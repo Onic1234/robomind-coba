@@ -1,53 +1,95 @@
-/**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
- */
+export const COLORS = {
+  // Brand Main Colors
+  brandBlue: "#0B84FF",        // Vibrant blue for the main hero card
+  brandOrange: "#FF5E36",      // Radiant orange for main CTAs ("Try 7 Days Free")
+  brandGreen: "#00C3A0",       // Teal green from the "Spanish VIP" logo
+  brandDarkBlue: "#111827",    // Sleek dark grey/blue for headers and text
 
-import { Platform } from 'react-native';
+  // Neutral Backgrounds & Card Colors
+  bgPrimary: "#FDFDFD",        // Page background (clean off-white)
+  cardPurple: "#EAE6FF",       // Light purple for the 90+ countries stat badge
+  cardCream: "#FAF3E8",        // Light cream for the 150,000 classes stat badge
+  cardWhite: "#FFFFFF",        // Card container backgrounds
+  borderLight: "#F0F0EE",      // Subtle separators and borders
+  
+  // Feedback States
+  success: "#10B981",          // Success green for ratings and validations
+  error: "#EF4444",            // Error red for validation states
+  warning: "#F59E0B",          // Amber warning state
+  
+  // Grey Scales
+  textDark: "#1F2937",         // Primary text
+  textMedium: "#4B5563",       // Secondary text
+  textLight: "#9CA3AF",        // Captions / placeholders
+  textMuted: "#D1D5DB",        // Disabled buttons or borders
+};
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+export const SPACING = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  xxl: 24,
+  xxxl: 32,
+};
 
-export const Colors = {
+export const SHAPES = {
+  radiusSm: 8,
+  radiusMd: 12,
+  radiusLg: 16,
+  radiusXl: 24,
+  radiusRound: 9999,
+};
+
+export const SHADOWS = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+  medium: {
+    shadowColor: "#171717",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 4,
+  },
+  premium: {
+    shadowColor: "#0084FF",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 6,
   },
 };
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
+export const FONTS = {
+  // We use standard React Native font weights for maximum compatibility while maintaining high visual quality.
+  heading: {
+    fontWeight: "800" as const,
+    color: COLORS.textDark,
   },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
+  subheading: {
+    fontWeight: "700" as const,
+    color: COLORS.textDark,
   },
-  web: {
-    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    serif: "Georgia, 'Times New Roman', serif",
-    rounded: "'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif",
-    mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+  bodyBold: {
+    fontWeight: "600" as const,
+    color: COLORS.textDark,
   },
-});
+  bodyMedium: {
+    fontWeight: "500" as const,
+    color: COLORS.textMedium,
+  },
+  bodyRegular: {
+    fontWeight: "400" as const,
+    color: COLORS.textMedium,
+  },
+  caption: {
+    fontWeight: "400" as const,
+    color: COLORS.textLight,
+  },
+};
