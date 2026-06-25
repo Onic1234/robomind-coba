@@ -6,6 +6,7 @@ import {
   FlatList,
   Pressable,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { Image } from "expo-image";
 import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../constants/Theme";
 
@@ -17,6 +18,7 @@ interface FeatureItem {
 }
 
 export default function GameFeaturesSlider() {
+  const router = useRouter();
   const features: FeatureItem[] = [
     {
       id: "math",
@@ -75,7 +77,7 @@ export default function GameFeaturesSlider() {
       {/* Header Section */}
       <View style={styles.headerRow}>
         <Text style={styles.sectionHeading}>Eksplorasi Fitur Game</Text>
-        <Pressable hitSlop={10} onPress={() => alert("Lihat semua fitur game")}>
+        <Pressable hitSlop={10} onPress={() => router.push("/explore")}>
           <Text style={styles.linkText}>Lihat Semua</Text>
         </Pressable>
       </View>

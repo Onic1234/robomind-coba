@@ -132,7 +132,7 @@ export default function HeroCarousel() {
                   if (item.id === "robomind") {
                     router.push("/explore");
                   } else {
-                    router.push("/profile");
+                    router.push("/register");
                   }
                 }}
                 variant="primary"

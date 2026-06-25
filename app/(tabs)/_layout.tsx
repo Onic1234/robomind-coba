@@ -44,16 +44,34 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="play"
         options={{
-          title: "Explore",
+          title: "Play",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={focused ? "compass" : "compass-outline"}
+              name={focused ? "game-controller" : "game-controller-outline"}
               size={22}
               color={color}
             />
           ),
+        }}
+      />
+      <Tabs.Screen
+        name="explore"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="progress"
+        options={{
+          href: null,
+        }}
+      />
+      <Tabs.Screen
+        name="register"
+        options={{
+          href: null,
         }}
       />
       <Tabs.Screen

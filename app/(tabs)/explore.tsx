@@ -1,178 +1,222 @@
-import React from "react";
-import { StyleSheet, View, Text, ScrollView, Platform } from "react-native";
+import React, { useState } from "react";
+import { StyleSheet, View, Text, ScrollView, TextInput, Pressable, StatusBar, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../../constants/Theme";
-import Button from "../../components/ui/Button";
+
+interface ArticleItem {
+  id: string;
+  title: string;
+  category: string;
+  readTime: string;
+  image: any;
+}
 
 interface ModuleItem {
   id: string;
   title: string;
-  description: string;
   image: any;
-  badgeText: string;
-  buttonText: string;
-  buttonVariant: "accent" | "primary" | "secondary";
-  isLocked?: boolean;
+  color: string;
+}
+
+interface VideoItem {
+  id: string;
+  title: string;
+  duration: string;
+  views: string;
+  image: any;
 }
 
 export default function ExploreScreen() {
-  const freeModules: ModuleItem[] = [
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const articles: ArticleItem[] = [
     {
-      id: "robotika",
-      title: "Pengenalan Robotika",
-      description: "Modul dasar untuk memahami apa itu robot dan bagaimana mereka bekerja di dunia nyata.",
+      id: "art1",
+      title: "Tips Mengurangi Brainrot pada Anak",
+      category: "Parenting",
+      readTime: "5 Min read",
+      image: require("../../assets/images/news_classroom.png"),
+    },
+    {
+      id: "art2",
+      title: "Pentingnya Logika Sejak Dini",
+      category: "Edukasi",
+      readTime: "4 Min read",
+      image: require("../../assets/images/news_nature.png"),
+    },
+  ];
+
+  const popularModules: ModuleItem[] = [
+    {
+      id: "mod1",
+      title: "Robotika Dasar",
       image: require("../../assets/images/modul_robot.png"),
-      badgeText: "Gratis",
-      buttonText: "Mulai Belajar",
-      buttonVariant: "accent", // Green button
+      color: "#EFF6FF",
     },
     {
-      id: "pemrograman_dasar",
-      title: "Logika Pemrograman Dasar",
-      description: "Pelajari cara berpikir layaknya seorang programmer dengan latihan logika sederhana.",
+      id: "mod2",
+      title: "Coding Dasar",
       image: require("../../assets/images/modul_coding.png"),
-      badgeText: "Gratis",
-      buttonText: "Mulai Belajar",
-      buttonVariant: "accent",
+      color: "#F0FDF4",
     },
     {
-      id: "algoritma",
-      title: "Eksplorasi Algoritma",
-      description: "Pahami konsep algoritma dengan menyusun langkah-langkah sistematis melalui game.",
+      id: "mod3",
+      title: "Algoritma Seru",
       image: require("../../assets/images/game_math.png"),
-      badgeText: "Gratis",
-      buttonText: "Mulai Belajar",
-      buttonVariant: "accent",
+      color: "#FFF7ED",
     },
   ];
 
-  const premiumModules: ModuleItem[] = [
+  const videos: VideoItem[] = [
     {
-      id: "block_programming",
-      title: "Dasar Pemrograman Block",
-      description: "Pelajari konsep dasar algoritma dengan menggunakan block programming yang interaktif.",
+      id: "vid1",
+      title: "Apa itu Algoritma?",
+      duration: "05:12",
+      views: "512 views",
       image: require("../../assets/images/game_coding.png"),
-      badgeText: "Rp 50.000",
-      buttonText: "Beli Modul",
-      buttonVariant: "primary", // Blue button
     },
     {
-      id: "animasi",
-      title: "Animasi Sederhana",
-      description: "Buat animasi pertamamu dan pahami bagaimana frame by frame bekerja dalam game.",
-      image: require("../../assets/images/modul_retro.png"),
-      badgeText: "Rp 75.000",
-      buttonText: "Beli Modul",
-      buttonVariant: "primary",
-    },
-    {
-      id: "ai_dasar",
-      title: "Logika Lanjutan & AI Dasar",
-      description: "Modul premium yang mengajarkan konsep AI dasar dan logika kompleks untuk game 3D.",
+      id: "vid2",
+      title: "Mengenal Cara Kerja Robot",
+      duration: "08:45",
+      views: "320 views",
       image: require("../../assets/images/robomind_hero.png"),
-      badgeText: "",
-      buttonText: "Berlangganan untuk Membuka",
-      buttonVariant: "secondary", // Custom black styling
-      isLocked: true,
     },
   ];
-
-  const renderModuleCard = (item: ModuleItem) => {
-    const isCustomBlackButton = item.id === "ai_dasar";
-    
-    return (
-      <View key={item.id} style={styles.card}>
-        <View style={styles.imageWrapper}>
-          <Image
-            source={item.image}
-            style={styles.cardImage}
-            contentFit="cover"
-            transition={300}
-          />
-          
-          {/* Price or Gratis Badge */}
-          {item.badgeText ? (
-            <View
-              style={[
-                styles.badge,
-                item.badgeText === "Gratis" ? styles.badgeGreen : styles.badgeDark,
-              ]}
-            >
-              <Text style={styles.badgeText}>{item.badgeText}</Text>
-            </View>
-          ) : null}
-
-          {/* Locked Overlay HUD */}
-          {item.isLocked && (
-            <View style={styles.lockedOverlay}>
-              <View style={styles.lockCircle}>
-                <Ionicons name="lock-closed" size={24} color="#FFFFFF" />
-              </View>
-              <Text style={styles.lockedOverlayText}>MODUL PREMIUM</Text>
-            </View>
-          )}
-        </View>
-
-        <View style={styles.textContainer}>
-          <Text style={styles.cardTitle}>{item.title}</Text>
-          <Text style={styles.cardDescription}>{item.description}</Text>
-          
-          <Button
-            title={item.buttonText}
-            onPress={() => alert(`Aksi untuk modul: ${item.title}`)}
-            variant={item.buttonVariant}
-            style={isCustomBlackButton ? styles.blackCtaButton : undefined}
-          />
-        </View>
-      </View>
-    );
-  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        
-        {/* Header Block */}
-        <View style={styles.headerContainer}>
-          <Text style={styles.pageTitle}>MODUL PEMBELAJARAN</Text>
-          <Text style={styles.pageSubtitle}>
-            Tingkatkan kemampuan logika dan kreativitas anak melalui modul-modul interaktif yang dirancang khusus untuk pembelajaran menyenangkan.
-          </Text>
-        </View>
+      <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgPrimary} />
 
-        {/* Free Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="gift-outline" size={18} color={COLORS.brandGreen} />
-            <Text style={styles.sectionTitle}>Modul Pembelajaran Gratis</Text>
-          </View>
-          <View style={styles.cardsGrid}>
-            {freeModules.map(renderModuleCard)}
-          </View>
-        </View>
-
-        {/* Premium Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="ribbon-outline" size={18} color={COLORS.brandBlue} />
-            <Text style={styles.sectionTitle}>Modul Spesialisasi & Premium</Text>
-          </View>
-          <View style={styles.cardsGrid}>
-            {premiumModules.map(renderModuleCard)}
-          </View>
-        </View>
-
-        {/* Bottom Lihat Semua Button */}
-        <View style={styles.bottomCtaWrapper}>
-          <Button
-            title="LIHAT SEMUA MODUL"
-            onPress={() => alert("Membuka katalog lengkap semua modul")}
-            variant="secondary"
-            style={styles.outlineCtaButton}
+      {/* Header with Search and Notification Bell */}
+      <View style={styles.header}>
+        <View style={styles.searchBarWrapper}>
+          <Ionicons name="search" size={18} color={COLORS.textLight} style={styles.searchIcon} />
+          <TextInput
+            placeholder="Cari artikel, modul, video..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholderTextColor={COLORS.textLight}
+            style={styles.searchInput}
           />
         </View>
+        <Pressable style={styles.bellButton} onPress={() => alert("Membuka Notifikasi")}>
+          <Ionicons name="notifications-outline" size={20} color={COLORS.textDark} />
+          <View style={styles.notificationDot} />
+        </Pressable>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        
+        {/* Artikel Terbaru Section */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Artikel Terbaru</Text>
+          <Pressable onPress={() => alert("Membuka Semua Artikel")}>
+            <Text style={styles.linkText}>{"Lihat Semua >"}</Text>
+          </Pressable>
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
+          {articles.map((item) => (
+            <Pressable 
+              key={item.id} 
+              style={styles.articleCard}
+              onPress={() => alert(`Membaca artikel: ${item.title}`)}
+            >
+              <Image source={item.image} style={styles.articleImage} contentFit="cover" />
+              <View style={styles.articleContent}>
+                <View style={styles.articleBadgeRow}>
+                  <Text style={styles.articleCategory}>{item.category}</Text>
+                  <Text style={styles.articleBullet}>•</Text>
+                  <Text style={styles.articleReadTime}>{item.readTime}</Text>
+                </View>
+                <Text style={styles.articleCardTitle} numberOfLines={2}>{item.title}</Text>
+              </View>
+            </Pressable>
+          ))}
+        </ScrollView>
+
+        {/* Modul Populer Section */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Modul Populer</Text>
+          <Pressable onPress={() => alert("Membuka Semua Modul")}>
+            <Text style={styles.linkText}>{"Lihat Semua >"}</Text>
+          </Pressable>
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
+          {popularModules.map((mod) => (
+            <Pressable 
+              key={mod.id} 
+              style={[styles.moduleCard, { backgroundColor: mod.color }]}
+              onPress={() => alert(`Membuka modul: ${mod.title}`)}
+            >
+              <Image source={mod.image} style={styles.moduleImage} contentFit="cover" />
+              <Text style={styles.moduleCardTitle}>{mod.title}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+
+        {/* Video Edukasi Section */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Video Edukasi</Text>
+          <Pressable onPress={() => alert("Membuka Semua Video")}>
+            <Text style={styles.linkText}>{"Lihat Semua >"}</Text>
+          </Pressable>
+        </View>
+
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
+          {videos.map((vid) => (
+            <Pressable 
+              key={vid.id} 
+              style={styles.videoCard}
+              onPress={() => alert(`Memutar video: ${vid.title}`)}
+            >
+              <View style={styles.videoThumbnailWrapper}>
+                <Image source={vid.image} style={styles.videoImage} contentFit="cover" />
+                <View style={styles.videoPlayOverlay}>
+                  <View style={styles.playIconCircle}>
+                    <Ionicons name="play" size={16} color="#FFFFFF" style={{ marginLeft: 2 }} />
+                  </View>
+                </View>
+                <View style={styles.durationBadge}>
+                  <Text style={styles.durationText}>{vid.duration}</Text>
+                </View>
+              </View>
+              <View style={styles.videoCardContent}>
+                <Text style={styles.videoCardTitle} numberOfLines={1}>{vid.title}</Text>
+                <Text style={styles.videoViewsText}>{vid.views}</Text>
+              </View>
+            </Pressable>
+          ))}
+        </ScrollView>
+
+        {/* Berita & Update Section */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Berita & Update</Text>
+          <Pressable onPress={() => alert("Membuka Halaman Berita")}>
+            <Text style={styles.linkText}>{"Lihat Semua >"}</Text>
+          </Pressable>
+        </View>
+
+        <Pressable 
+          style={styles.newsFeatureCard}
+          onPress={() => alert("Membuka artikel: AI dalam Pendidikan Anak")}
+        >
+          <Image 
+            source={require("../../assets/images/robomind_hero.png")}
+            style={styles.newsFeatureImage}
+            contentFit="cover"
+          />
+          <View style={styles.newsFeatureContent}>
+            <Text style={styles.newsFeatureTitle}>AI dalam Pendidikan Anak di Era Digital</Text>
+            <Text style={styles.newsFeatureDesc}>Rekomendasi cerdas dan pemantauan analitik perkembangan belajar anak berbasis AI.</Text>
+            <Text style={styles.newsFeatureTime}>2 jam lalu</Text>
+          </View>
+        </Pressable>
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -183,138 +227,244 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.bgPrimary,
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.md,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.borderLight,
+    gap: SPACING.md,
+  },
+  searchBarWrapper: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: COLORS.cardWhite,
+    borderWidth: 1.5,
+    borderColor: COLORS.borderLight,
+    borderRadius: SHAPES.radiusRound,
+    paddingHorizontal: SPACING.md,
+    height: 40,
+  },
+  searchIcon: {
+    marginRight: SPACING.sm,
+  },
+  searchInput: {
+    flex: 1,
+    ...FONTS.bodyMedium,
+    fontSize: 13,
+    color: COLORS.textDark,
+    paddingVertical: 0,
+  },
+  bellButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: COLORS.borderLight,
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  notificationDot: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: COLORS.error,
+  },
   scrollContent: {
     paddingVertical: SPACING.lg,
-    paddingHorizontal: SPACING.lg,
-  },
-  headerContainer: {
-    alignItems: "center",
-    marginBottom: SPACING.xxl,
-    paddingHorizontal: SPACING.sm,
-  },
-  pageTitle: {
-    ...FONTS.heading,
-    fontSize: 22,
-    color: COLORS.textDark,
-    textAlign: "center",
-    marginBottom: SPACING.sm,
-    letterSpacing: -0.5,
-  },
-  pageSubtitle: {
-    ...FONTS.bodyRegular,
-    fontSize: 13,
-    color: COLORS.textMedium,
-    textAlign: "center",
-    lineHeight: 18,
-  },
-  section: {
-    marginBottom: SPACING.xxl,
+    paddingBottom: Platform.OS === "ios" ? SPACING.xxl + 20 : SPACING.xxl,
   },
   sectionHeader: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    gap: SPACING.sm,
+    paddingHorizontal: SPACING.lg,
     marginBottom: SPACING.md,
+    marginTop: SPACING.sm,
   },
   sectionTitle: {
     ...FONTS.subheading,
-    fontSize: 16,
+    fontSize: 15,
     color: COLORS.textDark,
   },
-  cardsGrid: {
-    gap: SPACING.lg,
+  linkText: {
+    ...FONTS.bodyBold,
+    fontSize: 12,
+    color: COLORS.brandGreen,
   },
-  card: {
+  horizontalScroll: {
+    paddingLeft: SPACING.lg,
+    paddingRight: SPACING.lg + 10,
+    gap: SPACING.md,
+    paddingBottom: SPACING.md,
+  },
+  articleCard: {
+    width: 240,
     backgroundColor: COLORS.cardWhite,
     borderRadius: SHAPES.radiusLg,
-    overflow: "hidden",
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: COLORS.borderLight,
+    overflow: "hidden",
     ...SHADOWS.light,
   },
-  imageWrapper: {
+  articleImage: {
     width: "100%",
-    height: 160,
-    backgroundColor: "#F1F5F9",
+    height: 120,
+  },
+  articleContent: {
+    padding: SPACING.md,
+  },
+  articleBadgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  articleCategory: {
+    fontSize: 9,
+    fontWeight: "900",
+    color: COLORS.brandGreen,
+    letterSpacing: 0.5,
+  },
+  articleBullet: {
+    fontSize: 9,
+    color: COLORS.textLight,
+    marginHorizontal: 4,
+  },
+  articleReadTime: {
+    fontSize: 9,
+    fontWeight: "600",
+    color: COLORS.textLight,
+  },
+  articleCardTitle: {
+    ...FONTS.bodyBold,
+    fontSize: 12,
+    color: COLORS.textDark,
+    lineHeight: 16,
+  },
+  moduleCard: {
+    width: 110,
+    borderRadius: SHAPES.radiusLg,
+    borderWidth: 1.5,
+    borderColor: COLORS.borderLight,
+    padding: SPACING.md,
+    alignItems: "center",
+    ...SHADOWS.light,
+  },
+  moduleImage: {
+    width: 50,
+    height: 50,
+    marginBottom: SPACING.sm,
+  },
+  moduleCardTitle: {
+    ...FONTS.bodyBold,
+    fontSize: 10,
+    color: COLORS.textDark,
+    textAlign: "center",
+  },
+  videoCard: {
+    width: 180,
+    backgroundColor: COLORS.cardWhite,
+    borderRadius: SHAPES.radiusLg,
+    borderWidth: 1.5,
+    borderColor: COLORS.borderLight,
+    overflow: "hidden",
+    ...SHADOWS.light,
+  },
+  videoThumbnailWrapper: {
+    width: "100%",
+    height: 100,
     position: "relative",
   },
-  cardImage: {
+  videoImage: {
     width: "100%",
     height: "100%",
   },
-  badge: {
-    position: "absolute",
-    top: SPACING.sm,
-    right: SPACING.sm,
-    paddingVertical: 4,
-    paddingHorizontal: SPACING.md,
-    borderRadius: SHAPES.radiusSm,
+  videoPlayOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.25)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  playIconCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: COLORS.brandGreen,
+    justifyContent: "center",
+    alignItems: "center",
     ...SHADOWS.light,
   },
-  badgeGreen: {
-    backgroundColor: COLORS.brandGreen,
+  durationBadge: {
+    position: "absolute",
+    bottom: SPACING.xs,
+    right: SPACING.xs,
+    backgroundColor: "rgba(15, 23, 42, 0.75)",
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: SHAPES.radiusSm,
   },
-  badgeDark: {
-    backgroundColor: COLORS.textDark,
-  },
-  badgeText: {
-    fontSize: 10,
+  durationText: {
+    fontSize: 8,
     fontWeight: "800",
     color: "#FFFFFF",
   },
-  lockedOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(15, 23, 42, 0.65)", // Blur style dark semi-transparent screen
-    justifyContent: "center",
-    alignItems: "center",
-    gap: SPACING.sm,
+  videoCardContent: {
+    padding: SPACING.sm + 2,
   },
-  lockCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
-    borderWidth: 1.5,
-    borderColor: "#FFFFFF",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  lockedOverlayText: {
-    fontSize: 12,
-    fontWeight: "900",
-    color: "#FFFFFF",
-    letterSpacing: 1.5,
-  },
-  textContainer: {
-    padding: SPACING.lg,
-  },
-  cardTitle: {
+  videoCardTitle: {
     ...FONTS.bodyBold,
-    fontSize: 15,
+    fontSize: 11,
+    color: COLORS.textDark,
+    marginBottom: 2,
+  },
+  videoViewsText: {
+    ...FONTS.caption,
+    fontSize: 9,
+    color: COLORS.textLight,
+  },
+  newsFeatureCard: {
+    flexDirection: "row",
+    backgroundColor: COLORS.cardWhite,
+    borderRadius: SHAPES.radiusLg,
+    borderWidth: 1.5,
+    borderColor: COLORS.borderLight,
+    marginHorizontal: SPACING.lg,
+    padding: SPACING.md,
+    ...SHADOWS.light,
+    alignItems: "center",
+    gap: SPACING.md,
+    marginBottom: SPACING.md,
+  },
+  newsFeatureImage: {
+    width: 80,
+    height: 80,
+    borderRadius: SHAPES.radiusMd,
+  },
+  newsFeatureContent: {
+    flex: 1,
+  },
+  newsFeatureTitle: {
+    ...FONTS.bodyBold,
+    fontSize: 12,
     color: COLORS.textDark,
     marginBottom: 4,
   },
-  cardDescription: {
+  newsFeatureDesc: {
     ...FONTS.bodyRegular,
-    fontSize: 12,
+    fontSize: 10,
     color: COLORS.textMedium,
-    lineHeight: 16,
-    marginBottom: SPACING.lg,
+    lineHeight: 14,
+    marginBottom: 4,
   },
-  blackCtaButton: {
-    backgroundColor: COLORS.textDark,
-    borderColor: COLORS.textDark,
-  },
-  bottomCtaWrapper: {
-    alignItems: "center",
-    marginTop: SPACING.xs,
-    marginBottom: Platform.OS === "ios" ? SPACING.xxl : SPACING.lg,
-  },
-  outlineCtaButton: {
-    borderColor: COLORS.borderLight,
-    borderWidth: 1.5,
-    backgroundColor: COLORS.cardWhite,
-    width: "70%",
-    borderRadius: SHAPES.radiusRound,
+  newsFeatureTime: {
+    ...FONTS.caption,
+    fontSize: 8,
+    color: COLORS.textLight,
   },
 });
