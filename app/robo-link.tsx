@@ -9,6 +9,10 @@ import {
   StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ScrollView, Dimensions } from "react-native";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const ARENA_SIZE = Math.min(360, SCREEN_WIDTH - 40);
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -26,6 +30,10 @@ import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../constants/Theme";
 import Button from "../components/ui/Button";
 
 const COINS_STORAGE_KEY = "user_coins_balance";
+const LIVES_STORAGE_KEY = "robo_link_lives";
+const LAST_LOSS_STORAGE_KEY = "robo_link_last_loss";
+const MAX_LIVES = 5;
+const LIFE_COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
 
 interface Tile {
   id: string;
@@ -186,6 +194,3305 @@ const LEVEL_CONFIGS: LevelConfig[] = [
     instructions: "Tantangan Papan Sirkuit Final! Hubungkan jalur kabel tembaga terpanjang dari Robot ke Terminal target.",
     timeLimit: 45,
   },
+
+  // Generated Levels 6-20
+{
+  level: 6,
+  cols: 5,
+  rows: 5,
+  startCol: 0,
+  startRow: 4,
+  startDir: "left",
+  endCol: 4,
+  endRow: 0,
+  endDir: "right",
+  tiles: [
+    {
+      col: 0,
+      row: 4,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 1,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "elbow",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 3,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "elbow",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 2,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 3,
+      row: 2,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "elbow",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 1,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 3,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 2,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    }
+  ],
+  rewardCoins: 240,
+  rewardXP: 160,
+  instructions: "Level 6. Rute ular 5x5! Putar ubin agar energi mengalir.",
+  timeLimit: 44
+},
+{
+  level: 7,
+  cols: 5,
+  rows: 5,
+  startCol: 0,
+  startRow: 4,
+  startDir: "left",
+  endCol: 4,
+  endRow: 0,
+  endDir: "right",
+  tiles: [
+    {
+      col: 0,
+      row: 4,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 4,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 3,
+      row: 4,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "elbow",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 3,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 3,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 2,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 3,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "elbow",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 2,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 1,
+      row: 2,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 2,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 2,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 1,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 1,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 1,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 1,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 2,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    }
+  ],
+  rewardCoins: 255,
+  rewardXP: 170,
+  instructions: "Level 7. Rute ular 5x5! Putar ubin agar energi mengalir.",
+  timeLimit: 43
+},
+{
+  level: 8,
+  cols: 5,
+  rows: 5,
+  startCol: 0,
+  startRow: 4,
+  startDir: "left",
+  endCol: 4,
+  endRow: 0,
+  endDir: "right",
+  tiles: [
+    {
+      col: 0,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 4,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "elbow",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 3,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "elbow",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 1,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 2,
+      row: 1,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 1,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    }
+  ],
+  rewardCoins: 270,
+  rewardXP: 180,
+  instructions: "Level 8. Rute ular 5x5! Putar ubin agar energi mengalir.",
+  timeLimit: 42
+},
+{
+  level: 9,
+  cols: 5,
+  rows: 6,
+  startCol: 0,
+  startRow: 5,
+  startDir: "left",
+  endCol: 0,
+  endRow: 0,
+  endDir: "left",
+  tiles: [
+    {
+      col: 0,
+      row: 5,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 5,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 5,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 5,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 5,
+      type: "elbow",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 4,
+      type: "elbow",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 3,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 3,
+      type: "elbow",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 3,
+      row: 2,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 2,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 1,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 2,
+      type: "elbow",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 1,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 1,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    }
+  ],
+  rewardCoins: 285,
+  rewardXP: 190,
+  instructions: "Level 9. Rute ular 5x6! Putar ubin agar energi mengalir.",
+  timeLimit: 41
+},
+{
+  level: 10,
+  cols: 5,
+  rows: 6,
+  startCol: 0,
+  startRow: 5,
+  startDir: "left",
+  endCol: 0,
+  endRow: 0,
+  endDir: "left",
+  tiles: [
+    {
+      col: 0,
+      row: 5,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 5,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 5,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 5,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 5,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 4,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 1,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 4,
+      type: "elbow",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 3,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 3,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 3,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 2,
+      row: 2,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 1,
+      row: 2,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 2,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 1,
+      type: "elbow",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    }
+  ],
+  rewardCoins: 300,
+  rewardXP: 200,
+  instructions: "Level 10. Rute ular 5x6! Putar ubin agar energi mengalir.",
+  timeLimit: 40
+},
+{
+  level: 11,
+  cols: 5,
+  rows: 6,
+  startCol: 0,
+  startRow: 5,
+  startDir: "left",
+  endCol: 0,
+  endRow: 0,
+  endDir: "left",
+  tiles: [
+    {
+      col: 0,
+      row: 5,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 1,
+      row: 5,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 5,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 3,
+      row: 5,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 5,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 4,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 4,
+      type: "elbow",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 2,
+      row: 3,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 3,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 3,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 2,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 2,
+      type: "elbow",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 1,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 1,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 3,
+      row: 1,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 1,
+      type: "elbow",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    }
+  ],
+  rewardCoins: 315,
+  rewardXP: 210,
+  instructions: "Level 11. Rute ular 5x6! Putar ubin agar energi mengalir.",
+  timeLimit: 39
+},
+{
+  level: 12,
+  cols: 5,
+  rows: 6,
+  startCol: 0,
+  startRow: 5,
+  startDir: "left",
+  endCol: 0,
+  endRow: 0,
+  endDir: "left",
+  tiles: [
+    {
+      col: 0,
+      row: 5,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 5,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 5,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 5,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 5,
+      type: "elbow",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 3,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 4,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 4,
+      type: "elbow",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 2,
+      row: 3,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 3,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 2,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 2,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 2,
+      type: "elbow",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 1,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 2,
+      row: 1,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 1,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 1,
+      type: "elbow",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    }
+  ],
+  rewardCoins: 330,
+  rewardXP: 220,
+  instructions: "Level 12. Rute ular 5x6! Putar ubin agar energi mengalir.",
+  timeLimit: 38
+},
+{
+  level: 13,
+  cols: 5,
+  rows: 6,
+  startCol: 0,
+  startRow: 5,
+  startDir: "left",
+  endCol: 0,
+  endRow: 0,
+  endDir: "left",
+  tiles: [
+    {
+      col: 0,
+      row: 5,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 5,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 5,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 5,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 5,
+      type: "elbow",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 4,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 4,
+      type: "elbow",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 1,
+      row: 3,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 3,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 3,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 3,
+      type: "elbow",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 2,
+      row: 2,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 2,
+      type: "elbow",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 1,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 3,
+      row: 1,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 1,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    }
+  ],
+  rewardCoins: 345,
+  rewardXP: 230,
+  instructions: "Level 13. Rute ular 5x6! Putar ubin agar energi mengalir.",
+  timeLimit: 37
+},
+{
+  level: 14,
+  cols: 5,
+  rows: 6,
+  startCol: 0,
+  startRow: 5,
+  startDir: "left",
+  endCol: 0,
+  endRow: 0,
+  endDir: "left",
+  tiles: [
+    {
+      col: 0,
+      row: 5,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 5,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 5,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 5,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 5,
+      type: "elbow",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 4,
+      type: "elbow",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 3,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 2,
+      row: 2,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 2,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 2,
+      type: "elbow",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 1,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 1,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 3,
+      row: 1,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 1,
+      type: "elbow",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 2,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 1,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    }
+  ],
+  rewardCoins: 360,
+  rewardXP: 240,
+  instructions: "Level 14. Rute ular 5x6! Putar ubin agar energi mengalir.",
+  timeLimit: 36
+},
+{
+  level: 15,
+  cols: 5,
+  rows: 6,
+  startCol: 0,
+  startRow: 5,
+  startDir: "left",
+  endCol: 0,
+  endRow: 0,
+  endDir: "left",
+  tiles: [
+    {
+      col: 0,
+      row: 5,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 5,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 5,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 5,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 5,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 3,
+      row: 4,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 4,
+      type: "elbow",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 2,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 3,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 3,
+      type: "elbow",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 3,
+      row: 2,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 2,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 1,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 2,
+      type: "elbow",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 1,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 1,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 1,
+      type: "elbow",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 3,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    }
+  ],
+  rewardCoins: 375,
+  rewardXP: 250,
+  instructions: "Level 15. Rute ular 5x6! Putar ubin agar energi mengalir.",
+  timeLimit: 35
+},
+{
+  level: 16,
+  cols: 5,
+  rows: 6,
+  startCol: 0,
+  startRow: 5,
+  startDir: "left",
+  endCol: 0,
+  endRow: 0,
+  endDir: "left",
+  tiles: [
+    {
+      col: 0,
+      row: 5,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 5,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 5,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 5,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 5,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 4,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 4,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 1,
+      row: 4,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 4,
+      type: "elbow",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 1,
+      row: 3,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 3,
+      type: "elbow",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 2,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 2,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 2,
+      type: "elbow",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 1,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 1,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 3,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 2,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    }
+  ],
+  rewardCoins: 390,
+  rewardXP: 260,
+  instructions: "Level 16. Rute ular 5x6! Putar ubin agar energi mengalir.",
+  timeLimit: 34
+},
+{
+  level: 17,
+  cols: 5,
+  rows: 6,
+  startCol: 0,
+  startRow: 5,
+  startDir: "left",
+  endCol: 0,
+  endRow: 0,
+  endDir: "left",
+  tiles: [
+    {
+      col: 0,
+      row: 5,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 1,
+      row: 5,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 2,
+      row: 5,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 5,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 5,
+      type: "elbow",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 4,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 4,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 4,
+      type: "elbow",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 3,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 3,
+      type: "elbow",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 3,
+      row: 2,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 2,
+      type: "elbow",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 1,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 1,
+      type: "elbow",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 1,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    }
+  ],
+  rewardCoins: 405,
+  rewardXP: 270,
+  instructions: "Level 17. Rute ular 5x6! Putar ubin agar energi mengalir.",
+  timeLimit: 33
+},
+{
+  level: 18,
+  cols: 5,
+  rows: 6,
+  startCol: 0,
+  startRow: 5,
+  startDir: "left",
+  endCol: 0,
+  endRow: 0,
+  endDir: "left",
+  tiles: [
+    {
+      col: 0,
+      row: 5,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 5,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 5,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 5,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 5,
+      type: "elbow",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 4,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 4,
+      type: "elbow",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 3,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 3,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 3,
+      type: "elbow",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 2,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 2,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 1,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 2,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 1,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 1,
+      type: "elbow",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    }
+  ],
+  rewardCoins: 420,
+  rewardXP: 280,
+  instructions: "Level 18. Rute ular 5x6! Putar ubin agar energi mengalir.",
+  timeLimit: 32
+},
+{
+  level: 19,
+  cols: 5,
+  rows: 6,
+  startCol: 0,
+  startRow: 5,
+  startDir: "left",
+  endCol: 0,
+  endRow: 0,
+  endDir: "left",
+  tiles: [
+    {
+      col: 0,
+      row: 5,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 5,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 5,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 5,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 5,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 3,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 4,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 1,
+      row: 4,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 4,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 3,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 3,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 3,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 3,
+      type: "elbow",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 2,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 2,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 2,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 1,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 1,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 1,
+      type: "elbow",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 3,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 0,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    }
+  ],
+  rewardCoins: 435,
+  rewardXP: 290,
+  instructions: "Level 19. Rute ular 5x6! Putar ubin agar energi mengalir.",
+  timeLimit: 31
+},
+{
+  level: 20,
+  cols: 5,
+  rows: 6,
+  startCol: 0,
+  startRow: 5,
+  startDir: "left",
+  endCol: 0,
+  endRow: 0,
+  endDir: "left",
+  tiles: [
+    {
+      col: 0,
+      row: 5,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 5,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 5,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 5,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 5,
+      type: "elbow",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 4,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 4,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 4,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 4,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 3,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 3,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 2,
+      row: 3,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 3,
+      row: 3,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 3,
+      type: "elbow",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 4,
+      row: 2,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 2,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 2,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 2,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 2,
+      type: "elbow",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 0,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 1,
+      row: 1,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 2,
+      row: 1,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 3,
+      row: 1,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 4,
+      row: 1,
+      type: "elbow",
+      initialRotation: 270
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 0
+    },
+    {
+      col: 4,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    },
+    {
+      col: 3,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 2,
+      row: 0,
+      type: "straight",
+      initialRotation: 270
+    },
+    {
+      col: 1,
+      row: 0,
+      type: "straight",
+      initialRotation: 90
+    },
+    {
+      col: 0,
+      row: 0,
+      type: "straight",
+      initialRotation: 180
+    }
+  ],
+  rewardCoins: 450,
+  rewardXP: 300,
+  instructions: "Level 20. Rute ular 5x6! Putar ubin agar energi mengalir.",
+  timeLimit: 30
+}
 ];
 
 const getTilePorts = (type: "straight" | "elbow" | "t_junction", rotation: number): string[] => {
@@ -552,7 +3859,7 @@ const traceConnectionPath = (
 
     if (col === config.endCol && row === config.endRow && chosenExit === config.endDir) {
       const pcY = config.endRow * tileSize + tileSize / 2;
-      points.push({ x: 372, y: pcY });
+      points.push({ x: ARENA_SIZE + 12, y: pcY });
       break;
     }
 
@@ -567,13 +3874,19 @@ const traceConnectionPath = (
 export default function RoboLinkScreen() {
   const router = useRouter();
   const [level, setLevel] = useState(1);
+  const [highestUnlocked, setHighestUnlocked] = useState(1);
+  const [view, setView] = useState<"map" | "game">("map");
   const [userCoins, setUserCoins] = useState(1250);
-  const [gameState, setGameState] = useState<"playing" | "victory" | "completed" | "failed">("playing");
+  const [gameState, setGameState] = useState<"playing" | "victory" | "completed" | "failed" | "outOfLives">("playing");
 
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [timeCounter, setTimeCounter] = useState(0);
   const [timeLeft, setTimeLeft] = useState(30);
   const [isAnimatingFinish, setIsAnimatingFinish] = useState(false);
+
+  const [lives, setLives] = useState(MAX_LIVES);
+  const [lastLossTime, setLastLossTime] = useState<number | null>(null);
+  const [cooldownLeft, setCooldownLeft] = useState(0);
 
   const pulseScale = useSharedValue(1);
   const pulseProgress = useSharedValue(0);
@@ -625,7 +3938,23 @@ export default function RoboLinkScreen() {
           clearInterval(timer);
           playSynthSound("fail");
           triggerHaptic("error");
-          setGameState("failed");
+          
+          setLives((l) => {
+            const nextLives = Math.max(0, l - 1);
+            AsyncStorage.setItem(LIVES_STORAGE_KEY, nextLives.toString());
+            if (l === MAX_LIVES) {
+              const now = Date.now();
+              setLastLossTime(now);
+              AsyncStorage.setItem(LAST_LOSS_STORAGE_KEY, now.toString());
+            }
+            if (nextLives === 0) {
+              setGameState("outOfLives");
+            } else {
+              setGameState("failed");
+            }
+            return nextLives;
+          });
+          
           return 0;
         }
         return prev - 1;
@@ -665,8 +3994,40 @@ export default function RoboLinkScreen() {
         }
         const storedLevel = await AsyncStorage.getItem("robo_link_current_level");
         if (storedLevel !== null) {
-          setLevel(parseInt(storedLevel));
+          setHighestUnlocked(parseInt(storedLevel));
         }
+
+        const storedLives = await AsyncStorage.getItem(LIVES_STORAGE_KEY);
+        const storedLossTime = await AsyncStorage.getItem(LAST_LOSS_STORAGE_KEY);
+        
+        let currentLives = storedLives ? parseInt(storedLives) : MAX_LIVES;
+        let lossTime = storedLossTime ? parseInt(storedLossTime) : null;
+
+        if (lossTime !== null && currentLives < MAX_LIVES) {
+          const now = Date.now();
+          const elapsed = now - lossTime;
+          const restored = Math.floor(elapsed / LIFE_COOLDOWN_MS);
+          
+          if (restored > 0) {
+            currentLives = Math.min(MAX_LIVES, currentLives + restored);
+            if (currentLives === MAX_LIVES) {
+              lossTime = null;
+            } else {
+              lossTime = lossTime + restored * LIFE_COOLDOWN_MS;
+            }
+            await AsyncStorage.setItem(LIVES_STORAGE_KEY, currentLives.toString());
+            if (lossTime) {
+              await AsyncStorage.setItem(LAST_LOSS_STORAGE_KEY, lossTime.toString());
+            } else {
+              await AsyncStorage.removeItem(LAST_LOSS_STORAGE_KEY);
+            }
+          }
+        }
+        
+        setLives(currentLives);
+        setLastLossTime(lossTime);
+        if (currentLives === 0) setGameState("outOfLives");
+
       } catch (e) {
         console.error("Failed to load game data", e);
       }
@@ -674,7 +4035,41 @@ export default function RoboLinkScreen() {
     loadGameData();
   }, []);
 
+  // Cooldown countdown
+  useEffect(() => {
+    if (lives >= MAX_LIVES || !lastLossTime) return;
+    const timer = setInterval(() => {
+      const now = Date.now();
+      const nextLifeTime = lastLossTime + LIFE_COOLDOWN_MS;
+      const remaining = Math.max(0, nextLifeTime - now);
+      
+      if (remaining <= 0) {
+        setLives(prevLives => {
+          const newLives = prevLives + 1;
+          AsyncStorage.setItem(LIVES_STORAGE_KEY, newLives.toString());
+          if (newLives < MAX_LIVES) {
+            const newLossTime = Date.now();
+            setLastLossTime(newLossTime);
+            AsyncStorage.setItem(LAST_LOSS_STORAGE_KEY, newLossTime.toString());
+          } else {
+            setLastLossTime(null);
+            AsyncStorage.removeItem(LAST_LOSS_STORAGE_KEY);
+          }
+          return newLives;
+        });
+        setGameState(prev => prev === "outOfLives" ? "playing" : prev);
+      } else {
+        setCooldownLeft(Math.floor(remaining / 1000));
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [lives, lastLossTime]);
+
   const handleRestartLevel = () => {
+    if (lives <= 0) {
+      setGameState("outOfLives");
+      return;
+    }
     triggerHaptic("light");
     initLevel(level);
   };
@@ -765,11 +4160,15 @@ export default function RoboLinkScreen() {
     triggerHaptic("light");
     const nextLvl = level + 1;
     const finalBalance = userCoins + currentConfig.rewardCoins;
+    const newHighest = Math.max(highestUnlocked, nextLvl);
 
     try {
       await AsyncStorage.setItem(COINS_STORAGE_KEY, finalBalance.toString());
-      await AsyncStorage.setItem("robo_link_current_level", nextLvl.toString());
+      await AsyncStorage.setItem("robo_link_current_level", newHighest.toString());
       setUserCoins(finalBalance);
+      setHighestUnlocked(newHighest);
+      
+      // Lanjut main ke level berikutnya
       setLevel(nextLvl);
     } catch (e) {
       console.error("Failed to save progress", e);
@@ -783,11 +4182,10 @@ export default function RoboLinkScreen() {
 
     try {
       await AsyncStorage.setItem(COINS_STORAGE_KEY, finalBalance.toString());
-      await AsyncStorage.setItem("robo_link_current_level", "1");
-      router.back();
+      setView("map");
     } catch (e) {
       console.error("Failed to save progress", e);
-      router.back();
+      setView("map");
     }
   };
 
@@ -860,7 +4258,7 @@ export default function RoboLinkScreen() {
   });
 
   // Dynamic Tile size based on grid columns
-  const tileSize = 360 / currentConfig.cols;
+  const tileSize = ARENA_SIZE / currentConfig.cols;
 
   // Node Robot positions
   const robotPosition = useMemo(() => {
@@ -871,8 +4269,130 @@ export default function RoboLinkScreen() {
   // Node Target PC positions
   const pcPosition = useMemo(() => {
     const pY = currentConfig.endRow * tileSize + (tileSize - 50) / 2;
-    return { x: 372, y: pY };
+    return { x: ARENA_SIZE + 12, y: pY };
   }, [currentConfig, tileSize]);
+
+
+  if (view === "map") {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: "#F0FDF4" }]} edges={["top", "bottom"]}>
+        <StatusBar barStyle="dark-content" backgroundColor="#86EFAC" />
+        <View style={[styles.header, { backgroundColor: "#86EFAC", borderBottomColor: "#4ADE80" }]}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}>
+              <Ionicons name="arrow-back" size={20} color="#166534" />
+            </Pressable>
+            <Text style={{ ...FONTS.heading, fontSize: 18, color: "#14532D" }}>Peta Sirkuit</Text>
+          </View>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <View style={[styles.coinsHeaderBadge, { borderColor: "#EF4444", backgroundColor: "#FEF2F2" }]}>
+              <Ionicons name="heart" size={16} color="#EF4444" />
+              <Text style={[styles.coinsHeaderVal, { color: "#B91C1C" }]}>{lives}</Text>
+            </View>
+            <View style={styles.coinsHeaderBadge}>
+              <MaterialCommunityIcons name="coin" size={18} color="#D97706" />
+              <Text style={styles.coinsHeaderVal}>{userCoins}</Text>
+            </View>
+          </View>
+        </View>
+
+        <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingVertical: 40, alignItems: 'center' }}>
+          {/* Path SVG behind the levels */}
+          <View style={{ position: 'absolute', top: 40, bottom: 40, left: 0, right: 0, alignItems: 'center' }}>
+            <Svg width="200" height={LEVEL_CONFIGS.length * 85}>
+              <Path
+                d={`M 100 30 ` + LEVEL_CONFIGS.slice().reverse().map((lvl, idx) => {
+                  const x = 100 + Math.sin(lvl.level * 0.8) * 80;
+                  const y = idx * 85 + 30;
+                  return `L ${x} ${y}`;
+                }).join(" ")}
+                fill="none"
+                stroke="#4ADE80"
+                strokeWidth="12"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <Path
+                d={`M 100 30 ` + LEVEL_CONFIGS.slice().reverse().map((lvl, idx) => {
+                  const x = 100 + Math.sin(lvl.level * 0.8) * 80;
+                  const y = idx * 85 + 30;
+                  return `L ${x} ${y}`;
+                }).join(" ")}
+                fill="none"
+                stroke="#BBF7D0"
+                strokeWidth="6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
+          </View>
+          
+          {LEVEL_CONFIGS.slice().reverse().map((lvl, idx) => {
+            const isUnlocked = lvl.level <= highestUnlocked;
+            const isCurrent = lvl.level === highestUnlocked;
+            const offsetX = Math.sin(lvl.level * 0.8) * 80;
+            
+            return (
+              <View key={lvl.level} style={{ height: 85, width: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                <Pressable
+                  onPress={() => {
+                    if (isUnlocked) {
+                      if (lives <= 0) {
+                        setGameState("outOfLives");
+                      } else {
+                        setLevel(lvl.level);
+                        setView("game");
+                      }
+                    }
+                  }}
+                  style={({ pressed }) => [
+                    {
+                      width: 60, height: 60, borderRadius: 30,
+                      backgroundColor: isUnlocked ? (isCurrent ? "#F59E0B" : "#10B981") : "#CBD5E1",
+                      justifyContent: 'center', alignItems: 'center',
+                      borderWidth: 4, borderColor: isUnlocked ? "#FFFFFF" : "#94A3B8",
+                      shadowColor: "#000", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 4, elevation: 5,
+                      transform: [
+                        { translateX: offsetX },
+                        { scale: pressed && isUnlocked ? 0.9 : (isCurrent ? 1.1 : 1) }
+                      ]
+                    }
+                  ]}
+                >
+                  {isUnlocked ? (
+                     <Text style={{ ...FONTS.heading, fontSize: 24, color: "#FFF" }}>{lvl.level}</Text>
+                  ) : (
+                     <Ionicons name="lock-closed" size={24} color="#94A3B8" />
+                  )}
+                </Pressable>
+              </View>
+            );
+          })}
+        </ScrollView>
+
+        {/* OUT OF LIVES MODAL IN MAP */}
+        <Modal visible={gameState === "outOfLives"} transparent animationType="fade">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <View style={[styles.victoryIconCircle, { backgroundColor: "#FEF2F2" }]}>
+                <Ionicons name="heart-half" size={50} color="#EF4444" />
+              </View>
+              <Text style={styles.modalTitle}>NYAWA HABIS!</Text>
+              <Text style={styles.modalSubtitle}>Tunggu energi pulih untuk melanjutkan main. 1 Nyawa pulih dalam 15 menit.</Text>
+              <View style={styles.rewardSummary}>
+                <Text style={styles.rewardLabel}>WAKTU TUNGGU</Text>
+                <Text style={{ fontSize: 24, fontWeight: "bold", color: "#EF4444" }}>
+                  {Math.floor(cooldownLeft / 60)}:{(cooldownLeft % 60).toString().padStart(2, "0")}
+                </Text>
+              </View>
+              <Button title="Kembali" onPress={() => setGameState("playing")} variant="primary" style={{ width: "100%", backgroundColor: "#64748B" }} />
+            </View>
+          </View>
+        </Modal>
+
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
@@ -884,11 +4404,11 @@ export default function RoboLinkScreen() {
           <Pressable
             onPress={() => {
               triggerHaptic("light");
-              router.back();
+              setView("map");
             }}
             style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
           >
-            <Ionicons name="arrow-back" size={20} color="#0F766E" />
+            <Ionicons name="map" size={16} color="#0F766E" />
           </Pressable>
 
           {/* TIMER BADGE */}
@@ -910,9 +4430,15 @@ export default function RoboLinkScreen() {
           </Pressable>
         </View>
 
-        <View style={styles.coinsHeaderBadge}>
-          <MaterialCommunityIcons name={"coin" as any} size={18} color="#D97706" />
-          <Text style={styles.coinsHeaderVal}>{userCoins}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <View style={[styles.coinsHeaderBadge, { borderColor: "#EF4444", backgroundColor: "#FEF2F2" }]}>
+            <Ionicons name="heart" size={16} color="#EF4444" />
+            <Text style={[styles.coinsHeaderVal, { color: "#B91C1C" }]}>{lives}</Text>
+          </View>
+          <View style={styles.coinsHeaderBadge}>
+            <MaterialCommunityIcons name={"coin" as any} size={18} color="#D97706" />
+            <Text style={styles.coinsHeaderVal}>{userCoins}</Text>
+          </View>
         </View>
       </View>
 
@@ -1070,7 +4596,7 @@ export default function RoboLinkScreen() {
               })}
 
               {/* Single Parent SVG Canvas covering the entire grid + overflow bounds */}
-              <Svg width={360} height={360} style={[StyleSheet.absoluteFill, { overflow: "visible" }]} pointerEvents="none">
+              <Svg width={ARENA_SIZE} height={ARENA_SIZE} style={[StyleSheet.absoluteFill, { overflow: "visible" }]} pointerEvents="none">
                 {/* 1. Generator Source Input Lead (Always glowing orange-yellow) */}
                 <Line
                   x1={-12}
@@ -1093,18 +4619,18 @@ export default function RoboLinkScreen() {
 
                 {/* 2. PC Target Receptor Output Lead (Glows orange-yellow on connection success) */}
                 <Line
-                  x1={360}
+                  x1={ARENA_SIZE}
                   y1={currentConfig.endRow * tileSize + tileSize / 2}
-                  x2={372}
+                  x2={ARENA_SIZE + 12}
                   y2={currentConfig.endRow * tileSize + tileSize / 2}
                   stroke={isEnergyDelivered ? "#FBBF24" : "rgba(251, 191, 36, 0.16)"}
                   strokeWidth={8}
                   strokeLinecap="round"
                 />
                 <Line
-                  x1={360}
+                  x1={ARENA_SIZE}
                   y1={currentConfig.endRow * tileSize + tileSize / 2}
-                  x2={372}
+                  x2={ARENA_SIZE + 12}
                   y2={currentConfig.endRow * tileSize + tileSize / 2}
                   stroke={isEnergyDelivered ? "#F97316" : "#475569"}
                   strokeWidth={4}
@@ -1338,6 +4864,35 @@ export default function RoboLinkScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* OUT OF LIVES MODAL OVERLAY */}
+      <Modal visible={gameState === "outOfLives"} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={[styles.victoryIconCircle, { backgroundColor: "#FEF2F2" }]}>
+              <Ionicons name="heart-half" size={50} color="#EF4444" />
+            </View>
+            <Text style={styles.modalTitle}>NYAWA HABIS!</Text>
+            <Text style={styles.modalSubtitle}>
+              Tunggu energi pulih untuk melanjutkan main. 1 Nyawa pulih dalam 15 menit.
+            </Text>
+
+            <View style={styles.rewardSummary}>
+              <Text style={styles.rewardLabel}>WAKTU TUNGGU</Text>
+              <Text style={{ fontSize: 24, fontWeight: "bold", color: "#EF4444" }}>
+                {Math.floor(cooldownLeft / 60)}:{(cooldownLeft % 60).toString().padStart(2, "0")}
+              </Text>
+            </View>
+
+            <Button
+              title="Kembali"
+              onPress={() => router.back()}
+              variant="primary"
+              style={{ width: "100%", backgroundColor: "#64748B" }}
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1534,14 +5089,14 @@ const styles = StyleSheet.create({
   },
   arenaWrapper: {
     position: "relative",
-    width: 360,
-    height: 360,
+    width: ARENA_SIZE,
+    height: ARENA_SIZE,
     justifyContent: "center",
     alignItems: "center",
   },
   gameArena: {
-    width: 360,
-    height: 360,
+    width: ARENA_SIZE,
+    height: ARENA_SIZE,
     position: "relative",
     backgroundColor: "#115E59", // Solder mask dark teal
     borderColor: "#0F766E",
