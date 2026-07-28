@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Image } from "expo-image";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import Svg, { Polygon, Line, Circle, Rect, Text as SvgText } from "react-native-svg";
+import Svg, { Polygon, Line, Circle, Rect, Path, Text as SvgText } from "react-native-svg";
 import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../../constants/Theme";
 
 type SimulationLevel = "Beginner" | "Intermediate" | "Advanced";
@@ -26,22 +26,22 @@ export default function ProgressScreen() {
       skills: "5",
       activities: "10",
       curriculum: "5",
-      status: "Beginner",
-      desc: "Anak dalam tahap pengenalan konsep dasar.",
+      status: "Beginner Explorer 🚀",
+      desc: "Anak dalam tahap pengenalan konsep dasar & logika!",
     },
     Intermediate: {
       skills: "12",
       activities: "24",
       curriculum: "15",
-      status: "Intermediate",
-      desc: "Anak mulai menguasai algoritma menengah.",
+      status: "Intermediate Coder 🌟",
+      desc: "Anak mulai mahir menguasai algoritma menengah!",
     },
     Advanced: {
       skills: "18",
       activities: "50",
       curriculum: "24",
-      status: "Advanced",
-      desc: "Mampu memecahkan masalah logika kompleks.",
+      status: "Advanced Genius 👑",
+      desc: "Mampu memecahkan masalah logika & coding kompleks!",
     },
   };
 
@@ -54,26 +54,26 @@ export default function ProgressScreen() {
       pemecahanMasalah: 0.3,
     },
     Intermediate: {
-      logika: 0.65,
-      kreativitas: 0.7,
+      logika: 0.68,
+      kreativitas: 0.72,
       bahasa: 0.9,
-      fokus: 0.6,
-      pemecahanMasalah: 0.55,
+      fokus: 0.65,
+      pemecahanMasalah: 0.6,
     },
     Advanced: {
-      logika: 0.9,
-      kreativitas: 0.85,
+      logika: 0.92,
+      kreativitas: 0.88,
       bahasa: 0.95,
-      fokus: 0.8,
-      pemecahanMasalah: 0.85,
+      fokus: 0.85,
+      pemecahanMasalah: 0.88,
     },
   };
 
-  // Radar Chart dimensions with extra padding to prevent text overlap
-  const cx = 140;
-  const cy = 140;
-  const r = 70; // Max radius
-  const axisLabels = ["Logika", "Kreativitas", "Bahasa", "Fokus", "Masalah"];
+  // Radar Chart dimensions with wide padding for kid-friendly labels
+  const cx = 150;
+  const cy = 150;
+  const r = 75; // Max radius
+  const axisLabels = ["🧠 Logika", "🎨 Kreativitas", "🗣️ Bahasa", "🎯 Fokus", "🧩 Masalah"];
 
   const getCoordinates = (index: number, value: number) => {
     const angle = -Math.PI / 2 + (index * 2 * Math.PI) / 5;
@@ -84,7 +84,7 @@ export default function ProgressScreen() {
 
   const getLabelCoordinates = (index: number) => {
     const angle = -Math.PI / 2 + (index * 2 * Math.PI) / 5;
-    const distance = r + 26;
+    const distance = r + 30;
     const x = cx + distance * Math.cos(angle);
     const y = cy + distance * Math.sin(angle);
     return { x, y };
@@ -118,105 +118,126 @@ export default function ProgressScreen() {
   const activeMetrics = levelsMetrics[selectedLevel];
 
   const activities = [
-    { id: "act1", title: "Robot Circuit Level 5", xp: "+50 XP", time: "1 jam lalu", icon: "hardware-chip-outline", iconBg: "#EFF6FF", iconColor: "#0284C7" },
-    { id: "act2", title: "Screw Spin Level 8", xp: "+40 XP", time: "3 jam lalu", icon: "construct-outline", iconBg: "#F0FDF4", iconColor: "#16A34A" },
-    { id: "act3", title: "Rogue Soul II Stage 2", xp: "+100 XP", time: "1 hari lalu", icon: "flash-outline", iconBg: "#FFF7ED", iconColor: "#EA580C" },
+    { id: "act1", title: "Robot Circuit Level 5", xp: "+50 XP ⭐", time: "1 jam lalu", icon: "hardware-chip", iconBg: "#E0F2FE", iconColor: "#0284C7" },
+    { id: "act2", title: "Screw Spin Level 8", xp: "+40 XP ⭐", time: "3 jam lalu", icon: "construct", iconBg: "#DCFCE7", iconColor: "#16A34A" },
+    { id: "act3", title: "Rogue Soul II Stage 2", xp: "+100 XP ⭐", time: "1 hari lalu", icon: "flash", iconBg: "#FFEDD5", iconColor: "#EA580C" },
   ];
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Top Profile Header Bar */}
+      {/* Playful Top Profile Header Bar */}
       <View style={styles.topProfileBar}>
         <View style={styles.userProfileLeft}>
-          <Image
-            source={require("../../assets/images/robomind_hero.png")}
-            style={styles.userAvatar}
-            contentFit="cover"
-          />
+          <View style={styles.avatarGlowContainer}>
+            <Image
+              source={require("../../assets/images/robomind_hero.png")}
+              style={styles.userAvatar}
+              contentFit="cover"
+            />
+          </View>
           <View>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <Text style={styles.userName}>Halo, Aira!</Text>
-              <Text style={{ fontSize: 16 }}>👋</Text>
+              <Text style={{ fontSize: 18 }}>👋</Text>
             </View>
-            <Text style={styles.userSubtext}>Level 20 • Junior Explorer</Text>
+            <View style={styles.levelBadgeChip}>
+              <Ionicons name="star" size={12} color="#FFD700" />
+              <Text style={styles.userSubtext}>Level 20 • Junior Explorer</Text>
+            </View>
           </View>
         </View>
 
         <Pressable
           style={styles.bellButton}
-          onPress={() => alert("Notifikasi Aktivitas")}
+          onPress={() => alert("Notifikasi Aktivitas Seru!")}
         >
-          <Ionicons name="notifications-outline" size={20} color="#475569" />
+          <Ionicons name="notifications" size={20} color="#0284C7" />
           <View style={styles.bellBadge} />
         </Pressable>
       </View>
 
-      {/* Currency HUD Pills */}
+      {/* Kids Colorful Currency HUD Pills */}
       <View style={styles.currencyRow}>
-        <View style={[styles.currencyPill, { backgroundColor: "#FFFBEB", borderColor: "#FDE68A" }]}>
-          <Text style={{ fontSize: 14 }}>💡</Text>
+        <View style={[styles.currencyPill, { backgroundColor: "#FFF9E6", borderColor: "#FDE68A" }]}>
+          <Text style={{ fontSize: 16 }}>🪙</Text>
           <Text style={[styles.currencyText, { color: "#D97706" }]}>6.355</Text>
         </View>
 
-        <View style={[styles.currencyPill, { backgroundColor: "#EFF6FF", borderColor: "#BFDBFE" }]}>
-          <Ionicons name="flash" size={14} color="#2563EB" />
-          <Text style={[styles.currencyText, { color: "#1D4ED8" }]}>85/100</Text>
+        <View style={[styles.currencyPill, { backgroundColor: "#E0F2FE", borderColor: "#BAE6FD" }]}>
+          <Text style={{ fontSize: 16 }}>⚡</Text>
+          <Text style={[styles.currencyText, { color: "#0284C7" }]}>85/100</Text>
         </View>
 
-        <View style={[styles.currencyPill, { backgroundColor: "#FDF2F8", borderColor: "#FBCFE8" }]}>
-          <Ionicons name="diamond" size={14} color="#DB2777" />
-          <Text style={[styles.currencyText, { color: "#BE185D" }]}>12</Text>
+        <View style={[styles.currencyPill, { backgroundColor: "#FCE7F3", borderColor: "#FBCFE8" }]}>
+          <Text style={{ fontSize: 16 }}>💎</Text>
+          <Text style={[styles.currencyText, { color: "#DB2777" }]}>12</Text>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-        {/* Promo Banner Rogue Soul II */}
+        {/* Vibrant Rogue Soul II Banner */}
         <View style={styles.promoBannerCard}>
           <View style={styles.promoBannerLeft}>
             <View style={styles.promoTagContainer}>
-              <Text style={styles.promoTagText}>GAME BARU!</Text>
-              <Text style={styles.promoTagSub}>2D ACTION PLATFORMER</Text>
+              <Text style={styles.promoTagText}>🔥 GAME BARU!</Text>
+              <Text style={styles.promoTagSub}>ACTION PLATFORMER</Text>
             </View>
-            <Text style={styles.promoTitle}>Rogue Soul II</Text>
-            <Text style={styles.promoDesc}>Parkour, tebasan pedang, pisau lempar & toko armor!</Text>
+            <Text style={styles.promoTitle}>Rogue Soul II ⚔️</Text>
+            <Text style={styles.promoDesc}>Parkour seru, tebasan pedang, pisau lempar & toko armor keren!</Text>
           </View>
 
           <Pressable
-            style={({ pressed }) => [styles.mainGameBtn, pressed && { opacity: 0.85 }]}
+            style={({ pressed }) => [styles.mainGameBtn, pressed && { transform: [{ scale: 0.95 }] }]}
             onPress={() => router.push("/rogue-soul")}
           >
-            <Text style={styles.mainGameBtnText}>MAIN</Text>
+            <Text style={styles.mainGameBtnText}>MAIN! 🎮</Text>
           </Pressable>
         </View>
 
-        {/* Interactive 3D Robot Showcase Area */}
+        {/* Playful Robot Mascot Showcase Area */}
         <View style={styles.robotShowcaseCard}>
+          <View style={styles.skyCloudLeft} />
+          <View style={styles.skyCloudRight} />
           <View style={styles.showcaseBgCircle} />
-          <Svg width="140" height="150" viewBox="0 0 140 150">
+          
+          <Svg width="150" height="160" viewBox="0 0 150 160">
+            {/* Soft Shadow */}
+            <Rect x="40" y="148" width="70" height="8" rx="4" fill="rgba(0,0,0,0.12)" />
+            
             {/* Robot Head */}
-            <Rect x="20" y="25" width="100" height="75" rx="24" fill="#FFFFFF" stroke="#0284C7" strokeWidth="4" />
-            <Rect x="32" y="38" width="76" height="48" rx="16" fill="#0B132B" />
-            {/* Visor Eyes */}
-            <Circle cx="52" cy="62" r="9" fill="#00F0FF" />
-            <Circle cx="52" cy="62" r="4" fill="#FFFFFF" />
-            <Circle cx="88" cy="62" r="9" fill="#00F0FF" />
-            <Circle cx="88" cy="62" r="4" fill="#FFFFFF" />
-            {/* Antenna */}
-            <Line x1="70" y1="25" x2="70" y2="12" stroke="#0284C7" strokeWidth="4" strokeLinecap="round" />
-            <Circle cx="70" cy="10" r="6" fill="#FFB703" />
-            {/* Robot Chest */}
-            <Rect x="30" y="105" width="80" height="40" rx="18" fill="#FFFFFF" stroke="#0284C7" strokeWidth="4" />
-            <Circle cx="70" cy="125" r="8" fill="#00C3A0" />
+            <Rect x="25" y="25" width="100" height="75" rx="26" fill="#FFFFFF" stroke="#0284C7" strokeWidth="4.5" />
+            <Rect x="36" y="38" width="78" height="48" rx="18" fill="#0F172A" />
+            
+            {/* Visor Cute Eyes */}
+            <Circle cx="56" cy="62" r="10" fill="#00F0FF" />
+            <Circle cx="56" cy="62" r="4" fill="#FFFFFF" />
+            <Circle cx="94" cy="62" r="10" fill="#00F0FF" />
+            <Circle cx="94" cy="62" r="4" fill="#FFFFFF" />
+            
+            {/* Cute Antenna & Ball */}
+            <Line x1="75" y1="25" x2="75" y2="10" stroke="#0284C7" strokeWidth="4.5" strokeLinecap="round" />
+            <Circle cx="75" cy="8" r="7" fill="#FFB703" stroke="#FFFFFF" strokeWidth="2" />
+            
+            {/* Cute Ears */}
+            <Rect x="15" y="52" width="10" height="20" rx="5" fill="#0284C7" />
+            <Rect x="125" y="52" width="10" height="20" rx="5" fill="#0284C7" />
+            
+            {/* Robot Body */}
+            <Rect x="35" y="106" width="80" height="40" rx="20" fill="#FFFFFF" stroke="#0284C7" strokeWidth="4.5" />
+            <Circle cx="75" cy="126" r="9" fill="#10B981" stroke="#FFFFFF" strokeWidth="2" />
           </Svg>
+
+          {/* Grass Floor */}
+          <View style={styles.grassGround} />
         </View>
 
         {/* Level Simulation Control Container */}
         <View style={styles.simControlCard}>
           <View style={styles.simHeaderRow}>
-            <Text style={styles.simHeaderTitle}>LEVEL SIMULASI</Text>
+            <Text style={styles.simHeaderTitle}>🎯 LEVEL SIMULASI BELAJAR</Text>
             <View style={styles.autoSyncBadge}>
               <View style={styles.syncDot} />
               <Text style={styles.autoSyncText}>Auto-sync: Real-time</Text>
@@ -256,16 +277,20 @@ export default function ProgressScreen() {
             </View>
           </View>
 
-          {/* Radar Chart */}
+          {/* Radar Chart Kemampuan */}
+          <View style={styles.radarHeaderWrapper}>
+            <Text style={styles.radarCardTitle}>✨ RADAR KEMAMPUAN ANAK</Text>
+          </View>
+
           <View style={styles.radarContainer}>
-            <Svg width={280} height={280} viewBox="0 0 280 280">
+            <Svg width={300} height={300} viewBox="0 0 300 300">
               {/* Concentric Pentagons */}
               {gridPolygons.map((pts, idx) => (
                 <Polygon
                   key={idx}
                   points={pts}
                   fill="none"
-                  stroke="#E2E8F0"
+                  stroke="#CBD5E1"
                   strokeWidth="1.5"
                   strokeDasharray={idx < 3 ? "4 4" : "0"}
                 />
@@ -281,7 +306,7 @@ export default function ProgressScreen() {
                     y1={cy}
                     x2={end.x}
                     y2={end.y}
-                    stroke="#CBD5E1"
+                    stroke="#94A3B8"
                     strokeWidth="1.5"
                   />
                 );
@@ -290,9 +315,9 @@ export default function ProgressScreen() {
               {/* Active Competence Polygon */}
               <Polygon
                 points={valuePoints}
-                fill="rgba(0, 195, 160, 0.25)"
-                stroke="#00C3A0"
-                strokeWidth="3"
+                fill="rgba(16, 185, 129, 0.25)"
+                stroke="#10B981"
+                strokeWidth="3.5"
                 strokeLinejoin="round"
               />
 
@@ -304,15 +329,15 @@ export default function ProgressScreen() {
                     key={i}
                     cx={x}
                     cy={y}
-                    r="5"
+                    r="6"
                     fill="#FF8C00"
                     stroke="#FFFFFF"
-                    strokeWidth="2"
+                    strokeWidth="2.5"
                   />
                 );
               })}
 
-              {/* Crisp Axis Labels */}
+              {/* Clear Axis Labels with Kid Emojis */}
               {axisLabels.map((lbl, idx) => {
                 const { x, y } = getLabelCoordinates(idx);
                 let anchor: "middle" | "start" | "end" = "middle";
@@ -323,10 +348,10 @@ export default function ProgressScreen() {
                   <SvgText
                     key={idx}
                     x={x}
-                    y={idx === 0 ? y - 4 : y + 4}
-                    fontSize="11"
+                    y={idx === 0 ? y - 6 : y + 5}
+                    fontSize="12"
                     fontWeight="800"
-                    fill="#334155"
+                    fill="#1E293B"
                     textAnchor={anchor}
                   >
                     {lbl}
@@ -336,42 +361,42 @@ export default function ProgressScreen() {
             </Svg>
           </View>
 
-          {/* 3 Metric Stat Summary Boxes */}
+          {/* 3 Fun Metric Stat Summary Cards */}
           <View style={styles.threeStatsRow}>
-            <View style={styles.statBoxCard}>
-              <Text style={[styles.statBoxNumber, { color: "#00C3A0" }]}>{activeMetrics.skills}</Text>
+            <View style={[styles.statBoxCard, { backgroundColor: "#ECFDF5", borderColor: "#A7F3D0" }]}>
+              <Text style={[styles.statBoxNumber, { color: "#059669" }]}>{activeMetrics.skills}</Text>
               <Text style={styles.statBoxLabel}>KETERAMPILAN TARGET</Text>
             </View>
 
-            <View style={styles.statBoxCard}>
+            <View style={[styles.statBoxCard, { backgroundColor: "#FFFBEB", borderColor: "#FDE68A" }]}>
               <Text style={[styles.statBoxNumber, { color: "#D97706" }]}>{activeMetrics.activities}</Text>
               <Text style={styles.statBoxLabel}>AKTIVITAS INTERAKTIF</Text>
             </View>
 
-            <View style={styles.statBoxCard}>
-              <Text style={[styles.statBoxNumber, { color: "#0284C7" }]}>{activeMetrics.curriculum}</Text>
+            <View style={[styles.statBoxCard, { backgroundColor: "#EFF6FF", borderColor: "#BFDBFE" }]}>
+              <Text style={[styles.statBoxNumber, { color: "#2563EB" }]}>{activeMetrics.curriculum}</Text>
               <Text style={styles.statBoxLabel}>UKURAN KURIKULUM</Text>
             </View>
           </View>
         </View>
 
-        {/* Progress Hari Ini */}
+        {/* Fun Daily Progress Card */}
         <View style={styles.dailyProgressCard}>
           <View style={styles.dailyHeaderRow}>
-            <Text style={styles.dailyTitle}>Progress Hari Ini</Text>
-            <Text style={styles.dailyXpText}>+120 XP</Text>
+            <Text style={styles.dailyTitle}>🚀 Progress Hari Ini</Text>
+            <Text style={styles.dailyXpText}>+120 XP ⭐</Text>
           </View>
           <View style={styles.dailyBarTrack}>
             <View style={[styles.dailyBarFill, { width: "65%" }]} />
             <View style={styles.dailyRobotBadge}>
-              <Ionicons name="hardware-chip" size={14} color="#00C3A0" />
+              <Ionicons name="hardware-chip" size={14} color="#10B981" />
             </View>
           </View>
         </View>
 
         {/* Activity History */}
         <View style={styles.activityHeader}>
-          <Text style={styles.sectionTitle}>Riwayat Aktivitas</Text>
+          <Text style={styles.sectionTitle}>📜 Riwayat Aktivitas</Text>
           <Pressable onPress={() => alert("Membuka riwayat lengkap")}>
             <Text style={styles.linkText}>Lihat Semua {">"}</Text>
           </Pressable>
@@ -407,7 +432,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingVertical: 14,
     backgroundColor: "#FFFFFF",
     borderBottomWidth: 1,
     borderBottomColor: "#F1F5F9",
@@ -417,39 +442,56 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 12,
   },
+  avatarGlowContainer: {
+    padding: 2,
+    borderRadius: 24,
+    backgroundColor: "#E0F2FE",
+  },
   userAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 46,
+    height: 46,
+    borderRadius: 23,
     borderWidth: 2,
     borderColor: "#0284C7",
   },
   userName: {
-    fontSize: 16,
-    fontWeight: "800",
+    fontSize: 17,
+    fontWeight: "900",
     color: "#0F172A",
   },
+  levelBadgeChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 2,
+    backgroundColor: "#FEF3C7",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
   userSubtext: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#64748B",
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#B45309",
   },
   bellButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#F1F5F9",
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "#F0F9FF",
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
+    borderWidth: 1,
+    borderColor: "#BAE6FD",
   },
   bellBadge: {
     position: "absolute",
     top: 9,
     right: 9,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
     backgroundColor: "#EF4444",
   },
   currencyRow: {
@@ -458,21 +500,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     backgroundColor: "#FFFFFF",
-    gap: 8,
+    gap: 10,
   },
   currencyPill: {
     flex: 1,
-    height: 38,
-    borderRadius: 19,
-    borderWidth: 1,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1.5,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
+    elevation: 1,
   },
   currencyText: {
     fontSize: 13,
-    fontWeight: "800",
+    fontWeight: "900",
   },
   scrollContent: {
     paddingHorizontal: 16,
@@ -480,18 +523,20 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === "ios" ? 40 : 24,
   },
   promoBannerCard: {
-    backgroundColor: "#782A00",
-    borderRadius: 24,
+    backgroundColor: "#D97706",
+    borderRadius: 26,
     padding: 18,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 16,
-    elevation: 4,
-    shadowColor: "#000",
+    elevation: 5,
+    shadowColor: "#D97706",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    borderWidth: 2,
+    borderColor: "#FDE68A",
   },
   promoBannerLeft: {
     flex: 1,
@@ -508,14 +553,14 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 9,
     fontWeight: "900",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
   },
   promoTagSub: {
-    color: "#FFD700",
+    color: "#FEF3C7",
     fontSize: 10,
-    fontWeight: "800",
+    fontWeight: "900",
     letterSpacing: 0.5,
   },
   promoTitle: {
@@ -525,19 +570,21 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   promoDesc: {
-    color: "#FFEDD5",
+    color: "#FEF3C7",
     fontSize: 11,
-    fontWeight: "500",
+    fontWeight: "600",
     lineHeight: 15,
   },
   mainGameBtn: {
-    backgroundColor: "#00A859",
-    paddingHorizontal: 22,
+    backgroundColor: "#10B981",
+    paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
     elevation: 4,
+    borderWidth: 2,
+    borderColor: "#A7F3D0",
   },
   mainGameBtnText: {
     color: "#FFFFFF",
@@ -555,26 +602,57 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     position: "relative",
     overflow: "hidden",
+    borderWidth: 2,
+    borderColor: "#7DD3FC",
+  },
+  skyCloudLeft: {
+    position: "absolute",
+    top: 24,
+    left: 20,
+    width: 60,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    opacity: 0.9,
+  },
+  skyCloudRight: {
+    position: "absolute",
+    top: 36,
+    right: 25,
+    width: 70,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: "#FFFFFF",
+    opacity: 0.9,
   },
   showcaseBgCircle: {
     position: "absolute",
     width: 280,
     height: 280,
     borderRadius: 140,
-    backgroundColor: "rgba(255, 255, 255, 0.4)",
+    backgroundColor: "rgba(255, 255, 255, 0.45)",
+  },
+  grassGround: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    height: 48,
+    backgroundColor: "#34D399",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
   },
   simControlCard: {
     backgroundColor: "#FFFFFF",
     borderRadius: 28,
     padding: 18,
     marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "#F1F5F9",
-    elevation: 2,
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
+    elevation: 3,
     shadowColor: "#64748B",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
-    shadowRadius: 10,
+    shadowRadius: 12,
   },
   simHeaderRow: {
     flexDirection: "row",
@@ -583,19 +661,21 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   simHeaderTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "900",
-    color: "#00C3A0",
+    color: "#059669",
     letterSpacing: 1,
   },
   autoSyncBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#ECFDF5",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
     gap: 6,
+    borderWidth: 1,
+    borderColor: "#A7F3D0",
   },
   syncDot: {
     width: 8,
@@ -605,8 +685,8 @@ const styles = StyleSheet.create({
   },
   autoSyncText: {
     fontSize: 11,
-    fontWeight: "700",
-    color: "#475569",
+    fontWeight: "800",
+    color: "#047857",
   },
   chipRow: {
     flexDirection: "row",
@@ -615,21 +695,21 @@ const styles = StyleSheet.create({
   },
   levelChip: {
     flex: 1,
-    height: 38,
-    borderRadius: 19,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: "#F8FAFC",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#E2E8F0",
   },
   levelChipActive: {
-    backgroundColor: "#00C3A0",
-    borderColor: "#00C3A0",
+    backgroundColor: "#10B981",
+    borderColor: "#10B981",
   },
   levelChipText: {
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: "800",
     color: "#64748B",
   },
   levelChipTextActive: {
@@ -640,7 +720,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#F8FAFC",
     borderRadius: 20,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#E2E8F0",
     padding: 12,
     marginBottom: 16,
@@ -651,23 +731,34 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 22,
     borderWidth: 2,
-    borderColor: "#00C3A0",
+    borderColor: "#10B981",
   },
   robotStatusTitle: {
     fontSize: 13,
-    fontWeight: "800",
+    fontWeight: "900",
     color: "#1E293B",
   },
   robotStatusDesc: {
     fontSize: 11,
-    fontWeight: "500",
+    fontWeight: "600",
     color: "#64748B",
     marginTop: 2,
+  },
+  radarHeaderWrapper: {
+    alignItems: "center",
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  radarCardTitle: {
+    fontSize: 12,
+    fontWeight: "900",
+    color: "#0F172A",
+    letterSpacing: 0.5,
   },
   radarContainer: {
     alignItems: "center",
     justifyContent: "center",
-    marginVertical: 10,
+    marginVertical: 6,
   },
   threeStatsRow: {
     flexDirection: "row",
@@ -676,10 +767,8 @@ const styles = StyleSheet.create({
   },
   statBoxCard: {
     flex: 1,
-    backgroundColor: "#F8FAFC",
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: "#E2E8F0",
+    borderRadius: 20,
+    borderWidth: 2,
     paddingVertical: 14,
     paddingHorizontal: 6,
     alignItems: "center",
@@ -692,17 +781,17 @@ const styles = StyleSheet.create({
   },
   statBoxLabel: {
     fontSize: 8,
-    fontWeight: "800",
-    color: "#94A3B8",
+    fontWeight: "900",
+    color: "#64748B",
     textAlign: "center",
     letterSpacing: 0.5,
   },
   dailyProgressCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 20,
+    borderRadius: 22,
     padding: 16,
     marginBottom: 20,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#F1F5F9",
     elevation: 2,
   },
@@ -714,41 +803,41 @@ const styles = StyleSheet.create({
   },
   dailyTitle: {
     fontSize: 14,
-    fontWeight: "800",
+    fontWeight: "900",
     color: "#1E293B",
   },
   dailyXpText: {
     fontSize: 14,
     fontWeight: "900",
-    color: "#00C3A0",
+    color: "#10B981",
   },
   dailyBarTrack: {
-    height: 12,
+    height: 14,
     backgroundColor: "#F1F5F9",
-    borderRadius: 6,
+    borderRadius: 7,
     position: "relative",
     justifyContent: "center",
   },
   dailyBarFill: {
     height: "100%",
-    backgroundColor: "#00C3A0",
-    borderRadius: 6,
+    backgroundColor: "#10B981",
+    borderRadius: 7,
   },
   dailyRobotBadge: {
     position: "absolute",
     right: -4,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1.5,
-    borderColor: "#00C3A0",
+    borderWidth: 2,
+    borderColor: "#10B981",
   },
   sectionTitle: {
     fontSize: 15,
-    fontWeight: "800",
+    fontWeight: "900",
     color: "#0F172A",
   },
   activityHeader: {
@@ -759,7 +848,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: "800",
     color: "#0284C7",
   },
   activitiesContainer: {
@@ -769,8 +858,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
-    borderRadius: 16,
-    borderWidth: 1,
+    borderRadius: 18,
+    borderWidth: 1.5,
     borderColor: "#F1F5F9",
     padding: 12,
   },
@@ -787,18 +876,18 @@ const styles = StyleSheet.create({
   },
   activityTitle: {
     fontSize: 13,
-    fontWeight: "800",
+    fontWeight: "900",
     color: "#1E293B",
     marginBottom: 2,
   },
   activityTime: {
     fontSize: 10,
-    fontWeight: "500",
+    fontWeight: "600",
     color: "#94A3B8",
   },
   activityXp: {
     fontSize: 13,
-    fontWeight: "800",
-    color: "#00C3A0",
+    fontWeight: "900",
+    color: "#10B981",
   },
 });
