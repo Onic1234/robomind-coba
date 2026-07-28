@@ -1,0 +1,817 @@
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import {
+  StyleSheet,
+  View,
+  Text,
+  Pressable,
+  Dimensions,
+  Platform,
+  Modal,
+  StatusBar,
+  ScrollView,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Haptics from "expo-haptics";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  withSequence,
+  runOnJS,
+} from "react-native-reanimated";
+import Svg, { Path, Rect, Circle, Defs, LinearGradient, Stop } from "react-native-svg";
+import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../constants/Theme";
+import Button from "../components/ui/Button";
+
+const STORAGE_KEY_COINS = "user_coins_balance";
+const STORAGE_KEY_LEVEL = "energy_core_current_level";
+const STORAGE_KEY_EVOLUTION = "robomind_robot_evolution";
+
+type CellType = "SOURCE" | "STRAIGHT" | "CORNER" | "TJUNC" | "CROSS" | "NODE";
+
+const ENERGY_COLORS = {
+  LOGIC: { name: "Blue Energy (Logika)", color: "#38BDF8", glow: "rgba(56, 189, 248, 0.4)", xpType: "Logic XP" },
+  MATH: { name: "Green Energy (Matematika)", color: "#10B981", glow: "rgba(16, 185, 129, 0.4)", xpType: "Math XP" },
+  CREATIVITY: { name: "Yellow Energy (Kreativitas)", color: "#F59E0B", glow: "rgba(245, 158, 11, 0.4)", xpType: "Creativity XP" },
+  LITERACY: { name: "Purple Energy (Literasi)", color: "#8B5CF6", glow: "rgba(139, 92, 246, 0.4)", xpType: "Literacy XP" },
+  MORAL: { name: "Red Energy (Moral & Empati)", color: "#EF4444", glow: "rgba(239, 68, 68, 0.4)", xpType: "Moral XP" },
+};
+
+interface GridCell {
+  id: string;
+  gridX: number;
+  gridY: number;
+  type: CellType;
+  name: string;
+  energyType: "LOGIC" | "MATH" | "CREATIVITY" | "LITERACY" | "MORAL";
+  rotation: number;
+  isLocked?: boolean;
+}
+
+interface LevelConfig {
+  level: number;
+  title: string;
+  gridWidth: number;
+  gridHeight: number;
+  rewardCoins: number;
+  rewardXP: number;
+  cells: GridCell[];
+}
+
+const LEVELS: LevelConfig[] = [
+  {
+    level: 1,
+    title: "Sirkuit Pemula (Sangat Mudah)",
+    gridWidth: 2,
+    gridHeight: 2,
+    rewardCoins: 30,
+    rewardXP: 15,
+    cells: [
+      { id: "c0", gridX: 0, gridY: 0, type: "SOURCE", name: "AI Core", energyType: "LOGIC", rotation: 90 },
+      { id: "c1", gridX: 1, gridY: 0, type: "NODE", name: "Battery Core", energyType: "LOGIC", rotation: 270 },
+    ],
+  },
+  {
+    level: 2,
+    title: "Jalur Transmisi AI",
+    gridWidth: 3,
+    gridHeight: 3,
+    rewardCoins: 50,
+    rewardXP: 25,
+    cells: [
+      { id: "c0", gridX: 0, gridY: 1, type: "SOURCE", name: "Power Source", energyType: "LOGIC", rotation: 90 },
+      { id: "c1", gridX: 1, gridY: 1, type: "STRAIGHT", name: "Kabel Transmisi", energyType: "LOGIC", rotation: 0 },
+      { id: "c2", gridX: 2, gridY: 1, type: "NODE", name: "CPU Chip", energyType: "LOGIC", rotation: 270 },
+    ],
+  },
+  {
+    level: 3,
+    title: "Aliran Sudut Daya",
+    gridWidth: 3,
+    gridHeight: 3,
+    rewardCoins: 75,
+    rewardXP: 35,
+    cells: [
+      { id: "c0", gridX: 0, gridY: 0, type: "SOURCE", name: "Math Power Core", energyType: "MATH", rotation: 90 },
+      { id: "c1", gridX: 1, gridY: 0, type: "CORNER", name: "Jalur Sirkuit", energyType: "MATH", rotation: 0 },
+      { id: "c2", gridX: 1, gridY: 1, type: "NODE", name: "Servo Motor", energyType: "MATH", rotation: 0 },
+    ],
+  },
+  {
+    level: 4,
+    title: "Jalur Distributor AI",
+    gridWidth: 3,
+    gridHeight: 3,
+    rewardCoins: 100,
+    rewardXP: 45,
+    cells: [
+      { id: "c0", gridX: 0, gridY: 1, type: "SOURCE", name: "Math Source", energyType: "MATH", rotation: 90 },
+      { id: "c1", gridX: 1, gridY: 1, type: "TJUNC", name: "Distributor Daya", energyType: "MATH", rotation: 0 },
+      { id: "c2", gridX: 1, gridY: 0, type: "NODE", name: "Neural Processor", energyType: "MATH", rotation: 180 },
+      { id: "c3", gridX: 2, gridY: 1, type: "NODE", name: "Battery Core", energyType: "MATH", rotation: 270 },
+    ],
+  },
+  {
+    level: 5,
+    title: "Sirkuit Ganda Kreativitas & Moral",
+    gridWidth: 4,
+    gridHeight: 4,
+    rewardCoins: 120,
+    rewardXP: 60,
+    cells: [
+      { id: "c0", gridX: 0, gridY: 0, type: "SOURCE", name: "Creativity Core", energyType: "CREATIVITY", rotation: 90 },
+      { id: "c1", gridX: 1, gridY: 0, type: "STRAIGHT", name: "Kabel Transmisi", energyType: "CREATIVITY", rotation: 0 },
+      { id: "c2", gridX: 2, gridY: 0, type: "NODE", name: "AI Core", energyType: "CREATIVITY", rotation: 270 },
+      { id: "c3", gridX: 0, gridY: 2, type: "SOURCE", name: "Moral Power Core", energyType: "MORAL", rotation: 90 },
+      { id: "c4", gridX: 1, gridY: 2, type: "STRAIGHT", name: "Kabel Transmisi", energyType: "MORAL", rotation: 0 },
+      { id: "c5", gridX: 2, gridY: 2, type: "NODE", name: "Energy Crystal", energyType: "MORAL", rotation: 270 },
+    ],
+  },
+  {
+    level: 6,
+    title: "Labirin Quantum AI",
+    gridWidth: 4,
+    gridHeight: 4,
+    rewardCoins: 150,
+    rewardXP: 80,
+    cells: [
+      { id: "c0", gridX: 0, gridY: 0, type: "SOURCE", name: "Quantum Source", energyType: "LITERACY", rotation: 90 },
+      { id: "c1", gridX: 1, gridY: 0, type: "TJUNC", name: "Distributor Daya", energyType: "LITERACY", rotation: 90 },
+      { id: "c2", gridX: 2, gridY: 0, type: "CORNER", name: "Jalur Sirkuit", energyType: "LITERACY", rotation: 180 },
+      { id: "c3", gridX: 1, gridY: 1, type: "STRAIGHT", name: "Kabel Transmisi", energyType: "LITERACY", rotation: 90 },
+      { id: "c4", gridX: 2, gridY: 1, type: "NODE", name: "Satellite Node", energyType: "LITERACY", rotation: 0 },
+      { id: "c5", gridX: 1, gridY: 2, type: "NODE", name: "Quantum Hub", energyType: "LITERACY", rotation: 0 },
+    ],
+  },
+];
+
+const getPorts = (type: CellType, rotation: number): ("UP" | "RIGHT" | "DOWN" | "LEFT")[] => {
+  const normalizedRotation = rotation % 360;
+  let base: ("UP" | "RIGHT" | "DOWN" | "LEFT")[] = [];
+  if (type === "SOURCE" || type === "NODE") {
+    base = ["UP"];
+  } else if (type === "STRAIGHT") {
+    base = ["UP", "DOWN"];
+  } else if (type === "CORNER") {
+    base = ["UP", "RIGHT"];
+  } else if (type === "TJUNC") {
+    base = ["LEFT", "UP", "RIGHT"];
+  } else if (type === "CROSS") {
+    base = ["UP", "RIGHT", "DOWN", "LEFT"];
+  }
+  const directions: ("UP" | "RIGHT" | "DOWN" | "LEFT")[] = ["UP", "RIGHT", "DOWN", "LEFT"];
+  const rotSteps = Math.floor(normalizedRotation / 90);
+  return base.map((p) => {
+    const idx = directions.indexOf(p);
+    const newIdx = (idx + rotSteps) % 4;
+    return directions[newIdx];
+  });
+};
+
+const GridCellItem = React.memo(({
+  cell,
+  cellSize,
+  isEnergized,
+  energyColor,
+  onPress,
+}: {
+  cell: GridCell;
+  cellSize: number;
+  isEnergized: boolean;
+  energyColor: string;
+  onPress: () => void;
+}) => {
+  const animRot = useSharedValue(cell.rotation);
+  useEffect(() => {
+    animRot.value = withSpring(cell.rotation, { damping: 15 });
+  }, [cell.rotation]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotate: `${animRot.value}deg` }],
+    };
+  });
+
+  const pathColor = isEnergized ? energyColor : "#475569";
+  const glowShadow = isEnergized ? {
+    shadowColor: energyColor,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
+  } : {};
+
+  const renderSVGComponent = () => {
+    const S = cellSize;
+    const C = S / 2;
+    const strokeWidth = 5;
+
+    switch (cell.type) {
+      case "SOURCE":
+        return (
+          <Svg width={S} height={S}>
+            <Circle cx={C} cy={C} r={14} fill={isEnergized ? energyColor : "#334155"} />
+            <Path
+              d={`M ${C} ${C - 8} L ${C - 4} ${C + 1} L ${C + 1} ${C + 1} L ${C - 1} ${C + 8} L ${C + 5} ${C - 1} L ${C} ${C - 1} Z`}
+              fill="#FFFFFF"
+            />
+            <Path d={`M ${C} ${C - 14} L ${C} 0`} stroke={pathColor} strokeWidth={strokeWidth} strokeLinecap="round" />
+          </Svg>
+        );
+      case "NODE":
+        return (
+          <Svg width={S} height={S}>
+            <Rect x={C - 12} y={C - 12} width={24} height={24} rx={6} fill={isEnergized ? energyColor : "#334155"} />
+            <Path d={`M ${C} ${C - 12} L ${C} 0`} stroke={pathColor} strokeWidth={strokeWidth} strokeLinecap="round" />
+            <Text style={{
+              position: "absolute",
+              fontSize: 10,
+              fontWeight: "900",
+              color: "#FFFFFF",
+              textAlign: "center",
+              width: S,
+              top: C - 6,
+            }}>
+              {cell.name.substring(0, 2).toUpperCase()}
+            </Text>
+          </Svg>
+        );
+      case "STRAIGHT":
+        return (
+          <Svg width={S} height={S}>
+            <Path d={`M ${C} 0 L ${C} ${S}`} stroke={pathColor} strokeWidth={strokeWidth} strokeLinecap="round" />
+          </Svg>
+        );
+      case "CORNER":
+        return (
+          <Svg width={S} height={S}>
+            <Path d={`M ${C} 0 L ${C} ${C} L ${S} ${C}`} stroke={pathColor} strokeWidth={strokeWidth} strokeLinecap="round" fill="none" />
+          </Svg>
+        );
+      case "TJUNC":
+        return (
+          <Svg width={S} height={S}>
+            <Path d={`M 0 ${C} L ${S} ${C} M ${C} ${C} L ${C} 0`} stroke={pathColor} strokeWidth={strokeWidth} strokeLinecap="round" />
+          </Svg>
+        );
+      case "CROSS":
+        return (
+          <Svg width={S} height={S}>
+            <Path d={`M 0 ${C} L ${S} ${C} M ${C} 0 L ${C} ${S}`} stroke={pathColor} strokeWidth={strokeWidth} strokeLinecap="round" />
+          </Svg>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <Pressable
+      onPress={onPress}
+      style={[
+        styles.cellContainer,
+        {
+          width: cellSize - 4,
+          height: cellSize - 4,
+          margin: 2,
+        },
+      ]}
+    >
+      <Animated.View style={[styles.cellWrapper, animatedStyle, glowShadow]}>
+        {renderSVGComponent()}
+      </Animated.View>
+    </Pressable>
+  );
+});
+
+export default function EnergyCoreScreen() {
+  const router = useRouter();
+
+  const [level, setLevel] = useState(1);
+  const [cells, setCells] = useState<GridCell[]>([]);
+  const [history, setHistory] = useState<GridCell[][]>([]);
+  const [userCoins, setUserCoins] = useState(1250);
+  const [gameState, setGameState] = useState<"playing" | "victory" | "completed">("playing");
+  const [companionText, setCompanionText] = useState(
+    "Klik pada kabel dan sirkuit untuk memutarnya. Sambungkan semua inti energi ke robot agar kota menyala!"
+  );
+  const [robotEvolution, setRobotEvolution] = useState(52);
+
+  const windowWidth = Dimensions.get("window").width;
+  const windowHeight = Dimensions.get("window").height;
+  const boardPadding = SPACING.md;
+
+  const currentLevelConfig = useMemo(() => {
+    return LEVELS.find((l) => l.level === level) || LEVELS[0];
+  }, [level]);
+
+  const gridWidth = currentLevelConfig.gridWidth;
+  const gridHeight = currentLevelConfig.gridHeight;
+  const maxBoardWidth = Math.min(windowWidth - boardPadding * 2, 280, windowHeight * 0.32);
+  const cellSize = maxBoardWidth / gridWidth;
+  const boardSize = cellSize * gridWidth;
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const storedCoins = await AsyncStorage.getItem(STORAGE_KEY_COINS);
+        if (storedCoins !== null) setUserCoins(parseInt(storedCoins));
+        const storedLevel = await AsyncStorage.getItem(STORAGE_KEY_LEVEL);
+        if (storedLevel !== null) {
+          const l = parseInt(storedLevel);
+          if (l <= LEVELS.length) setLevel(l);
+        }
+        const storedEvo = await AsyncStorage.getItem(STORAGE_KEY_EVOLUTION);
+        if (storedEvo !== null) setRobotEvolution(parseInt(storedEvo));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    loadStats();
+  }, []);
+
+  useEffect(() => {
+    if (currentLevelConfig) {
+      const randomized = currentLevelConfig.cells.map((cell) => {
+        const rots = [0, 90, 180, 270];
+        const randomRot = rots[Math.floor(Math.random() * rots.length)];
+        return { ...cell, rotation: randomRot };
+      });
+      setCells(randomized);
+      setHistory([]);
+      setGameState("playing");
+      setCompanionText(
+        `World ${level}: Hubungkan lintasan daya. Warna sasaran: ${
+          ENERGY_COLORS[currentLevelConfig.cells[0]?.energyType]?.name
+        }`
+      );
+    }
+  }, [level, currentLevelConfig]);
+
+  const energizedCellsMap = useMemo(() => {
+    const energizedMap: Record<string, { energized: boolean; color: string }> = {};
+    const sources = cells.filter((c) => c.type === "SOURCE");
+    const queue: GridCell[] = [];
+
+    sources.forEach((src) => {
+      energizedMap[src.id] = {
+        energized: true,
+        color: ENERGY_COLORS[src.energyType]?.color || "#38BDF8",
+      };
+      queue.push(src);
+    });
+
+    while (queue.length > 0) {
+      const current = queue.shift()!;
+      const currentPorts = getPorts(current.type, current.rotation);
+      const currentColor = energizedMap[current.id].color;
+
+      currentPorts.forEach((portDir) => {
+        let nx = current.gridX;
+        let ny = current.gridY;
+        if (portDir === "UP") ny -= 1;
+        else if (portDir === "RIGHT") nx += 1;
+        else if (portDir === "DOWN") ny += 1;
+        else if (portDir === "LEFT") nx -= 1;
+
+        const neighbor = cells.find((c) => c.gridX === nx && c.gridY === ny);
+        if (!neighbor) return;
+
+        const neighborPorts = getPorts(neighbor.type, neighbor.rotation);
+        const requiredInput =
+          portDir === "UP" ? "DOWN" : portDir === "RIGHT" ? "LEFT" : portDir === "DOWN" ? "UP" : "RIGHT";
+
+        if (neighborPorts.includes(requiredInput)) {
+          if (!energizedMap[neighbor.id]) {
+            energizedMap[neighbor.id] = { energized: true, color: currentColor };
+            queue.push(neighbor);
+          }
+        }
+      });
+    }
+    return energizedMap;
+  }, [cells]);
+
+  useEffect(() => {
+    if (cells.length === 0 || gameState !== "playing") return;
+    const allEnergized = cells.every((c) => energizedCellsMap[c.id]?.energized);
+    if (allEnergized) {
+      setGameState("victory");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setCompanionText("Sirkuit menyala! Kamu berhasil memperbaiki jaringan kota.");
+    }
+  }, [cells, energizedCellsMap, gameState]);
+
+  const handleCellPress = (cellId: string) => {
+    if (gameState !== "playing") return;
+    setCells((prev) =>
+      prev.map((c) => {
+        if (c.id === cellId) {
+          setHistory((h) => [...h, JSON.parse(JSON.stringify(prev))]);
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          return { ...c, rotation: (c.rotation + 90) % 360 };
+        }
+        return c;
+      })
+    );
+  };
+
+  const handleUndo = () => {
+    if (history.length === 0) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const prevState = history[history.length - 1];
+    setHistory((h) => h.slice(0, -1));
+    setCells(prevState);
+  };
+
+  const handleRestart = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    const randomized = cells.map((cell) => {
+      const rots = [0, 90, 180, 270];
+      return { ...cell, rotation: rots[Math.floor(Math.random() * rots.length)] };
+    });
+    setCells(randomized);
+    setHistory([]);
+  };
+
+  const handleNextLevel = async () => {
+    const nextLvl = level + 1;
+    const coinsReward = currentLevelConfig.rewardCoins;
+    const finalCoins = userCoins + coinsReward;
+    setUserCoins(finalCoins);
+    await AsyncStorage.setItem(STORAGE_KEY_COINS, String(finalCoins));
+
+    const nextEvo = Math.min(100, robotEvolution + 8);
+    setRobotEvolution(nextEvo);
+    await AsyncStorage.setItem(STORAGE_KEY_EVOLUTION, String(nextEvo));
+
+    if (nextLvl > LEVELS.length) {
+      setGameState("completed");
+      setLevel(1);
+      await AsyncStorage.setItem(STORAGE_KEY_LEVEL, "1");
+    } else {
+      setLevel(nextLvl);
+      await AsyncStorage.setItem(STORAGE_KEY_LEVEL, String(nextLvl));
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+      <StatusBar barStyle="light-content" backgroundColor="#0B0E17" />
+      <View style={styles.header}>
+        <Pressable style={styles.iconButton} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+        </Pressable>
+        <View style={styles.levelBadgeContainer}>
+          <Text style={styles.levelText}>{currentLevelConfig.title}</Text>
+        </View>
+        <View style={styles.topHud}>
+          <View style={[styles.hudBadge, { borderColor: "#F59E0B" }]}>
+            <MaterialCommunityIcons name="coins" size={16} color="#FFFFFF" />
+            <Text style={styles.hudText}>{userCoins}</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.mainGameArea}>
+        <View style={[styles.boardContainer, { width: boardSize, height: boardSize, flexDirection: "column" }]}>
+          {Array.from({ length: gridHeight }).map((_, y) => (
+            <View key={y} style={{ flexDirection: "row" }}>
+              {Array.from({ length: gridWidth }).map((_, x) => {
+                const cell = cells.find((c) => c.gridX === x && c.gridY === y);
+                if (!cell) return <View key={x} style={{ width: cellSize, height: cellSize }} />;
+                const status = energizedCellsMap[cell.id] || { energized: false, color: "#475569" };
+                return (
+                  <GridCellItem
+                    key={cell.id}
+                    cell={cell}
+                    cellSize={cellSize}
+                    isEnergized={status.energized}
+                    energyColor={status.color}
+                    onPress={() => handleCellPress(cell.id)}
+                  />
+                );
+              })}
+            </View>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.evolutionPanel}>
+        <View style={styles.evolutionHeader}>
+          <Text style={styles.evolutionTitle}>Ron-Bonta Evolution</Text>
+          <Text style={styles.evolutionPercent}>{robotEvolution}%</Text>
+        </View>
+        <View style={styles.progressBarBg}>
+          <View style={[styles.progressBarFill, { width: `${robotEvolution}%` }]} />
+        </View>
+      </View>
+
+      <View style={styles.companionPanel}>
+        <View style={styles.ronBontaAvatarContainer}>
+          <Svg width="44" height="44" viewBox="0 0 64 64">
+            <Rect x="8" y="14" width="48" height="40" rx="14" fill="#00C3A0" stroke="#FFFFFF" strokeWidth="3" />
+            <Circle cx="22" cy="32" r="6" fill="#1E2937" />
+            <Circle cx="22" cy="32" r="2.5" fill="#00FFFF" />
+            <Circle cx="42" cy="32" r="6" fill="#1E2937" />
+            <Circle cx="42" cy="32" r="2.5" fill="#00FFFF" />
+            <Rect x="29" y="4" width="6" height="10" rx="3" fill="#FFE600" />
+            <Circle cx="32" cy="4" r="5" fill="#FFE600" />
+          </Svg>
+        </View>
+        <View style={styles.dialogBubble}>
+          <Text style={styles.dialogText}>{companionText}</Text>
+        </View>
+      </View>
+
+      <View style={styles.bottomBar}>
+        <Pressable style={styles.actionBtn} onPress={handleUndo}>
+          <View style={styles.actionIconBg}>
+            <Ionicons name="arrow-undo-outline" size={20} color="#FFFFFF" />
+          </View>
+          <Text style={styles.actionBtnLabel}>Undo</Text>
+        </Pressable>
+        <Pressable style={styles.actionBtn} onPress={handleRestart}>
+          <View style={[styles.actionIconBg, { backgroundColor: "#FF5E36" }]}>
+            <Ionicons name="refresh" size={20} color="#FFFFFF" />
+          </View>
+          <Text style={styles.actionBtnLabel}>Reset</Text>
+        </Pressable>
+      </View>
+
+      <Modal visible={gameState === "victory"} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.victoryCard}>
+            <Text style={styles.victoryTitle}>⚡ Energy Restored!</Text>
+            <Text style={styles.victorySubtitle}>Sirkuit AI menyala dan mengisi inti kemampuan Ron-Bonta.</Text>
+            <View style={styles.evolutionStatsGroup}>
+              <Text style={styles.statsLabel}>Robot Evolution: {robotEvolution}% (+8%)</Text>
+              <View style={[styles.progressBarBg, { marginVertical: 8 }]}>
+                <View style={[styles.progressBarFill, { width: `${robotEvolution}%`, backgroundColor: "#38BDF8" }]} />
+              </View>
+            </View>
+            <View style={styles.rewardCardContainer}>
+              <View style={styles.rewardItem}>
+                <MaterialCommunityIcons name="coins" size={26} color="#FBBF24" />
+                <Text style={styles.rewardAmount}>+{currentLevelConfig?.rewardCoins} Koin</Text>
+              </View>
+              <View style={styles.rewardItem}>
+                <MaterialCommunityIcons name="lightning-bolt" size={26} color="#FFE600" />
+                <Text style={styles.rewardAmount}>+1 Energy Core</Text>
+              </View>
+              <View style={styles.rewardItem}>
+                <MaterialCommunityIcons name="trophy-outline" size={26} color="#60A5FA" />
+                <Text style={styles.rewardAmount}>+25 {ENERGY_COLORS[currentLevelConfig?.cells[0]?.energyType || "LOGIC"]?.xpType}</Text>
+              </View>
+            </View>
+            <Button
+              title={level === LEVELS.length ? "Selesai" : "Misi Berikutnya"}
+              onPress={handleNextLevel}
+              variant="orange"
+              style={styles.nextLevelButton}
+            />
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={gameState === "completed"} transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.victoryCard}>
+            <MaterialCommunityIcons name="party-popper" size={60} color="#FF5E36" />
+            <Text style={styles.victoryTitle}>Semua Sirkuit Menyala!</Text>
+            <Text style={styles.victorySubtitle}>Kota RoboMind kini menyala terang benderang. Ron-Bonta berterima kasih!</Text>
+            <Button
+              title="Kembali ke Home"
+              onPress={() => router.back()}
+              variant="green"
+              style={styles.nextLevelButton}
+            />
+          </View>
+        </View>
+      </Modal>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#0B0E17",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    backgroundColor: "#111827",
+  },
+  iconButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  levelBadgeContainer: {
+    backgroundColor: "transparent",
+  },
+  levelText: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 16,
+  },
+  topHud: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  hudBadge: {
+    paddingHorizontal: 12,
+    height: 40,
+    borderRadius: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FF8C42",
+    gap: 4,
+  },
+  hudText: {
+    color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 14,
+  },
+  mainGameArea: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  boardContainer: {
+    backgroundColor: "#1E293B",
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+  cellContainer: {
+    backgroundColor: "#0F172A",
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cellWrapper: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  evolutionPanel: {
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
+    backgroundColor: "rgba(255, 255, 255, 0.02)",
+  },
+  evolutionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+  evolutionTitle: {
+    color: "#94A3B8",
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  evolutionPercent: {
+    color: "#38BDF8",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  progressBarBg: {
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: "#334155",
+    width: "100%",
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    borderRadius: 5,
+    backgroundColor: "#10B981",
+  },
+  companionPanel: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: SPACING.md,
+    marginBottom: SPACING.md,
+    backgroundColor: "rgba(255, 255, 255, 0.05)",
+    borderRadius: 16,
+    padding: 10,
+  },
+  ronBontaAvatarContainer: {
+    marginRight: 10,
+  },
+  dialogBubble: {
+    flex: 1,
+  },
+  dialogText: {
+    color: "#E2E8F0",
+    fontSize: 11,
+    fontWeight: "600",
+    lineHeight: 16,
+  },
+  bottomBar: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    paddingVertical: SPACING.sm,
+    backgroundColor: "rgba(0, 0, 0, 0.2)",
+  },
+  actionBtn: {
+    alignItems: "center",
+  },
+  actionIconBg: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  actionBtnLabel: {
+    color: "#94A3B8",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(11, 14, 23, 0.85)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: SPACING.lg,
+  },
+  victoryCard: {
+    width: "100%",
+    backgroundColor: "#1E293B",
+    borderRadius: 24,
+    padding: 24,
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "#38BDF8",
+    shadowColor: "#38BDF8",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 8,
+  },
+  victoryTitle: {
+    fontSize: 22,
+    fontWeight: "900",
+    color: "#FFFFFF",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  victorySubtitle: {
+    fontSize: 13,
+    color: "#94A3B8",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  evolutionStatsGroup: {
+    width: "100%",
+    marginBottom: 20,
+  },
+  statsLabel: {
+    color: "#E2E8F0",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  rewardCardContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#0F172A",
+    borderRadius: 16,
+    padding: 16,
+    width: "100%",
+    marginBottom: 24,
+  },
+  rewardItem: {
+    alignItems: "center",
+    flex: 1,
+  },
+  rewardAmount: {
+    color: "#FFFFFF",
+    fontSize: 10,
+    fontWeight: "700",
+    marginTop: 6,
+    textAlign: "center",
+  },
+  nextLevelButton: {
+    width: "100%",
+  },
+});

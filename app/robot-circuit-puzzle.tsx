@@ -21,7 +21,6 @@ import Animated, {
   withSpring,
   withTiming,
   withSequence,
-  withRepeat,
   runOnJS,
 } from "react-native-reanimated";
 import Svg, { Path, Rect, Circle, Defs, LinearGradient, Stop, Polygon } from "react-native-svg";
@@ -360,7 +359,6 @@ const LEVELS: LevelConfig[] = [
   },
 ];
 
-// Helper to determine if two modules are adjacent on a specific side
 const getNeighborConnection = (
   mod: RobotModule,
   allModules: RobotModule[],
@@ -368,7 +366,6 @@ const getNeighborConnection = (
 ): "KNOB" | "SOCKET" | "NONE" => {
   let nx = mod.gridX;
   let ny = mod.gridY;
-
   if (side === "TOP") ny -= 1;
   else if (side === "RIGHT") nx += 1;
   else if (side === "BOTTOM") ny += 1;
@@ -376,12 +373,9 @@ const getNeighborConnection = (
 
   const neighbor = allModules.find((m) => m.gridX === nx && m.gridY === ny);
   if (!neighbor) return "NONE";
-
-  // Deterministic rule: smaller ID gets knob, larger gets socket
   return mod.id < neighbor.id ? "KNOB" : "SOCKET";
 };
 
-// Sub-component for rendering a jigsaw puzzle piece
 const ModuleItem = React.memo(({
   mod,
   allModules,
@@ -409,76 +403,50 @@ const ModuleItem = React.memo(({
   const bottomConn = getNeighborConnection(mod, allModules, "BOTTOM");
   const leftConn = getNeighborConnection(mod, allModules, "LEFT");
 
-  // SVG Jigsaw Path Generation
   const generateJigsawPath = () => {
     const S = cellSize;
-    const R = 8; // rounded corners radius
-    const K = 12; // knob size
-
-    // Start at top-left corner
+    const R = 8;
+    const K = 12;
     let path = `M ${R} 0`;
 
-    // TOP EDGE: goes to (S - R, 0)
-    if (topConn === "NONE") {
-      path += ` L ${S - R} 0`;
-    } else {
+    if (topConn === "NONE") path += ` L ${S - R} 0`;
+    else {
       const mid = S / 2;
-      const dir = topConn === "KNOB" ? -1 : 1; // Knob bulges out (upward negative), Socket bulges in (downward positive)
-      path += ` L ${mid - 10} 0`;
-      path += ` C ${mid - 8} ${dir * K}, ${mid + 8} ${dir * K}, ${mid + 10} 0`;
-      path += ` L ${S - R} 0`;
+      const dir = topConn === "KNOB" ? -1 : 1;
+      path += ` L ${mid - 10} 0 C ${mid - 8} ${dir * K}, ${mid + 8} ${dir * K}, ${mid + 10} 0 L ${S - R} 0`;
     }
-    // Top-Right Corner
     path += ` A ${R} ${R} 0 0 1 ${S} ${R}`;
 
-    // RIGHT EDGE: goes to (S, S - R)
-    if (rightConn === "NONE") {
-      path += ` L ${S} ${S - R}`;
-    } else {
+    if (rightConn === "NONE") path += ` L ${S} ${S - R}`;
+    else {
       const mid = S / 2;
-      const dir = rightConn === "KNOB" ? 1 : -1; // Knob bulges out (rightward positive)
-      path += ` L ${S} ${mid - 10}`;
-      path += ` C ${S + dir * K} ${mid - 8}, ${S + dir * K} ${mid + 8}, ${S} ${mid + 10}`;
-      path += ` L ${S} ${S - R}`;
+      const dir = rightConn === "KNOB" ? 1 : -1;
+      path += ` L ${S} ${mid - 10} C ${S + dir * K} ${mid - 8}, ${S + dir * K} ${mid + 8}, ${S} ${mid + 10} L ${S} ${S - R}`;
     }
-    // Bottom-Right Corner
     path += ` A ${R} ${R} 0 0 1 ${S - R} ${S}`;
 
-    // BOTTOM EDGE: goes to (R, S)
-    if (bottomConn === "NONE") {
-      path += ` L ${R} ${S}`;
-    } else {
+    if (bottomConn === "NONE") path += ` L ${R} ${S}`;
+    else {
       const mid = S / 2;
-      const dir = bottomConn === "KNOB" ? 1 : -1; // Knob bulges out (downward positive)
-      path += ` L ${mid + 10} ${S}`;
-      path += ` C ${mid + 8} ${S + dir * K}, ${mid - 8} ${S + dir * K}, ${mid - 10} ${S}`;
-      path += ` L ${R} ${S}`;
+      const dir = bottomConn === "KNOB" ? 1 : -1;
+      path += ` L ${mid + 10} ${S} C ${mid + 8} ${S + dir * K}, ${mid - 8} ${S + dir * K}, ${mid - 10} ${S} L ${R} ${S}`;
     }
-    // Bottom-Left Corner
     path += ` A ${R} ${R} 0 0 1 0 ${S - R}`;
 
-    // LEFT EDGE: goes to (0, R)
-    if (leftConn === "NONE") {
-      path += ` L 0 ${R}`;
-    } else {
+    if (leftConn === "NONE") path += ` L 0 ${R}`;
+    else {
       const mid = S / 2;
-      const dir = leftConn === "KNOB" ? -1 : 1; // Knob bulges out (leftward negative)
-      path += ` L 0 ${mid + 10}`;
-      path += ` C ${dir * K} ${mid + 8}, ${dir * K} ${mid - 8}, 0 ${mid - 10}`;
-      path += ` L 0 ${R}`;
+      const dir = leftConn === "KNOB" ? -1 : 1;
+      path += ` L 0 ${mid + 10} C ${dir * K} ${mid + 8}, ${dir * K} ${mid - 8}, 0 ${mid - 10} L 0 ${R}`;
     }
-    // Top-Left Corner
     path += ` A ${R} ${R} 0 0 1 ${R} 0 Z`;
-
     return path;
   };
 
-  // Render Triangle direction indicator inside the piece
   const renderArrow = () => {
     const c = cellSize / 2;
     const size = 16;
     let rot = "0deg";
-
     if (mod.direction === "RIGHT") rot = "90deg";
     else if (mod.direction === "DOWN") rot = "180deg";
     else if (mod.direction === "LEFT") rot = "270deg";
@@ -499,20 +467,8 @@ const ModuleItem = React.memo(({
   };
 
   return (
-    <Animated.View
-      style={[
-        styles.moduleWrapper,
-        animatedStyle,
-        {
-          left: mod.gridX * cellSize,
-          top: mod.gridY * cellSize,
-          width: cellSize,
-          height: cellSize,
-        },
-      ]}
-    >
+    <Animated.View style={[styles.moduleWrapper, animatedStyle, { left: mod.gridX * cellSize, top: mod.gridY * cellSize, width: cellSize, height: cellSize }]}>
       <Pressable onPress={onPress} style={{ width: cellSize, height: cellSize }}>
-        {/* Draw puzzle body with soft shadow */}
         <Svg width={cellSize + 20} height={cellSize + 20} style={{ overflow: "visible", position: "absolute", left: -10, top: -10 }}>
           <Defs>
             <LinearGradient id="pieceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -520,13 +476,9 @@ const ModuleItem = React.memo(({
               <Stop offset="100%" stopColor="#F3F4F6" />
             </LinearGradient>
           </Defs>
-          {/* Drop shadow path */}
           <Path d={generateJigsawPath()} fill="#D1D5DB" transform="translate(10, 12)" opacity="0.8" />
-          {/* Main piece path */}
           <Path d={generateJigsawPath()} fill="url(#pieceGrad)" stroke="#E5E7EB" strokeWidth="1.5" transform="translate(10, 10)" />
         </Svg>
-
-        {/* Direction Indicator */}
         {renderArrow()}
       </Pressable>
     </Animated.View>
@@ -536,7 +488,6 @@ const ModuleItem = React.memo(({
 export default function RobotCircuitPuzzleScreen() {
   const router = useRouter();
 
-  // Define 12 pairs of shared values (maximum possible modules in a level) to comply with Rules of Hooks
   const sv1_x = useSharedValue(0); const sv1_y = useSharedValue(0);
   const sv2_x = useSharedValue(0); const sv2_y = useSharedValue(0);
   const sv3_x = useSharedValue(0); const sv3_y = useSharedValue(0);
@@ -571,74 +522,52 @@ export default function RobotCircuitPuzzleScreen() {
 
   const moduleIndexMap = useRef<Record<string, number>>({});
 
-  // State Variables
   const [level, setLevel] = useState(1);
   const [modules, setModules] = useState<RobotModule[]>([]);
   const [history, setHistory] = useState<RobotModule[][]>([]);
   const [userCoins, setUserCoins] = useState(1250);
   const [energy, setEnergy] = useState(100);
   const [gameState, setGameState] = useState<"playing" | "victory" | "completed">("playing");
-  const [showHintModal, setShowHintModal] = useState(false);
-  const [hintIndex, setHintIndex] = useState(0);
-
-  // Educational Challenge Modal state
-  const [showEduModal, setShowEduModal] = useState(false);
   const [showPauseModal, setShowPauseModal] = useState(false);
-  const [selectedEduOption, setSelectedEduOption] = useState<number | null>(null);
-  const [eduIsCorrect, setEduIsCorrect] = useState<boolean | null>(null);
-
-  // Companion Dialog state
   const [companionText, setCompanionText] = useState(
-    "Hai Anak Pintar! Bantu Ron-Bonta melepas semua komponen robot dari sirkuit dengan menggesernya keluar!"
+    "Bantu Ron-Bonta melepas semua komponen robot dari sirkuit dengan menggesernya keluar!"
   );
 
-  // Screen layout measurements (constrained for mobile aspect ratio on web/desktop)
   const windowWidth = Dimensions.get("window").width;
   const windowHeight = Dimensions.get("window").height;
   const boardPadding = SPACING.md;
   const boardSize = Math.min(windowWidth - boardPadding * 2, 420, windowHeight * 0.42);
   const cellSize = boardSize / GRID_SIZE;
 
-  // Active level config
   const currentLevelConfig = useMemo(() => {
     return LEVELS.find((l) => l.level === level) || LEVELS[0];
   }, [level]);
 
-  // Load User Stats on mount
   useEffect(() => {
     const loadGameData = async () => {
       try {
         const storedCoins = await AsyncStorage.getItem(STORAGE_KEY_COINS);
-        if (storedCoins !== null) {
-          setUserCoins(parseInt(storedCoins));
-        }
+        if (storedCoins !== null) setUserCoins(parseInt(storedCoins));
         const storedLevel = await AsyncStorage.getItem(STORAGE_KEY_LEVEL);
         if (storedLevel !== null) {
           const l = parseInt(storedLevel);
-          if (l <= LEVELS.length) {
-            setLevel(l);
-          } else {
-            setLevel(1);
-          }
+          if (l <= LEVELS.length) setLevel(l);
         }
       } catch (err) {
-        console.error("Error loading sirkuit data", err);
+        console.error(err);
       }
     };
     loadGameData();
   }, []);
 
-  // Initialize level
   useEffect(() => {
     if (currentLevelConfig) {
       setModules(JSON.parse(JSON.stringify(currentLevelConfig.modules)));
       setHistory([]);
       setGameState("playing");
-      setHintIndex(0);
       setCompanionText(
         `Misi Level ${level}: Lepaskan semua komponen ${currentLevelConfig.title}. Perhatikan arah panah masing-masing modul!`
       );
-
       const indexMap: Record<string, number> = {};
       currentLevelConfig.modules.forEach((m, idx) => {
         indexMap[m.id] = idx;
@@ -651,117 +580,72 @@ export default function RobotCircuitPuzzleScreen() {
     }
   }, [level, currentLevelConfig, sharedValues]);
 
-  // Check victory condition
   useEffect(() => {
     if (modules.length === 0 && gameState === "playing") {
-      handleLevelComplete();
+      setGameState("victory");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setCompanionText("Luar biasa! Kamu berhasil menyusun urutan pelepasan sirkuit!");
     }
   }, [modules, gameState]);
 
-  // Level Complete logic
-  const handleLevelComplete = () => {
-    setGameState("victory");
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setCompanionText("Luar biasa! Kamu berhasil menyusun urutan pelepasan sirkuit secara sempurna!");
-  };
-
-  // Move Validation Logic
   const canMove = (mod: RobotModule, currentModules: RobotModule[]): boolean => {
     const { gridX, gridY, width, height, direction } = mod;
-
     if (direction === "RIGHT") {
       const rightBound = gridX + width;
       for (let x = rightBound; x < GRID_SIZE; x++) {
         for (let y = gridY; y < gridY + height; y++) {
-          const isBlocked = currentModules.some(
-            (o) =>
-              o.id !== mod.id &&
-              x >= o.gridX &&
-              x < o.gridX + o.width &&
-              y >= o.gridY &&
-              y < o.gridY + o.height
-          );
+          const isBlocked = currentModules.some((o) => o.id !== mod.id && x >= o.gridX && x < o.gridX + o.width && y >= o.gridY && y < o.gridY + o.height);
           if (isBlocked) return false;
         }
       }
       return true;
     }
-
     if (direction === "LEFT") {
       const leftBound = gridX - 1;
       for (let x = leftBound; x >= 0; x--) {
         for (let y = gridY; y < gridY + height; y++) {
-          const isBlocked = currentModules.some(
-            (o) =>
-              o.id !== mod.id &&
-              x >= o.gridX &&
-              x < o.gridX + o.width &&
-              y >= o.gridY &&
-              y < o.gridY + o.height
-          );
+          const isBlocked = currentModules.some((o) => o.id !== mod.id && x >= o.gridX && x < o.gridX + o.width && y >= o.gridY && y < o.gridY + o.height);
           if (isBlocked) return false;
         }
       }
       return true;
     }
-
     if (direction === "UP") {
       const upperBound = gridY - 1;
       for (let y = upperBound; y >= 0; y--) {
         for (let x = gridX; x < gridX + width; x++) {
-          const isBlocked = currentModules.some(
-            (o) =>
-              o.id !== mod.id &&
-              x >= o.gridX &&
-              x < o.gridX + o.width &&
-              y >= o.gridY &&
-              y < o.gridY + o.height
-          );
+          const isBlocked = currentModules.some((o) => o.id !== mod.id && x >= o.gridX && x < o.gridX + o.width && y >= o.gridY && y < o.gridY + o.height);
           if (isBlocked) return false;
         }
       }
       return true;
     }
-
     if (direction === "DOWN") {
       const lowerBound = gridY + height;
       for (let y = lowerBound; y < GRID_SIZE; y++) {
         for (let x = gridX; x < gridX + width; x++) {
-          const isBlocked = currentModules.some(
-            (o) =>
-              o.id !== mod.id &&
-              x >= o.gridX &&
-              x < o.gridX + o.width &&
-              y >= o.gridY &&
-              y < o.gridY + o.height
-          );
+          const isBlocked = currentModules.some((o) => o.id !== mod.id && x >= o.gridX && x < o.gridX + o.width && y >= o.gridY && y < o.gridY + o.height);
           if (isBlocked) return false;
         }
       }
       return true;
     }
-
     return false;
   };
 
   const getTranslationForModule = (id: string) => {
     const idx = moduleIndexMap.current[id];
-    if (idx !== undefined && sharedValues[idx]) {
-      return sharedValues[idx];
-    }
+    if (idx !== undefined && sharedValues[idx]) return sharedValues[idx];
     return { x: { value: 0 }, y: { value: 0 } };
   };
 
-  // Handle tap/click on a module
   const handleTapModule = (mod: RobotModule) => {
     if (gameState !== "playing") return;
-
     const currentTrans = getTranslationForModule(mod.id);
     if (!currentTrans || !("value" in currentTrans.x)) return;
 
     if (canMove(mod, modules)) {
       setHistory((prev) => [...prev, JSON.parse(JSON.stringify(modules))]);
-
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setEnergy((prev) => Math.max(10, prev - 2));
 
@@ -778,27 +662,21 @@ export default function RobotCircuitPuzzleScreen() {
       currentTrans.y.value = withTiming(targetY, { duration: 400 }, () => {
         runOnJS(removeModule)(mod.id);
       });
-
-      setCompanionText(`Modul ${mod.name} berhasil dilepas!`);
+      setCompanionText(`Modul ${mod.name} dilepas!`);
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       setCompanionText(`Gagal! Modul ${mod.name} terhalang modul lain.`);
-
       const shakeAmt = 8;
       if (mod.direction === "LEFT" || mod.direction === "RIGHT") {
         currentTrans.y.value = withSequence(
           withTiming(-shakeAmt, { duration: 50 }),
           withTiming(shakeAmt, { duration: 50 }),
-          withTiming(-shakeAmt / 2, { duration: 50 }),
-          withTiming(shakeAmt / 2, { duration: 50 }),
           withTiming(0, { duration: 50 })
         );
       } else {
         currentTrans.x.value = withSequence(
           withTiming(-shakeAmt, { duration: 50 }),
           withTiming(shakeAmt, { duration: 50 }),
-          withTiming(-shakeAmt / 2, { duration: 50 }),
-          withTiming(shakeAmt / 2, { duration: 50 }),
           withTiming(0, { duration: 50 })
         );
       }
@@ -810,14 +688,10 @@ export default function RobotCircuitPuzzleScreen() {
   };
 
   const handleUndo = () => {
-    if (history.length === 0) {
-      setCompanionText("Tidak ada gerakan untuk di-undo!");
-      return;
-    }
+    if (history.length === 0) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const prevState = history[history.length - 1];
     setHistory((prev) => prev.slice(0, -1));
-
     prevState.forEach((m) => {
       const trans = getTranslationForModule(m.id);
       if (trans && "value" in trans.x) {
@@ -825,9 +699,7 @@ export default function RobotCircuitPuzzleScreen() {
         trans.y.value = 0;
       }
     });
-
     setModules(prevState);
-    setCompanionText("Gerakan dibatalkan. Kembalikan modul!");
   };
 
   const handleRestart = () => {
@@ -841,41 +713,25 @@ export default function RobotCircuitPuzzleScreen() {
     });
     setModules(JSON.parse(JSON.stringify(currentLevelConfig.modules)));
     setHistory([]);
-    setHintIndex(0);
-    setCompanionText("Sirkuit di-reset. Mari kita coba lagi!");
   };
 
   const handleHint = () => {
     if (gameState !== "playing" || modules.length === 0) return;
-
-    if (userCoins < 20) {
-      setCompanionText("Koin tidak cukup!");
-      return;
-    }
-
+    if (userCoins < 20) return;
     const newCoins = userCoins - 20;
     setUserCoins(newCoins);
     AsyncStorage.setItem(STORAGE_KEY_COINS, String(newCoins));
 
-    const nextToClear = currentLevelConfig.hintOrder.find((id) =>
-      modules.some((m) => m.id === id)
-    );
-
+    const nextToClear = currentLevelConfig.hintOrder.find((id) => modules.some((m) => m.id === id));
     if (nextToClear) {
       const targetMod = modules.find((m) => m.id === nextToClear);
       if (targetMod) {
-        setCompanionText(`💡 Petunjuk: Coba lepaskan modul "${targetMod.name}"!`);
+        setCompanionText(`💡 Petunjuk: Coba lepaskan "${targetMod.name}"!`);
         const trans = getTranslationForModule(targetMod.id);
         if (trans && "value" in trans.x) {
-          trans.y.value = withSequence(
-            withTiming(-6, { duration: 80 }),
-            withTiming(6, { duration: 80 }),
-            withTiming(0, { duration: 80 })
-          );
+          trans.y.value = withSequence(withTiming(-6, { duration: 80 }), withTiming(6, { duration: 80 }), withTiming(0, { duration: 80 }));
         }
       }
-    } else {
-      setCompanionText("💡 Petunjuk: Semua modul siap dilepas!");
     }
   };
 
@@ -886,57 +742,26 @@ export default function RobotCircuitPuzzleScreen() {
     setUserCoins(finalCoins);
     await AsyncStorage.setItem(STORAGE_KEY_COINS, String(finalCoins));
 
-    if (EDUCATIONAL_CHALLENGES[nextLevelNum]) {
-      setSelectedEduOption(null);
-      setEduIsCorrect(null);
-      setShowEduModal(true);
-      return;
-    }
-
-    proceedToLevel(nextLevelNum);
-  };
-
-  const proceedToLevel = async (lvl: number) => {
-    if (lvl > LEVELS.length) {
+    if (nextLevelNum > LEVELS.length) {
       setGameState("completed");
-      setCompanionText("Semua level selesai!");
       setLevel(1);
       await AsyncStorage.setItem(STORAGE_KEY_LEVEL, "1");
     } else {
-      setLevel(lvl);
-      await AsyncStorage.setItem(STORAGE_KEY_LEVEL, String(lvl));
-    }
-  };
-
-  const handleAnswerChallenge = (index: number) => {
-    const nextLevelNum = level + 1;
-    const challenge = EDUCATIONAL_CHALLENGES[nextLevelNum];
-    if (!challenge) return;
-
-    setSelectedEduOption(index);
-    if (index === challenge.correctIndex) {
-      setEduIsCorrect(true);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } else {
-      setEduIsCorrect(false);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setLevel(nextLevelNum);
+      await AsyncStorage.setItem(STORAGE_KEY_LEVEL, String(nextLevelNum));
     }
   };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <StatusBar barStyle="light-content" backgroundColor="#0EA5E9" />
-
-      {/* TOP BAR */}
       <View style={styles.header}>
         <Pressable style={styles.iconButton} onPress={() => setShowPauseModal(true)}>
           <Ionicons name="menu" size={24} color="#64748B" />
         </Pressable>
-
         <View style={styles.levelBadgeContainer}>
           <Text style={styles.levelText}>Sirkuit {level}</Text>
         </View>
-
         <View style={styles.topHud}>
           <View style={[styles.hudBadge, { borderColor: "#F59E0B" }]}>
             <Ionicons name="bulb" size={16} color="#FFFFFF" />
@@ -945,10 +770,8 @@ export default function RobotCircuitPuzzleScreen() {
         </View>
       </View>
 
-      {/* Main Game Area */}
       <View style={styles.mainGameArea}>
         <View style={[styles.boardContainer, { width: boardSize, height: boardSize }]}>
-          {/* Render Robot Modules */}
           {modules.map((mod) => {
             const trans = getTranslationForModule(mod.id);
             return (
@@ -965,7 +788,6 @@ export default function RobotCircuitPuzzleScreen() {
         </View>
       </View>
 
-      {/* Robot Companion Ron-Bonta Panel & Dialog */}
       <View style={styles.companionPanel}>
         <View style={styles.ronBontaAvatarContainer}>
           <Svg width="44" height="44" viewBox="0 0 64 64">
@@ -976,8 +798,6 @@ export default function RobotCircuitPuzzleScreen() {
             <Circle cx="42" cy="32" r="2.5" fill="#00FFFF" />
             <Rect x="29" y="4" width="6" height="10" rx="3" fill="#FFE600" />
             <Circle cx="32" cy="4" r="5" fill="#FFE600" />
-            <Circle cx="15" cy="42" r="3" fill="#FF5E36" opacity="0.6" />
-            <Circle cx="49" cy="42" r="3" fill="#FF5E36" opacity="0.6" />
           </Svg>
         </View>
         <View style={styles.dialogBubble}>
@@ -985,7 +805,6 @@ export default function RobotCircuitPuzzleScreen() {
         </View>
       </View>
 
-      {/* BOTTOM PANEL CONTROLS */}
       <View style={styles.bottomBar}>
         <Pressable style={styles.actionBtn} onPress={handleUndo}>
           <View style={styles.actionIconBg}>
@@ -993,70 +812,25 @@ export default function RobotCircuitPuzzleScreen() {
           </View>
           <Text style={styles.actionBtnLabel}>Undo</Text>
         </Pressable>
-
         <Pressable style={styles.actionBtn} onPress={handleRestart}>
           <View style={[styles.actionIconBg, { backgroundColor: "#FF5E36" }]}>
             <Ionicons name="refresh" size={20} color="#FFFFFF" />
           </View>
           <Text style={styles.actionBtnLabel}>Restart</Text>
         </Pressable>
-
-        <Pressable style={styles.actionBtn} onPress={handleHint}>
-          <View style={[styles.actionIconBg, { backgroundColor: "#FBBF24" }]}>
-            <Ionicons name="bulb-outline" size={20} color="#FFFFFF" />
-          </View>
-          <Text style={styles.actionBtnLabel}>Hint (20🪙)</Text>
-        </Pressable>
       </View>
 
-      {/* Victory & Reward Modal */}
-      <Modal visible={gameState === "victory"} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.victoryCard}>
-            <Text style={styles.victoryTitle}>Sirkuit Selesai!</Text>
-            <Text style={styles.victorySubtitle}>Kamu berhasil melepas semua komponen digital.</Text>
-
-            <View style={styles.starRow}>
-              <Ionicons name="star" size={42} color="#FBBF24" />
-              <Ionicons name="star" size={54} color="#FBBF24" style={{ marginTop: -15 }} />
-              <Ionicons name="star" size={42} color="#FBBF24" />
-            </View>
-
-            <View style={styles.rewardCardContainer}>
-              <View style={styles.rewardItem}>
-                <MaterialCommunityIcons name="coins" size={26} color="#FBBF24" />
-                <Text style={styles.rewardAmount}>+{currentLevelConfig?.rewardCoins} Koin</Text>
-              </View>
-              <View style={styles.rewardItem}>
-                <MaterialCommunityIcons name="trophy-outline" size={26} color="#60A5FA" />
-                <Text style={styles.rewardAmount}>+{currentLevelConfig?.rewardXP} XP</Text>
-              </View>
-            </View>
-
-            <Button
-              title={level === LEVELS.length ? "Selesai" : "Misi Berikutnya"}
-              onPress={handleNextLevel}
-              variant="orange"
-              style={styles.nextLevelButton}
-            />
-          </View>
-        </View>
-      </Modal>
-
-      {/* Pause Menu Modal */}
       <Modal visible={showPauseModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.victoryCard}>
             <Text style={[styles.victoryTitle, { color: "#1E2937", marginBottom: 6 }]}>Game Berhenti</Text>
             <Text style={[styles.victorySubtitle, { marginBottom: 24 }]}>Pilih opsi untuk melanjutkan:</Text>
-
             <Button
               title="Lanjutkan Bermain"
               onPress={() => setShowPauseModal(false)}
               variant="green"
               style={{ width: "100%", marginBottom: 12 }}
             />
-
             <Button
               title="Mulai Ulang Level"
               onPress={() => {
@@ -1066,7 +840,6 @@ export default function RobotCircuitPuzzleScreen() {
               variant="orange"
               style={{ width: "100%", marginBottom: 12 }}
             />
-
             <Button
               title="Kembali ke Menu Utama"
               onPress={() => {
@@ -1080,77 +853,36 @@ export default function RobotCircuitPuzzleScreen() {
         </View>
       </Modal>
 
-      {/* Educational Challenge Modal */}
-      <Modal visible={showEduModal} transparent animationType="slide">
+      <Modal visible={gameState === "victory"} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={styles.eduCard}>
-            <View style={styles.eduHeader}>
-              <MaterialCommunityIcons name="lightbulb-on" size={24} color="#FBBF24" />
-              <Text style={styles.eduTitle}>Tantangan Komputasi</Text>
+          <View style={styles.victoryCard}>
+            <Text style={styles.victoryTitle}>Sirkuit Selesai!</Text>
+            <Text style={styles.victorySubtitle}>Kamu berhasil melepas semua komponen digital.</Text>
+            <View style={styles.starRow}>
+              <Ionicons name="star" size={42} color="#FBBF24" />
+              <Ionicons name="star" size={54} color="#FBBF24" style={{ marginTop: -15 }} />
+              <Ionicons name="star" size={42} color="#FBBF24" />
             </View>
-            <ScrollView contentContainerStyle={styles.eduScroll}>
-              <Text style={styles.eduQuestion}>
-                {EDUCATIONAL_CHALLENGES[level + 1]?.question}
-              </Text>
-
-              {EDUCATIONAL_CHALLENGES[level + 1]?.options.map((opt, index) => {
-                let btnStyle = styles.optionBtn;
-                let textStyle = styles.optionText;
-
-                if (selectedEduOption === index) {
-                  if (eduIsCorrect) {
-                    btnStyle = [styles.optionBtn, styles.optionBtnSuccess];
-                    textStyle = [styles.optionText, styles.optionTextSuccess];
-                  } else {
-                    btnStyle = [styles.optionBtn, styles.optionBtnError];
-                    textStyle = [styles.optionText, styles.optionTextError];
-                  }
-                }
-
-                return (
-                  <Pressable
-                    key={index}
-                    disabled={selectedEduOption !== null}
-                    style={btnStyle}
-                    onPress={() => handleAnswerChallenge(index)}
-                  >
-                    <Text style={textStyle}>{opt}</Text>
-                    {selectedEduOption === index && (
-                      <Ionicons
-                        name={eduIsCorrect ? "checkmark-circle" : "close-circle"}
-                        size={20}
-                        color={eduIsCorrect ? "#10B981" : "#EF4444"}
-                      />
-                    )}
-                  </Pressable>
-                );
-              })}
-
-              {eduIsCorrect !== null && (
-                <View style={styles.feedbackContainer}>
-                  <Text style={styles.feedbackHeader}>
-                    {eduIsCorrect ? "🎉 Jawaban Benar!" : "❌ Kurang Tepat"}
-                  </Text>
-                  <Text style={styles.feedbackText}>
-                    {EDUCATIONAL_CHALLENGES[level + 1]?.explanation}
-                  </Text>
-                  <Button
-                    title="Lanjutkan"
-                    variant="green"
-                    style={{ marginTop: 15 }}
-                    onPress={() => {
-                      setShowEduModal(false);
-                      proceedToLevel(level + 1);
-                    }}
-                  />
-                </View>
-              )}
-            </ScrollView>
+            <View style={styles.rewardCardContainer}>
+              <View style={styles.rewardItem}>
+                <MaterialCommunityIcons name="coins" size={26} color="#FBBF24" />
+                <Text style={styles.rewardAmount}>+{currentLevelConfig?.rewardCoins} Koin</Text>
+              </View>
+              <View style={styles.rewardItem}>
+                <MaterialCommunityIcons name="trophy-outline" size={26} color="#60A5FA" />
+                <Text style={styles.rewardAmount}>+{currentLevelConfig?.rewardXP} XP</Text>
+              </View>
+            </View>
+            <Button
+              title={level === LEVELS.length ? "Selesai" : "Misi Berikutnya"}
+              onPress={handleNextLevel}
+              variant="orange"
+              style={styles.nextLevelButton}
+            />
           </View>
         </View>
       </Modal>
 
-      {/* Game Completed screen */}
       <Modal visible={gameState === "completed"} transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.victoryCard}>
@@ -1173,7 +905,7 @@ export default function RobotCircuitPuzzleScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#0EA5E9", // Light blue sky color like Unpuzzle
+    backgroundColor: "#0EA5E9",
   },
   header: {
     flexDirection: "row",
@@ -1213,11 +945,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#FF8C42",
     gap: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
   },
   hudText: {
     color: "#FFFFFF",
@@ -1342,86 +1069,5 @@ const styles = StyleSheet.create({
   },
   nextLevelButton: {
     width: "100%",
-  },
-  eduCard: {
-    width: "100%",
-    maxHeight: "85%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    overflow: "hidden",
-  },
-  eduHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#F3F4F6",
-    padding: 16,
-    gap: 8,
-  },
-  eduTitle: {
-    fontSize: 16,
-    fontWeight: "800",
-    color: "#1F2937",
-  },
-  eduScroll: {
-    padding: 20,
-  },
-  eduQuestion: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#374151",
-    lineHeight: 20,
-    marginBottom: 20,
-    backgroundColor: "#F3F4F6",
-    padding: 14,
-    borderRadius: 12,
-  },
-  optionBtn: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderWidth: 2,
-    borderColor: "#E5E7EB",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  },
-  optionBtnSuccess: {
-    borderColor: "#10B981",
-    backgroundColor: "rgba(16, 185, 129, 0.05)",
-  },
-  optionBtnError: {
-    borderColor: "#EF4444",
-    backgroundColor: "rgba(239, 68, 68, 0.05)",
-  },
-  optionText: {
-    color: "#374151",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  optionTextSuccess: {
-    color: "#10B981",
-  },
-  optionTextError: {
-    color: "#EF4444",
-  },
-  feedbackContainer: {
-    marginTop: 10,
-    padding: 16,
-    backgroundColor: "#F9FAFB",
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: "#E5E7EB",
-  },
-  feedbackHeader: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: "#111827",
-    marginBottom: 6,
-  },
-  feedbackText: {
-    fontSize: 12,
-    color: "#6B7280",
-    lineHeight: 17,
   },
 });

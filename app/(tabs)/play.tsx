@@ -25,6 +25,7 @@ export default function PlayScreen() {
   const [userCoins, setUserCoins] = useState(1250);
   const [robotEscapeLevel, setRobotEscapeLevel] = useState(1);
   const [robotCircuitLevel, setRobotCircuitLevel] = useState(1);
+  const [energyCoreLevel, setEnergyCoreLevel] = useState(1);
 
   useFocusEffect(
     useCallback(() => {
@@ -42,6 +43,10 @@ export default function PlayScreen() {
           if (storedCircuitLevel !== null) {
             setRobotCircuitLevel(parseInt(storedCircuitLevel));
           }
+          const storedEnergyLevel = await AsyncStorage.getItem("energy_core_current_level");
+          if (storedEnergyLevel !== null) {
+            setEnergyCoreLevel(parseInt(storedEnergyLevel));
+          }
         } catch (e) {
           console.error("Failed to load play screen data", e);
         }
@@ -53,6 +58,15 @@ export default function PlayScreen() {
   const categories = ["Semua", "Kognitif", "Moral", "Literasi", "Fokus"];
 
   const games: GameItem[] = [
+    {
+      id: "rogue_soul_2",
+      title: "Rogue Soul 2",
+      category: "Fokus",
+      image: require("../../assets/images/robomind_hero.png"),
+      levelInfo: "BARU! 2D Action",
+      coinsReward: 500,
+      isLocked: false,
+    },
     {
       id: "math_quest",
       title: "Math Quest",
@@ -81,8 +95,17 @@ export default function PlayScreen() {
       id: "robot_circuit_puzzle",
       title: "Robot Circuit",
       category: "Kognitif",
-      image: require("../../assets/images/modul_coding.png"), // Reuse coding module or similar image
+      image: require("../../assets/images/game_robot_escape.png"), // Jigsaw escape puzzle visual
       levelInfo: `Level ${robotCircuitLevel}`,
+      coinsReward: 200,
+      isLocked: false,
+    },
+    {
+      id: "energy_core",
+      title: "Energy Core",
+      category: "Kognitif",
+      image: require("../../assets/images/modul_coding.png"), // Connection circuit puzzle visual
+      levelInfo: `Level ${energyCoreLevel}`,
       coinsReward: 200,
       isLocked: false,
     },
@@ -118,12 +141,16 @@ export default function PlayScreen() {
           if (item.isLocked) {
             alert("Misi game ini masih terkunci! Selesaikan misi sebelumnya.");
           } else {
-            if (item.id === "math_quest") {
+            if (item.id === "rogue_soul_2") {
+              router.push("/rogue-soul");
+            } else if (item.id === "math_quest") {
               router.push("/math-quest");
             } else if (item.id === "problem_solving") {
               router.push("/robot-escape");
             } else if (item.id === "robot_circuit_puzzle") {
               router.push("/robot-circuit-puzzle");
+            } else if (item.id === "energy_core") {
+              router.push("/energy-core");
             } else if (!isLoggedIn) {
               Alert.alert(
                 "Harap Login Dahulu",

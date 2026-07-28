@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import Svg, { Polygon, Line, Circle, Text as SvgText } from "react-native-svg";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../../constants/Theme";
 import Robot3DView from "../../components/Robot3DView";
@@ -13,6 +13,7 @@ import { useAuth } from "../../hooks/useAuth";
 
 
 export default function Index() {
+  const router = useRouter();
   const { isLoggedIn, childName, updateChildName, avatarUrl, updateAvatarUrl } = useAuth();
   const [userCoins, setUserCoins] = useState(1250);
   const [childLevel, setChildLevel] = useState(12);
@@ -278,6 +279,37 @@ export default function Index() {
         showsVerticalScrollIndicator={false}
       >
 
+
+        {/* Featured Game: Rogue Soul 2 Banner */}
+        <Pressable
+          style={{
+            backgroundColor: "#78350F",
+            borderRadius: SHAPES.radiusLg,
+            borderWidth: 2,
+            borderColor: "#F59E0B",
+            padding: SPACING.lg,
+            marginBottom: SPACING.lg,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            ...SHADOWS.premium,
+          }}
+          onPress={() => router.push("/rogue-soul")}
+        >
+          <View style={{ flex: 1, paddingRight: SPACING.md }}>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
+              <View style={{ backgroundColor: "#DC2626", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
+                <Text style={{ color: "#FFF", fontSize: 9, fontWeight: "900" }}>GAME BARU!</Text>
+              </View>
+              <Text style={{ color: "#FEF08A", fontSize: 10, fontWeight: "800" }}>2D ACTION PLATFORMER</Text>
+            </View>
+            <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "900", letterSpacing: 0.5 }}>Rogue Soul II</Text>
+            <Text style={{ color: "#CBD5E1", fontSize: 11, marginTop: 2 }}>Parkour, tebasan pedang, pisau lempar & toko armor!</Text>
+          </View>
+          <View style={{ backgroundColor: "#16A34A", paddingVertical: 10, paddingHorizontal: 16, borderRadius: 20 }}>
+            <Text style={{ color: "#FFF", fontWeight: "900", fontSize: 12 }}>MAIN</Text>
+          </View>
+        </Pressable>
 
         {/* Robot Section Placeholder Card */}
         <View style={styles.robotCardContainer}>
