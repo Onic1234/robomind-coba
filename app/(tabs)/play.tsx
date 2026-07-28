@@ -31,6 +31,8 @@ export default function PlayScreen() {
   const [roboLinkLevel, setRoboLinkLevel] = useState(1);
   const [roboMazeLevel, setRoboMazeLevel] = useState(1);
 
+  const [screwSpinLevel, setScrewSpinLevel] = useState(1);
+
   useFocusEffect(
     useCallback(() => {
       const loadData = async () => {
@@ -67,6 +69,10 @@ export default function PlayScreen() {
           if (storedMazeLevel !== null) {
             setRoboMazeLevel(parseInt(storedMazeLevel));
           }
+          const storedScrewSpin = await AsyncStorage.getItem("screw_spin_current_level");
+          if (storedScrewSpin !== null) {
+            setScrewSpinLevel(parseInt(storedScrewSpin));
+          }
         } catch (e) {
           console.error("Failed to load play screen data", e);
         }
@@ -78,6 +84,15 @@ export default function PlayScreen() {
   const categories = ["Semua", "Kognitif", "Moral", "Literasi", "Fokus"];
 
   const games: GameItem[] = [
+    {
+      id: "screw_spin",
+      title: "Screw Spin",
+      category: "Kognitif",
+      image: require("../../assets/images/modul_coding.png"),
+      levelInfo: `Level ${screwSpinLevel}`,
+      coinsReward: 250,
+      isLocked: false,
+    },
     {
       id: "rogue_soul_2",
       title: "Rogue Soul 2",
@@ -188,7 +203,9 @@ export default function PlayScreen() {
           if (item.isLocked) {
             alert("Misi game ini masih terkunci! Selesaikan misi sebelumnya.");
           } else {
-            if (item.id === "rogue_soul_2") {
+            if (item.id === "screw_spin") {
+              router.push("/screw-spin");
+            } else if (item.id === "rogue_soul_2") {
               router.push("/rogue-soul");
             } else if (item.id === "math_quest") {
               router.push("/math-quest");
