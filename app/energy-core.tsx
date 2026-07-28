@@ -470,7 +470,7 @@ export default function EnergyCoreScreen() {
         </View>
         <View style={styles.topHud}>
           <View style={[styles.hudBadge, { borderColor: "#F59E0B" }]}>
-            <MaterialCommunityIcons name="coins" size={16} color="#FFFFFF" />
+            <MaterialCommunityIcons name="cash-multiple" size={16} color="#FFFFFF" />
             <Text style={styles.hudText}>{userCoins}</Text>
           </View>
         </View>
@@ -717,7 +717,7 @@ export default function EnergyCoreScreen() {
             <Button
               title="Kembali ke Home"
               onPress={() => router.back()}
-              variant="green"
+              variant="primary"
               style={styles.nextLevelButton}
             />
           </View>
