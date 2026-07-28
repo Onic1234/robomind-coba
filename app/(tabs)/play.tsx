@@ -103,30 +103,6 @@ export default function PlayScreen() {
       isLocked: false,
     },
     {
-      id: "math_quest",
-      title: "Math Quest",
-      category: "Kognitif",
-      image: require("../../assets/images/game_math.png"),
-      levelInfo: "Level 4",
-      coinsReward: 150,
-    },
-    {
-      id: "moral_story",
-      title: "Moral Story",
-      category: "Moral",
-      image: require("../../assets/images/hero_classroom.png"),
-      levelInfo: "Level 3",
-      coinsReward: 120,
-    },
-    {
-      id: "hoax_detection",
-      title: "Hoax vs Fact",
-      category: "Literasi",
-      image: require("../../assets/images/modul_coding.png"),
-      levelInfo: "Level 1",
-      coinsReward: 200,
-    },
-    {
       id: "robot_circuit_puzzle",
       title: "Robot Circuit",
       category: "Kognitif",
@@ -207,8 +183,6 @@ export default function PlayScreen() {
               router.push("/screw-spin");
             } else if (item.id === "rogue_soul_2") {
               router.push("/rogue-soul");
-            } else if (item.id === "math_quest") {
-              router.push("/math-quest");
             } else if (item.id === "problem_solving") {
               router.push("/robot-escape");
             } else if (item.id === "robot_circuit_puzzle") {

@@ -15,7 +15,6 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="parent-mode" options={{ headerShown: false }} />
-        <Stack.Screen name="math-quest" options={{ headerShown: false }} />
         <Stack.Screen name="robot-escape" options={{ headerShown: false }} />
         <Stack.Screen name="robot-circuit-puzzle" options={{ headerShown: false }} />
         <Stack.Screen name="energy-core" options={{ headerShown: false }} />

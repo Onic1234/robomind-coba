@@ -386,7 +386,7 @@ const ModuleItem = React.memo(({
 }: {
   mod: RobotModule;
   allModules: RobotModule[];
-  trans: { x: SharedValue<number>; y: SharedValue<number> };
+  trans: { x: any; y: any };
   cellSize: number;
   onPress: () => void;
 }) => {
@@ -893,7 +893,7 @@ export default function RobotCircuitPuzzleScreen() {
             <Button
               title="Lanjutkan Bermain"
               onPress={() => setShowPauseModal(false)}
-              variant="green"
+              variant="primary"
               style={{ width: "100%", marginBottom: 12 }}
             />
             <Button
@@ -902,7 +902,7 @@ export default function RobotCircuitPuzzleScreen() {
                 setShowPauseModal(false);
                 handleRestart();
               }}
-              variant="orange"
+              variant="accent"
               style={{ width: "100%", marginBottom: 12 }}
             />
             <Button
@@ -911,7 +911,7 @@ export default function RobotCircuitPuzzleScreen() {
                 setShowPauseModal(false);
                 router.back();
               }}
-              variant="orange"
+              variant="secondary"
               style={{ width: "100%", backgroundColor: "#EF4444" }}
             />
           </View>
@@ -930,7 +930,7 @@ export default function RobotCircuitPuzzleScreen() {
             </View>
             <View style={styles.rewardCardContainer}>
               <View style={styles.rewardItem}>
-                <MaterialCommunityIcons name="coins" size={26} color="#FBBF24" />
+                <Ionicons name="sparkles" size={26} color="#FBBF24" />
                 <Text style={styles.rewardAmount}>+{currentLevelConfig?.rewardCoins} Koin</Text>
               </View>
               <View style={styles.rewardItem}>
@@ -941,7 +941,7 @@ export default function RobotCircuitPuzzleScreen() {
             <Button
               title={level === LEVELS.length ? "Selesai" : "Misi Berikutnya"}
               onPress={handleNextLevel}
-              variant="orange"
+              variant="accent"
               style={styles.nextLevelButton}
             />
           </View>
@@ -957,7 +957,7 @@ export default function RobotCircuitPuzzleScreen() {
             <Button
               title="Keluar"
               onPress={() => router.back()}
-              variant="green"
+              variant="primary"
               style={styles.nextLevelButton}
             />
           </View>
