@@ -26,6 +26,10 @@ export default function PlayScreen() {
   const [robotEscapeLevel, setRobotEscapeLevel] = useState(1);
   const [robotCircuitLevel, setRobotCircuitLevel] = useState(1);
   const [energyCoreLevel, setEnergyCoreLevel] = useState(1);
+  const [roboCircleLevel, setRoboCircleLevel] = useState(1);
+  const [roboChargeLevel, setRoboChargeLevel] = useState(1);
+  const [roboLinkLevel, setRoboLinkLevel] = useState(1);
+  const [roboMazeLevel, setRoboMazeLevel] = useState(1);
 
   useFocusEffect(
     useCallback(() => {
@@ -46,6 +50,22 @@ export default function PlayScreen() {
           const storedEnergyLevel = await AsyncStorage.getItem("energy_core_current_level");
           if (storedEnergyLevel !== null) {
             setEnergyCoreLevel(parseInt(storedEnergyLevel));
+          }
+          const storedCircleLevel = await AsyncStorage.getItem("robo_circle_current_level");
+          if (storedCircleLevel !== null) {
+            setRoboCircleLevel(parseInt(storedCircleLevel));
+          }
+          const storedChargeLevel = await AsyncStorage.getItem("robo_charge_current_level");
+          if (storedChargeLevel !== null) {
+            setRoboChargeLevel(parseInt(storedChargeLevel));
+          }
+          const storedLinkLevel = await AsyncStorage.getItem("robo_link_current_level");
+          if (storedLinkLevel !== null) {
+            setRoboLinkLevel(parseInt(storedLinkLevel));
+          }
+          const storedMazeLevel = await AsyncStorage.getItem("robo_maze_current_level");
+          if (storedMazeLevel !== null) {
+            setRoboMazeLevel(parseInt(storedMazeLevel));
           }
         } catch (e) {
           console.error("Failed to load play screen data", e);
@@ -119,13 +139,40 @@ export default function PlayScreen() {
       isLocked: false,
     },
     {
-      id: "focus_challenge",
-      title: "Focus Challenge",
+      id: "robo_circle",
+      title: "Robo Circle",
       category: "Fokus",
-      image: require("../../assets/images/news_nature.png"),
-      levelInfo: "Level 2",
+      image: require("../../assets/images/modul_robot.png"),
+      levelInfo: `Level ${roboCircleLevel}`,
       coinsReward: 250,
-      isLocked: true,
+      isLocked: false,
+    },
+    {
+      id: "robo_charge",
+      title: "Robo Charge",
+      category: "Fokus",
+      image: require("../../assets/images/game_coding.png"),
+      levelInfo: `Level ${roboChargeLevel}`,
+      coinsReward: 250,
+      isLocked: false,
+    },
+    {
+      id: "robo_link",
+      title: "Robo Link",
+      category: "Kognitif",
+      image: require("../../assets/images/modul_coding.png"),
+      levelInfo: `Level ${roboLinkLevel}`,
+      coinsReward: 250,
+      isLocked: false,
+    },
+    {
+      id: "robo_maze",
+      title: "Robo Maze",
+      category: "Kognitif",
+      image: require("../../assets/images/game_robot_escape.png"),
+      levelInfo: `Level ${roboMazeLevel}`,
+      coinsReward: 250,
+      isLocked: false,
     },
   ];
 
@@ -151,6 +198,14 @@ export default function PlayScreen() {
               router.push("/robot-circuit-puzzle");
             } else if (item.id === "energy_core") {
               router.push("/energy-core");
+            } else if (item.id === "robo_circle") {
+              router.push("/robo-circle");
+            } else if (item.id === "robo_charge") {
+              router.push("/robo-charge");
+            } else if (item.id === "robo_link") {
+              router.push("/robo-link");
+            } else if (item.id === "robo_maze") {
+              router.push("/robo-maze");
             } else if (!isLoggedIn) {
               Alert.alert(
                 "Harap Login Dahulu",
