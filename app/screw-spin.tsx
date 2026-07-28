@@ -24,7 +24,7 @@ import Animated, {
   runOnJS,
   Easing,
 } from "react-native-reanimated";
-import Svg, { Rect, Circle, Path, Defs, LinearGradient, Stop } from "react-native-svg";
+import Svg, { Rect, Circle, Path, Defs, LinearGradient, Stop, Polygon, Line, Text as SvgText } from "react-native-svg";
 import { COLORS } from "../constants/Theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -756,25 +756,171 @@ export default function ScrewSpinScreen() {
         </View>
       </View>
 
-      {/* VICTORY MODAL */}
-      <Modal visible={isVictoryModalVisible} transparent animationType="slide">
+      {/* VICTORY / MISSION COMPLETED MODAL */}
+      <Modal visible={isVictoryModalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Ionicons name="trophy-sharp" size={60} color="#FFD600" />
-            <Text style={styles.modalTitleText}>LEVEL SELESAI!</Text>
-            <Text style={styles.modalSubText}>Selamat, kamu berhasil menyelesaikan tantangan level ini!</Text>
+          <View style={styles.victoryCardContainer}>
+            {/* Header Tag & Title */}
+            <Text style={styles.missionTagText}>MISSION COMPLETED</Text>
+            <Text style={styles.victoryTitleText}>
+              LEVEL {String(currentLevel).padStart(2, "0")} CLEARED!
+            </Text>
+            <Text style={styles.victorySubText}>
+              Rute Sirkuit Baut Logam: Level {currentLevel} → Selesai!
+            </Text>
 
-            <View style={styles.rewardContainer}>
-              <Ionicons name="logo-bitcoin" size={24} color="#FFD600" />
-              <Text style={styles.rewardText}>+{levelData?.coinsReward || 150} Koin</Text>
+            {/* Main Content Area */}
+            <ScrollView style={{ width: "100%", maxHeight: 400 }} contentContainerStyle={styles.victoryContentRow}>
+              {/* Left Column: Mission Achievements */}
+              <View style={styles.victoryLeftCol}>
+                <Text style={styles.columnTitle}>PENCAPAIAN MISI</Text>
+
+                {/* 3 Stars */}
+                <View style={styles.starRowGroup}>
+                  <Ionicons name="star" size={26} color="#FFD700" />
+                  <Ionicons name="star" size={32} color="#FFD700" style={{ marginTop: -4 }} />
+                  <Ionicons name="star" size={26} color="#FFD700" />
+                </View>
+
+                {/* Checklist */}
+                <View style={styles.checklistGroup}>
+                  <View style={styles.checkItem}>
+                    <Ionicons name="star" size={12} color="#FFD700" />
+                    <Text style={styles.checkText}>Melepaskan seluruh baut (100%)</Text>
+                  </View>
+                  <View style={styles.checkItem}>
+                    <Ionicons name="star" size={12} color="#FFD700" />
+                    <Text style={styles.checkText}>Soket cadangan bebas penuh</Text>
+                  </View>
+                  <View style={styles.checkItem}>
+                    <Ionicons name="star" size={12} color="#FFD700" />
+                    <Text style={styles.checkText}>Urutan Tepat (+Bonus)</Text>
+                  </View>
+                </View>
+
+                {/* Loot Breakdown */}
+                <View style={styles.lootDivider} />
+                <View style={styles.lootRow}>
+                  <Text style={styles.lootLabel}>Loot Baut Terkumpul:</Text>
+                  <Text style={styles.lootValue}>+{levelData?.coinsReward || 100} Koin</Text>
+                </View>
+                <View style={styles.lootRow}>
+                  <Text style={styles.lootLabel}>Bonus Kombinasi Warna:</Text>
+                  <Text style={styles.lootValue}>+36 Koin</Text>
+                </View>
+                <View style={[styles.lootRow, { marginTop: 6 }]}>
+                  <Text style={styles.totalLabel}>TOTAL KOIN / XP:</Text>
+                  <Text style={styles.totalValue}>{(levelData?.coinsReward || 100) + 36} KOIN</Text>
+                </View>
+              </View>
+
+              {/* Right Column: Brain Cognitive Analysis Radar Chart */}
+              <View style={styles.victoryRightCol}>
+                <Text style={styles.columnTitle}>🧠 Analisis Perkembangan Otak</Text>
+                <Text style={styles.columnSubTitle}>(Prefrontal Cortex & Kontrol Emosi)</Text>
+
+                {/* SVG Radar Chart */}
+                <View style={styles.victoryRadarWrapper}>
+                  <Svg width={180} height={180} viewBox="0 0 200 200">
+                    {/* Grid Pentagons */}
+                    {[0.3, 0.6, 1.0].map((lvl, idx) => {
+                      const pts = [0, 1, 2, 3, 4].map((i) => {
+                        const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+                        const x = 100 + 55 * lvl * Math.cos(angle);
+                        const y = 100 + 55 * lvl * Math.sin(angle);
+                        return `${x.toFixed(1)},${y.toFixed(1)}`;
+                      }).join(" ");
+
+                      return (
+                        <Polygon
+                          key={idx}
+                          points={pts}
+                          fill="none"
+                          stroke="rgba(0, 229, 255, 0.3)"
+                          strokeWidth="1"
+                          strokeDasharray={idx < 2 ? "3 3" : "0"}
+                        />
+                      );
+                    })}
+
+                    {/* Axis Spoke Lines */}
+                    {[0, 1, 2, 3, 4].map((i) => {
+                      const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+                      const endX = 100 + 55 * Math.cos(angle);
+                      const endY = 100 + 55 * Math.sin(angle);
+                      return (
+                        <Line key={i} x1={100} y1={100} x2={endX} y2={endY} stroke="rgba(0, 229, 255, 0.3)" strokeWidth="1" />
+                      );
+                    })}
+
+                    {/* Polygon Fill */}
+                    {(() => {
+                      const vals = [0.85, 0.75, 0.9, 0.8, 0.7];
+                      const pts = vals.map((val, i) => {
+                        const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+                        const x = 100 + 55 * val * Math.cos(angle);
+                        const y = 100 + 55 * val * Math.sin(angle);
+                        return `${x.toFixed(1)},${y.toFixed(1)}`;
+                      }).join(" ");
+
+                      return (
+                        <Polygon
+                          points={pts}
+                          fill="rgba(139, 92, 246, 0.45)"
+                          stroke="#A78BFA"
+                          strokeWidth="2.5"
+                        />
+                      );
+                    })()}
+
+                    {/* Data Node Dots */}
+                    {[0, 1, 2, 3, 4].map((i) => {
+                      const vals = [0.85, 0.75, 0.9, 0.8, 0.7];
+                      const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+                      const x = 100 + 55 * vals[i] * Math.cos(angle);
+                      const y = 100 + 55 * vals[i] * Math.sin(angle);
+                      return <Circle key={i} cx={x} cy={y} r="3.5" fill="#FFFFFF" stroke="#A78BFA" strokeWidth="1.5" />;
+                    })}
+
+                    {/* Axis Text Labels */}
+                    {["Perencanaan", "Keputusan", "Kontrol Diri", "Memori Kerja", "Spasial"].map((lbl, i) => {
+                      const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+                      const x = 100 + (55 + 18) * Math.cos(angle);
+                      const y = 100 + (55 + 14) * Math.sin(angle);
+                      let anchor: "middle" | "start" | "end" = "middle";
+                      if (i === 1 || i === 2) anchor = "start";
+                      if (i === 3 || i === 4) anchor = "end";
+
+                      return (
+                        <SvgText key={i} x={x} y={i === 0 ? y - 2 : y + 3} fontSize="9" fontWeight="800" fill="#E2E8F0" textAnchor={anchor}>
+                          {lbl}
+                        </SvgText>
+                      );
+                    })}
+                  </Svg>
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* Bottom Action Buttons */}
+            <View style={styles.victoryActionRow}>
+              <Pressable
+                style={({ pressed }) => [styles.backToMapBtn, pressed && styles.btnPressed]}
+                onPress={() => {
+                  setIsVictoryModalVisible(false);
+                  setIsGameStarted(false);
+                }}
+              >
+                <Text style={styles.backToMapText}>[ Kembali Ke Menu Utama ]</Text>
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => [styles.continueBtn, pressed && styles.btnPressed]}
+                onPress={handleNextLevel}
+              >
+                <Text style={styles.continueText}>[ CONTINUE (Lanjut Level) → ]</Text>
+              </Pressable>
             </View>
-
-            <Pressable
-              style={({ pressed }) => [styles.modalPrimaryBtn, pressed && styles.btnPressed]}
-              onPress={handleNextLevel}
-            >
-              <Text style={styles.modalPrimaryBtnText}>LEVEL BERIKUTNYA</Text>
-            </Pressable>
           </View>
         </View>
       </Modal>
@@ -1271,5 +1417,176 @@ const styles = StyleSheet.create({
     color: "#94A3B8",
     fontSize: 15,
     fontWeight: "700",
+  },
+
+  // Victory / Mission Completed Popup Styles matching reference image
+  victoryCardContainer: {
+    width: Math.min(SCREEN_WIDTH - 20, 520),
+    backgroundColor: "#0B132B",
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: "rgba(0, 229, 255, 0.4)",
+    padding: 16,
+    alignItems: "center",
+    elevation: 12,
+    shadowColor: "#00F0FF",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+  },
+  missionTagText: {
+    color: "#FFB703",
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 2,
+    marginBottom: 2,
+  },
+  victoryTitleText: {
+    color: "#00FF88",
+    fontSize: 22,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+    textAlign: "center",
+    textShadowColor: "#00E5FF",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
+  },
+  victorySubText: {
+    color: "#94A3B8",
+    fontSize: 11,
+    fontWeight: "600",
+    marginBottom: 14,
+    textAlign: "center",
+  },
+  victoryContentRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    justifyContent: "center",
+  },
+  victoryLeftCol: {
+    flex: 1,
+    minWidth: 210,
+    backgroundColor: "rgba(15, 23, 42, 0.8)",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(0, 229, 255, 0.2)",
+    padding: 12,
+  },
+  victoryRightCol: {
+    flex: 1,
+    minWidth: 210,
+    backgroundColor: "rgba(15, 23, 42, 0.8)",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(0, 229, 255, 0.2)",
+    padding: 12,
+    alignItems: "center",
+  },
+  columnTitle: {
+    fontSize: 12,
+    fontWeight: "900",
+    color: "#00F0FF",
+    marginBottom: 6,
+    textAlign: "center",
+  },
+  columnSubTitle: {
+    fontSize: 9,
+    fontWeight: "600",
+    color: "#94A3B8",
+    marginBottom: 4,
+    textAlign: "center",
+  },
+  starRowGroup: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 6,
+    marginVertical: 6,
+  },
+  checklistGroup: {
+    gap: 4,
+    marginVertical: 6,
+  },
+  checkItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  checkText: {
+    color: "#E2E8F0",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  lootDivider: {
+    height: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    marginVertical: 8,
+  },
+  lootRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 2,
+  },
+  lootLabel: {
+    color: "#94A3B8",
+    fontSize: 10,
+    fontWeight: "500",
+  },
+  lootValue: {
+    color: "#FFD700",
+    fontSize: 10,
+    fontWeight: "800",
+  },
+  totalLabel: {
+    color: "#00FF88",
+    fontSize: 11,
+    fontWeight: "900",
+  },
+  totalValue: {
+    color: "#00FF88",
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  victoryRadarWrapper: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 4,
+  },
+  victoryActionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    width: "100%",
+    marginTop: 14,
+    justifyContent: "center",
+  },
+  backToMapBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
+  },
+  backToMapText: {
+    color: "#CBD5E1",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  continueBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: "#00E5FF",
+    alignItems: "center",
+    elevation: 4,
+  },
+  continueText: {
+    color: "#0F172A",
+    fontSize: 11,
+    fontWeight: "900",
   },
 });
