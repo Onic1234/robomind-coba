@@ -22,6 +22,7 @@ import Animated, {
   withTiming,
   withSequence,
   runOnJS,
+  type SharedValue,
 } from "react-native-reanimated";
 import Svg, { Path, Rect, Circle, Defs, LinearGradient, Stop, Polygon } from "react-native-svg";
 import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../constants/Theme";
@@ -385,7 +386,7 @@ const ModuleItem = React.memo(({
 }: {
   mod: RobotModule;
   allModules: RobotModule[];
-  trans: { x: Animated.SharedValue<number>; y: Animated.SharedValue<number> };
+  trans: { x: SharedValue<number>; y: SharedValue<number> };
   cellSize: number;
   onPress: () => void;
 }) => {
@@ -445,39 +446,71 @@ const ModuleItem = React.memo(({
 
   const renderArrow = () => {
     const c = cellSize / 2;
-    const size = 16;
+    const size = cellSize * 0.24;
     let rot = "0deg";
     if (mod.direction === "RIGHT") rot = "90deg";
     else if (mod.direction === "DOWN") rot = "180deg";
     else if (mod.direction === "LEFT") rot = "270deg";
 
+    const accent = mod.accentColor || "#00E5FF";
+
     return (
       <View style={[StyleSheet.absoluteFillObject, { justifyContent: "center", alignItems: "center", transform: [{ rotate: rot }] }]}>
         <Svg width={cellSize} height={cellSize} viewBox={`0 0 ${cellSize} ${cellSize}`}>
+          <Defs>
+            <LinearGradient id={`arrowGrad_${mod.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
+              <Stop offset="0%" stopColor="#FFFFFF" />
+              <Stop offset="100%" stopColor={accent} />
+            </LinearGradient>
+          </Defs>
+          {/* Arrow Shadow */}
           <Polygon
-            points={`${c},${c - size} ${c - size},${c + size * 0.7} ${c + size},${c + size * 0.7}`}
-            fill="none"
-            stroke="#0284C7"
-            strokeWidth="3.5"
+            points={`${c},${c - size + 2} ${c - size * 0.8},${c + size * 0.75} ${c + size * 0.8},${c + size * 0.75}`}
+            fill="rgba(0,0,0,0.4)"
+          />
+          {/* Main 3D Arrow */}
+          <Polygon
+            points={`${c},${c - size} ${c - size * 0.8},${c + size * 0.7} ${c + size * 0.8},${c + size * 0.7}`}
+            fill={`url(#arrowGrad_${mod.id})`}
+            stroke={accent}
+            strokeWidth="2.5"
             strokeLinejoin="round"
+          />
+          {/* High-tech Inner Pulse Line */}
+          <Path
+            d={`M ${c} ${c - size * 0.4} L ${c} ${c + size * 0.4}`}
+            stroke="#1E293B"
+            strokeWidth="2.5"
+            strokeLinecap="round"
           />
         </Svg>
       </View>
     );
   };
 
+  const accent = mod.accentColor || "#00E5FF";
+
   return (
     <Animated.View style={[styles.moduleWrapper, animatedStyle, { left: mod.gridX * cellSize, top: mod.gridY * cellSize, width: cellSize, height: cellSize }]}>
       <Pressable onPress={onPress} style={{ width: cellSize, height: cellSize }}>
         <Svg width={cellSize + 20} height={cellSize + 20} style={{ overflow: "visible", position: "absolute", left: -10, top: -10 }}>
           <Defs>
-            <LinearGradient id="pieceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <Stop offset="0%" stopColor="#FFFFFF" />
-              <Stop offset="100%" stopColor="#F3F4F6" />
+            <LinearGradient id={`pieceGrad_${mod.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
+              <Stop offset="0%" stopColor="#1E293B" />
+              <Stop offset="50%" stopColor="#111827" />
+              <Stop offset="100%" stopColor="#0B132B" />
             </LinearGradient>
           </Defs>
-          <Path d={generateJigsawPath()} fill="#D1D5DB" transform="translate(10, 12)" opacity="0.8" />
-          <Path d={generateJigsawPath()} fill="url(#pieceGrad)" stroke="#E5E7EB" strokeWidth="1.5" transform="translate(10, 10)" />
+          {/* Drop shadow */}
+          <Path d={generateJigsawPath()} fill="#000000" opacity="0.6" transform="translate(13, 15)" />
+          {/* Main Metallic Jigsaw Piece */}
+          <Path
+            d={generateJigsawPath()}
+            fill={`url(#pieceGrad_${mod.id})`}
+            stroke={accent}
+            strokeWidth="2.5"
+            transform="translate(10, 10)"
+          />
         </Svg>
         {renderArrow()}
       </Pressable>
@@ -754,24 +787,48 @@ export default function RobotCircuitPuzzleScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
-      <StatusBar barStyle="light-content" backgroundColor="#0EA5E9" />
+      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
       <View style={styles.header}>
         <Pressable style={styles.iconButton} onPress={() => setShowPauseModal(true)}>
-          <Ionicons name="menu" size={24} color="#64748B" />
+          <Ionicons name="menu" size={22} color="#94A3B8" />
         </Pressable>
         <View style={styles.levelBadgeContainer}>
-          <Text style={styles.levelText}>Sirkuit {level}</Text>
+          <Text style={styles.levelText}>SIRKUIT {String(level).padStart(2, "0")}</Text>
         </View>
         <View style={styles.topHud}>
-          <View style={[styles.hudBadge, { borderColor: "#F59E0B" }]}>
+          <View style={styles.hudBadge}>
             <Ionicons name="bulb" size={16} color="#FFFFFF" />
-            <Text style={[styles.hudText, { color: "#FFFFFF" }]}>2</Text>
+            <Text style={styles.hudText}>{userCoins}</Text>
           </View>
         </View>
       </View>
 
       <View style={styles.mainGameArea}>
+        {/* Outer Metallic Bezel Board Container */}
         <View style={[styles.boardContainer, { width: boardSize, height: boardSize }]}>
+          {/* Grid Cell Sockets Background */}
+          {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, idx) => {
+            const gx = idx % GRID_SIZE;
+            const gy = Math.floor(idx / GRID_SIZE);
+            return (
+              <View
+                key={idx}
+                style={[
+                  styles.gridCellSocket,
+                  {
+                    left: gx * cellSize,
+                    top: gy * cellSize,
+                    width: cellSize,
+                    height: cellSize,
+                  },
+                ]}
+              >
+                <View style={styles.socketInnerDot} />
+              </View>
+            );
+          })}
+
+          {/* Modules */}
           {modules.map((mod) => {
             const trans = getTranslationForModule(mod.id);
             return (
@@ -791,13 +848,13 @@ export default function RobotCircuitPuzzleScreen() {
       <View style={styles.companionPanel}>
         <View style={styles.ronBontaAvatarContainer}>
           <Svg width="44" height="44" viewBox="0 0 64 64">
-            <Rect x="8" y="14" width="48" height="40" rx="14" fill="#00C3A0" stroke="#FFFFFF" strokeWidth="3" />
-            <Circle cx="22" cy="32" r="6" fill="#1E2937" />
-            <Circle cx="22" cy="32" r="2.5" fill="#00FFFF" />
-            <Circle cx="42" cy="32" r="6" fill="#1E2937" />
-            <Circle cx="42" cy="32" r="2.5" fill="#00FFFF" />
-            <Rect x="29" y="4" width="6" height="10" rx="3" fill="#FFE600" />
-            <Circle cx="32" cy="4" r="5" fill="#FFE600" />
+            <Rect x="8" y="14" width="48" height="40" rx="14" fill="#00E5FF" stroke="#FFFFFF" strokeWidth="2.5" />
+            <Circle cx="22" cy="32" r="6" fill="#0B132B" />
+            <Circle cx="22" cy="32" r="2.5" fill="#00F0FF" />
+            <Circle cx="42" cy="32" r="6" fill="#0B132B" />
+            <Circle cx="42" cy="32" r="2.5" fill="#00F0FF" />
+            <Rect x="29" y="4" width="6" height="10" rx="3" fill="#FFD700" />
+            <Circle cx="32" cy="4" r="5" fill="#FFD700" />
           </Svg>
         </View>
         <View style={styles.dialogBubble}>
@@ -807,13 +864,21 @@ export default function RobotCircuitPuzzleScreen() {
 
       <View style={styles.bottomBar}>
         <Pressable style={styles.actionBtn} onPress={handleUndo}>
-          <View style={styles.actionIconBg}>
-            <Ionicons name="arrow-undo-outline" size={20} color="#FFFFFF" />
+          <View style={[styles.actionIconBg, { backgroundColor: "#3B82F6" }]}>
+            <Ionicons name="arrow-undo" size={20} color="#FFFFFF" />
           </View>
           <Text style={styles.actionBtnLabel}>Undo</Text>
         </Pressable>
+
+        <Pressable style={styles.actionBtn} onPress={handleHint}>
+          <View style={[styles.actionIconBg, { backgroundColor: "#F59E0B" }]}>
+            <Ionicons name="bulb" size={20} color="#FFFFFF" />
+          </View>
+          <Text style={styles.actionBtnLabel}>Petunjuk (-20)</Text>
+        </Pressable>
+
         <Pressable style={styles.actionBtn} onPress={handleRestart}>
-          <View style={[styles.actionIconBg, { backgroundColor: "#FF5E36" }]}>
+          <View style={[styles.actionIconBg, { backgroundColor: "#EF4444" }]}>
             <Ionicons name="refresh" size={20} color="#FFFFFF" />
           </View>
           <Text style={styles.actionBtnLabel}>Restart</Text>
@@ -905,46 +970,55 @@ export default function RobotCircuitPuzzleScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#0EA5E9",
+    backgroundColor: "#0B1120",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    backgroundColor: "#0EA5E9",
+    paddingVertical: SPACING.sm + 4,
+    backgroundColor: "#0F172A",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.08)",
   },
   iconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(0, 0, 0, 0.15)",
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.15)",
   },
   levelBadgeContainer: {
-    backgroundColor: "transparent",
+    backgroundColor: "rgba(0, 229, 255, 0.12)",
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(0, 229, 255, 0.3)",
   },
   levelText: {
-    color: "#FFFFFF",
-    fontWeight: "800",
-    fontSize: 18,
-    opacity: 0.9,
+    color: "#00F0FF",
+    fontWeight: "900",
+    fontSize: 16,
+    letterSpacing: 1,
   },
   topHud: {
     flexDirection: "row",
     gap: 8,
   },
   hudBadge: {
-    width: 50,
-    height: 40,
-    borderRadius: 8,
+    height: 38,
+    paddingHorizontal: 12,
+    borderRadius: 19,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FF8C42",
-    gap: 2,
+    backgroundColor: "#F59E0B",
+    gap: 6,
   },
   hudText: {
     color: "#FFFFFF",
@@ -955,11 +1029,33 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingVertical: 10,
   },
   boardContainer: {
-    backgroundColor: "transparent",
-    overflow: "visible",
+    backgroundColor: "#0F172A",
+    borderRadius: 24,
+    borderWidth: 3,
+    borderColor: "#1E293B",
     position: "relative",
+    shadowColor: "#00F0FF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
+    overflow: "hidden",
+  },
+  gridCellSocket: {
+    position: "absolute",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.04)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  socketInnerDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "rgba(0, 240, 255, 0.2)",
   },
   moduleWrapper: {
     position: "absolute",
@@ -968,51 +1064,55 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginHorizontal: SPACING.md,
-    marginBottom: SPACING.md,
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
-    borderRadius: 16,
-    padding: 10,
+    marginBottom: SPACING.sm,
+    backgroundColor: "rgba(15, 23, 42, 0.85)",
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: "rgba(0, 240, 255, 0.3)",
+    padding: 12,
   },
   ronBontaAvatarContainer: {
-    marginRight: 10,
+    marginRight: 12,
   },
   dialogBubble: {
     flex: 1,
   },
   dialogText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "700",
-    lineHeight: 16,
+    color: "#E2E8F0",
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18,
   },
   bottomBar: {
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
     paddingVertical: SPACING.sm,
-    backgroundColor: "rgba(0, 0, 0, 0.05)",
+    backgroundColor: "#0F172A",
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.08)",
   },
   actionBtn: {
     alignItems: "center",
   },
   actionIconBg: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(0, 0, 0, 0.15)",
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: 4,
+    elevation: 4,
   },
   actionBtnLabel: {
-    color: "#FFFFFF",
+    color: "#94A3B8",
     fontSize: 11,
     fontWeight: "700",
-    opacity: 0.9,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.6)",
+    backgroundColor: "rgba(15, 23, 42, 0.75)",
     justifyContent: "center",
     alignItems: "center",
     padding: SPACING.lg,
