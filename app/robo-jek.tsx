@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -16,7 +16,25 @@ import { COLORS, FONTS } from "../constants/Theme";
 export default function RoboJekScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const toggleFullscreen = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      el.requestFullscreen?.().then(() => setIsFullscreen(true)).catch(() => {});
+    } else {
+      document.exitFullscreen?.().then(() => setIsFullscreen(false)).catch(() => {});
+    }
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
 
   useEffect(() => {
     const timeout = setTimeout(() => setLoading(false), 3000);
@@ -51,7 +69,7 @@ export default function RoboJekScreen() {
   }
 
   return (
-    <View style={styles.webContainer} onClick={() => iframeRef.current?.focus()}>
+    <View ref={containerRef} style={styles.webContainer} onClick={() => iframeRef.current?.focus()}>
       <StatusBar hidden />
 
       {loading && (
@@ -75,6 +93,11 @@ export default function RoboJekScreen() {
       <Pressable onPress={() => router.back()} style={styles.floatingExit}>
         <Ionicons name="exit-outline" size={20} color="#fff" />
         <Text style={styles.floatingExitText}>EXIT</Text>
+      </Pressable>
+
+      <Pressable onPress={toggleFullscreen} style={styles.floatingFs}>
+        <Ionicons name={isFullscreen ? "contract" : "expand"} size={20} color="#fff" />
+        <Text style={styles.floatingFsText}>{isFullscreen ? "WINDOW" : "FULL"}</Text>
       </Pressable>
     </View>
   );
@@ -137,6 +160,28 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 14,
     fontWeight: "900",
+    letterSpacing: 1,
+  },
+  floatingFs: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(15, 23, 42, 0.85)",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    zIndex: 9999,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: "rgba(56, 189, 248, 0.4)",
+  },
+  floatingFsText: {
+    color: "#38bdf8",
+    fontSize: 12,
+    fontWeight: "800",
     letterSpacing: 1,
   },
   iframe: {
