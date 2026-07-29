@@ -145,7 +145,7 @@ export default function PlayScreen() {
       image: require("../../assets/images/rbt_chrg.png"),
       levelInfo: `Level ${roboChargeLevel}`,
       coinsReward: 250,
-      isLocked: false,
+      isLocked: true,
     },
     {
       id: "robo_link",
@@ -163,6 +163,15 @@ export default function PlayScreen() {
       image: require("../../assets/images/rbt_maze.png"),
       levelInfo: `Level ${roboMazeLevel}`,
       coinsReward: 250,
+      isLocked: false,
+    },
+    {
+      id: "robo_jek",
+      title: "Robo-Jek",
+      category: "Fokus",
+      image: require("../../assets/images/modul_robot.png"),
+      levelInfo: "Level 1",
+      coinsReward: 300,
       isLocked: false,
     },
   ];
@@ -197,6 +206,8 @@ export default function PlayScreen() {
               router.push("/robo-link");
             } else if (item.id === "robo_maze") {
               router.push("/robo-maze");
+            } else if (item.id === "robo_jek") {
+              router.push("/robo-jek");
             } else if (!isLoggedIn) {
               Alert.alert(
                 "Harap Login Dahulu",

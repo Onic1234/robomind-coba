@@ -522,7 +522,7 @@ export default function RoboCircleScreen() {
     triggerHaptic("light");
 
     const nextRobot = queuedRobots[0];
-    setLaunchingRobot({ ...nextRobot, progress: 0 });
+    setLaunchingRobot({ ...nextRobot, progress: 1 });
 
     setQueuedRobots((prev) => {
       const colors = ["#38BDF8", "#34D399", "#FBBF24", "#F472B6", "#A78BFA", "#FB7185"];

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Robo-Jek — 2D Top-Down Delivery Racing Game (Fase 0)</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    h1 {
+      font-size: 1.25rem;
+      color: #38bdf8;
+      margin-bottom: 12px;
+    }
+    #game-container {
+      width: 1024px;
+      height: 768px;
+      border: 4px solid #334155;
+      border-radius: 12px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+      background-color: #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #loading-msg {
+      font-size: 1.1rem;
+      color: #94a3b8;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.80.1/phaser.min.js" crossorigin="anonymous"></script>
+</head>
+<body>
+  <h1>Robo-Jek — Fase 0 Prototype Test</h1>
+  <div id="game-container">
+    <div id="loading-msg">Memuat Game Engine Phaser 3...</div>
+  </div>
+
+  <script>
+    window.addEventListener('load', function() {
+      if (typeof Phaser === 'undefined') {
+        document.getElementById('loading-msg').innerHTML = 
+          '<span style="color:#ef4444">Gagal memuat Phaser dari CDN. Memuat fallback lokal...</span>';
+        return;
+      }
+
+      document.getElementById('loading-msg').style.display = 'none';
+
+      class Vehicle extends Phaser.Physics.Arcade.Sprite {
+        constructor(scene, x, y, texture) {
+          super(scene, x, y, texture);
+          scene.add.existing(this);
+          scene.physics.add.existing(this);
+
+          this.speed = 0;
+          this.maxSpeed = 350;
+          this.acceleration = 400;
+          this.deceleration = 300;
+          this.turnSpeed = 180;
+
+          this.body.setCollideWorldBounds(true);
+          this.body.setSize(30, 50);
+
+          this.cursors = scene.input.keyboard.createCursorKeys();
+          this.wasd = {
+            up: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
+            down: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S),
+            left: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A),
+            right: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
+          };
+        }
+
+        update(deltaSeconds) {
+          const isUp = this.cursors.up.isDown || this.wasd.up.isDown;
+          const isDown = this.cursors.down.isDown || this.wasd.down.isDown;
+          const isLeft = this.cursors.left.isDown || this.wasd.left.isDown;
+          const isRight = this.cursors.right.isDown || this.wasd.right.isDown;
+
+          if (isUp) {
+            this.speed = Math.min(this.speed + this.acceleration * deltaSeconds, this.maxSpeed);
+          } else if (isDown) {
+            this.speed = Math.max(this.speed - this.acceleration * deltaSeconds, -this.maxSpeed * 0.4);
+          } else {
+            if (this.speed > 0) {
+              this.speed = Math.max(0, this.speed - this.deceleration * deltaSeconds);
+            } else if (this.speed < 0) {
+              this.speed = Math.min(0, this.speed + this.deceleration * deltaSeconds);
+            }
+          }
+
+          if (Math.abs(this.speed) > 10) {
+            const dir = this.speed >= 0 ? 1 : -1;
+            if (isLeft) this.angle -= this.turnSpeed * deltaSeconds * dir;
+            if (isRight) this.angle += this.turnSpeed * deltaSeconds * dir;
+          }
+
+          const rotationRad = Phaser.Math.DegToRad(this.angle - 90);
+          this.body.setVelocity(
+            Math.cos(rotationRad) * this.speed,
+            Math.sin(rotationRad) * this.speed
+          );
+        }
+
+        getSpeed() {
+          return Math.round(this.speed);
+        }
+      }
+
+      class BootScene extends Phaser.Scene {
+        constructor() { super({ key: 'BootScene' }); }
+
+        create() {
+          // Vehicle texture
+          const graphics = this.make.graphics({ x: 0, y: 0 });
+          graphics.fillStyle(0x0284c7, 1);
+          graphics.fillRoundedRect(5, 5, 30, 50, 6);
+          graphics.fillStyle(0x38bdf8, 1);
+          graphics.fillRect(10, 15, 20, 15);
+          graphics.fillStyle(0xfacc15, 1);
+          graphics.fillRect(7, 5, 6, 4);
+          graphics.fillRect(27, 5, 6, 4);
+          graphics.fillStyle(0xef4444, 1);
+          graphics.fillRect(7, 51, 6, 3);
+          graphics.fillRect(27, 51, 6, 3);
+          graphics.generateTexture('vehicle_placeholder', 40, 60);
+          graphics.destroy();
+
+          // Obstacle texture
+          const obs = this.make.graphics({ x: 0, y: 0 });
+          obs.fillStyle(0xd97706, 1);
+          obs.fillRoundedRect(0, 0, 50, 50, 8);
+          obs.lineStyle(3, 0xf59e0b, 1);
+          obs.strokeRoundedRect(2, 2, 46, 46, 6);
+          obs.lineStyle(4, 0x78350f, 0.8);
+          obs.lineBetween(10, 10, 40, 40);
+          obs.lineBetween(40, 10, 10, 40);
+          obs.generateTexture('obstacle_placeholder', 50, 50);
+          obs.destroy();
+
+          this.scene.start('LevelScene');
+        }
+      }
+
+      class LevelScene extends Phaser.Scene {
+        constructor() { super({ key: 'LevelScene' }); }
+
+        create() {
+          this.elapsedTime = 0;
+          this.collisions = 0;
+
+          // Background Road
+          const graphics = this.add.graphics();
+          graphics.fillStyle(0x1e293b, 1);
+          graphics.fillRect(0, 0, 1600, 1200);
+          graphics.lineStyle(2, 0x334155, 0.6);
+          for (let x = 0; x < 1600; x += 100) graphics.lineBetween(x, 0, x, 1200);
+          for (let y = 0; y < 1200; y += 100) graphics.lineBetween(0, y, 1600, y);
+          graphics.lineStyle(4, 0xeab308, 0.8);
+          for (let y = 0; y < 1200; y += 40) graphics.lineBetween(800, y, 800, y + 20);
+
+          this.add.text(50, 50, 'FASE 0 PROTOTYPE — ROAD TEST', {
+            font: 'bold 20px Arial',
+            color: '#4ade80'
+          });
+
+          this.obstacle = this.physics.add.sprite(500, 300, 'obstacle_placeholder');
+          this.obstacle.setImmovable(true);
+
+          this.player = new Vehicle(this, 200, 300, 'vehicle_placeholder');
+
+          this.physics.add.collider(this.player, this.obstacle, () => {
+            this.collisions++;
+            console.log('[COLLISION] Nabrak obstacle dummy! Total:', this.collisions);
+            this.cameras.main.shake(100, 0.01);
+          });
+
+          // HUD
+          const hud = this.add.container(0, 0).setScrollFactor(0);
+          const hudBg = this.add.graphics();
+          hudBg.fillStyle(0x0f172a, 0.85);
+          hudBg.fillRoundedRect(16, 16, 320, 150, 8);
+          hudBg.lineStyle(2, 0x38bdf8, 1);
+          hudBg.strokeRoundedRect(16, 16, 320, 150, 8);
+          hud.add(hudBg);
+
+          this.timerText = this.add.text(32, 28, 'Waktu: 0.0s', { font: 'bold 18px monospace', color: '#38bdf8' });
+          this.speedText = this.add.text(32, 56, 'Kecepatan: 0 km/h', { font: '16px monospace', color: '#f8fafc' });
+          this.collisionText = this.add.text(32, 84, 'Tabrakan: 0x', { font: '16px monospace', color: '#f43f5e' });
+          this.infoText = this.add.text(32, 115, 'Kontrol: WASD / Panah', { font: '14px Arial', color: '#94a3b8' });
+          hud.add([this.timerText, this.speedText, this.collisionText, this.infoText]);
+
+          this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
+          this.cameras.main.setBounds(0, 0, 1600, 1200);
+          this.physics.world.setBounds(0, 0, 1600, 1200);
+        }
+
+        update(_time, delta) {
+          const deltaSeconds = delta / 1000;
+          this.elapsedTime += deltaSeconds;
+          this.player.update(deltaSeconds);
+          this.timerText.setText(`Waktu: ${this.elapsedTime.toFixed(1)}s`);
+          this.speedText.setText(`Kecepatan: ${this.player.getSpeed()} km/h`);
+          this.collisionText.setText(`Tabrakan: ${this.collisions}x`);
+        }
+      }
+
+      const config = {
+        type: Phaser.AUTO,
+        width: 1024,
+        height: 768,
+        parent: 'game-container',
+        backgroundColor: '#0f172a',
+        physics: {
+          default: 'arcade',
+          arcade: { gravity: { x: 0, y: 0 }, debug: false }
+        },
+        scene: [BootScene, LevelScene]
+      };
+
+      new Phaser.Game(config);
+    });
+  </script>
+</body>
+</html>
