@@ -113,13 +113,15 @@ export default function AppIntroFlow({ onFinish }: AppIntroFlowProps) {
         <Text style={styles.onboardingTitle}>{currentStep.title}</Text>
       </View>
 
-      {/* Robot Character illustration */}
+      {/* Robot Character illustration - FULL HERO CARD */}
       <View style={styles.onboardingIllustrationContainer}>
-        <Image
-          source={currentStep.image}
-          style={styles.onboardingImage}
-          contentFit="contain"
-        />
+        <View style={styles.heroImageCardWrapper}>
+          <Image
+            source={currentStep.image}
+            style={styles.onboardingImageFull}
+            contentFit="cover"
+          />
+        </View>
       </View>
 
       {/* Dots & CTA Button */}
@@ -231,55 +233,74 @@ const styles = StyleSheet.create({
   // Onboarding Styles
   onboardingContainer: {
     flex: 1,
-    backgroundColor: "#E0F2FE", // Consistent soft sky blue bg
+    backgroundColor: "#F0F9FF", // Consistent soft sky blue bg
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 40,
+    paddingVertical: 20,
   },
   onboardingHeader: {
-    paddingHorizontal: 30,
-    marginTop: 30,
+    paddingHorizontal: 24,
+    marginTop: 20,
+    marginBottom: 10,
   },
   onboardingTitle: {
     ...FONTS.heading,
-    fontSize: 22,
+    fontSize: 24,
+    fontWeight: "900",
     color: "#0F172A",
     textAlign: "center",
-    lineHeight: 30,
+    lineHeight: 32,
     letterSpacing: -0.5,
   },
   onboardingIllustrationContainer: {
     flex: 1,
+    width: "100%",
+    paddingHorizontal: 20,
     justifyContent: "center",
     alignItems: "center",
-    width: "100%",
+    marginVertical: 12,
   },
-  onboardingImage: {
-    width: 220,
-    height: 220,
+  heroImageCardWrapper: {
+    width: "100%",
+    height: "100%",
+    maxHeight: 420,
+    borderRadius: 32,
+    overflow: "hidden",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 4,
+    borderColor: "#FFFFFF",
+    elevation: 8,
+    shadowColor: "#0284C7",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 18,
+  },
+  onboardingImageFull: {
+    width: "100%",
+    height: "100%",
   },
   onboardingFooter: {
     width: "100%",
-    paddingHorizontal: 40,
+    paddingHorizontal: 30,
     alignItems: "center",
     marginBottom: 20,
   },
   dotsRow: {
     flexDirection: "row",
     gap: 8,
-    marginBottom: 30,
+    marginBottom: 24,
   },
   dot: {
     height: 10,
     borderRadius: 5,
   },
   dotActive: {
-    width: 20,
+    width: 24,
     backgroundColor: "#0D9488", // Teal active dot
   },
   dotInactive: {
     width: 10,
-    backgroundColor: "#94A3B8", // Slate gray inactive dot
+    backgroundColor: "#CBD5E1", // Soft gray inactive dot
   },
   ctaButton: {
     backgroundColor: "#0D9488",
@@ -296,7 +317,8 @@ const styles = StyleSheet.create({
   },
   ctaButtonText: {
     ...FONTS.bodyBold,
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: "900",
     color: "#FFFFFF",
   },
 });
