@@ -47,7 +47,7 @@ export default function AppIntroFlow({ onFinish }: AppIntroFlowProps) {
     },
     {
       title: "Pantau tumbuh kembang\nanak secara real-time!",
-      image: require("../assets/images/robomind_character_2d.png"),
+      image: require("../assets/images/news_classroom.png"),
     },
   ];
 
