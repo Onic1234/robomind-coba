@@ -116,6 +116,23 @@
       max-width: 129vh; /* 86vh * 1.5 aspect ratio */
       width: 100%;
     }
+
+    /* Landscape mobile: compact layout */
+    @media screen and (orientation: landscape) and (max-height: 500px) {
+      body { padding: 4px !important; }
+      #gameContainer { max-height: 96vh; padding: 6px !important; border-width: 2px !important; border-radius: 12px !important; }
+      #gameContainer .text-[10px] { font-size: 7px !important; }
+      #gameContainer .text-[9px] { font-size: 7px !important; }
+      #gameContainer .px-2\.5 { padding-left: 5px !important; padding-right: 5px !important; }
+      #gameContainer .py-1 { padding-top: 2px !important; padding-bottom: 2px !important; }
+      #mazeGrid { inset: 8px !important; }
+      .w-24 { width: 56px !important; }
+      .h-24 { height: 56px !important; }
+      .w-7 { width: 18px !important; }
+      .h-7 { height: 18px !important; }
+      .w-8 { width: 22px !important; }
+      .h-8 { height: 22px !important; }
+    }
   </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-2 md:p-4 text-white overflow-hidden bg-slate-950">
