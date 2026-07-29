@@ -11,8 +11,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { COLORS, FONTS } from "../constants/Theme";
 
-export default function RoboMazeScreen() {
+export default function RoboJekScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -30,14 +31,15 @@ export default function RoboMazeScreen() {
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
             <Ionicons name="arrow-back" size={22} color="#fff" />
           </Pressable>
-          <Text style={styles.headerTitle}>Robo Maze</Text>
+          <Text style={styles.headerTitle}>Robo-Jek</Text>
           <View style={{ width: 40 }} />
         </View>
         <View style={styles.mobileNotice}>
-          <Ionicons name="grid" size={64} color="#38bdf8" />
-          <Text style={styles.mobileTitle}>Robo Maze</Text>
+          <Ionicons name="game-controller" size={64} color="#38bdf8" />
+          <Text style={styles.mobileTitle}>Robo-Jek</Text>
           <Text style={styles.mobileDesc}>
-            Game ini hanya bisa dimainkan di versi web browser.
+            Game Robo-Jek adalah game berbasis web (HTML5 Canvas).
+            Mainkan di versi web browser untuk pengalaman terbaik.
           </Text>
           <Pressable style={styles.playBtn} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={20} color="#fff" />
@@ -55,13 +57,13 @@ export default function RoboMazeScreen() {
       {loading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color="#38bdf8" />
-          <Text style={styles.loadingText}>Memuat Robo Maze...</Text>
+          <Text style={styles.loadingText}>Memuat Robo-Jek...</Text>
         </View>
       )}
 
       <iframe
         ref={iframeRef}
-        src="/robo-maze/index.html"
+        src="/robo-jek/index.html"
         style={styles.iframe}
         onLoad={() => {
           setLoading(false);
@@ -81,11 +83,11 @@ export default function RoboMazeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#111827",
+    backgroundColor: "#030712",
   },
   webContainer: {
     flex: 1,
-    backgroundColor: "#111827",
+    backgroundColor: "#030712",
   },
   header: {
     flexDirection: "row",
@@ -93,14 +95,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: "rgba(15, 23, 42, 0.95)",
+    backgroundColor: "rgba(3, 7, 18, 0.95)",
     borderBottomWidth: 1,
     borderBottomColor: "rgba(56, 189, 248, 0.2)",
   },
   headerTitle: {
-    fontWeight: "800",
+    ...FONTS.h3,
     fontSize: 18,
     color: "#38bdf8",
+    fontWeight: "800",
   },
   backBtn: {
     flexDirection: "row",
@@ -143,14 +146,14 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     border: "none",
-    backgroundColor: "#111827",
+    backgroundColor: "#030712",
   },
   loadingOverlay: {
     position: "absolute",
     inset: 0,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(17, 24, 39, 0.9)",
+    backgroundColor: "rgba(3, 7, 18, 0.9)",
     zIndex: 5,
   },
   loadingText: {
@@ -167,9 +170,10 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   mobileTitle: {
-    fontWeight: "900",
+    ...FONTS.h2,
     fontSize: 28,
     color: "#38bdf8",
+    fontWeight: "900",
   },
   mobileDesc: {
     color: "#94a3b8",
