@@ -32,6 +32,7 @@ export default function PlayScreen() {
   const [roboMazeLevel, setRoboMazeLevel] = useState(1);
 
   const [screwSpinLevel, setScrewSpinLevel] = useState(1);
+  const [pickAndDropLevel, setPickAndDropLevel] = useState(1);
 
   useFocusEffect(
     useCallback(() => {
@@ -72,6 +73,10 @@ export default function PlayScreen() {
           const storedScrewSpin = await AsyncStorage.getItem("screw_spin_current_level");
           if (storedScrewSpin !== null) {
             setScrewSpinLevel(parseInt(storedScrewSpin));
+          }
+          const storedPickDrop = await AsyncStorage.getItem("pick_and_drop_current_level");
+          if (storedPickDrop !== null) {
+            setPickAndDropLevel(parseInt(storedPickDrop));
           }
         } catch (e) {
           console.error("Failed to load play screen data", e);
@@ -165,6 +170,15 @@ export default function PlayScreen() {
       coinsReward: 250,
       isLocked: false,
     },
+    {
+      id: "pick_and_drop",
+      title: "Robo Pick & Drop",
+      category: "Kognitif",
+      image: require("../../assets/images/rbt_ct.png"),
+      levelInfo: `Level ${pickAndDropLevel}`,
+      coinsReward: 300,
+      isLocked: false,
+    },
   ];
 
   const filteredGames = selectedCategory === "Semua" 
@@ -181,6 +195,8 @@ export default function PlayScreen() {
           } else {
             if (item.id === "screw_spin") {
               router.push("/screw-spin");
+            } else if (item.id === "pick_and_drop") {
+              router.push("/pick-and-drop");
             } else if (item.id === "rogue_soul_2") {
               router.push("/rogue-soul");
             } else if (item.id === "problem_solving") {
@@ -267,7 +283,7 @@ export default function PlayScreen() {
         
         {/* Coins HUD Badge */}
         <View style={styles.coinsHud}>
-          <MaterialCommunityIcons name="coins" size={18} color="#F59E0B" />
+          <Ionicons name="cash" size={18} color="#F59E0B" />
           <Text style={styles.coinsHudText}>{userCoins.toLocaleString("id-ID")}</Text>
         </View>
       </View>
