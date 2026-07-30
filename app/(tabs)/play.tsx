@@ -33,6 +33,7 @@ export default function PlayScreen() {
 
   const [screwSpinLevel, setScrewSpinLevel] = useState(1);
   const [pickAndDropLevel, setPickAndDropLevel] = useState(1);
+  const [poseMasterLevel, setPoseMasterLevel] = useState(1);
 
   useFocusEffect(
     useCallback(() => {
@@ -77,6 +78,10 @@ export default function PlayScreen() {
           const storedPickDrop = await AsyncStorage.getItem("pick_and_drop_current_level");
           if (storedPickDrop !== null) {
             setPickAndDropLevel(parseInt(storedPickDrop));
+          }
+          const storedPoseMaster = await AsyncStorage.getItem("pose_master_current_level");
+          if (storedPoseMaster !== null) {
+            setPoseMasterLevel(parseInt(storedPoseMaster));
           }
         } catch (e) {
           console.error("Failed to load play screen data", e);
@@ -180,6 +185,15 @@ export default function PlayScreen() {
       isLocked: false,
     },
     {
+      id: "pose_master",
+      title: "Master Pose Tangan",
+      category: "Fokus",
+      image: require("../../assets/images/modul_robot.png"),
+      levelInfo: `Level ${poseMasterLevel}`,
+      coinsReward: 300,
+      isLocked: false,
+    },
+    {
       id: "robo_jek",
       title: "Robo-Jek",
       category: "Fokus",
@@ -204,6 +218,8 @@ export default function PlayScreen() {
           } else {
             if (item.id === "screw_spin") {
               router.push("/screw-spin");
+            } else if (item.id === "pose_master") {
+              router.push("/pose-master");
             } else if (item.id === "pick_and_drop") {
               router.push("/pick-and-drop");
             } else if (item.id === "rogue_soul_2") {
