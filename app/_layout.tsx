@@ -21,6 +21,7 @@ export default function RootLayout() {
         <Stack.Screen name="rogue-soul" options={{ headerShown: false }} />
         <Stack.Screen name="pick-and-drop" options={{ headerShown: false }} />
         <Stack.Screen name="pose-master" options={{ headerShown: false }} />
+        <Stack.Screen name="robo-bros" options={{ headerShown: false }} />
       </Stack>
       <ChatbotButton />
     </>

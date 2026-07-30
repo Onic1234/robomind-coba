@@ -34,6 +34,7 @@ export default function PlayScreen() {
   const [screwSpinLevel, setScrewSpinLevel] = useState(1);
   const [pickAndDropLevel, setPickAndDropLevel] = useState(1);
   const [poseMasterLevel, setPoseMasterLevel] = useState(1);
+  const [roboBrosLevel, setRoboBrosLevel] = useState(1);
 
   useFocusEffect(
     useCallback(() => {
@@ -83,6 +84,10 @@ export default function PlayScreen() {
           if (storedPoseMaster !== null) {
             setPoseMasterLevel(parseInt(storedPoseMaster));
           }
+          const storedRoboBros = await AsyncStorage.getItem("robo_bros_current_level");
+          if (storedRoboBros !== null) {
+            setRoboBrosLevel(parseInt(storedRoboBros));
+          }
         } catch (e) {
           console.error("Failed to load play screen data", e);
         }
@@ -101,6 +106,15 @@ export default function PlayScreen() {
       image: require("../../assets/images/Screw_Spin.png"),
       levelInfo: `Level ${screwSpinLevel}`,
       coinsReward: 250,
+      isLocked: false,
+    },
+    {
+      id: "robo_bros",
+      title: "Robo Bros",
+      category: "Kognitif",
+      image: require("../../assets/images/modul_robot.png"),
+      levelInfo: `Level ${roboBrosLevel}`,
+      coinsReward: 350,
       isLocked: false,
     },
     {
@@ -218,6 +232,8 @@ export default function PlayScreen() {
           } else {
             if (item.id === "screw_spin") {
               router.push("/screw-spin");
+            } else if (item.id === "robo_bros") {
+              router.push("/robo-bros");
             } else if (item.id === "pose_master") {
               router.push("/pose-master");
             } else if (item.id === "pick_and_drop") {

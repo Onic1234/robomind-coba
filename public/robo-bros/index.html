@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Robo Bros - 2D Platformer</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+        html, body {
+            width: 100vw; height: 100vh; overflow: hidden;
+            background: #0f172a; color: #FFF;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        #game {
+            width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            position: relative;
+        }
+        #gameArea {
+            width: 100%; height: 100%;
+            position: relative;
+            display: flex; justify-content: center; align-items: center;
+        }
+        canvas {
+            display: block; margin: auto;
+            width: 100%; height: 100%;
+            object-fit: contain;
+            background: #67d2d6;
+        }
+        /* Touch Controls */
+        .touch-controls {
+            position: absolute; bottom: 20px; left: 0; right: 0;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 24px; z-index: 99; pointer-events: none;
+        }
+        .dpad-group { display: flex; gap: 12px; pointer-events: auto; }
+        .action-group { pointer-events: auto; }
+        .ctrl-btn {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: rgba(15, 23, 42, 0.8); border: 2.5px solid rgba(245, 158, 11, 0.8);
+            color: #F8FAFC; font-size: 24px; font-weight: bold;
+            display: flex; justify-content: center; align-items: center;
+            touch-action: manipulation; box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+            cursor: pointer;
+        }
+        .ctrl-btn:active { background: rgba(245, 158, 11, 0.95); color: #0F172A; transform: scale(0.92); }
+        .btn-jump { width: 72px; height: 72px; background: rgba(16, 185, 129, 0.9); border-color: #34D399; font-size: 28px; }
+        .btn-jump:active { background: #059669; }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <div id="gameArea">
+            <canvas id="canvas"></canvas>
+        </div>
+    </div>
+
+    <!-- On-screen Virtual Controls -->
+    <div class="touch-controls">
+        <div class="dpad-group">
+            <div class="ctrl-btn" onmousedown="pressBtn('kiri')" onmouseup="releaseBtn('kiri')" ontouchstart="pressBtn('kiri')" ontouchend="releaseBtn('kiri')">◀</div>
+            <div class="ctrl-btn" onmousedown="pressBtn('kanan')" onmouseup="releaseBtn('kanan')" ontouchstart="pressBtn('kanan')" ontouchend="releaseBtn('kanan')">▶</div>
+        </div>
+        <div class="action-group">
+            <div class="ctrl-btn btn-jump" onmousedown="pressBtn('jump')" onmouseup="releaseBtn('jump')" ontouchstart="pressBtn('jump')" ontouchend="releaseBtn('jump')">▲</div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="js/gameLib.js"></script>
+    <script type="text/javascript" src="js/map_1.js"></script>
+    <script type="text/javascript" src="js/map_2.js"></script>
+    <script type="text/javascript" src="js/game.js"></script>
+    <script>
+        function pressBtn(action) {
+            if (!window.game) return;
+            if (action === 'kiri') { window.game.kiri = true; if (typeof window.kiri !== 'undefined') window.kiri = true; }
+            if (action === 'kanan') { window.game.kanan = true; if (typeof window.kanan !== 'undefined') window.kanan = true; }
+            if (action === 'jump') { window.game.atas = true; window.game.spasi = true; if (typeof window.atas !== 'undefined') window.atas = true; }
+        }
+        function releaseBtn(action) {
+            if (!window.game) return;
+            if (action === 'kiri') { window.game.kiri = false; if (typeof window.kiri !== 'undefined') window.kiri = false; }
+            if (action === 'kanan') { window.game.kanan = false; if (typeof window.kanan !== 'undefined') window.kanan = false; }
+            if (action === 'jump') { window.game.atas = false; window.game.spasi = false; if (typeof window.atas !== 'undefined') window.atas = false; }
+        }
+    </script>
+</body>
+</html>
