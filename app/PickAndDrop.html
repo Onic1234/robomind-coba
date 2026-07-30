@@ -654,13 +654,11 @@
             document.getElementById('total_count').innerText = 8;
             document.getElementById('sorted_count').innerText = 0;
             document.getElementById('score').innerText = 0;
-            document.getElementById('timer').innerText = timeLeft;
-
             if (timer) clearInterval(timer);
             timer = setInterval(() => {
                 timeLeft--;
                 document.getElementById('timer').innerText = timeLeft;
-                if (timeLeft <= 0) endGame(false, "Waktu Misi Habis!");
+                if (timeLeft <= 0) endGame(true, "Waktu Misi Habis!");
             }, 1000);
 
             if (animFrameId) cancelAnimationFrame(animFrameId);
@@ -686,58 +684,77 @@
             if (cursor.y >= podY) {
                 const idx = Math.min(2, Math.max(0, Math.floor(cursor.x / podW)));
                 const pod = PODS[idx];
+                sorted++;
+                document.getElementById('sorted_count').innerText = sorted;
+
                 if (it.category === pod.id) {
-                    correct++; sorted++; combo++;
+                    correct++; combo++;
                     const pts = 100 + combo * 25; score += pts;
-                    document.getElementById('sorted_count').innerText = sorted;
                     document.getElementById('score').innerText = score;
                     toast('+' + pts + ' PTS! Tepat ' + it.name, true);
-                    if (sorted >= 8) endGame(true);
                 } else {
                     wrong++; combo = 0;
-                    toast('Salah Pod!', false);
+                    toast('❌ Salah Pod! ' + it.name, false);
+                }
+
+                cursor.item = null;
+                if (sorted >= 8 || items.length === 0) {
+                    endGame(true, "Misi Pemilahan Selesai!");
                 }
             } else {
                 items.push({ ...it, x: cursor.x, y: cursor.y });
+                cursor.item = null;
             }
-            cursor.item = null;
         }
 
-        function endGame(win, reason = "") {
+        function endGame(win = true, reason = "") {
             gameActive = false; clearInterval(timer);
-            if (win) {
-                const totalAccuracy = Math.round((correct / Math.max(1, correct + wrong)) * 100);
-                const timeBonus = Math.max(0, timeLeft);
-                const baseCoin = 150;
-                const bonusCoin = Math.round((totalAccuracy / 100) * 50);
-                const totalCoins = baseCoin + bonusCoin;
+            
+            const totalProcessed = Math.max(1, correct + wrong);
+            const totalAccuracy = Math.round((correct / totalProcessed) * 100);
+            const timeBonus = Math.max(0, timeLeft);
+            const baseCoin = 100 + (correct * 10);
+            const bonusCoin = Math.round((totalAccuracy / 100) * 50);
+            const totalCoins = baseCoin + bonusCoin;
 
-                // Scores for 5 axis (50 - 100)
-                const logikaSpasial = Math.min(100, Math.max(50, totalAccuracy));
-                const keputusanCepat = Math.min(100, Math.max(50, Math.round(70 + (timeBonus / 45) * 30)));
-                const kontrolDiri = Math.max(30, 100 - (wrong * 20));
-                const memoriKerja = Math.min(100, Math.max(50, Math.round(75 + (combo * 5))));
-                const fokusAtensi = Math.round((logikaSpasial * 0.4 + kontrolDiri * 0.3 + keputusanCepat * 0.3));
-
-                document.getElementById('res_item_count').innerText = sorted + '/8 Item';
-                document.getElementById('res_accuracy').innerText = totalAccuracy + '%';
-                document.getElementById('res_time_bonus').innerText = '+' + timeBonus + 's';
-                document.getElementById('res_coin_base').innerText = '+' + baseCoin + ' Koin';
-                document.getElementById('res_coin_bonus').innerText = '+' + bonusCoin + ' Koin';
-                document.getElementById('res_coin_total').innerText = totalCoins + ' KOIN';
-
-                if (totalAccuracy >= 90) document.getElementById('res_stars').innerText = '⭐⭐⭐';
-                else if (totalAccuracy >= 60) document.getElementById('res_stars').innerText = '⭐⭐☆';
-                else document.getElementById('res_stars').innerText = '⭐☆☆';
-
-                document.getElementById('win_screen').classList.remove('hidden');
-
-                setTimeout(() => {
-                    drawRadarChart([logikaSpasial, keputusanCepat, kontrolDiri, memoriKerja, fokusAtensi]);
-                }, 50);
+            // Dynamic Header Title & Stars based on accuracy
+            let titleText = "LEVEL 1 CLEARED!";
+            let starsText = "⭐⭐⭐";
+            if (totalAccuracy >= 85 && correct >= 6) {
+                titleText = "EXCELLENT! LEVEL 1 CLEARED!";
+                starsText = "⭐⭐⭐";
+            } else if (totalAccuracy >= 50) {
+                titleText = "BAGUS! LEVEL 1 CLEARED!";
+                starsText = "⭐⭐☆";
             } else {
-                document.getElementById('lose_reason').innerText = reason;
-                document.getElementById('lose_screen').classList.remove('hidden');
+                titleText = "MISI SELESAI! TETAP SEMANGAT!";
+                starsText = "⭐☆☆";
+            }
+
+            // Scores for 5 axis (30 - 100)
+            const logikaSpasial = Math.min(100, Math.max(40, totalAccuracy));
+            const keputusanCepat = Math.min(100, Math.max(40, Math.round(60 + (timeBonus / 45) * 40)));
+            const kontrolDiri = Math.max(30, 100 - (wrong * 20));
+            const memoriKerja = Math.min(100, Math.max(40, Math.round(60 + (combo * 8))));
+            const fokusAtensi = Math.round((logikaSpasial * 0.4 + kontrolDiri * 0.3 + keputusanCepat * 0.3));
+
+            document.getElementById('res_title').innerText = titleText;
+            document.getElementById('res_stars').innerText = starsText;
+            document.getElementById('res_item_count').innerText = correct + '/' + totalProcessed + ' Item Tepat';
+            document.getElementById('res_accuracy').innerText = totalAccuracy + '%';
+            document.getElementById('res_time_bonus').innerText = '+' + timeBonus + 's';
+            document.getElementById('res_coin_base').innerText = '+' + baseCoin + ' Koin';
+            document.getElementById('res_coin_bonus').innerText = '+' + bonusCoin + ' Koin';
+            document.getElementById('res_coin_total').innerText = totalCoins + ' KOIN';
+
+            document.getElementById('win_screen').classList.remove('hidden');
+
+            setTimeout(() => {
+                drawRadarChart([logikaSpasial, keputusanCepat, kontrolDiri, memoriKerja, fokusAtensi]);
+            }, 50);
+
+            if (window.ReactNativeWebView) {
+                window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'LEVEL_COMPLETE', coins: totalCoins }));
             }
         }
 
