@@ -174,6 +174,15 @@ export default function PlayScreen() {
       coinsReward: 300,
       isLocked: false,
     },
+    {
+      id: "robo_pose",
+      title: "Robo Pose",
+      category: "Fokus",
+      image: require("../../assets/images/modul_retro.png"),
+      levelInfo: "Level 1",
+      coinsReward: 200,
+      isLocked: false,
+    },
   ];
 
   const filteredGames = selectedCategory === "Semua" 
@@ -208,6 +217,8 @@ export default function PlayScreen() {
               router.push("/robo-maze");
             } else if (item.id === "robo_jek") {
               router.push("/robo-jek");
+            } else if (item.id === "robo_pose") {
+              router.push("/robo-pose");
             } else if (!isLoggedIn) {
               Alert.alert(
                 "Harap Login Dahulu",
