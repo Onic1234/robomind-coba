@@ -5001,22 +5001,79 @@ export default function RoboLinkScreen() {
         </View>
       </Modal>
 
-      {/* FAILED MODAL OVERLAY */}
+      {/* FAILED MODAL OVERLAY - 2 COLUMN COGNITIVE RADAR CHART */}
       <Modal visible={gameState === "failed"} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={[styles.victoryIconCircle, { backgroundColor: "#FEF2F2" }]}>
-              <Ionicons name="alert-circle" size={50} color="#EF4444" />
+          <View style={[styles.resultModalCard, { borderColor: "rgba(239, 68, 68, 0.4)" }]}>
+            {/* HEADER */}
+            <View style={styles.resultHeader}>
+              <Text style={[styles.resultBadgeText, { color: "#EF4444" }]}>MISSION FAILED</Text>
+              <Text style={[styles.resultTitleText, { color: "#F87171" }]}>WAKTU HABIS!</Text>
+              <Text style={styles.resultSubtitleText}>
+                Sirkuit Data Gagal Tersambung Dalam Batas Waktu. Latih Kembali Kecepatan Berpikir Spasial!
+              </Text>
             </View>
-            <Text style={styles.modalTitle}>WAKTU HABIS!</Text>
-            <Text style={styles.modalSubtitle}>Sirkuit gagal tersambung dalam batas waktu. Jangan menyerah, coba lagi!</Text>
 
-            <Button
-              title="Coba Lagi"
-              onPress={handleRestartLevel}
-              variant="primary"
-              style={{ width: "100%" }}
-            />
+            {/* DUAL COLUMN CONTAINER */}
+            <View style={styles.resultGrid}>
+              {/* LEFT COLUMN: EVALUASI MISI */}
+              <View style={[styles.resultColumnLeft, { borderColor: "rgba(239, 68, 68, 0.25)" }]}>
+                <Text style={styles.columnTitle}>EVALUASI MISI</Text>
+                
+                {/* STARS */}
+                <View style={styles.starRow}>
+                  <Text style={styles.starText}>☆ ☆ ☆</Text>
+                </View>
+
+                {/* CHECKLIST */}
+                <View style={styles.checklistContainer}>
+                  <Text style={styles.checkItem}>❌ Kabel belum tersambung <Text style={[styles.checkVal, { color: "#F87171" }]}> (Terputus)</Text></Text>
+                  <Text style={styles.checkItem}>⚠️ Batas waktu sirkuit <Text style={styles.checkVal}>(Waktu Habis)</Text></Text>
+                  <Text style={styles.checkItem}>💡 Perhatikan alur kabel <Text style={styles.checkVal}>(Rencanakan Rute)</Text></Text>
+                </View>
+
+                {/* LOOT BREAKDOWN */}
+                <View style={styles.lootBreakdown}>
+                  <View style={styles.lootRow}>
+                    <Text style={styles.lootLabel}>Loot Koin Diraih:</Text>
+                    <Text style={styles.lootVal}>+10 Koin</Text>
+                  </View>
+                  <View style={styles.totalRow}>
+                    <Text style={[styles.totalLabel, { color: "#F87171" }]}>TOTAL SOULONS / KOIN:</Text>
+                    <Text style={[styles.totalVal, { color: "#F87171" }]}>10 KOIN</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* RIGHT COLUMN: ANALISIS PERKEMBANGAN OTAK */}
+              <View style={styles.resultColumnRight}>
+                <Text style={styles.brainTitle}>🧠 Evaluasi Perkembangan Otak</Text>
+                <Text style={styles.brainSubtitle}>(Area Pengembangan: Memori Kerja & Spasial)</Text>
+
+                {/* RADAR CHART */}
+                <View style={styles.radarWrapper}>
+                  <RadarChart
+                    data={[
+                      { axis: "Spasial", score: 55 },
+                      { axis: "Keputusan", score: 60 },
+                      { axis: "Kontrol Diri", score: 68 },
+                      { axis: "Memori Kerja", score: 50 },
+                      { axis: "Fokus", score: 62 },
+                    ]}
+                  />
+                </View>
+              </View>
+            </View>
+
+            {/* ACTION BUTTONS */}
+            <View style={styles.resultActions}>
+              <Pressable style={styles.btnGhost} onPress={() => router.back()}>
+                <Text style={styles.btnGhostText}>[ Kembali Ke Menu Utama ]</Text>
+              </Pressable>
+              <Pressable style={[styles.btnPrimaryNext, { backgroundColor: "#DC2626" }]} onPress={handleRestartLevel}>
+                <Text style={styles.btnPrimaryNextText}>[ COBA LAGI 🔄 ]</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </Modal>

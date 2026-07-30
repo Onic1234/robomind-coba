@@ -1,11 +1,11 @@
-import React, { useState, useCallback } from "react";
-import { StyleSheet, View, Text, ScrollView, Pressable, StatusBar, FlatList, Alert } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../../constants/Theme";
+import { Image } from "expo-image";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
+import { Alert, FlatList, Pressable, ScrollView, StatusBar, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { COLORS, FONTS, SHADOWS, SHAPES, SPACING } from "../../constants/Theme";
 import { useAuth } from "../../hooks/useAuth";
 
 interface GameItem {
