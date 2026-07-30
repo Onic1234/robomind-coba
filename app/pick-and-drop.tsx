@@ -36,7 +36,7 @@ export default function PickAndDropScreen() {
     loadStoredData();
   }, []);
 
-  // Sync message events from WebView when level completes
+  // Sync message events from WebView when level completes or user exits
   const handleWebViewMessage = async (event: any) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
@@ -46,6 +46,8 @@ export default function PickAndDropScreen() {
         setUserCoins(newCoins);
         await AsyncStorage.setItem(STORAGE_KEY_COINS, newCoins.toString());
         await AsyncStorage.setItem(STORAGE_KEY_LEVEL, (currentLevel + 1).toString());
+      } else if (data.type === "GO_BACK") {
+        router.back();
       }
     } catch (e) {
       // Ignore non-json messages
@@ -104,7 +106,7 @@ export default function PickAndDropScreen() {
                 overflow: hidden; position: relative; border: 2px solid #38BDF8;
                 box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
             }
-            #input_video { display: none; }
+            #input_video { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
             #output_canvas { width: 100%; height: 100%; transform: scaleX(-1); object-fit: cover; }
             
             .cam-hud-overlay {
@@ -172,23 +174,182 @@ export default function PickAndDropScreen() {
             .btn:hover { transform: scale(1.04); }
             .hidden { display: none !important; }
 
-            .report-card {
-                background: rgba(30, 41, 59, 0.9); border-radius: 20px; padding: 18px;
-                width: 100%; max-width: 440px; margin-top: 14px;
-                border: 1px solid rgba(56, 189, 248, 0.3); text-align: left;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            .result-card {
+                background: rgba(15, 23, 42, 0.95);
+                border: 1px solid rgba(56, 189, 248, 0.4);
+                border-radius: 20px;
+                padding: 16px 20px;
+                width: 100%;
+                max-width: 560px;
+                box-shadow: 0 0 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(56, 189, 248, 0.2);
+                backdrop-filter: blur(16px);
             }
-            .metric-row { margin-bottom: 10px; }
-            .metric-lbl { display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 700; color: #E2E8F0; margin-bottom: 4px; }
-            .bar-track { height: 10px; background: #0F172A; border-radius: 5px; overflow: hidden; border: 1px solid #334155; }
-            .bar-fill { height: 100%; border-radius: 5px; transition: width 0.6s ease; }
+            .result-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                margin-top: 8px;
+            }
+            .result-col {
+                background: rgba(30, 41, 59, 0.7);
+                border: 1px solid rgba(56, 189, 248, 0.25);
+                border-radius: 14px;
+                padding: 12px;
+                text-align: left;
+            }
+            .btn-ghost {
+                background: rgba(30, 41, 59, 0.8);
+                border: 1px solid rgba(148, 163, 184, 0.4);
+                color: #CBD5E1;
+                padding: 10px 18px;
+                border-radius: 24px;
+                font-size: 0.82rem;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            .btn-ghost:hover {
+                background: rgba(51, 65, 85, 0.9);
+                color: #FFFFFF;
+            }
+            .btn-action {
+                background: linear-gradient(135deg, #0284C7, #0B84FF);
+                border: none;
+                color: white;
+                padding: 10px 22px;
+                border-radius: 24px;
+                font-size: 0.85rem;
+                font-weight: 800;
+                cursor: pointer;
+                box-shadow: 0 4px 15px rgba(11, 132, 255, 0.4);
+                transition: all 0.2s;
+            }
+            .btn-action:hover {
+                transform: scale(1.03);
+            }
+
+            /* Mobile Responsive Styling */
+            @media (max-width: 768px) {
+                .top-hud {
+                    padding: 6px 10px;
+                    flex-wrap: nowrap;
+                    gap: 6px;
+                }
+                .brand-title {
+                    font-size: 0.78rem;
+                    white-space: nowrap;
+                }
+                .brand-title-full { display: none; }
+                .brand-title-short { display: inline; }
+
+                .hud-metrics {
+                    gap: 4px;
+                }
+                .hud-chip {
+                    padding: 4px 8px;
+                    font-size: 0.72rem;
+                    border-radius: 12px;
+                    gap: 3px;
+                }
+
+                .main-arena {
+                    flex-direction: column;
+                    padding: 6px;
+                    gap: 6px;
+                }
+                .sidebar {
+                    width: 100%;
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 6px;
+                }
+                .cam-card {
+                    width: 68px;
+                    height: 50px;
+                    aspect-ratio: auto;
+                    flex-shrink: 0;
+                    border-radius: 10px;
+                }
+                .cam-badge {
+                    font-size: 0.55rem;
+                    padding: 1px 3px;
+                    bottom: 2px; left: 2px; right: 2px;
+                    border-radius: 4px;
+                }
+                .cam-badge span { display: none; }
+
+                .mode-switch-box {
+                    flex: 1;
+                    flex-direction: row;
+                    align-items: center;
+                    gap: 4px;
+                    padding: 4px;
+                    overflow-x: auto;
+                    border-radius: 10px;
+                }
+                .mode-label { display: none; }
+                .mode-btn {
+                    padding: 5px 8px;
+                    font-size: 0.7rem;
+                    white-space: nowrap;
+                    border-radius: 8px;
+                    flex: 1;
+                    justify-content: center;
+                }
+                .mode-btn span { font-size: 0.85rem; }
+
+                .guide-panel { display: none; }
+
+                .overlay {
+                    padding: 16px;
+                }
+                .overlay h2 {
+                    font-size: 1.15rem !important;
+                }
+                .overlay p {
+                    font-size: 0.78rem !important;
+                    max-width: 280px !important;
+                }
+                .btn {
+                    padding: 10px 24px;
+                    font-size: 0.85rem;
+                    margin-top: 12px;
+                }
+                .result-card {
+                    padding: 12px;
+                    max-width: 360px;
+                    max-height: 90vh;
+                    overflow-y: auto;
+                }
+                .result-grid {
+                    grid-template-columns: 1fr;
+                    gap: 8px;
+                }
+                .result-col {
+                    padding: 10px;
+                }
+                .btn-ghost, .btn-action {
+                    width: 100%;
+                    text-align: center;
+                    padding: 8px 14px;
+                    font-size: 0.78rem;
+                }
+            }
+            @media (min-width: 769px) {
+                .brand-title-full { display: inline; }
+                .brand-title-short { display: none; }
+            }
         </style>
     </head>
     <body>
         <div class="bg-grid"></div>
 
         <div class="top-hud">
-            <div class="brand-title">🤖 ROBO PICK & DROP • CYBER LAB</div>
+            <div class="brand-title">
+                <span>🤖</span>
+                <span class="brand-title-full">ROBO PICK & DROP • CYBER LAB</span>
+                <span class="brand-title-short">CYBER LAB</span>
+            </div>
             <div class="hud-metrics">
                 <div class="hud-chip">📦 <span class="chip-highlight" id="sorted_count">0</span>/<span id="total_count">0</span></div>
                 <div class="hud-chip">⏱️ <span class="chip-accent" id="timer">45</span>s</div>
@@ -242,34 +403,61 @@ export default function PickAndDropScreen() {
                     <button class="btn" onclick="startGame()">Mulai Misi Pemilahan</button>
                 </div>
 
-                <!-- Win / Psychological Report Overlay -->
+                <!-- Win / Psychological Report Result Modal Overlay -->
                 <div id="win_screen" class="overlay hidden">
-                    <div style="font-size: 42px;">🎉</div>
-                    <h2 style="color:#10B981; margin:0;">MISI BERHASIL!</h2>
-                    <p style="color:#94A3B8; font-size:0.85rem; margin-top:2px;">Evaluasi Persentase Psikologi Anak (%):</p>
-                    <div class="report-card">
-                        <div style="text-align:center; margin-bottom:12px;">
-                            <div style="font-size:0.75rem; color:#94A3B8;">Indeks Perkembangan Keseluruhan</div>
-                            <div id="psych_overall" style="font-size:2.5rem; font-weight:900; color:#38BDF8;">92%</div>
+                    <div class="result-card">
+                        <div style="text-align: center; margin-bottom: 10px;">
+                            <div style="font-size: 0.78rem; font-weight: 800; color: #F59E0B; letter-spacing: 2px; text-transform: uppercase;">MISSION COMPLETED</div>
+                            <h2 style="color: #10B981; margin: 2px 0; font-size: 1.5rem; font-weight: 900;" id="res_title">LEVEL 1 CLEARED!</h2>
+                            <div style="font-size: 0.78rem; color: #94A3B8;">Misi Pemilahan Cyber Robot → Selesai!</div>
                         </div>
-                        <div class="metric-row">
-                            <div class="metric-lbl"><span>🧠 Logika Spasial & Kategorisasi</span><span id="p_logika">95%</span></div>
-                            <div class="bar-track"><div id="b_logika" class="bar-fill" style="width:95%; background: linear-gradient(90deg, #3B82F6, #60A5FA);"></div></div>
+
+                        <div class="result-grid">
+                            <!-- LEFT COLUMN: PENCAPAIAN MISI -->
+                            <div class="result-col">
+                                <div style="font-size: 0.82rem; font-weight: 800; color: #38BDF8; margin-bottom: 6px; text-transform: uppercase; text-align: center;">PENCAPAIAN MISI</div>
+                                
+                                <div style="font-size: 1.4rem; text-align: center; margin-bottom: 6px;" id="res_stars">⭐⭐⭐</div>
+
+                                <div style="font-size: 0.75rem; color: #CBD5E1; display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px;">
+                                    <div>⭐ Item Disortir Tepat: <strong style="color:#10B981;" id="res_item_count">8/8 Item</strong></div>
+                                    <div>⭐ Akurasi Pemilahan: <strong style="color:#38BDF8;" id="res_accuracy">100%</strong></div>
+                                    <div>⭐ Bonus Waktu Sisa: <strong style="color:#F59E0B;" id="res_time_bonus">+15s</strong></div>
+                                </div>
+
+                                <div style="border-top: 1px dashed rgba(255,255,255,0.15); padding-top: 6px; font-size: 0.78rem; color: #CBD5E1;">
+                                    <div style="display:flex; justify-content:space-between; margin-bottom: 3px;">
+                                        <span>Loot Koin Terkumpul:</span>
+                                        <strong style="color:#F59E0B;" id="res_coin_base">+150 Koin</strong>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; margin-bottom: 4px;">
+                                        <span>Bonus Akurasi Combo:</span>
+                                        <strong style="color:#38BDF8;" id="res_coin_bonus">+50 Koin</strong>
+                                    </div>
+                                    <div style="display:flex; justify-content:space-between; font-size: 0.88rem; font-weight:800; color:#10B981; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px;">
+                                        <span>TOTAL SOULONS / KOIN:</span>
+                                        <span id="res_coin_total" style="color: #F59E0B;">200 KOIN</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- RIGHT COLUMN: ANALISIS PERKEMBANGAN OTAK -->
+                            <div class="result-col">
+                                <div style="font-size: 0.82rem; font-weight: 800; color: #C084FC; margin-bottom: 2px; text-align: center;">🧠 Analisis Perkembangan Otak</div>
+                                <div style="font-size: 0.7rem; color: #94A3B8; margin-bottom: 6px; text-align: center;">(Prefrontal Cortex & Kontrol Emosi)</div>
+
+                                <div style="display: flex; justify-content: center; align-items: center;">
+                                    <canvas id="radarChartCanvas" width="220" height="180"></canvas>
+                                </div>
+                            </div>
                         </div>
-                        <div class="metric-row">
-                            <div class="metric-lbl"><span>🎯 Fokus & Atensi Visual</span><span id="p_focus">88%</span></div>
-                            <div class="bar-track"><div id="b_focus" class="bar-fill" style="width:88%; background: linear-gradient(90deg, #10B981, #34D399);"></div></div>
-                        </div>
-                        <div class="metric-row">
-                            <div class="metric-lbl"><span>⚡ Speed & Motorik Halus Jari</span><span id="p_motorik">90%</span></div>
-                            <div class="bar-track"><div id="b_motorik" class="bar-fill" style="width:90%; background: linear-gradient(90deg, #F59E0B, #FBBF24);"></div></div>
-                        </div>
-                        <div class="metric-row">
-                            <div class="metric-lbl"><span>🧩 Pemecahan Masalah Eksekutif</span><span id="p_problem">91%</span></div>
-                            <div class="bar-track"><div id="b_problem" class="bar-fill" style="width:91%; background: linear-gradient(90deg, #8B5CF6, #A78BFA);"></div></div>
+
+                        <!-- ACTION BUTTONS -->
+                        <div style="display: flex; gap: 10px; justify-content: center; margin-top: 12px; flex-wrap: wrap;">
+                            <button class="btn-ghost" onclick="exitGame()">[ Kembali Ke Peta Utama ]</button>
+                            <button class="btn-action" onclick="startGame()">[ CONTINUE (Lanjut Level) ➔ ]</button>
                         </div>
                     </div>
-                    <button class="btn" onclick="startGame()">Mainkan Lagi</button>
                 </div>
 
                 <!-- Lose Overlay -->
@@ -324,10 +512,16 @@ export default function PickAndDropScreen() {
 
             function resize() {
                 const b = document.getElementById('arena_bounds');
-                canvas.width = b.clientWidth; canvas.height = b.clientHeight;
-                outCanvas.width = 190; outCanvas.height = 142;
+                if (b) {
+                    canvas.width = b.clientWidth; canvas.height = b.clientHeight;
+                }
+                const camCard = document.querySelector('.cam-card');
+                if (camCard) {
+                    outCanvas.width = camCard.clientWidth || 190;
+                    outCanvas.height = camCard.clientHeight || 142;
+                }
             }
-            window.onresize = resize; resize();
+            window.onresize = resize; setTimeout(resize, 100); resize();
 
             // Mode Switcher Handler
             function setControlMode(mode) {
@@ -349,22 +543,62 @@ export default function PickAndDropScreen() {
             }
 
             // MediaPipe Hands Pipeline Init
-            const hands = new Hands({ locateFile: f => 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + f });
-            hands.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-            hands.onResults(onResults);
+            let hands = null;
+            try {
+                if (typeof Hands !== 'undefined') {
+                    hands = new Hands({ locateFile: f => 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + f });
+                    hands.setOptions({ maxNumHands: 1, modelComplexity: 0, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+                    hands.onResults(onResults);
+                }
+            } catch (e) {
+                console.warn("Hands init warning:", e);
+            }
 
-            const cam = new Camera(video, {
-                onFrame: async () => { await hands.send({ image: video }); },
-                width: 320, height: 240
-            });
-            cam.start().catch(err => {
-                document.getElementById('cam_status').innerText = "Touch Mode";
-            });
+            // Custom Camera Feed Init with Graceful Fallback
+            async function startCameraFeed() {
+                const statusEl = document.getElementById('cam_status');
+                try {
+                    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                        throw new Error("Camera API not supported");
+                    }
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: {
+                            width: { ideal: 320 },
+                            height: { ideal: 240 },
+                            facingMode: 'user'
+                        }
+                    });
+                    video.srcObject = stream;
+                    await video.play();
+                    if (statusEl) statusEl.innerText = "MediaPipe Active";
+
+                    async function streamLoop() {
+                        if (hands && video.readyState >= 2 && !video.paused && !video.ended) {
+                            try {
+                                await hands.send({ image: video });
+                            } catch (e) {
+                                console.warn("Hands send error:", e);
+                            }
+                        }
+                        requestAnimationFrame(streamLoop);
+                    }
+                    requestAnimationFrame(streamLoop);
+                } catch (err) {
+                    console.warn("Camera access fallback:", err);
+                    if (statusEl) statusEl.innerText = "Touch Mode";
+                    toast("📷 Kamera sedang digunakan / offline. Menggunakan Mode Touch!", false);
+                    setControlMode('tap');
+                }
+            }
+
+            startCameraFeed();
 
             function onResults(res) {
+                const cw = outCanvas.width || 190;
+                const ch = outCanvas.height || 142;
                 outCtx.save();
-                outCtx.clearRect(0,0,190,142);
-                outCtx.drawImage(res.image, 0,0,190,142);
+                outCtx.clearRect(0, 0, cw, ch);
+                outCtx.drawImage(res.image, 0, 0, cw, ch);
                 if (res.multiHandLandmarks && res.multiHandLandmarks.length > 0) {
                     const lm = res.multiHandLandmarks[0];
                     const idx = lm[8], thm = lm[4];
@@ -530,30 +764,133 @@ export default function PickAndDropScreen() {
             function endGame(win, reason = "") {
                 gameActive = false; clearInterval(timer);
                 if (win) {
-                    const acc = (correct / (correct + wrong)) || 1;
-                    const log = Math.min(100, Math.round(acc * 96));
-                    const foc = Math.min(100, Math.round(acc * 88 + (timeLeft/45)*12));
-                    const mot = Math.min(100, Math.round(acc * 90 + (combo > 3 ? 10 : 5)));
-                    const prb = Math.min(100, Math.round((log*0.4 + foc*0.3 + mot*0.3)));
-                    const ovr = Math.round((log + foc + mot + prb) / 4);
+                    const totalAccuracy = Math.round((correct / Math.max(1, correct + wrong)) * 100);
+                    const timeBonus = Math.max(0, timeLeft);
+                    const baseCoin = 150;
+                    const bonusCoin = Math.round((totalAccuracy / 100) * 50);
+                    const totalCoins = baseCoin + bonusCoin;
 
-                    document.getElementById('psych_overall').innerText = ovr + '%';
-                    document.getElementById('p_logika').innerText = log + '%';
-                    document.getElementById('b_logika').style.width = log + '%';
-                    document.getElementById('p_focus').innerText = foc + '%';
-                    document.getElementById('b_focus').style.width = foc + '%';
-                    document.getElementById('p_motorik').innerText = mot + '%';
-                    document.getElementById('b_motorik').style.width = mot + '%';
-                    document.getElementById('p_problem').innerText = prb + '%';
-                    document.getElementById('b_problem').style.width = prb + '%';
+                    // Scores for 5 axis (50 - 100)
+                    const logikaSpasial = Math.min(100, Math.max(50, totalAccuracy));
+                    const keputusanCepat = Math.min(100, Math.max(50, Math.round(70 + (timeBonus / 45) * 30)));
+                    const kontrolDiri = Math.max(30, 100 - (wrong * 20));
+                    const memoriKerja = Math.min(100, Math.max(50, Math.round(75 + (combo * 5))));
+                    const fokusAtensi = Math.round((logikaSpasial * 0.4 + kontrolDiri * 0.3 + keputusanCepat * 0.3));
+
+                    document.getElementById('res_item_count').innerText = sorted + '/8 Item';
+                    document.getElementById('res_accuracy').innerText = totalAccuracy + '%';
+                    document.getElementById('res_time_bonus').innerText = '+' + timeBonus + 's';
+                    document.getElementById('res_coin_base').innerText = '+' + baseCoin + ' Koin';
+                    document.getElementById('res_coin_bonus').innerText = '+' + bonusCoin + ' Koin';
+                    document.getElementById('res_coin_total').innerText = totalCoins + ' KOIN';
+
+                    if (totalAccuracy >= 90) document.getElementById('res_stars').innerText = '⭐⭐⭐';
+                    else if (totalAccuracy >= 60) document.getElementById('res_stars').innerText = '⭐⭐☆';
+                    else document.getElementById('res_stars').innerText = '⭐☆☆';
+
                     document.getElementById('win_screen').classList.remove('hidden');
 
+                    setTimeout(() => {
+                        drawRadarChart([logikaSpasial, keputusanCepat, kontrolDiri, memoriKerja, fokusAtensi]);
+                    }, 50);
+
                     if (window.ReactNativeWebView) {
-                        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'LEVEL_COMPLETE', coins: 150 }));
+                        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'LEVEL_COMPLETE', coins: totalCoins }));
                     }
                 } else {
                     document.getElementById('lose_reason').innerText = reason;
                     document.getElementById('lose_screen').classList.remove('hidden');
+                }
+            }
+
+            function exitGame() {
+                if (window.ReactNativeWebView) {
+                    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'GO_BACK' }));
+                } else {
+                    window.history.back();
+                }
+            }
+
+            function drawRadarChart(scores) {
+                const canvas = document.getElementById('radarChartCanvas');
+                if (!canvas) return;
+                const rctx = canvas.getContext('2d');
+                const w = canvas.width;
+                const h = canvas.height;
+                rctx.clearRect(0, 0, w, h);
+
+                const centerX = w / 2;
+                const centerY = h / 2 - 2;
+                const radius = 55;
+                const labels = ['Spasial', 'Keputusan', 'Kontrol Diri', 'Memori Kerja', 'Fokus'];
+                const numPoints = labels.length;
+
+                // Background Polygon Webs
+                for (let level = 1; level <= 4; level++) {
+                    const r = (radius / 4) * level;
+                    rctx.beginPath();
+                    for (let i = 0; i < numPoints; i++) {
+                        const angle = (i * 2 * Math.PI / numPoints) - (Math.PI / 2);
+                        const x = centerX + r * Math.cos(angle);
+                        const y = centerY + r * Math.sin(angle);
+                        if (i === 0) rctx.moveTo(x, y);
+                        else rctx.lineTo(x, y);
+                    }
+                    rctx.closePath();
+                    rctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+                    rctx.lineWidth = 1;
+                    rctx.stroke();
+                }
+
+                // Axis Lines & Labels
+                for (let i = 0; i < numPoints; i++) {
+                    const angle = (i * 2 * Math.PI / numPoints) - (Math.PI / 2);
+                    const x = centerX + radius * Math.cos(angle);
+                    const y = centerY + radius * Math.sin(angle);
+                    rctx.beginPath();
+                    rctx.moveTo(centerX, centerY);
+                    rctx.lineTo(x, y);
+                    rctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+                    rctx.stroke();
+
+                    const labelRadius = radius + 16;
+                    const lx = centerX + labelRadius * Math.cos(angle);
+                    const ly = centerY + labelRadius * Math.sin(angle);
+                    rctx.fillStyle = '#CBD5E1';
+                    rctx.font = 'bold 9px sans-serif';
+                    rctx.textAlign = Math.abs(lx - centerX) < 5 ? 'center' : (lx > centerX ? 'left' : 'right');
+                    rctx.textBaseline = Math.abs(ly - centerY) < 5 ? 'middle' : (ly > centerY ? 'top' : 'bottom');
+                    rctx.fillText(labels[i], lx, ly);
+                }
+
+                // Filled Data Polygon
+                rctx.beginPath();
+                for (let i = 0; i < numPoints; i++) {
+                    const score = scores[i] / 100;
+                    const angle = (i * 2 * Math.PI / numPoints) - (Math.PI / 2);
+                    const x = centerX + (radius * score) * Math.cos(angle);
+                    const y = centerY + (radius * score) * Math.sin(angle);
+                    if (i === 0) rctx.moveTo(x, y);
+                    else rctx.lineTo(x, y);
+                }
+                rctx.closePath();
+
+                rctx.fillStyle = 'rgba(168, 85, 247, 0.4)';
+                rctx.fill();
+                rctx.strokeStyle = '#C084FC';
+                rctx.lineWidth = 2;
+                rctx.stroke();
+
+                // Data Dots
+                for (let i = 0; i < numPoints; i++) {
+                    const score = scores[i] / 100;
+                    const angle = (i * 2 * Math.PI / numPoints) - (Math.PI / 2);
+                    const x = centerX + (radius * score) * Math.cos(angle);
+                    const y = centerY + (radius * score) * Math.sin(angle);
+                    rctx.beginPath();
+                    rctx.arc(x, y, 3.5, 0, Math.PI * 2);
+                    rctx.fillStyle = '#F0ABFC';
+                    rctx.fill();
                 }
             }
 
