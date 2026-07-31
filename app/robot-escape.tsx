@@ -26,7 +26,7 @@ import Animated, {
   Easing,
   runOnJS,
 } from "react-native-reanimated";
-import Svg, { Path } from "react-native-svg";
+import Svg, { Path, Polygon, G, Circle, Line, Rect } from "react-native-svg";
 import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../constants/Theme";
 import Button from "../components/ui/Button";
 
@@ -35,6 +35,109 @@ const ROBOT_SIZE = 68;
 const ROBOT_HEIGHT = 75;
 const ROAD_WIDTH = 90;
 const COLLISION_THRESHOLD = 58;
+
+const RadarChart = ({ data }: { data: { axis: string; score: number }[] }) => {
+  const size = 200;
+  const center = size / 2;
+  const radius = 62;
+  const numAxes = data.length;
+
+  const getPolygonPoints = (rFactor: number) => {
+    return data
+      .map((_, i) => {
+        const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+        const x = center + radius * rFactor * Math.cos(angle);
+        const y = center + radius * rFactor * Math.sin(angle);
+        return `${x},${y}`;
+      })
+      .join(" ");
+  };
+
+  const dataPoints = data
+    .map((d, i) => {
+      const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+      const r = radius * (Math.min(100, Math.max(20, d.score)) / 100);
+      const x = center + r * Math.cos(angle);
+      const y = center + r * Math.sin(angle);
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  return (
+    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
+      <Svg width={size} height={size}>
+        {[0.2, 0.4, 0.6, 0.8, 1.0].map((rFactor, idx) => (
+          <Polygon
+            key={idx}
+            points={getPolygonPoints(rFactor)}
+            fill="none"
+            stroke="rgba(56, 189, 248, 0.25)"
+            strokeWidth="1"
+          />
+        ))}
+
+        {data.map((_, i) => {
+          const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+          const x = center + radius * Math.cos(angle);
+          const y = center + radius * Math.sin(angle);
+          return (
+            <Line
+              key={i}
+              x1={center}
+              y1={center}
+              x2={x}
+              y2={y}
+              stroke="rgba(56, 189, 248, 0.3)"
+              strokeWidth="1"
+            />
+          );
+        })}
+
+        <Polygon
+          points={dataPoints}
+          fill="rgba(168, 85, 247, 0.45)"
+          stroke="#C084FC"
+          strokeWidth="2.5"
+        />
+
+        {data.map((d, i) => {
+          const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+          const r = radius * (Math.min(100, Math.max(20, d.score)) / 100);
+          const x = center + r * Math.cos(angle);
+          const y = center + r * Math.sin(angle);
+          return (
+            <G key={i}>
+              <Circle cx={x} cy={y} r="4.5" fill="#FFFFFF" stroke="#A855F7" strokeWidth="2" />
+            </G>
+          );
+        })}
+      </Svg>
+
+      {data.map((d, i) => {
+        const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+        const labelR = radius + 22;
+        const x = center + labelR * Math.cos(angle) - 35;
+        const y = center + labelR * Math.sin(angle) - 8;
+        return (
+          <View
+            key={i}
+            style={{
+              position: "absolute",
+              left: x,
+              top: y,
+              width: 70,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 9.5, fontWeight: "800", color: "#F8FAFC", textAlign: "center" }}>
+              {d.axis}
+            </Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+};
 
 interface RobotObject {
   id: number;

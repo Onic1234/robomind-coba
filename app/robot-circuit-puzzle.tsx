@@ -377,6 +377,81 @@ const getNeighborConnection = (
   return mod.id < neighbor.id ? "KNOB" : "SOCKET";
 };
 
+const getModuleColors = (mod: RobotModule) => {
+  const name = (mod.name || "").toLowerCase();
+  const icon = (mod.icon || "").toLowerCase();
+  
+  if (name.includes("battery") || name.includes("energy") || icon.includes("battery") || icon.includes("lightning")) {
+    return {
+      accent: "#F59E0B",
+      grad0: "#F59E0B",
+      grad50: "#D97706",
+      grad100: "#78350F",
+      border: "#FCD34D",
+      arrow: "#FFFBEB",
+    };
+  }
+  if (name.includes("ai") || name.includes("core") || icon.includes("robot")) {
+    return {
+      accent: "#10B981",
+      grad0: "#10B981",
+      grad50: "#059669",
+      grad100: "#064E3B",
+      border: "#6EE7B7",
+      arrow: "#ECFDF5",
+    };
+  }
+  if (name.includes("vision") || name.includes("sensor") || name.includes("eye") || icon.includes("eye")) {
+    return {
+      accent: "#EC4899",
+      grad0: "#EC4899",
+      grad50: "#DB2777",
+      grad100: "#831843",
+      border: "#F9A8D4",
+      arrow: "#FDF2F8",
+    };
+  }
+  if (name.includes("cpu") || name.includes("processor") || icon.includes("cpu")) {
+    return {
+      accent: "#A855F7",
+      grad0: "#A855F7",
+      grad50: "#9333EA",
+      grad100: "#581C87",
+      border: "#E9D5FF",
+      arrow: "#F5F3FF",
+    };
+  }
+  if (name.includes("servo") || name.includes("arm") || name.includes("joint") || icon.includes("engine") || icon.includes("industrial")) {
+    return {
+      accent: "#EAB308",
+      grad0: "#EAB308",
+      grad50: "#CA8A04",
+      grad100: "#713F12",
+      border: "#FEF08A",
+      arrow: "#FEFCE8",
+    };
+  }
+  if (name.includes("cooling") || name.includes("snowflake") || icon.includes("snowflake")) {
+    return {
+      accent: "#06B6D4",
+      grad0: "#06B6D4",
+      grad50: "#0284C7",
+      grad100: "#164E63",
+      border: "#7DD3FC",
+      arrow: "#F0F9FF",
+    };
+  }
+  // Memory / Navigation Default
+  return {
+    accent: "#38BDF8",
+    grad0: "#38BDF8",
+    grad50: "#0284C7",
+    grad100: "#0C4A6E",
+    border: "#93C5FD",
+    arrow: "#EFF6FF",
+  };
+};
+
 const ModuleItem = React.memo(({
   mod,
   allModules,
@@ -398,6 +473,8 @@ const ModuleItem = React.memo(({
       ],
     };
   });
+
+  const colors = getModuleColors(mod);
 
   const topConn = getNeighborConnection(mod, allModules, "TOP");
   const rightConn = getNeighborConnection(mod, allModules, "RIGHT");
@@ -446,13 +523,11 @@ const ModuleItem = React.memo(({
 
   const renderArrow = () => {
     const c = cellSize / 2;
-    const size = cellSize * 0.24;
+    const size = cellSize * 0.25;
     let rot = "0deg";
     if (mod.direction === "RIGHT") rot = "90deg";
     else if (mod.direction === "DOWN") rot = "180deg";
     else if (mod.direction === "LEFT") rot = "270deg";
-
-    const accent = mod.accentColor || "#00E5FF";
 
     return (
       <View style={[StyleSheet.absoluteFillObject, { justifyContent: "center", alignItems: "center", transform: [{ rotate: rot }] }]}>
@@ -460,27 +535,27 @@ const ModuleItem = React.memo(({
           <Defs>
             <LinearGradient id={`arrowGrad_${mod.id}`} x1="0%" y1="0%" x2="0%" y2="100%">
               <Stop offset="0%" stopColor="#FFFFFF" />
-              <Stop offset="100%" stopColor={accent} />
+              <Stop offset="100%" stopColor={colors.border} />
             </LinearGradient>
           </Defs>
           {/* Arrow Shadow */}
           <Polygon
-            points={`${c},${c - size + 2} ${c - size * 0.8},${c + size * 0.75} ${c + size * 0.8},${c + size * 0.75}`}
-            fill="rgba(0,0,0,0.4)"
+            points={`${c},${c - size + 2} ${c - size * 0.85},${c + size * 0.8} ${c + size * 0.85},${c + size * 0.8}`}
+            fill="rgba(0,0,0,0.5)"
           />
           {/* Main 3D Arrow */}
           <Polygon
-            points={`${c},${c - size} ${c - size * 0.8},${c + size * 0.7} ${c + size * 0.8},${c + size * 0.7}`}
+            points={`${c},${c - size} ${c - size * 0.85},${c + size * 0.75} ${c + size * 0.85},${c + size * 0.75}`}
             fill={`url(#arrowGrad_${mod.id})`}
-            stroke={accent}
-            strokeWidth="2.5"
+            stroke="#FFFFFF"
+            strokeWidth="3"
             strokeLinejoin="round"
           />
-          {/* High-tech Inner Pulse Line */}
+          {/* Inner Line */}
           <Path
-            d={`M ${c} ${c - size * 0.4} L ${c} ${c + size * 0.4}`}
-            stroke="#1E293B"
-            strokeWidth="2.5"
+            d={`M ${c} ${c - size * 0.35} L ${c} ${c + size * 0.45}`}
+            stroke="#0F172A"
+            strokeWidth="3"
             strokeLinecap="round"
           />
         </Svg>
@@ -488,30 +563,30 @@ const ModuleItem = React.memo(({
     );
   };
 
-  const accent = mod.accentColor || "#00E5FF";
-
   return (
     <Animated.View style={[styles.moduleWrapper, animatedStyle, { left: mod.gridX * cellSize, top: mod.gridY * cellSize, width: cellSize, height: cellSize }]}>
       <Pressable onPress={onPress} style={{ width: cellSize, height: cellSize }}>
         <Svg width={cellSize + 20} height={cellSize + 20} style={{ overflow: "visible", position: "absolute", left: -10, top: -10 }}>
           <Defs>
             <LinearGradient id={`pieceGrad_${mod.id}`} x1="0%" y1="0%" x2="100%" y2="100%">
-              <Stop offset="0%" stopColor="#1E293B" />
-              <Stop offset="50%" stopColor="#111827" />
-              <Stop offset="100%" stopColor="#0B132B" />
+              <Stop offset="0%" stopColor={colors.grad0} />
+              <Stop offset="50%" stopColor={colors.grad50} />
+              <Stop offset="100%" stopColor={colors.grad100} />
             </LinearGradient>
           </Defs>
           {/* Drop shadow */}
-          <Path d={generateJigsawPath()} fill="#000000" opacity="0.6" transform="translate(13, 15)" />
-          {/* Main Metallic Jigsaw Piece */}
+          <Path d={generateJigsawPath()} fill="#000000" opacity="0.65" transform="translate(13, 15)" />
+          {/* Main Vibrant Jigsaw Piece */}
           <Path
             d={generateJigsawPath()}
             fill={`url(#pieceGrad_${mod.id})`}
-            stroke={accent}
-            strokeWidth="2.5"
+            stroke={colors.border}
+            strokeWidth="3.5"
             transform="translate(10, 10)"
           />
         </Svg>
+
+        {/* Direction Arrow */}
         {renderArrow()}
       </Pressable>
     </Animated.View>
@@ -623,6 +698,7 @@ export default function RobotCircuitPuzzleScreen() {
 
   const canMove = (mod: RobotModule, currentModules: RobotModule[]): boolean => {
     const { gridX, gridY, width, height, direction } = mod;
+
     if (direction === "RIGHT") {
       const rightBound = gridX + width;
       for (let x = rightBound; x < GRID_SIZE; x++) {
@@ -684,35 +760,38 @@ export default function RobotCircuitPuzzleScreen() {
 
       let targetX = 0;
       let targetY = 0;
-      const travelDist = boardSize + 100;
+      const travelDist = boardSize + 120;
 
       if (mod.direction === "RIGHT") targetX = travelDist;
       if (mod.direction === "LEFT") targetX = -travelDist;
       if (mod.direction === "DOWN") targetY = travelDist;
       if (mod.direction === "UP") targetY = -travelDist;
 
-      currentTrans.x.value = withTiming(targetX, { duration: 400 });
-      currentTrans.y.value = withTiming(targetY, { duration: 400 }, () => {
+      currentTrans.x.value = withTiming(targetX, { duration: 380 });
+      currentTrans.y.value = withTiming(targetY, { duration: 380 }, () => {
         runOnJS(removeModule)(mod.id);
       });
-      setCompanionText(`Modul ${mod.name} dilepas!`);
+      setCompanionText(`✨ Hore! Modul ${mod.name} berhasil dilepaskan!`);
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      setCompanionText(`Gagal! Modul ${mod.name} terhalang modul lain.`);
-      const shakeAmt = 8;
-      if (mod.direction === "LEFT" || mod.direction === "RIGHT") {
-        currentTrans.y.value = withSequence(
-          withTiming(-shakeAmt, { duration: 50 }),
-          withTiming(shakeAmt, { duration: 50 }),
-          withTiming(0, { duration: 50 })
-        );
-      } else {
-        currentTrans.x.value = withSequence(
-          withTiming(-shakeAmt, { duration: 50 }),
-          withTiming(shakeAmt, { duration: 50 }),
-          withTiming(0, { duration: 50 })
-        );
-      }
+      setCompanionText(`🔒 TERHALANG! Modul ${mod.name} tidak bisa jalan karena ada modul lain di depan arah panahnya.`);
+      
+      const bumpDist = 14;
+      let bumpX = 0;
+      let bumpY = 0;
+      if (mod.direction === "RIGHT") bumpX = bumpDist;
+      if (mod.direction === "LEFT") bumpX = -bumpDist;
+      if (mod.direction === "DOWN") bumpY = bumpDist;
+      if (mod.direction === "UP") bumpY = -bumpDist;
+
+      currentTrans.x.value = withSequence(
+        withTiming(bumpX, { duration: 70 }),
+        withSpring(0, { damping: 12, stiffness: 180 })
+      );
+      currentTrans.y.value = withSequence(
+        withTiming(bumpY, { duration: 70 }),
+        withSpring(0, { damping: 12, stiffness: 180 })
+      );
     }
   };
 
@@ -768,12 +847,12 @@ export default function RobotCircuitPuzzleScreen() {
     }
   };
 
-  const handleNextLevel = async () => {
+  const handleVictoryNext = async () => {
     const nextLevelNum = level + 1;
-    const coinsReward = currentLevelConfig.rewardCoins;
-    const finalCoins = userCoins + coinsReward;
-    setUserCoins(finalCoins);
-    await AsyncStorage.setItem(STORAGE_KEY_COINS, String(finalCoins));
+    const coinsEarned = currentLevelConfig.rewardCoins;
+    const newCoins = userCoins + coinsEarned;
+    setUserCoins(newCoins);
+    await AsyncStorage.setItem(STORAGE_KEY_COINS, String(newCoins));
 
     if (nextLevelNum > LEVELS.length) {
       setGameState("completed");
@@ -940,7 +1019,7 @@ export default function RobotCircuitPuzzleScreen() {
             </View>
             <Button
               title={level === LEVELS.length ? "Selesai" : "Misi Berikutnya"}
-              onPress={handleNextLevel}
+              onPress={handleVictoryNext}
               variant="accent"
               style={styles.nextLevelButton}
             />

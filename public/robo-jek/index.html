@@ -148,6 +148,92 @@
     .btn-green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
     .btn-ghost { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(148, 163, 184, 0.2); color: #e2e8f0; padding: 10px 24px; border-radius: 50px; font-weight: 700; cursor: pointer; }
 
+    /* SPEED MODE SELECTOR */
+    .speed-section {
+      width: 100%;
+      max-width: 520px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .speed-section-title {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--primary-cyan);
+      margin-bottom: 10px;
+      letter-spacing: 1px;
+    }
+    .speed-grid {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+    .speed-card {
+      flex: 1;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1.5px solid rgba(148, 163, 184, 0.2);
+      border-radius: 16px;
+      padding: 10px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s ease;
+    }
+    .speed-card.selected {
+      border-color: var(--primary-cyan);
+      background: linear-gradient(180deg, rgba(6, 182, 212, 0.25) 0%, rgba(15, 23, 42, 0.9) 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);
+    }
+    .speed-badge {
+      font-size: 0.85rem;
+      font-weight: 900;
+      padding: 4px 8px;
+      border-radius: 20px;
+      margin-bottom: 4px;
+    }
+    .bg-green { color: #34d399; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
+    .bg-yellow { color: #f59e0b; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); }
+    .bg-red { color: #f43f5e; background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); }
+    .speed-desc {
+      font-size: 0.7rem;
+      color: var(--text-sub);
+      font-weight: 600;
+    }
+
+    /* LIVE HUD SPEEDOMETER */
+    #live-speedometer {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1.5px solid rgba(56, 189, 248, 0.4);
+      backdrop-filter: blur(10px);
+      padding: 8px 16px;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 9;
+      pointer-events: none;
+    }
+    .hud-speed-val {
+      font-size: 1.6rem;
+      font-weight: 900;
+      color: #38bdf8;
+      line-height: 1;
+    }
+    .hud-speed-unit {
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: #94a3b8;
+      letter-spacing: 1px;
+    }
+    .hud-speed-mode {
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: #f59e0b;
+      margin-top: 2px;
+    }
+
     .modal-box {
       width: 90%; max-width: 660px; background: var(--panel-glass);
       border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 24px; padding: 24px 30px; text-align: center;
@@ -272,6 +358,13 @@
       </div>
     </div>
 
+    <!-- LIVE HUD SPEEDOMETER -->
+    <div id="live-speedometer" class="hidden">
+      <div class="hud-speed-val" id="hud-speed-val">0</div>
+      <div class="hud-speed-unit">KM/H</div>
+      <div class="hud-speed-mode" id="hud-mode-tag">MIDDLE (Lvl 1)</div>
+    </div>
+
     <!-- SCREEN 1: VEHICLE SELECT -->
     <div id="screen-vehicle" class="overlay-screen">
       <div class="brand-tag">⚡ SIMULATOR KOGNITIF ANAK INDONESIA</div>
@@ -293,6 +386,25 @@
           <div class="vehicle-desc">Kokoh & Performa Stabil.</div>
           <div class="stat-row"><span>Kecepatan</span><div class="stat-bar-bg"><div class="stat-bar-fill" style="width: 75%;"></div></div></div>
           <div class="stat-row"><span>Kelincahan</span><div class="stat-bar-bg"><div class="stat-bar-fill" style="width: 60%;"></div></div></div>
+        </div>
+      </div>
+
+      <!-- SPEED MODE SELECTION -->
+      <div class="speed-section">
+        <div class="speed-section-title">⚡ PILIH MODE KECEPATAN:</div>
+        <div class="speed-grid">
+          <div class="speed-card" onclick="selectSpeedMode('low')" id="mode-low">
+            <div class="speed-badge bg-green">🟢 LOW</div>
+            <div class="speed-desc">Santai (50 km/h)</div>
+          </div>
+          <div class="speed-card selected" onclick="selectSpeedMode('middle')" id="mode-middle">
+            <div class="speed-badge bg-yellow">🟡 MIDDLE</div>
+            <div class="speed-desc">Sedang (100 km/h)</div>
+          </div>
+          <div class="speed-card" onclick="selectSpeedMode('faster')" id="mode-faster">
+            <div class="speed-badge bg-red">🔴 FASTER</div>
+            <div class="speed-desc">Ngebut (450 km/h)</div>
+          </div>
         </div>
       </div>
 
@@ -534,6 +646,27 @@
       document.getElementById('card-car').classList.toggle('selected', type === 'car');
     }
 
+    let selectedSpeedMode = 'middle'; // 'low', 'middle', 'faster'
+
+    function selectSpeedMode(mode) {
+      selectedSpeedMode = mode;
+      document.getElementById('mode-low').classList.toggle('selected', mode === 'low');
+      document.getElementById('mode-middle').classList.toggle('selected', mode === 'middle');
+      document.getElementById('mode-faster').classList.toggle('selected', mode === 'faster');
+    }
+
+    function getSpeedMultiplier() {
+      let targetKmh = 100;
+      if (selectedSpeedMode === 'low') targetKmh = 50;
+      if (selectedSpeedMode === 'middle') targetKmh = 100;
+      if (selectedSpeedMode === 'faster') targetKmh = 450;
+
+      let levelNum = (activeLevel && activeLevel.levelNum) ? activeLevel.levelNum : 1;
+      let levelMult = 1.0 + (levelNum - 1) * 0.10; // +10% speed boost per level!
+
+      return (targetKmh / 100) * levelMult;
+    }
+
     function showWorldMap() {
       currentScreen = 'worldmap';
       document.getElementById('screen-vehicle').classList.add('hidden');
@@ -733,7 +866,7 @@
 
     let player = {
       x: 422, y: 364, width: 6, height: 14, angle: 0, speed: 0,
-      maxSpeed: 200, acceleration: 180, deceleration: 200, turnSpeed: 180, type: 'motor'
+      maxSpeed: 420, acceleration: 450, deceleration: 400, turnSpeed: 240, type: 'motor'
     };
 
     let trafficNPCs = spawnAllNPCs();
@@ -755,19 +888,27 @@
       document.getElementById('screen-city-modal').classList.add('hidden');
       document.getElementById('screen-result').classList.add('hidden');
       document.getElementById('mobile-controls').classList.remove('hidden');
+      document.getElementById('live-speedometer').classList.remove('hidden');
 
+      const mult = getSpeedMultiplier();
       const isMotor = selectedVehicleType === 'motor';
       player = {
         x: 422, y: 364,
         width: isMotor ? 6 : 12,
         height: isMotor ? 14 : 22,
         angle: 0, speed: 0,
-        maxSpeed: isMotor ? 200 : 170,
-        acceleration: isMotor ? 180 : 140,
-        deceleration: isMotor ? 200 : 160,
-        turnSpeed: isMotor ? 180 : 140,
+        maxSpeed: 112 * mult,
+        acceleration: 240 * Math.sqrt(mult),
+        deceleration: 260 * Math.sqrt(mult),
+        turnSpeed: (isMotor ? 220 : 180) * (1 + (mult - 1) * 0.15),
         type: selectedVehicleType
       };
+
+      // Update HUD Speedometer mode tag
+      const modeName = selectedSpeedMode.toUpperCase();
+      const levelNum = (activeLevel && activeLevel.levelNum) ? activeLevel.levelNum : 1;
+      const tagElem = document.getElementById('hud-mode-tag');
+      if (tagElem) tagElem.innerText = `${modeName} (Lvl ${levelNum})`;
 
       initPassengers();
       const nCount = activeLevel.npcCount || 8;
@@ -823,6 +964,11 @@
       if (currentScreen !== 'game' || gameStatus === 'won') return;
 
       levelTime += dt;
+
+      // Live Speedometer HUD update
+      const displayKmh = Math.round(Math.abs(player.speed) * 0.9);
+      const speedValElem = document.getElementById('hud-speed-val');
+      if (speedValElem) speedValElem.innerText = displayKmh;
 
       const isUp = keys['w'] || keys['W'] || keys['ArrowUp'];
       const isDown = keys['s'] || keys['S'] || keys['ArrowDown'];

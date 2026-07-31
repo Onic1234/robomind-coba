@@ -1,11 +1,11 @@
-import React, { useState, useCallback } from "react";
-import { StyleSheet, View, Text, ScrollView, Pressable, StatusBar, FlatList, Alert } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../../constants/Theme";
+import { Image } from "expo-image";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from "react";
+import { Alert, FlatList, Pressable, ScrollView, StatusBar, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { COLORS, FONTS, SHADOWS, SHAPES, SPACING } from "../../constants/Theme";
 import { useAuth } from "../../hooks/useAuth";
 
 interface GameItem {
@@ -32,6 +32,9 @@ export default function PlayScreen() {
   const [roboMazeLevel, setRoboMazeLevel] = useState(1);
 
   const [screwSpinLevel, setScrewSpinLevel] = useState(1);
+  const [pickAndDropLevel, setPickAndDropLevel] = useState(1);
+  const [poseMasterLevel, setPoseMasterLevel] = useState(1);
+  const [roboBrosLevel, setRoboBrosLevel] = useState(1);
 
   useFocusEffect(
     useCallback(() => {
@@ -73,6 +76,18 @@ export default function PlayScreen() {
           if (storedScrewSpin !== null) {
             setScrewSpinLevel(parseInt(storedScrewSpin));
           }
+          const storedPickDrop = await AsyncStorage.getItem("pick_and_drop_current_level");
+          if (storedPickDrop !== null) {
+            setPickAndDropLevel(parseInt(storedPickDrop));
+          }
+          const storedPoseMaster = await AsyncStorage.getItem("pose_master_current_level");
+          if (storedPoseMaster !== null) {
+            setPoseMasterLevel(parseInt(storedPoseMaster));
+          }
+          const storedRoboBros = await AsyncStorage.getItem("robo_bros_current_level");
+          if (storedRoboBros !== null) {
+            setRoboBrosLevel(parseInt(storedRoboBros));
+          }
         } catch (e) {
           console.error("Failed to load play screen data", e);
         }
@@ -91,6 +106,15 @@ export default function PlayScreen() {
       image: require("../../assets/images/Screw_Spin.png"),
       levelInfo: `Level ${screwSpinLevel}`,
       coinsReward: 250,
+      isLocked: false,
+    },
+    {
+      id: "robo_bros",
+      title: "Robo Bros",
+      category: "Kognitif",
+      image: require("../../assets/images/modul_robot.png"),
+      levelInfo: `Level ${roboBrosLevel}`,
+      coinsReward: 350,
       isLocked: false,
     },
     {
@@ -166,6 +190,24 @@ export default function PlayScreen() {
       isLocked: false,
     },
     {
+      id: "pick_and_drop",
+      title: "Robo Pick & Drop",
+      category: "Kognitif",
+      image: require("../../assets/images/rbt_ct.png"),
+      levelInfo: `Level ${pickAndDropLevel}`,
+      coinsReward: 300,
+      isLocked: false,
+    },
+    {
+      id: "pose_master",
+      title: "Master Pose Tangan",
+      category: "Fokus",
+      image: require("../../assets/images/modul_robot.png"),
+      levelInfo: `Level ${poseMasterLevel}`,
+      coinsReward: 300,
+      isLocked: false,
+    },
+    {
       id: "robo_jek",
       title: "Robo-Jek",
       category: "Fokus",
@@ -199,6 +241,12 @@ export default function PlayScreen() {
           } else {
             if (item.id === "screw_spin") {
               router.push("/screw-spin");
+            } else if (item.id === "robo_bros") {
+              router.push("/robo-bros");
+            } else if (item.id === "pose_master") {
+              router.push("/pose-master");
+            } else if (item.id === "pick_and_drop") {
+              router.push("/pick-and-drop");
             } else if (item.id === "rogue_soul_2") {
               router.push("/rogue-soul");
             } else if (item.id === "problem_solving") {
@@ -289,7 +337,7 @@ export default function PlayScreen() {
         
         {/* Coins HUD Badge */}
         <View style={styles.coinsHud}>
-          <MaterialCommunityIcons name="coins" size={18} color="#F59E0B" />
+          <Ionicons name="cash" size={18} color="#F59E0B" />
           <Text style={styles.coinsHudText}>{userCoins.toLocaleString("id-ID")}</Text>
         </View>
       </View>

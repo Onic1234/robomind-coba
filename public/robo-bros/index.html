@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Robo Bros - 2D Platformer</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+        html, body {
+            width: 100vw; height: 100vh; overflow: hidden;
+            background: #0f172a; color: #FFF;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        #game {
+            width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            position: relative;
+        }
+        #gameArea {
+            width: 100%; height: 100%;
+            position: relative;
+            display: flex; justify-content: center; align-items: center;
+        }
+        canvas {
+            display: block; margin: auto;
+            width: 100%; height: 100%;
+            object-fit: contain;
+            background: #67d2d6;
+        }
+        /* Touch Controls */
+        .touch-controls {
+            position: absolute; bottom: 20px; left: 0; right: 0;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 24px; z-index: 99; pointer-events: none;
+        }
+        .dpad-group { display: flex; gap: 12px; pointer-events: auto; }
+        .action-group { pointer-events: auto; }
+        .ctrl-btn {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: rgba(15, 23, 42, 0.8); border: 2.5px solid rgba(245, 158, 11, 0.8);
+            color: #F8FAFC; font-size: 24px; font-weight: bold;
+            display: flex; justify-content: center; align-items: center;
+            touch-action: manipulation; box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+            cursor: pointer;
+        }
+        .ctrl-btn:active { background: rgba(245, 158, 11, 0.95); color: #0F172A; transform: scale(0.92); }
+        .btn-jump { width: 72px; height: 72px; background: rgba(16, 185, 129, 0.9); border-color: #34D399; font-size: 28px; }
+        .btn-jump:active { background: #059669; }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <div id="gameArea">
+            <canvas id="canvas"></canvas>
+        </div>
+    </div>
+
+    <!-- On-screen Virtual Controls -->
+    <div class="touch-controls">
+        <div class="dpad-group">
+            <div class="ctrl-btn" onmousedown="pressBtn('kiri')" onmouseup="releaseBtn('kiri')" ontouchstart="pressBtn('kiri')" ontouchend="releaseBtn('kiri')">◀</div>
+            <div class="ctrl-btn" onmousedown="pressBtn('kanan')" onmouseup="releaseBtn('kanan')" ontouchstart="pressBtn('kanan')" ontouchend="releaseBtn('kanan')">▶</div>
+        </div>
+        <div class="action-group">
+            <div class="ctrl-btn btn-jump" onmousedown="pressBtn('jump')" onmouseup="releaseBtn('jump')" ontouchstart="pressBtn('jump')" ontouchend="releaseBtn('jump')">▲</div>
+        </div>
+    </div>
+
+    <!-- VICTORY / RESULT MODAL OVERLAY (2-COLUMN COGNITIVE RADAR CHART) -->
+    <div id="resultModal" style="position: fixed; inset: 0; background: rgba(3, 7, 18, 0.88); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 999; padding: 16px;">
+        <div style="background: rgba(11, 19, 41, 0.96); border: 1.5px solid rgba(56, 189, 248, 0.4); border-radius: 24px; padding: 24px; max-width: 680px; width: 95%; box-shadow: 0 0 30px rgba(0,229,255,0.3); text-align: left;">
+            <!-- HEADER -->
+            <div style="text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px;">
+                <div style="font-size: 11px; font-weight: 900; color: #F59E0B; letter-spacing: 2px; margin-bottom: 2px;">MISSION COMPLETED</div>
+                <h2 id="modalLevelTitle" style="font-size: 24px; font-weight: 900; color: #34D399; margin-bottom: 4px;">LEVEL 01 CLEARED!</h2>
+                <p style="font-size: 12px; color: #94A3B8;">Petualangan Robo-Bros: Karakter Berhasil Mencapai Bendera Finish!</p>
+            </div>
+
+            <!-- DUAL COLUMN GRID -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                <!-- LEFT COLUMN -->
+                <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="font-size: 11px; font-weight: 800; color: #94A3B8; letter-spacing: 1px; margin-bottom: 8px;">PENCAPAIAN MISI</div>
+                        <div style="text-align: center; font-size: 26px; color: #F59E0B; margin-bottom: 12px;">⭐ ⭐ ⭐</div>
+                        <div style="font-size: 12px; color: #E2E8F0; display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;">
+                            <div>⭐ Mengumpulkan buah segar <strong style="color: #34D399;">(100%)</strong></div>
+                            <div>⭐ Menghindari rintangan musuh <strong style="color: #34D399;">(Bebas Luka)</strong></div>
+                            <div>⭐ Mencapai bendera finish <strong style="color: #34D399;">(Sukses)</strong></div>
+                        </div>
+                    </div>
+                    <div style="border-top: 1px solid rgba(255,255,255,0.12); padding-top: 10px; font-size: 12px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span style="color: #CBD5E1;">Loot Skor Terkumpul:</span>
+                            <span style="font-weight: 800; color: #F59E0B;" id="modalScoreText">+150 Skor</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px; margin-top: 4px;">
+                            <span style="font-weight: 800; color: #34D399;">TOTAL SOULONS / KOIN:</span>
+                            <span style="font-weight: 900; color: #34D399;" id="modalCoinText">150 KOIN</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: RADAR CHART -->
+                <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <div style="font-size: 13px; font-weight: 800; color: #C084FC; margin-bottom: 2px;">🧠 Analisis Perkembangan Otak</div>
+                    <div style="font-size: 10.5px; color: #94A3B8; margin-bottom: 10px;">(Prefrontal Cortex & Motorik Halus)</div>
+                    <div style="width: 190px; height: 190px; display: flex; align-items: center; justify-content: center;">
+                        <canvas id="brosRadarCanvas" width="190" height="190"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button onclick="exitToCover()" style="padding: 12px 20px; border-radius: 30px; background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(148, 163, 184, 0.25); color: #E2E8F0; font-size: 13px; font-weight: 700; cursor: pointer;">
+                    [ Kembali Ke Menu Utama ]
+                </button>
+                <button id="btnNextLevel" onclick="continueNextLevel()" style="padding: 12px 28px; border-radius: 30px; background: #0284C7; border: none; color: #FFF; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 12px rgba(2,132,199,0.4);">
+                    [ CONTINUE (Lanjut Level) ➔ ]
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="js/gameLib.js"></script>
+    <script type="text/javascript" src="js/map_1.js"></script>
+    <script type="text/javascript" src="js/map_2.js"></script>
+    <script type="text/javascript" src="js/game.js"></script>
+    <script>
+        function pressBtn(action) {
+            if (!window.game) return;
+            if (action === 'kiri') { window.game.kiri = true; if (typeof window.kiri !== 'undefined') window.kiri = true; }
+            if (action === 'kanan') { window.game.kanan = true; if (typeof window.kanan !== 'undefined') window.kanan = true; }
+            if (action === 'jump') { window.game.atas = true; window.game.spasi = true; if (typeof window.atas !== 'undefined') window.atas = true; }
+        }
+        function releaseBtn(action) {
+            if (!window.game) return;
+            if (action === 'kiri') { window.game.kiri = false; if (typeof window.kiri !== 'undefined') window.kiri = false; }
+            if (action === 'kanan') { window.game.kanan = false; if (typeof window.kanan !== 'undefined') window.kanan = false; }
+            if (action === 'jump') { window.game.atas = false; window.game.spasi = false; if (typeof window.atas !== 'undefined') window.atas = false; }
+        }
+    </script>
+</body>
+</html>
