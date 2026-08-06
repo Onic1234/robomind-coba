@@ -14,6 +14,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { GameBackButton } from "../components/GameBackButton";
+import { HowToPlayModal } from "../components/HowToPlayModal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -265,6 +267,7 @@ export default function ScrewSpinScreen() {
   const [isVictoryModalVisible, setIsVictoryModalVisible] = useState(false);
   const [isDefeatModalVisible, setIsDefeatModalVisible] = useState(false);
   const [isSettingsModalVisible, setIsSettingsModalVisible] = useState(false);
+  const [showHelp, setShowHelp] = useState(true);
 
   // Load Saved Progress
   useEffect(() => {
@@ -490,12 +493,7 @@ export default function ScrewSpinScreen() {
 
         {/* Top Header Buttons */}
         <View style={styles.splashHeader}>
-          <Pressable
-            style={({ pressed }) => [styles.circleIconButton, styles.backCircleBtn, pressed && styles.btnPressed]}
-            onPress={() => router.back()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-          </Pressable>
+          <GameBackButton bgColor="#006874" borderColor="#006874" bottomBorderColor="#004E57" />
 
           <Pressable
             style={({ pressed }) => [styles.circleIconButton, styles.soundCircleBtn, pressed && styles.btnPressed]}
@@ -535,6 +533,25 @@ export default function ScrewSpinScreen() {
             <Text style={styles.resetFooterText}>Hold here to reset level progress only</Text>
           </Pressable>
         </View>
+
+        <HowToPlayModal
+          visible={showHelp}
+          onClose={() => setShowHelp(false)}
+          title="Cara Main Screw Spin"
+          goal="Buka semua baut dari papan dan masukkan ke kotak kolektor yang warnanya sesuai!"
+          accentColor="#7C3AED"
+          subtitleColor="#6D28D9"
+          steps={[
+            { emoji: "1️⃣", text: "Ketuk baut di papan untuk mengambilnya." },
+            { emoji: "2️⃣", text: "Baut yang warnanya cocok dengan kotak aktif akan langsung terisi." },
+            { emoji: "3️⃣", text: "Kalau warnanya tidak cocok, baut masuk ke slot buffer (penampung)." },
+            { emoji: "4️⃣", text: "Jangan sampai buffer penuh — kalau penuh dan tidak ada kotak cocok, kamu kalah!" },
+          ]}
+          tips={[
+            "Perhatikan warna kotak aktif yang terlihat sebelum mengambil baut.",
+            "Urutan baut itu penting — susun strategi agar buffer tidak cepat penuh.",
+          ]}
+        />
       </SafeAreaView>
     );
   }
@@ -562,6 +579,13 @@ export default function ScrewSpinScreen() {
           </View>
 
           <View style={styles.headerRightGroup}>
+            <Pressable
+              style={({ pressed }) => [styles.smallSquareBtn, pressed && styles.btnPressed]}
+              onPress={() => setShowHelp(true)}
+            >
+              <Ionicons name="help-circle-sharp" size={20} color="#FFFFFF" />
+            </Pressable>
+
             <Pressable
               style={({ pressed }) => [styles.smallSquareBtn, pressed && styles.btnPressed]}
               onPress={() => setIsSettingsModalVisible(true)}
@@ -969,6 +993,25 @@ export default function ScrewSpinScreen() {
           </View>
         </View>
       </Modal>
+
+      <HowToPlayModal
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Cara Main Screw Spin"
+        goal="Buka semua baut dari papan dan masukkan ke kotak kolektor yang warnanya sesuai!"
+        accentColor="#7C3AED"
+        subtitleColor="#6D28D9"
+        steps={[
+          { emoji: "1️⃣", text: "Ketuk baut di papan untuk mengambilnya." },
+          { emoji: "2️⃣", text: "Baut yang warnanya cocok dengan kotak aktif akan langsung terisi." },
+          { emoji: "3️⃣", text: "Kalau warnanya tidak cocok, baut masuk ke slot buffer (penampung)." },
+          { emoji: "4️⃣", text: "Jangan sampai buffer penuh — kalau penuh dan tidak ada kotak cocok, kamu kalah!" },
+        ]}
+        tips={[
+          "Perhatikan warna kotak aktif yang terlihat sebelum mengambil baut.",
+          "Urutan baut itu penting — susun strategi agar buffer tidak cepat penuh.",
+        ]}
+      />
     </SafeAreaView>
   );
 }

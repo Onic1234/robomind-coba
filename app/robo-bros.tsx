@@ -12,10 +12,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { COLORS, FONTS } from "../constants/Theme";
+import { HowToPlayModal } from "../components/HowToPlayModal";
 
 export default function RoboBrosScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [showHelp, setShowHelp] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   useEffect(() => {
@@ -64,6 +66,29 @@ export default function RoboBrosScreen() {
         <Ionicons name="exit-outline" size={20} color="#fff" />
         <Text style={styles.floatingExitText}>EXIT</Text>
       </Pressable>
+
+      <Pressable onPress={() => setShowHelp(true)} style={styles.floatingHelp}>
+        <Ionicons name="help-circle" size={22} color="#fff" />
+      </Pressable>
+
+      <HowToPlayModal
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Cara Main Robo Bros"
+        goal="Gerakkan robot mencapai bendera finish di setiap level sambil mengumpulkan buah!"
+        accentColor="#0284C7"
+        subtitleColor="#0369A1"
+        steps={[
+          { emoji: "1️⃣", text: "Gunakan tombol ← / → (atau A / D) untuk bergerak, ↑ atau Spasi untuk melompat." },
+          { emoji: "2️⃣", text: "Kumpulkan buah (strawberry/kiwi) yang ada di sepanjang jalan untuk menambah skor." },
+          { emoji: "3️⃣", text: "Hindari musuh — kena musuh berarti luka." },
+          { emoji: "4️⃣", text: "Sentuh bendera finish untuk menyelesaikan level. Di HP gunakan tombol ◀ ▶ ▲ di layar." },
+        ]}
+        tips={[
+          "Kumpulkan semua buah di level untuk pencapaian 100%.",
+          "Tekan P untuk pause, dan Esc untuk keluar dari fullscreen.",
+        ]}
+      />
     </View>
   );
 }
@@ -100,6 +125,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "900",
     letterSpacing: 1,
+  },
+  floatingHelp: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#0284c7",
+    zIndex: 9999,
+    elevation: 10,
+    shadowColor: "#0284c7",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
   },
   iframe: {
     position: "absolute",

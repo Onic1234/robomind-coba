@@ -11,11 +11,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { HowToPlayModal } from "../components/HowToPlayModal";
 
 export default function RoboMazeScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showHelp, setShowHelp] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -97,6 +99,29 @@ export default function RoboMazeScreen() {
         <Ionicons name={isFullscreen ? "contract" : "expand"} size={20} color="#fff" />
         <Text style={styles.floatingFsText}>{isFullscreen ? "WINDOW" : "FULL"}</Text>
       </Pressable>
+
+      <Pressable onPress={() => setShowHelp(true)} style={styles.floatingHelp}>
+        <Ionicons name="help-circle" size={22} color="#fff" />
+      </Pressable>
+
+      <HowToPlayModal
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Cara Main Robo Maze"
+        goal="Ingat posisi dinding labirin, lalu arahkan Robocube ke portal finish tanpa menabrak!"
+        accentColor="#0D9488"
+        subtitleColor="#0F766E"
+        steps={[
+          { emoji: "1️⃣", text: "Pada fase awal (8 detik) dinding terlihat — hafalkan jalurnya." },
+          { emoji: "2️⃣", text: "Setelah itu dinding jadi tak terlihat. Arahkan robot memakai D-pad / tombol panah." },
+          { emoji: "3️⃣", text: "Gunakan tombol \"Intip\" untuk melihat dinding 1,5 detik (jumlah terbatas per level)." },
+          { emoji: "4️⃣", text: "Jangan menabrak dinding tak terlihat — setiap tabrakan mengurangi Core (3 nyawa)." },
+        ]}
+        tips={[
+          "Gunakan kesempatan Intip saat ragu, jangan boros di awal.",
+          "Semakin tinggi level, semakin sedikit kesempatan Intip — hafalkan jalur dengan baik!",
+        ]}
+      />
     </View>
   );
 }
@@ -237,5 +262,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1,
+  },
+  floatingHelp: {
+    position: "absolute",
+    top: 16,
+    left: 108,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(15, 23, 42, 0.85)",
+    zIndex: 9999,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: "rgba(56, 189, 248, 0.4)",
   },
 });

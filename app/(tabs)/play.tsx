@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
-import { Alert, FlatList, Pressable, ScrollView, StatusBar, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, Platform, Pressable, ScrollView, StatusBar, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS, FONTS, SHADOWS, SHAPES, SPACING } from "../../constants/Theme";
 import { useAuth } from "../../hooks/useAuth";
@@ -21,8 +21,14 @@ interface GameItem {
 export default function PlayScreen() {
   const { isLoggedIn } = useAuth();
   const router = useRouter();
+  const { width } = useWindowDimensions();
+
+  // Dynamic responsive grid columns based on screen width
+  const numColumns = width < 640 ? 3 : width < 1024 ? 4 : 5;
+  const isMobile = width < 640;
+
   const [selectedCategory, setSelectedCategory] = useState<string>("Semua");
-  const [userCoins, setUserCoins] = useState(1250);
+  const [userCoins, setUserCoins] = useState(5569);
   const [robotEscapeLevel, setRobotEscapeLevel] = useState(1);
   const [robotCircuitLevel, setRobotCircuitLevel] = useState(1);
   const [energyCoreLevel, setEnergyCoreLevel] = useState(1);
@@ -96,7 +102,13 @@ export default function PlayScreen() {
     }, [])
   );
 
-  const categories = ["Semua", "Kognitif", "Moral", "Literasi", "Fokus"];
+  const categories = [
+    { name: "Semua", icon: "grid-outline" },
+    { name: "Kognitif", icon: "bulb-outline" },
+    { name: "Moral", icon: "heart-outline" },
+    { name: "Literasi", icon: "book-outline" },
+    { name: "Fokus", icon: "extension-puzzle-outline" },
+  ];
 
   const games: GameItem[] = [
     {
@@ -130,7 +142,7 @@ export default function PlayScreen() {
       id: "robot_circuit_puzzle",
       title: "Robot Circuit",
       category: "Kognitif",
-      image: require("../../assets/images/rbt_ct.png"), // Jigsaw escape puzzle visual
+      image: require("../../assets/images/rbt_ct.png"),
       levelInfo: `Level ${robotCircuitLevel}`,
       coinsReward: 200,
       isLocked: false,
@@ -139,7 +151,7 @@ export default function PlayScreen() {
       id: "energy_core",
       title: "Energy Core",
       category: "Kognitif",
-      image: require("../../assets/images/enrg_cr.png"), // Connection circuit puzzle visual
+      image: require("../../assets/images/enrg_cr.png"),
       levelInfo: `Level ${energyCoreLevel}`,
       coinsReward: 200,
       isLocked: false,
@@ -200,7 +212,7 @@ export default function PlayScreen() {
     },
     {
       id: "pose_master",
-      title: "Master Pose Tangan",
+      title: "Master Pose",
       category: "Fokus",
       image: require("../../assets/images/modul_robot.png"),
       levelInfo: `Level ${poseMasterLevel}`,
@@ -231,10 +243,31 @@ export default function PlayScreen() {
     ? games 
     : games.filter(game => game.category === selectedCategory);
 
+  const [hoveredGameId, setHoveredGameId] = useState<string | null>(null);
+
   const renderGameCard = ({ item }: { item: GameItem }) => {
+    // Render transparent invisible spacer for grid row alignment
+    if ((item as any).isSpacer) {
+      return <View style={[styles.card, { backgroundColor: "transparent", borderWidth: 0, shadowOpacity: 0, opacity: 0 }]} />;
+    }
+
+    const isHovered = hoveredGameId === item.id;
+    const isRoboLink = item.id === "robo_link";
+    const isRoboMaze = item.id === "robo_maze";
+    const hasVideoPreview = isRoboLink || isRoboMaze;
+    const videoPreviewSrc = isRoboLink ? "/robo_link_preview.mp4" : "/robo_maze_preview.mp4";
+
     return (
       <Pressable 
-        style={[styles.card, item.isLocked && styles.cardLocked]}
+        // @ts-ignore - web mouse events
+        onMouseEnter={() => setHoveredGameId(item.id)}
+        // @ts-ignore - web mouse events
+        onMouseLeave={() => setHoveredGameId(null)}
+        style={[
+          styles.card, 
+          item.isLocked && styles.cardLocked,
+          isHovered && styles.cardHovered
+        ]}
         onPress={() => {
           if (item.isLocked) {
             alert("Misi game ini masih terkunci! Selesaikan misi sebelumnya.");
@@ -289,60 +322,107 @@ export default function PlayScreen() {
         }}
       >
         <View style={styles.cardImageContainer}>
-          <Image source={item.image} style={styles.cardImage} contentFit="cover" />
+          <Image 
+            source={item.image} 
+            style={[styles.cardImage, isHovered && styles.cardImageHovered]} 
+            contentFit="cover" 
+          />
           
-          {item.isLocked && (
-            <View style={styles.lockedOverlay}>
-              <View style={styles.lockCircle}>
-                <Ionicons name="lock-closed" size={20} color="#FFFFFF" />
+          {/* Stitch Hover Overlay with MAIN Button (for other games) */}
+          {isHovered && !item.isLocked && !isRoboLink && (
+            <View style={styles.hoverTitleOverlay}>
+              <View style={styles.stitchPlayButton}>
+                <Text style={styles.stitchPlayButtonText}>MAIN</Text>
               </View>
             </View>
           )}
 
-          {!item.isLocked && item.levelInfo && (
-            <View style={styles.levelBadge}>
-              <Text style={styles.levelBadgeText}>{item.levelInfo}</Text>
+          {/* Pure HTML5 Video Highlight Preview for Robo Link on Hover */}
+          {hasVideoPreview && isHovered && (
+            <View style={[styles.videoHighlightOverlay, { zIndex: 99 }]}>
+              {Platform.OS === "web" ? (
+                // @ts-ignore - web html5 video player
+                <video
+                  src={videoPreviewSrc}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    borderRadius: 0,
+                    pointerEvents: "none",
+                  }}
+                />
+              ) : (
+                <View style={styles.animatedCircuitPreview}>
+                  <Ionicons name="sparkles" size={24} color="#00F0FF" style={styles.previewSparkle} />
+                  <View style={styles.previewPulseCircle} />
+                  <Ionicons name="hardware-chip-outline" size={40} color="#26C6DA" />
+                </View>
+              )}
+              
+              <View style={styles.liveBadge}>
+                <View style={styles.liveDot} />
+                <Text style={styles.liveText}>PREVIEW VIDEO</Text>
+              </View>
             </View>
           )}
         </View>
 
-        <View style={styles.cardInfo}>
-          <Text style={styles.cardTitle}>{item.title}</Text>
-          <View style={styles.cardFooter}>
-            <View style={styles.categoryBadge}>
-              <Text style={styles.categoryBadgeText}>{item.category}</Text>
-            </View>
-            {item.coinsReward && (
-              <View style={styles.coinsRow}>
-                <MaterialCommunityIcons name="coins" size={14} color="#F59E0B" />
-                <Text style={styles.coinsText}>{item.coinsReward}</Text>
-              </View>
-            )}
-          </View>
+        {/* Stitch Bottom Card Footer */}
+        <View style={styles.cardFooter}>
+          <Text style={styles.cardFooterTitle} numberOfLines={1}>
+            {item.title}
+          </Text>
         </View>
       </Pressable>
     );
   };
 
+  // Format games array with invisible dummy spacers so incomplete last row items match exact grid column width
+  const formatDataWithSpacers = (dataList: GameItem[], cols: number) => {
+    const fullRows = Math.floor(dataList.length / cols);
+    let numberOfElementsLastRow = dataList.length - fullRows * cols;
+    if (numberOfElementsLastRow === 0) return dataList;
+
+    const paddedList = [...dataList];
+    while (numberOfElementsLastRow !== cols && numberOfElementsLastRow !== 0) {
+      paddedList.push({
+        id: `blank-spacer-${numberOfElementsLastRow}`,
+        title: "",
+        category: "Kognitif",
+        image: null,
+        isSpacer: true,
+      } as any);
+      numberOfElementsLastRow++;
+    }
+    return paddedList;
+  };
+
+  const displayGames = formatDataWithSpacers(filteredGames, numColumns);
+
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgPrimary} />
+      <StatusBar barStyle="dark-content" backgroundColor="#F3FAFF" />
       
-      {/* Header Panel */}
       <View style={styles.header}>
-        <View>
+        <View style={styles.headerLeft}>
           <Text style={styles.headerSubtitle}>PILIH MISI GAME</Text>
           <Text style={styles.headerTitle}>Petualangan Belajar</Text>
         </View>
         
-        {/* Coins HUD Badge */}
-        <View style={styles.coinsHud}>
-          <Ionicons name="cash" size={18} color="#F59E0B" />
-          <Text style={styles.coinsHudText}>{userCoins.toLocaleString("id-ID")}</Text>
+        <View style={styles.currencyBadge}>
+          <Text style={styles.currencyIcon}>🪙</Text>
+          <Text style={styles.currencyText}>{userCoins.toLocaleString("id-ID")}</Text>
         </View>
       </View>
 
-      {/* Category Chips Scroll */}
       <View style={styles.chipsContainer}>
         <ScrollView 
           horizontal 
@@ -350,15 +430,20 @@ export default function PlayScreen() {
           contentContainerStyle={styles.chipsScroll}
         >
           {categories.map((cat) => {
-            const isActive = selectedCategory === cat;
+            const isActive = selectedCategory === cat.name;
             return (
               <Pressable
-                key={cat}
-                onPress={() => setSelectedCategory(cat)}
-                style={[styles.chip, isActive && styles.chipActive]}
+                key={cat.name}
+                onPress={() => setSelectedCategory(cat.name)}
+                style={[styles.chip, isActive ? styles.chipActive : styles.chipInactive]}
               >
-                <Text style={[styles.chipText, isActive && styles.chipTextActive]}>
-                  {cat}
+                <Ionicons 
+                  name={cat.icon as any} 
+                  size={16} 
+                  color={isActive ? "#FFFFFF" : "#071E27"} 
+                />
+                <Text style={[styles.chipText, isActive ? styles.chipTextActive : styles.chipTextInactive]}>
+                  {cat.name}
                 </Text>
               </Pressable>
             );
@@ -366,12 +451,12 @@ export default function PlayScreen() {
         </ScrollView>
       </View>
 
-      {/* Grid of games */}
       <FlatList
-        data={filteredGames}
+        key={`grid-${numColumns}`}
+        data={displayGames}
         renderItem={renderGameCard}
         keyExtractor={(item) => item.id}
-        numColumns={2}
+        numColumns={numColumns}
         columnWrapperStyle={styles.rowWrapper}
         contentContainerStyle={styles.gridContainer}
         showsVerticalScrollIndicator={false}
@@ -383,169 +468,274 @@ export default function PlayScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.bgPrimary,
+    backgroundColor: "#F3FAFF",
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-end",
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.md,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.borderLight,
+    backgroundColor: "#F3FAFF",
+  },
+  headerLeft: {
+    flex: 1,
   },
   headerSubtitle: {
-    ...FONTS.caption,
-    fontSize: 10,
-    fontWeight: "800",
+    fontSize: 11,
+    fontWeight: "700",
     letterSpacing: 1.5,
-    color: COLORS.brandGreen,
+    color: "#006874",
+    textTransform: "uppercase",
+    marginBottom: 2,
   },
   headerTitle: {
-    ...FONTS.heading,
-    fontSize: 20,
-    color: COLORS.textDark,
+    fontSize: 26,
+    fontWeight: "700",
+    color: "#071E27",
   },
-  coinsHud: {
+  currencyBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF7ED",
-    borderWidth: 1.5,
-    borderColor: "#FFEDD5",
+    backgroundColor: "#F3E24D",
     borderRadius: SHAPES.radiusRound,
     paddingVertical: 6,
     paddingHorizontal: SPACING.md,
-    gap: 4,
+    gap: 6,
+    borderBottomWidth: 3,
+    borderBottomColor: "#6D6400",
     ...SHADOWS.light,
   },
-  coinsHudText: {
-    ...FONTS.bodyBold,
-    fontSize: 13,
-    color: "#D97706",
+  currencyIcon: {
+    fontSize: 18,
+  },
+  currencyText: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#6D6400",
   },
   chipsContainer: {
-    paddingVertical: 0,
+    paddingVertical: SPACING.xs,
+    marginBottom: SPACING.sm,
   },
   chipsScroll: {
     paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
     gap: SPACING.sm,
   },
   chip: {
-    paddingVertical: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 10,
     paddingHorizontal: SPACING.lg,
     borderRadius: SHAPES.radiusRound,
-    backgroundColor: COLORS.cardWhite,
-    borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
+    borderWidth: 2,
   },
   chipActive: {
-    backgroundColor: COLORS.brandGreen,
-    borderColor: COLORS.brandGreen,
+    backgroundColor: "#006874",
+    borderColor: "#006874",
+    borderBottomWidth: 4,
+    borderBottomColor: "#004E57",
+  },
+  chipInactive: {
+    backgroundColor: "#DBF1FE",
+    borderColor: "#BBC9CC",
   },
   chipText: {
-    ...FONTS.bodyBold,
-    fontSize: 12,
-    color: COLORS.textMedium,
+    fontSize: 13,
+    fontWeight: "700",
   },
   chipTextActive: {
     color: "#FFFFFF",
+  },
+  chipTextInactive: {
+    color: "#071E27",
   },
   gridContainer: {
     paddingHorizontal: SPACING.lg,
     paddingBottom: SPACING.xxl,
   },
   rowWrapper: {
-    justifyContent: "space-between",
-    marginBottom: SPACING.lg,
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    gap: 14,
+    marginBottom: SPACING.md,
   },
   card: {
-    width: "48%",
-    backgroundColor: COLORS.cardWhite,
-    borderRadius: SHAPES.radiusLg,
+    flex: 1,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
     borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
+    borderColor: "#DBF1FE",
+    borderBottomWidth: 3,
+    borderBottomColor: "#CFE6F2",
     overflow: "hidden",
     ...SHADOWS.light,
+    // @ts-ignore - web cursor
+    cursor: "pointer",
+  },
+  cardHovered: {
+    borderColor: "#006874",
+    borderBottomColor: "#006874",
+    shadowColor: "#006874",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 6,
   },
   cardLocked: {
-    opacity: 0.85,
+    opacity: 0.7,
+    backgroundColor: "#E6F6FF",
   },
   cardImageContainer: {
     width: "100%",
-    height: 120,
+    height: 125,
     position: "relative",
-    backgroundColor: "#F1F5F9",
+    backgroundColor: "#CFE6F2",
+    overflow: "hidden",
   },
   cardImage: {
     width: "100%",
     height: "100%",
   },
-  lockedOverlay: {
+  cardImageHovered: {
+    opacity: 0.9,
+  },
+  videoHighlightOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(15, 23, 42, 0.5)",
+    backgroundColor: "rgba(7, 30, 39, 0.85)",
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 10,
+  },
+  animatedCircuitPreview: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  previewSparkle: {
+    position: "absolute",
+    top: 8,
+    right: 10,
+  },
+  previewPulseCircle: {
+    position: "absolute",
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    borderWidth: 2,
+    borderColor: "rgba(38, 198, 218, 0.6)",
+  },
+  previewPulseCircle2: {
+    position: "absolute",
+    width: 78,
+    height: 78,
+    borderRadius: 39,
+    borderWidth: 1,
+    borderColor: "rgba(38, 198, 218, 0.3)",
+  },
+  liveBadge: {
+    position: "absolute",
+    top: 6,
+    left: 6,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(7, 30, 39, 0.9)",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: "#26C6DA",
+    zIndex: 15,
+  },
+  liveDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+    backgroundColor: "#BA1A1A",
+  },
+  liveText: {
+    fontSize: 7,
+    fontWeight: "700",
+    color: "#26C6DA",
+    letterSpacing: 0.5,
+  },
+  hoverTitleOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(7, 30, 39, 0.75)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: SPACING.xs,
+    zIndex: 12,
+  },
+  stitchPlayButton: {
+    backgroundColor: "#006874",
+    paddingHorizontal: SPACING.md,
+    paddingVertical: 5,
+    borderRadius: SHAPES.radiusRound,
+    borderBottomWidth: 3,
+    borderBottomColor: "#004E57",
+    marginBottom: 6,
+    ...SHADOWS.light,
+  },
+  stitchPlayButtonText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  hoverCardTitle: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    textAlign: "center",
+    marginBottom: 3,
+  },
+  hoverCategoryBadge: {
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.4)",
+    borderRadius: SHAPES.radiusSm,
+    paddingVertical: 1,
+    paddingHorizontal: 6,
+  },
+  hoverCategoryBadgeText: {
+    fontSize: 8,
+    fontWeight: "700",
+    color: "#98F0FF",
+  },
+  cardFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: SPACING.sm,
+    paddingHorizontal: 8,
+    backgroundColor: "#FFFFFF",
+  },
+  cardFooterTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#071E27",
+    textAlign: "center",
+  },
+  lockedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(7, 30, 39, 0.65)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 11,
   },
   lockCircle: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 1.5,
+    borderWidth: 2,
     borderColor: "#FFFFFF",
-  },
-  levelBadge: {
-    position: "absolute",
-    top: SPACING.sm,
-    left: SPACING.sm,
-    backgroundColor: "rgba(0, 195, 160, 0.85)",
-    paddingVertical: 2,
-    paddingHorizontal: SPACING.sm,
-    borderRadius: SHAPES.radiusSm,
-  },
-  levelBadgeText: {
-    fontSize: 9,
-    fontWeight: "900",
-    color: "#FFFFFF",
-  },
-  cardInfo: {
-    padding: SPACING.md,
-  },
-  cardTitle: {
-    ...FONTS.bodyBold,
-    fontSize: 13,
-    color: COLORS.textDark,
-    marginBottom: 6,
-  },
-  cardFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  categoryBadge: {
-    backgroundColor: COLORS.bgPrimary,
-    borderWidth: 1,
-    borderColor: COLORS.borderLight,
-    borderRadius: SHAPES.radiusSm,
-    paddingVertical: 2,
-    paddingHorizontal: 6,
-  },
-  categoryBadgeText: {
-    fontSize: 8,
-    fontWeight: "700",
-    color: COLORS.textMedium,
-  },
-  coinsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-  },
-  coinsText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#D97706",
   },
 });

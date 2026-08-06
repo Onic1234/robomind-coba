@@ -10,6 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { HowToPlayModal } from "../components/HowToPlayModal";
 import { COLORS } from "../constants/Theme";
 
 const STORAGE_KEY_LEVEL = "pick_and_drop_current_level";
@@ -20,6 +21,7 @@ export default function PickAndDropScreen() {
 
   const [currentLevel, setCurrentLevel] = useState(1);
   const [userCoins, setUserCoins] = useState(1250);
+  const [showHelp, setShowHelp] = useState(true);
 
   // Load Saved Progress
   useEffect(() => {
@@ -1091,6 +1093,9 @@ export default function PickAndDropScreen() {
         <Pressable style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={22} color={COLORS.textDark} />
         </Pressable>
+        <Pressable style={styles.helpButton} onPress={() => setShowHelp(true)}>
+          <Ionicons name="help-circle" size={22} color="#006874" />
+        </Pressable>
 
         <View style={styles.titleContainer}>
           <Text style={styles.headerTitle}>Robo Pick & Drop</Text>
@@ -1110,6 +1115,25 @@ export default function PickAndDropScreen() {
           style={{ width: "100%", height: "100%", border: "none" }}
         />
       </View>
+
+      <HowToPlayModal
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Cara Main Robo Pick & Drop"
+        goal="Sortir semua barang yang jatuh ke Pod dengan warna yang sesuai sebelum waktu habis!"
+        accentColor="#0891B2"
+        subtitleColor="#0E7490"
+        steps={[
+          { emoji: "1️⃣", text: "Pilih mode kontrol: Hover (otomatis menangkap), Cubit (pinch), atau Tap (sentuh)." },
+          { emoji: "2️⃣", text: "Arahkan tangan (webcam) atau jari untuk mengambil barang yang jatuh." },
+          { emoji: "3️⃣", text: "Bawa barang ke Pod dengan warna yang sesuai: Bekal, Energi, atau Limbah." },
+          { emoji: "4️⃣", text: "Sortir semua 8 barang sebelum waktu 45 detik habis untuk menang!" },
+        ]}
+        tips={[
+          "Mode Hover paling mudah untuk anak-anak — jari dekat barang langsung menangkap.",
+          "Barang berbahaya/limbah harus masuk Pod yang benar, jangan asal taruh.",
+        ]}
+      />
     </SafeAreaView>
   );
 }
@@ -1136,6 +1160,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#F1F5F9",
     alignItems: "center",
     justifyContent: "center",
+  },
+  helpButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#F1F5F9",
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: 8,
   },
   titleContainer: {
     alignItems: "center",

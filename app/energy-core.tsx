@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { HowToPlayModal } from "../components/HowToPlayModal";
 import * as Haptics from "expo-haptics";
 import Animated, {
   useSharedValue,
@@ -295,6 +296,7 @@ export default function EnergyCoreScreen() {
   const [history, setHistory] = useState<GridCell[][]>([]);
   const [userCoins, setUserCoins] = useState(1250);
   const [gameState, setGameState] = useState<"playing" | "victory" | "completed">("playing");
+  const [showHelp, setShowHelp] = useState(true);
   const [companionText, setCompanionText] = useState(
     "Klik pada kabel dan sirkuit untuk memutarnya. Sambungkan semua inti energi ke robot agar kota menyala!"
   );
@@ -462,9 +464,14 @@ export default function EnergyCoreScreen() {
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <StatusBar barStyle="light-content" backgroundColor="#0B0E17" />
       <View style={styles.header}>
-        <Pressable style={styles.iconButton} onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
-        </Pressable>
+        <View style={styles.headerLeftRow}>
+          <Pressable style={styles.iconButton} onPress={() => router.back()}>
+            <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
+          </Pressable>
+          <Pressable style={styles.iconButton} onPress={() => setShowHelp(true)}>
+            <Ionicons name="help-circle-outline" size={24} color="#FFFFFF" />
+          </Pressable>
+        </View>
         <View style={styles.levelBadgeContainer}>
           <Text style={styles.levelText}>{currentLevelConfig.title}</Text>
         </View>
@@ -723,6 +730,25 @@ export default function EnergyCoreScreen() {
           </View>
         </View>
       </Modal>
+
+      <HowToPlayModal
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Cara Main Energy Core"
+        goal="Sambungkan jalur energi dari sumber ke semua inti baterai robot agar kota menyala!"
+        accentColor="#0D9488"
+        subtitleColor="#0F766E"
+        steps={[
+          { emoji: "1️⃣", text: "Ketuk kabel, sirkuit, atau sumber energi untuk memutarnya sebesar 90°." },
+          { emoji: "2️⃣", text: "Putar tile hingga terbentuk jalur yang tersambung dari SUMBER ke semua inti/baterai." },
+          { emoji: "3️⃣", text: "Gunakan tombol Undo untuk membatalkan langkah, dan Reset untuk mengacak ulang rotasi." },
+          { emoji: "4️⃣", text: "Setiap level punya target energi berbeda. Selesaikan semua level untuk memenangkan misi!" },
+        ]}
+        tips={[
+          "Mulai putar dari tile yang dekat dengan sumber energi dulu.",
+          "Jalur boleh bercabang (T/CROSS) asalkan semua inti terhubung.",
+        ]}
+      />
     </SafeAreaView>
   );
 }
@@ -739,6 +765,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.md,
     paddingVertical: SPACING.sm,
     backgroundColor: "#111827",
+  },
+  headerLeftRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   iconButton: {
     width: 44,

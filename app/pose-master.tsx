@@ -1376,6 +1376,13 @@ const poseEngineHtml = `<!DOCTYPE html>
         function closeHelpModal() {
             document.getElementById('helpModal').classList.add('hidden');
         }
+
+        // Tampilkan panduan cara main otomatis saat game dibuka
+        window.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                showHelpModal();
+            }, 500);
+        });
     </script>
 </body>
 </html>`;

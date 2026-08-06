@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { HowToPlayModal } from "../components/HowToPlayModal";
 import * as Haptics from "expo-haptics";
 import Animated, {
   useSharedValue,
@@ -447,6 +448,7 @@ export default function RoboChargeScreen() {
   const [level, setLevel] = useState(1);
   const [userCoins, setUserCoins] = useState(1250);
   const [gameState, setGameState] = useState<"playing" | "victory" | "completed" | "failed">("playing");
+  const [showHelp, setShowHelp] = useState(true);
 
   const [obstacles, setObstacles] = useState<Obstacle[]>([]);
   const [orb, setOrb] = useState({ x: 80, y: 80, vx: 0, vy: 0 });
@@ -984,6 +986,13 @@ export default function RoboChargeScreen() {
             style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
           >
             <Ionicons name="arrow-back" size={18} color="#FFFFFF" />
+          </Pressable>
+
+          <Pressable
+            onPress={() => setShowHelp(true)}
+            style={({ pressed }) => [styles.resetBtn, pressed && { opacity: 0.7 }]}
+          >
+            <Ionicons name="help-circle" size={18} color="#FFFFFF" />
           </Pressable>
 
           <View style={styles.heartsRow}>
@@ -1587,6 +1596,25 @@ export default function RoboChargeScreen() {
           </View>
         </View>
       </Modal>
+
+      <HowToPlayModal
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Cara Main Robo Charge"
+        goal="Luncurkan bola energi agar masuk ke Monster Core di setiap sektor!"
+        accentColor="#D97706"
+        subtitleColor="#B45309"
+        steps={[
+          { emoji: "1️⃣", text: "Seret bola ke belakang untuk mengatur arah dan kekuatan tembakan — ada preview lintasan." },
+          { emoji: "2️⃣", text: "Lepas bola untuk meluncurkannya melewati penghalang, portal, dan pendulum." },
+          { emoji: "3️⃣", text: "Aktifkan switch 🟢 untuk mematikan laser yang menghalangi jalan." },
+          { emoji: "4️⃣", text: "Masukkan bola ke Monster Core. Kamu punya 3 nyawa; rating bintang dihitung dari jumlah tembakan." },
+        ]}
+        tips={[
+          "Gunakan titik-titik preview lintasan untuk membidik sebelum melepas.",
+          "Pantulkan bola ke bumper untuk mengubah arah menuju target.",
+        ]}
+      />
     </SafeAreaView>
   );
 }

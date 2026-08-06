@@ -12,11 +12,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { COLORS, FONTS } from "../constants/Theme";
+import { HowToPlayModal } from "../components/HowToPlayModal";
 
 export default function RoboJekScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showHelp, setShowHelp] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -99,6 +101,29 @@ export default function RoboJekScreen() {
         <Ionicons name={isFullscreen ? "contract" : "expand"} size={20} color="#fff" />
         <Text style={styles.floatingFsText}>{isFullscreen ? "WINDOW" : "FULL"}</Text>
       </Pressable>
+
+      <Pressable onPress={() => setShowHelp(true)} style={styles.floatingHelp}>
+        <Ionicons name="help-circle" size={22} color="#fff" />
+      </Pressable>
+
+      <HowToPlayModal
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Cara Main Robo-Jek"
+        goal="Antar paket ke semua checkpoint dan tujuan sebelum waktu habis tanpa menabrak!"
+        accentColor="#0284C7"
+        subtitleColor="#0369A1"
+        steps={[
+          { emoji: "1️⃣", text: "Pilih kendaraan (motor/mobil) dan mode kecepatan (LOW / MIDDLE / FASTER)." },
+          { emoji: "2️⃣", text: "Kemudi dengan WASD atau tombol panah. Di HP gunakan D-pad sentuh di layar." },
+          { emoji: "3️⃣", text: "Lewati semua checkpoint lalu sampai ke tujuan dalam batas waktu (gold time)." },
+          { emoji: "4️⃣", text: "Hindari tabrakan dengan rintangan kota untuk nilai dan bintang terbaik!" },
+        ]}
+        tips={[
+          "Rute melewati kota-kota Indonesia dari Banda Aceh sampai Jayapura.",
+          "Kecepatan tinggi memang cepat, tapi lebih sulit dikendalikan.",
+        ]}
+      />
     </View>
   );
 }
@@ -183,6 +208,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800",
     letterSpacing: 1,
+  },
+  floatingHelp: {
+    position: "absolute",
+    top: 16,
+    left: 108,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(15, 23, 42, 0.85)",
+    zIndex: 9999,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: "rgba(56, 189, 248, 0.4)",
   },
   iframe: {
     position: "absolute",
