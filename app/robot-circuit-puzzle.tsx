@@ -504,7 +504,7 @@ const TileView = React.memo(function TileView({
   }
 );
 
-ModuleItem.displayName = "ModuleItem";
+TileView.displayName = "TileView";
 
 export default function RobotCircuitPuzzleScreen() {
   const router = useRouter();

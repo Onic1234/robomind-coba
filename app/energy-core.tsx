@@ -208,60 +208,170 @@ const GridCellItem = React.memo(({
   const renderSVGComponent = () => {
     const S = cellSize;
     const C = S / 2;
-    const strokeWidth = 5;
+
+    // Proportional dynamic metrics based on tile size S
+    const glowWidth = Math.max(8, S * 0.08);
+    const mainWidth = Math.max(5, S * 0.05);
+    const coreWidth = Math.max(2, S * 0.02);
+    const reactorRadius = S * 0.22;
+    const nodeSize = S * 0.38;
+
+    const glowColor = isEnergized ? energyColor : "transparent";
+    const mainColor = isEnergized ? energyColor : "#334155";
+    const coreColor = isEnergized ? "#FFFFFF" : "#1E293B";
+
+    // Reusable multi-layered cable rendering
+    const renderCable = (dPath: string) => (
+      <>
+        {/* Outer Glow Layer */}
+        {isEnergized && (
+          <Path
+            d={dPath}
+            stroke={glowColor}
+            strokeWidth={glowWidth}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity={0.45}
+            fill="none"
+          />
+        )}
+        {/* Main Conduit Body */}
+        <Path
+          d={dPath}
+          stroke={mainColor}
+          strokeWidth={mainWidth}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+        {/* Inner White Core Filament */}
+        <Path
+          d={dPath}
+          stroke={coreColor}
+          strokeWidth={coreWidth}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      </>
+    );
 
     switch (cell.type) {
       case "SOURCE":
         return (
           <Svg width={S} height={S}>
-            <Circle cx={C} cy={C} r={14} fill={isEnergized ? energyColor : "#334155"} />
+            {/* Tile Chassis Bevel Background */}
+            <Rect x={2} y={2} width={S - 4} height={S - 4} rx={12} fill="#0B132B" stroke="#1E293B" strokeWidth={2} />
+            {/* Corner Rivets */}
+            <Circle cx={8} cy={8} r={2} fill="#475569" />
+            <Circle cx={S - 8} cy={8} r={2} fill="#475569" />
+            <Circle cx={8} cy={S - 8} r={2} fill="#475569" />
+            <Circle cx={S - 8} cy={S - 8} r={2} fill="#475569" />
+
+            {/* Cable Port to top */}
+            {renderCable(`M ${C} ${C - reactorRadius} L ${C} 0`)}
+
+            {/* 3D Nuclear Energy Reactor Sphere */}
+            <Circle cx={C} cy={C} r={reactorRadius + 6} fill="rgba(15, 23, 42, 0.9)" stroke={mainColor} strokeWidth={3} />
+            <Circle cx={C} cy={C} r={reactorRadius} fill={isEnergized ? energyColor : "#1E293B"} opacity={0.85} />
+            <Circle cx={C} cy={C} r={reactorRadius * 0.65} fill="#0F172A" />
+
+            {/* Lightning Core Symbol */}
             <Path
-              d={`M ${C} ${C - 8} L ${C - 4} ${C + 1} L ${C + 1} ${C + 1} L ${C - 1} ${C + 8} L ${C + 5} ${C - 1} L ${C} ${C - 1} Z`}
-              fill="#FFFFFF"
+              d={`M ${C} ${C - reactorRadius * 0.45} L ${C - reactorRadius * 0.25} ${C + 1} L ${C + 1} ${C + 1} L ${C - reactorRadius * 0.1} ${C + reactorRadius * 0.45} L ${C + reactorRadius * 0.25} ${C - 1} L ${C} ${C - 1} Z`}
+              fill={isEnergized ? "#FFFFFF" : "#64748B"}
             />
-            <Path d={`M ${C} ${C - 14} L ${C} 0`} stroke={pathColor} strokeWidth={strokeWidth} strokeLinecap="round" />
           </Svg>
         );
       case "NODE":
         return (
           <Svg width={S} height={S}>
-            <Rect x={C - 12} y={C - 12} width={24} height={24} rx={6} fill={isEnergized ? energyColor : "#334155"} />
-            <Path d={`M ${C} ${C - 12} L ${C} 0`} stroke={pathColor} strokeWidth={strokeWidth} strokeLinecap="round" />
-            <Text style={{
-              position: "absolute",
-              fontSize: 10,
-              fontWeight: "900",
-              color: "#FFFFFF",
-              textAlign: "center",
-              width: S,
-              top: C - 6,
-            }}>
-              {cell.name.substring(0, 2).toUpperCase()}
-            </Text>
+            <Rect x={2} y={2} width={S - 4} height={S - 4} rx={12} fill="#0B132B" stroke="#1E293B" strokeWidth={2} />
+            <Circle cx={8} cy={8} r={2} fill="#475569" />
+            <Circle cx={S - 8} cy={8} r={2} fill="#475569" />
+            <Circle cx={8} cy={S - 8} r={2} fill="#475569" />
+            <Circle cx={S - 8} cy={S - 8} r={2} fill="#475569" />
+
+            {/* Cable Port to top */}
+            {renderCable(`M ${C} ${C - nodeSize / 2} L ${C} 0`)}
+
+            {/* 3D Energy Battery Cell Box */}
+            <Rect
+              x={C - nodeSize / 2}
+              y={C - nodeSize / 2}
+              width={nodeSize}
+              height={nodeSize}
+              rx={8}
+              fill="#0F172A"
+              stroke={mainColor}
+              strokeWidth={3}
+            />
+            <Rect
+              x={C - nodeSize / 2 + 4}
+              y={C - nodeSize / 2 + 4}
+              width={nodeSize - 8}
+              height={nodeSize - 8}
+              rx={6}
+              fill={isEnergized ? energyColor : "#1E293B"}
+              opacity={0.3}
+            />
+            <Rect
+              x={C - nodeSize / 4}
+              y={C - nodeSize / 4}
+              width={nodeSize / 2}
+              height={nodeSize / 2}
+              rx={4}
+              fill={isEnergized ? energyColor : "#334155"}
+            />
           </Svg>
         );
       case "STRAIGHT":
         return (
           <Svg width={S} height={S}>
-            <Path d={`M ${C} 0 L ${C} ${S}`} stroke={pathColor} strokeWidth={strokeWidth} strokeLinecap="round" />
+            <Rect x={2} y={2} width={S - 4} height={S - 4} rx={12} fill="#0B132B" stroke="#1E293B" strokeWidth={2} />
+            <Circle cx={8} cy={8} r={2} fill="#475569" />
+            <Circle cx={S - 8} cy={8} r={2} fill="#475569" />
+            <Circle cx={8} cy={S - 8} r={2} fill="#475569" />
+            <Circle cx={S - 8} cy={S - 8} r={2} fill="#475569" />
+            {renderCable(`M ${C} 0 L ${C} ${S}`)}
           </Svg>
         );
       case "CORNER":
         return (
           <Svg width={S} height={S}>
-            <Path d={`M ${C} 0 L ${C} ${C} L ${S} ${C}`} stroke={pathColor} strokeWidth={strokeWidth} strokeLinecap="round" fill="none" />
+            <Rect x={2} y={2} width={S - 4} height={S - 4} rx={12} fill="#0B132B" stroke="#1E293B" strokeWidth={2} />
+            <Circle cx={8} cy={8} r={2} fill="#475569" />
+            <Circle cx={S - 8} cy={8} r={2} fill="#475569" />
+            <Circle cx={8} cy={S - 8} r={2} fill="#475569" />
+            <Circle cx={S - 8} cy={S - 8} r={2} fill="#475569" />
+            {renderCable(`M ${C} 0 L ${C} ${C} L ${S} ${C}`)}
+            <Circle cx={C} cy={C} r={mainWidth * 0.8} fill={mainColor} />
           </Svg>
         );
       case "TJUNC":
         return (
           <Svg width={S} height={S}>
-            <Path d={`M 0 ${C} L ${S} ${C} M ${C} ${C} L ${C} 0`} stroke={pathColor} strokeWidth={strokeWidth} strokeLinecap="round" />
+            <Rect x={2} y={2} width={S - 4} height={S - 4} rx={12} fill="#0B132B" stroke="#1E293B" strokeWidth={2} />
+            <Circle cx={8} cy={8} r={2} fill="#475569" />
+            <Circle cx={S - 8} cy={8} r={2} fill="#475569" />
+            <Circle cx={8} cy={S - 8} r={2} fill="#475569" />
+            <Circle cx={S - 8} cy={S - 8} r={2} fill="#475569" />
+            {renderCable(`M 0 ${C} L ${S} ${C}`)}
+            {renderCable(`M ${C} ${C} L ${C} 0`)}
+            <Circle cx={C} cy={C} r={mainWidth * 0.9} fill={mainColor} />
           </Svg>
         );
       case "CROSS":
         return (
           <Svg width={S} height={S}>
-            <Path d={`M 0 ${C} L ${S} ${C} M ${C} 0 L ${C} ${S}`} stroke={pathColor} strokeWidth={strokeWidth} strokeLinecap="round" />
+            <Rect x={2} y={2} width={S - 4} height={S - 4} rx={12} fill="#0B132B" stroke="#1E293B" strokeWidth={2} />
+            <Circle cx={8} cy={8} r={2} fill="#475569" />
+            <Circle cx={S - 8} cy={8} r={2} fill="#475569" />
+            <Circle cx={8} cy={S - 8} r={2} fill="#475569" />
+            <Circle cx={S - 8} cy={S - 8} r={2} fill="#475569" />
+            {renderCable(`M 0 ${C} L ${S} ${C}`)}
+            {renderCable(`M ${C} 0 L ${C} ${S}`)}
+            <Circle cx={C} cy={C} r={mainWidth} fill={mainColor} />
           </Svg>
         );
       default:
@@ -312,7 +422,7 @@ export default function EnergyCoreScreen() {
 
   const gridWidth = currentLevelConfig.gridWidth;
   const gridHeight = currentLevelConfig.gridHeight;
-  const maxBoardWidth = Math.min(windowWidth - boardPadding * 2, 280, windowHeight * 0.32);
+  const maxBoardWidth = Math.min(windowWidth - boardPadding * 2, 540, windowHeight * 0.58);
   const cellSize = maxBoardWidth / gridWidth;
   const boardSize = cellSize * gridWidth;
 
@@ -810,21 +920,30 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingVertical: 12,
   },
   boardContainer: {
-    backgroundColor: "#1E293B",
-    borderRadius: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 8,
+    backgroundColor: "#060A14",
+    borderRadius: 24,
+    borderWidth: 3,
+    borderColor: "rgba(56, 189, 248, 0.4)",
+    shadowColor: "#38BDF8",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    elevation: 12,
+    padding: 6,
+    overflow: "hidden",
   },
   cellContainer: {
-    backgroundColor: "#0F172A",
-    borderRadius: 8,
+    backgroundColor: "#0B132B",
+    borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
   },
   cellWrapper: {
     flex: 1,
