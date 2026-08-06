@@ -30,11 +30,11 @@ function MenuItem({ icon, iconType, title, subtitle, badge, badgeColor, onPress 
       <View style={styles.menuLeft}>
         <View style={styles.menuIconCircle}>
           {iconType === "ionicons" ? (
-            <Ionicons name={icon as any} size={18} color={COLORS.textMedium} />
+            <Ionicons name={icon as any} size={18} color="#0B84FF" />
           ) : iconType === "material" ? (
-            <Ionicons name={icon as any} size={18} color={COLORS.textMedium} />
+            <Ionicons name={icon as any} size={18} color="#0B84FF" />
           ) : (
-            <MaterialCommunityIcons name={icon as any} size={18} color={COLORS.textMedium} />
+            <MaterialCommunityIcons name={icon as any} size={18} color="#0B84FF" />
           )}
         </View>
         <View>
@@ -49,7 +49,7 @@ function MenuItem({ icon, iconType, title, subtitle, badge, badgeColor, onPress 
             <Text style={styles.menuBadgeText}>{badge}</Text>
           </View>
         ) : null}
-        <Ionicons name="chevron-forward" size={16} color={COLORS.textLight} />
+        <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
       </View>
     </Pressable>
   );
@@ -168,7 +168,7 @@ export default function ProfileScreen() {
   if (!isLoggedIn) {
     return (
       <SafeAreaView style={styles.safeArea} edges={["top"]}>
-        <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgPrimary} />
+        <StatusBar barStyle="dark-content" backgroundColor="#F3FAFF" />
         <ScrollView 
           contentContainerStyle={styles.loginScrollContent} 
           showsVerticalScrollIndicator={false}
@@ -197,11 +197,11 @@ export default function ProfileScreen() {
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Username atau Email</Text>
                 <View style={styles.inputWrapper}>
-                  <Ionicons name="person-outline" size={20} color={COLORS.textLight} style={styles.inputIcon} />
+                  <Ionicons name="person-outline" size={20} color="#64748B" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     placeholder="Masukkan username atau email"
-                    placeholderTextColor={COLORS.textLight}
+                    placeholderTextColor="#94A3B8"
                     value={username}
                     onChangeText={setUsername}
                     autoCapitalize="none"
@@ -214,11 +214,11 @@ export default function ProfileScreen() {
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Kata Sandi</Text>
                 <View style={styles.inputWrapper}>
-                  <Ionicons name="lock-closed-outline" size={20} color={COLORS.textLight} style={styles.inputIcon} />
+                  <Ionicons name="lock-closed-outline" size={20} color="#64748B" style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     placeholder="Masukkan kata sandi"
-                    placeholderTextColor={COLORS.textLight}
+                    placeholderTextColor="#94A3B8"
                     value={password}
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword}
@@ -229,7 +229,7 @@ export default function ProfileScreen() {
                     <Ionicons
                       name={showPassword ? "eye-off-outline" : "eye-outline"}
                       size={20}
-                      color={COLORS.textMedium}
+                      color="#64748B"
                     />
                   </Pressable>
                 </View>
@@ -238,7 +238,7 @@ export default function ProfileScreen() {
               {/* Error Message */}
               {loginError ? (
                 <View style={styles.loginErrorContainer}>
-                  <Ionicons name="alert-circle-outline" size={16} color={COLORS.error} />
+                  <Ionicons name="alert-circle-outline" size={16} color="#EF4444" />
                   <Text style={styles.loginErrorText}>{loginError}</Text>
                 </View>
               ) : null}
@@ -263,7 +263,7 @@ export default function ProfileScreen() {
 
             {/* Hint */}
             <View style={styles.loginHintCard}>
-              <Ionicons name="information-circle-outline" size={18} color={COLORS.brandBlue} />
+              <Ionicons name="information-circle-outline" size={18} color="#0B84FF" />
               <Text style={styles.loginHintText}>
                 Demo mode: Ketik username & kata sandi apa saja untuk mencoba masuk.
               </Text>
@@ -276,7 +276,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgPrimary} />
+      <StatusBar barStyle="dark-content" backgroundColor="#F3FAFF" />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         
@@ -291,8 +291,8 @@ export default function ProfileScreen() {
             ]}
           >
             {isSavingAvatar ? (
-              <View style={[styles.avatarImage, { justifyContent: "center", alignItems: "center", backgroundColor: `${COLORS.brandGreen}15` }]}>
-                <ActivityIndicator size="small" color={COLORS.brandGreen} />
+              <View style={[styles.avatarImage, { justifyContent: "center", alignItems: "center", backgroundColor: "rgba(11, 132, 255, 0.1)" }]}>
+                <ActivityIndicator size="small" color="#0B84FF" />
               </View>
             ) : (
               <Image
@@ -324,7 +324,7 @@ export default function ProfileScreen() {
           >
             <Text style={styles.profileName}>{childName}</Text>
             {isLoggedIn && (
-              <Ionicons name="pencil-sharp" size={14} color={COLORS.textMedium} style={styles.editIcon} />
+              <Ionicons name="pencil-sharp" size={14} color="#0B84FF" style={styles.editIcon} />
             )}
           </Pressable>
           <View style={styles.explorerTag}>
@@ -353,7 +353,7 @@ export default function ProfileScreen() {
             iconType="ionicons"
             title="Achievement"
             badge="24/120"
-            badgeColor={COLORS.brandGreen}
+            badgeColor="#00C3A0"
             onPress={() => alert("Membuka pencapaian")}
           />
           <MenuItem
@@ -361,7 +361,7 @@ export default function ProfileScreen() {
             iconType="ionicons"
             title="Berlangganan"
             badge="Premium Aktif"
-            badgeColor={COLORS.brandBlue}
+            badgeColor="#0B84FF"
             onPress={() => Linking.openURL("https://gambaran-robomind-nanti1.vercel.app/#berlangganan")}
           />
           <MenuItem
@@ -404,7 +404,7 @@ export default function ProfileScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.lockIconCircle}>
-              <Ionicons name="lock-closed" size={24} color={COLORS.brandOrange} />
+              <Ionicons name="lock-closed" size={24} color="#FF9F0A" />
             </View>
             
             <Text style={styles.modalTitle}>Parent Passcode Gate</Text>
@@ -418,8 +418,8 @@ export default function ProfileScreen() {
               maxLength={4}
               value={passcode}
               onChangeText={setPasscode}
-              placeholder="Masukkan 4 digit PIN"
-              placeholderTextColor={COLORS.textLight}
+              placeholder="Masukkan PIN"
+              placeholderTextColor="#94A3B8"
               style={styles.passcodeInput}
               onSubmitEditing={verifyPasscode}
             />
@@ -427,7 +427,7 @@ export default function ProfileScreen() {
             {passcodeError ? (
               <Text style={styles.errorText}>{passcodeError}</Text>
             ) : (
-              <Text style={styles.hintText}>Petunjuk: masukkan 1234 untuk demo</Text>
+              <Text style={styles.hintText}>Hint: masukkan 1234 untuk demo</Text>
             )}
 
             <View style={styles.modalButtons}>
@@ -458,8 +458,8 @@ export default function ProfileScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <View style={[styles.lockIconCircle, { backgroundColor: "#F0FDF4", borderColor: "#DCFCE7" }]}>
-              <Ionicons name="pencil" size={24} color={COLORS.brandGreen} />
+            <View style={[styles.lockIconCircle, { backgroundColor: "rgba(0, 195, 160, 0.1)", borderColor: "rgba(0, 195, 160, 0.2)" }]}>
+              <Ionicons name="pencil" size={24} color="#00C3A0" />
             </View>
             
             <Text style={styles.modalTitle}>Ubah Nama Anak</Text>
@@ -471,7 +471,7 @@ export default function ProfileScreen() {
               value={editName}
               onChangeText={setEditName}
               placeholder="Masukkan nama anak"
-              placeholderTextColor={COLORS.textLight}
+              placeholderTextColor="#94A3B8"
               style={[styles.passcodeInput, { letterSpacing: 0, textAlign: "left", paddingHorizontal: 12 }]}
               autoCapitalize="words"
               maxLength={20}
@@ -492,7 +492,7 @@ export default function ProfileScreen() {
               </Pressable>
               
               <Pressable 
-                style={[styles.modalBtn, styles.modalBtnPrimary, { backgroundColor: COLORS.brandGreen }]} 
+                style={[styles.modalBtn, styles.modalBtnPrimary, { backgroundColor: "#00C3A0" }]} 
                 onPress={handleSaveName}
                 disabled={isSavingName}
               >
@@ -513,22 +513,22 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.bgPrimary,
+    backgroundColor: "#F3FAFF",
   },
   scrollContent: {
     paddingVertical: SPACING.xl,
     paddingHorizontal: SPACING.lg,
-    paddingBottom: Platform.OS === "ios" ? SPACING.xxl + 20 : SPACING.xxl,
+    paddingBottom: Platform.OS === "ios" ? SPACING.xxl + 40 : SPACING.xxl + 20,
   },
   profileHeaderCard: {
     alignItems: "center",
-    backgroundColor: COLORS.cardWhite,
+    backgroundColor: "#FFFFFF",
     borderRadius: SHAPES.radiusXl,
-    borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     paddingVertical: SPACING.xl + 4,
-    marginBottom: SPACING.xl + 4,
-    ...SHADOWS.medium,
+    marginBottom: SPACING.xl,
+    ...SHADOWS.light,
   },
   avatarWrapper: {
     position: "relative",
@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
     height: 90,
     borderRadius: 45,
     borderWidth: 3,
-    borderColor: `${COLORS.brandGreen}30`,
+    borderColor: "#0B84FF",
     padding: 3,
     marginBottom: SPACING.md,
   },
@@ -552,22 +552,22 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: COLORS.brandOrange,
+    backgroundColor: "#0B84FF",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
     borderColor: "#FFFFFF",
   },
   profileName: {
-    ...FONTS.heading,
     fontSize: 20,
-    color: COLORS.textDark,
+    fontWeight: "900",
+    color: "#1F2937",
     marginBottom: 4,
   },
   explorerTag: {
-    backgroundColor: "#F0FDF4",
+    backgroundColor: "rgba(11, 132, 255, 0.1)",
     borderWidth: 1,
-    borderColor: `${COLORS.brandGreen}20`,
+    borderColor: "rgba(11, 132, 255, 0.2)",
     borderRadius: SHAPES.radiusRound,
     paddingVertical: 4,
     paddingHorizontal: SPACING.md,
@@ -575,13 +575,13 @@ const styles = StyleSheet.create({
   explorerTagText: {
     fontSize: 10,
     fontWeight: "800",
-    color: COLORS.brandGreen,
+    color: "#0B84FF",
   },
   menuList: {
-    backgroundColor: COLORS.cardWhite,
+    backgroundColor: "#FFFFFF",
     borderRadius: SHAPES.radiusLg,
-    borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     overflow: "hidden",
     ...SHADOWS.light,
   },
@@ -592,7 +592,7 @@ const styles = StyleSheet.create({
     paddingVertical: SPACING.lg,
     paddingHorizontal: SPACING.lg,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.borderLight,
+    borderBottomColor: "#F1F5F9",
   },
   menuItemPressed: {
     backgroundColor: "#F8FAFC",
@@ -606,21 +606,21 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: COLORS.bgPrimary,
+    backgroundColor: "#EFF6FF",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: COLORS.borderLight,
+    borderColor: "#DBEAFE",
   },
   menuTitle: {
-    ...FONTS.bodyBold,
     fontSize: 13,
-    color: COLORS.textDark,
+    fontWeight: "700",
+    color: "#1F2937",
   },
   menuSubtitle: {
-    ...FONTS.caption,
     fontSize: 10,
-    color: COLORS.textMedium,
+    fontWeight: "600",
+    color: "#64748B",
     marginTop: 2,
   },
   menuRight: {
@@ -629,7 +629,6 @@ const styles = StyleSheet.create({
     gap: SPACING.sm,
   },
   menuBadge: {
-    backgroundColor: COLORS.brandBlue,
     borderRadius: SHAPES.radiusSm,
     paddingVertical: 2,
     paddingHorizontal: 8,
@@ -643,72 +642,72 @@ const styles = StyleSheet.create({
   // Modal PIN styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.4)",
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 30,
   },
   modalContent: {
-    backgroundColor: COLORS.cardWhite,
+    backgroundColor: "#FFFFFF",
     width: "100%",
     maxWidth: 320,
     borderRadius: SHAPES.radiusXl,
     padding: SPACING.xl + 4,
     alignItems: "center",
     borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
+    borderColor: "#E2E8F0",
     ...SHADOWS.medium,
   },
   lockIconCircle: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: "rgba(255, 159, 10, 0.1)",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1.5,
-    borderColor: "#FFEDD5",
+    borderColor: "rgba(255, 159, 10, 0.2)",
     marginBottom: SPACING.md,
   },
   modalTitle: {
-    ...FONTS.subheading,
     fontSize: 16,
-    color: COLORS.textDark,
+    fontWeight: "800",
+    color: "#1F2937",
     textAlign: "center",
     marginBottom: 6,
   },
   modalSubtitle: {
-    ...FONTS.bodyRegular,
     fontSize: 11,
-    color: COLORS.textMedium,
+    fontWeight: "500",
+    color: "#6B7280",
     textAlign: "center",
     lineHeight: 15,
     marginBottom: SPACING.lg,
   },
   passcodeInput: {
-    backgroundColor: COLORS.bgPrimary,
-    borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     borderRadius: SHAPES.radiusMd,
     width: "100%",
     height: 45,
     textAlign: "center",
     fontSize: 18,
     fontWeight: "700",
-    color: COLORS.textDark,
+    color: "#1F2937",
     letterSpacing: 8,
     marginBottom: SPACING.sm,
   },
   errorText: {
     fontSize: 10,
-    color: COLORS.error,
+    color: "#EF4444",
     fontWeight: "700",
     textAlign: "center",
     marginBottom: SPACING.md,
   },
   hintText: {
     fontSize: 10,
-    color: COLORS.textLight,
+    color: "#64748B",
     fontWeight: "500",
     textAlign: "center",
     marginBottom: SPACING.md,
@@ -726,11 +725,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalBtnPrimary: {
-    backgroundColor: COLORS.brandOrange,
+    backgroundColor: "#FF9F0A",
   },
   modalBtnSecondary: {
     backgroundColor: "#F1F5F9",
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: "#E2E8F0",
   },
   modalBtnTextPrimary: {
@@ -741,14 +740,14 @@ const styles = StyleSheet.create({
   modalBtnTextSecondary: {
     fontSize: 12,
     fontWeight: "800",
-    color: COLORS.textMedium,
+    color: "#4B5563",
   },
   
   // Login Form Styles
   loginScrollContent: {
     paddingVertical: SPACING.xl,
     paddingHorizontal: SPACING.lg,
-    paddingBottom: Platform.OS === "ios" ? SPACING.xxl + 40 : SPACING.xxl,
+    paddingBottom: Platform.OS === "ios" ? SPACING.xxl + 40 : SPACING.xxl + 20,
   },
   loginContainer: {
     flex: 1,
@@ -764,116 +763,115 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: `${COLORS.brandGreen}15`,
+    backgroundColor: "rgba(11, 132, 255, 0.1)",
     justifyContent: "center",
     alignItems: "center",
     marginBottom: SPACING.md,
     borderWidth: 2,
-    borderColor: `${COLORS.brandGreen}30`,
+    borderColor: "#0B84FF",
   },
   loginLogo: {
     width: 70,
     height: 70,
   },
   loginWelcomeText: {
-    ...FONTS.caption,
     fontSize: 11,
     fontWeight: "800",
-    color: COLORS.brandOrange,
+    color: "#0B84FF",
     letterSpacing: 1.5,
     textTransform: "uppercase",
     marginBottom: 4,
   },
   loginTitleText: {
-    ...FONTS.heading,
     fontSize: 24,
-    color: COLORS.textDark,
+    fontWeight: "900",
+    color: "#1F2937",
     marginBottom: SPACING.sm,
   },
   loginSubtitleText: {
-    ...FONTS.bodyRegular,
     fontSize: 13,
-    color: COLORS.textMedium,
+    fontWeight: "500",
+    color: "#6B7280",
     textAlign: "center",
     lineHeight: 18,
     paddingHorizontal: SPACING.lg,
   },
   loginCard: {
-    backgroundColor: COLORS.cardWhite,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     borderRadius: SHAPES.radiusXl,
-    borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
-    padding: SPACING.xl,
     width: "100%",
+    padding: SPACING.xl,
+    marginBottom: SPACING.lg,
     ...SHADOWS.medium,
-    marginBottom: SPACING.xl,
   },
   inputGroup: {
     marginBottom: SPACING.lg,
-    width: "100%",
   },
   inputLabel: {
-    ...FONTS.bodyBold,
-    fontSize: 12,
-    color: COLORS.textDark,
-    marginBottom: SPACING.xs + 2,
+    fontSize: 11,
+    fontWeight: "800",
+    color: "#1F2937",
+    marginBottom: 8,
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: COLORS.bgPrimary,
-    borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     borderRadius: SHAPES.radiusMd,
     height: 48,
-    paddingHorizontal: SPACING.md,
-    position: "relative",
+    paddingHorizontal: 12,
   },
   inputIcon: {
-    marginRight: SPACING.sm,
+    marginRight: 10,
   },
   input: {
     flex: 1,
-    height: "100%",
+    color: "#1F2937",
     fontSize: 13,
-    color: COLORS.textDark,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   passwordToggle: {
-    padding: SPACING.xs,
+    padding: 4,
   },
   loginErrorContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: SPACING.xs,
-    marginBottom: SPACING.md,
-    paddingHorizontal: SPACING.xs,
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
+    borderRadius: SHAPES.radiusMd,
+    padding: 10,
+    marginBottom: SPACING.lg,
+    gap: 8,
   },
   loginErrorText: {
     fontSize: 11,
-    fontWeight: "600",
-    color: COLORS.error,
+    fontWeight: "700",
+    color: "#EF4444",
+    flex: 1,
   },
   loginBtn: {
-    backgroundColor: COLORS.brandOrange,
-    borderRadius: SHAPES.radiusRound,
+    backgroundColor: "#0B84FF",
     height: 48,
+    borderRadius: SHAPES.radiusRound,
     justifyContent: "center",
     alignItems: "center",
-    width: "100%",
-    marginTop: SPACING.sm,
-    ...SHADOWS.light,
+    borderBottomWidth: 3,
+    borderBottomColor: "#0062C4",
   },
   loginBtnPressed: {
     opacity: 0.9,
-    transform: [{ scale: 0.99 }],
   },
   loginBtnDisabled: {
-    backgroundColor: COLORS.textMuted,
+    opacity: 0.5,
   },
   loginBtnText: {
     fontSize: 14,
-    fontWeight: "800",
+    fontWeight: "900",
     color: "#FFFFFF",
   },
   loginHintCard: {
@@ -881,32 +879,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#EFF6FF",
     borderWidth: 1,
-    borderColor: "#DBEAFE",
+    borderColor: "#BFDBFE",
     borderRadius: SHAPES.radiusLg,
-    paddingVertical: SPACING.md,
-    paddingHorizontal: SPACING.lg,
-    gap: SPACING.sm,
+    padding: SPACING.md,
     width: "100%",
+    gap: 10,
   },
   loginHintText: {
-    flex: 1,
     fontSize: 11,
     fontWeight: "500",
-    color: "#1E40AF",
+    color: "#1E3A8A",
+    flex: 1,
     lineHeight: 15,
   },
   nameEditTrigger: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-    paddingVertical: 2,
-    alignSelf: "center",
+    gap: 6,
+    marginBottom: 4,
   },
   editIcon: {
-    opacity: 0.6,
-    marginLeft: 4,
-    marginBottom: 4,
+    marginTop: 2,
   },
   editAvatarBadge: {
     position: "absolute",
@@ -915,7 +908,7 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    backgroundColor: COLORS.brandGreen,
+    backgroundColor: "#0B84FF",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,

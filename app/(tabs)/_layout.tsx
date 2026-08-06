@@ -8,28 +8,29 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: COLORS.brandBlue,
-        tabBarInactiveTintColor: COLORS.textLight,
+        tabBarActiveTintColor: "#0B84FF",
+        tabBarInactiveTintColor: "#64748B",
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: COLORS.cardWhite,
-          borderTopWidth: 1,
-          borderTopColor: COLORS.borderLight,
-          height: Platform.OS === "ios" ? 88 : 64,
-          paddingBottom: Platform.OS === "ios" ? 28 : 12,
-          paddingTop: 10,
-          elevation: 8,
+          backgroundColor: "#FFFFFF",
+          borderTopWidth: 1.5,
+          borderTopColor: "#E2E8F0",
+          height: Platform.OS === "ios" ? 88 : 74,
+          paddingBottom: Platform.OS === "ios" ? 28 : 10,
+          paddingTop: 8,
+          elevation: 12,
           shadowColor: "#000",
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.05,
-          shadowRadius: 3,
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.08,
+          shadowRadius: 8,
         },
         // @ts-ignore
         id: "bottomNavbar",
         nativeID: "bottomNavbar",
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           ...FONTS.bodyBold,
+          marginTop: 2,
         },
       }}
     >

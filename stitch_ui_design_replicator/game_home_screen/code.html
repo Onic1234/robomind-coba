@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mobile Game UI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<style data-purpose="custom-fonts">
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #000;
+        }
+    </style>
+<style data-purpose="custom-styles">.glass-panel {
+    background: rgba(15, 30, 45, 0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3)
+    }
+.gold-text {
+    color: #ffd700;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8)
+    }
+.gold-gradient {
+    background: linear-gradient(to bottom, #fff700, #fa0);
+    border: 2px solid #8b5a00;
+    box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.5), 0 4px 6px rgba(0, 0, 0, 0.5)
+    }
+.icon-btn {
+    background: linear-gradient(145deg, #2a3b4c, #1f2a36);
+    border: 1px solid #4a6580;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+    border-radius: 12px;
+    transition: transform 0.1s
+    }
+.icon-btn:active {
+    transform: scale(0.95)
+    }
+.badge {
+    background: #f33;
+    color: white;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5)
+    }
+.bottom-nav {
+    background: linear-gradient(to top, #0f1c29, #1c2e40);
+    border-top: 2px solid #3a526b
+    }
+.nav-item.active {
+    background: linear-gradient(145deg, #2c4258, #203142);
+    border-radius: 12px;
+    border: 1px solid #5a7b9e
+    }
+.exp-bar-bg {
+    background-color: #1a1a1a;
+    border: 1px solid #333
+    }
+.exp-bar-fill {
+    background: linear-gradient(to right, #fa0, #fd0)
+    }
+/* Mobile Container to simulate phone screen */
+.mobile-container {
+    width: 100%;
+    max-width: 430px;
+    /* Approximate iPhone width */
+    height: 100vh;
+    max-height: 932px;
+    /* Approximate iPhone height */
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuCilji_CDbG9MlA0GaeKYUlqUpZv7gW6Fi7eHGwhCSiitylbcmCUQm_4Neb4NnlGhacx7qmbzJHzLMSn6J-W-l3rjzKw3svZgnGdHwjIsXnkvujdl8o_nxK62Np4Ns0WgQiSvB0lEB3cfwJoD4HCPBqS0dVNXutCcEam2v3LbrxDLOpEFWc_38NqAwWfzJvjxIEQohOcFzVajklJZPGyE1v5-_zrfhuWxDFRD2XYdoAe4nq8Wzee0_22w);
+    background-size: cover;
+    background-position: center;
+    border-radius: 40px;
+    /* Simulate phone curves if viewing on desktop */
+    border: 8px solid #333
+    }
+/* Adjust for actual mobile device */
+@media (max-width: 480px) {
+    .mobile-container {
+        max-width: 100%;
+        height: 100vh;
+        border-radius: 0;
+        border: none
+        }
+    }</style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+<!-- BEGIN: Mobile App Container -->
+<main class="mobile-container flex flex-col justify-between">
+<!-- BEGIN: Top Header Section -->
+<header class="w-full pt-12 pb-2 px-4 flex flex-col gap-3 z-10 relative">
+<!-- Top Row: Profile & Currency -->
+<div class="flex justify-between items-center gap-2">
+<!-- Profile Snippet -->
+<div class="glass-panel rounded-full flex items-center pr-4 pl-1 py-1 gap-2 flex-shrink-0">
+<img alt="Avatar" class="w-10 h-10 rounded-full border-2 border-gold" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHc3YiIP-boxbeuZuna79pDFAJFJaxFcBb5lUfsAhiXTvPsyPyXbiY3l8BexJ4eHtiCk9kYOenbWFA4_qUqsMmLVhj0miYprLz7a_RAS6NACEAHjdJ5Lyk2KRPpF8tBqxYSJhCmNBMPk3mojb0Lgv6kdNgQRYwaGJRQK8hRJDiDbfYvZDGvdFU9Uwe-K-yzl2OUtwPp90uujpEJjhMtGuZ0R0GJnkdjdwRcso6dqK5tFXd9QRwo2SiWw"/>
+<div class="flex flex-col leading-tight">
+<span class="text-white font-bold text-sm">Explore</span>
+<span class="text-gray-300 text-xs">Level 24</span>
+</div>
+</div>
+<!-- Currency Counters -->
+<div class="flex gap-2 flex-grow justify-end">
+<!-- Gold -->
+<div class="glass-panel rounded-full flex items-center px-2 py-1 gap-1 relative pl-6">
+<div class="absolute -left-2 w-7 h-7 bg-yellow-400 rounded-full flex items-center justify-center border border-yellow-600 shadow-sm">
+<i class="fa-solid fa-star text-yellow-700 text-xs"></i>
+</div>
+<span class="text-white font-bold text-xs pl-2">18,650</span>
+<button class="w-5 h-5 bg-green-500 rounded flex items-center justify-center border border-green-700 ml-1">
+<i class="fa-solid fa-plus text-white text-[10px]"></i>
+</button>
+</div>
+<!-- Gems -->
+<div class="glass-panel rounded-full flex items-center px-2 py-1 gap-1 relative pl-6">
+<div class="absolute -left-2 w-7 h-7 bg-purple-500 rounded-full flex items-center justify-center border border-purple-700 shadow-sm transform rotate-45">
+<div class="w-4 h-4 bg-purple-300 transform -rotate-45 rounded-sm"></div>
+</div>
+<span class="text-white font-bold text-xs pl-2">8,650</span>
+<button class="w-5 h-5 bg-green-500 rounded flex items-center justify-center border border-green-700 ml-1">
+<i class="fa-solid fa-plus text-white text-[10px]"></i>
+</button>
+</div>
+</div>
+</div>
+<!-- EXP Bar -->
+<div class="w-32 exp-bar-bg rounded-full h-3 relative mt-1">
+<div class="exp-bar-fill h-full rounded-full w-1/2"></div>
+<span class="absolute inset-0 flex items-center justify-center text-[10px] text-white font-bold drop-shadow-md">3600/7200</span>
+</div>
+<!-- Daily Spin -->
+<div class="absolute right-4 top-24">
+<div class="glass-panel rounded-xl p-2 flex items-center gap-2 border border-blue-400/30">
+<div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center border-2 border-blue-300">
+<i class="fa-solid fa-dharmachakra text-orange-400 text-xl"></i>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-white text-xs font-bold whitespace-nowrap">DAILY SPIN</span>
+<span class="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm mt-0.5">FREE</span>
+</div>
+</div>
+</div>
+</header>
+<!-- END: Top Header Section -->
+<!-- BEGIN: Middle Content Area (Character & Side Menus) -->
+<section class="flex-grow relative flex justify-between px-2 py-4">
+<!-- Character Placeholder (Center) -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<img alt="Main Character" class="h-3/4 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWDSfVmm2t3LqRyO0EkBVu55JOaIel317JrQ_S5QWM_FDws_ZPuKvOGMlGDtvGSb5AtJzEaHYqgVwHWvKRcZTWCSJv1kfKHxuFdbHLn-KdXOiwWY8PyErkl_Y81uvP7CR6Pi3lNAZ3oezOP4Y6iEf1aSJmTNcQTippkUJkluuOQ6dw_XuEc5n8NlRgUKF1qE1fsM9-oPvdZ8-ycxw5Xb5E8CztHdR2I7HY8LWMpORFfmgdTLGOCV5XRw"/>
+<!-- Pedestal -->
+<div class="absolute bottom-16 w-48 h-12 bg-stone-700 rounded-[100%] border-t-4 border-stone-500 opacity-80" style="transform: perspective(200px) rotateX(60deg);"></div>
+</div>
+<!-- Left Menu -->
+<div class="flex flex-col gap-4 z-10 mt-16 pl-2">
+<!-- Event -->
+<button class="icon-btn w-14 h-14 flex flex-col items-center justify-center relative">
+<div class="absolute -top-2 -right-2 badge w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-bold">2</div>
+<i class="fa-solid fa-gift text-red-400 text-xl mb-1"></i>
+<span class="text-gray-300 text-[9px] font-bold">EVENT</span>
+</button>
+<!-- Shop -->
+<button class="icon-btn w-14 h-14 flex flex-col items-center justify-center">
+<i class="fa-solid fa-store text-blue-300 text-xl mb-1"></i>
+<span class="text-gray-300 text-[9px] font-bold">SHOP</span>
+</button>
+<!-- Pass -->
+<button class="icon-btn w-14 h-14 flex flex-col items-center justify-center">
+<i class="fa-solid fa-shield-halved text-yellow-500 text-xl mb-1"></i>
+<span class="text-gray-300 text-[9px] font-bold">PASS</span>
+</button>
+</div>
+<!-- Right Menu -->
+<div class="flex flex-col gap-4 z-10 mt-16 pr-2">
+<!-- Mail -->
+<button class="icon-btn w-14 h-14 flex flex-col items-center justify-center relative">
+<div class="absolute -top-2 -right-2 badge w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-bold">2</div>
+<i class="fa-regular fa-envelope text-red-200 text-xl mb-1"></i>
+<span class="text-gray-300 text-[9px] font-bold">MAIL</span>
+</button>
+<!-- Quest -->
+<button class="icon-btn w-14 h-14 flex flex-col items-center justify-center relative">
+<div class="absolute -top-2 -right-2 badge w-5 h-5 rounded-full text-[10px] flex items-center justify-center font-bold">1</div>
+<i class="fa-solid fa-scroll text-yellow-100 text-xl mb-1"></i>
+<span class="text-gray-300 text-[9px] font-bold">QUEST</span>
+</button>
+<!-- Friend -->
+<button class="icon-btn w-14 h-14 flex flex-col items-center justify-center">
+<i class="fa-solid fa-user-group text-orange-200 text-xl mb-1"></i>
+<span class="text-gray-300 text-[9px] font-bold">FRIEND</span>
+</button>
+</div>
+<!-- Floating Elements -->
+<div class="absolute bottom-32 right-8 z-10 opacity-90">
+<div class="relative">
+<i class="fa-solid fa-question text-yellow-400 text-3xl absolute -top-8 left-4 drop-shadow-lg animate-bounce"></i>
+<i class="fa-solid fa-box-open text-yellow-300 text-5xl drop-shadow-xl"></i>
+</div>
+</div>
+<!-- Navigation Arrows (Mid screen) -->
+<div class="absolute left-4 bottom-40 z-10">
+<i class="fa-solid fa-caret-left text-yellow-400 text-6xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] opacity-80"></i>
+</div>
+<div class="absolute right-4 bottom-16 z-10">
+<i class="fa-solid fa-share text-yellow-400 text-4xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] opacity-80 transform scale-x-[-1] rotate-45"></i>
+</div>
+</section>
+<!-- END: Middle Content Area -->
+<!-- BEGIN: Bottom Section (Claim & Nav) -->
+<section class="w-full flex flex-col z-20">
+<!-- Claim Button -->
+<div class="px-6 pb-4">
+<button class="w-full h-16 gold-gradient rounded-xl flex items-center justify-center text-white font-black text-2xl tracking-wider uppercase transition-transform active:scale-95 relative overflow-hidden">
+<span class="relative z-10 drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] text-yellow-100">CLAIM</span>
+<!-- Shine effect -->
+<div class="absolute top-0 left-[-100%] w-1/2 h-full bg-white opacity-20 skew-x-[-20deg] hover:animate-[shine_1.5s_ease-in-out_infinite]"></div>
+</button>
+</div>
+<!-- Bottom Navigation Bar -->
+<nav class="bottom-nav w-full h-20 rounded-t-3xl flex justify-between items-center px-4 pb-2">
+<!-- Home -->
+<button class="nav-item active flex-1 h-16 flex flex-col items-center justify-center gap-1">
+<i class="fa-solid fa-house text-yellow-400 text-xl"></i>
+<span class="text-blue-200 text-[10px] font-bold">HOME</span>
+</button>
+<!-- Advent -->
+<button class="flex-1 h-16 flex flex-col items-center justify-center gap-1 opacity-80 hover:opacity-100 transition-opacity">
+<i class="fa-solid fa-map text-orange-200 text-xl"></i>
+<span class="text-blue-200 text-[10px] font-bold">ADVENT</span>
+</button>
+<!-- Clan -->
+<button class="flex-1 h-16 flex flex-col items-center justify-center gap-1 opacity-80 hover:opacity-100 transition-opacity">
+<i class="fa-solid fa-shield text-red-400 text-xl"></i>
+<span class="text-blue-200 text-[10px] font-bold">CLAN</span>
+</button>
+<!-- Invent -->
+<button class="flex-1 h-16 flex flex-col items-center justify-center gap-1 opacity-80 hover:opacity-100 transition-opacity">
+<i class="fa-solid fa-briefcase text-orange-400 text-xl"></i>
+<span class="text-blue-200 text-[10px] font-bold">INVENT</span>
+</button>
+<!-- More -->
+<button class="flex-1 h-16 flex flex-col items-center justify-center gap-1 opacity-80 hover:opacity-100 transition-opacity">
+<i class="fa-solid fa-gear text-yellow-500 text-xl"></i>
+<span class="text-blue-200 text-[10px] font-bold">MORE</span>
+</button>
+</nav>
+</section>
+<!-- END: Bottom Section -->
+</main>
+<!-- END: Mobile App Container -->
+<style data-purpose="animations">
+        @keyframes shine {
+            100% {
+                left: 200%;
+            }
+        }
+    </style>
+</body></html>
