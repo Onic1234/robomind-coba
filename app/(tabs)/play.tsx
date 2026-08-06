@@ -285,7 +285,6 @@ export default function PlayScreen() {
   const [hoveredGameId, setHoveredGameId] = useState<string | null>(null);
 
   const renderGameCard = ({ item }: { item: GameItem }) => {
-    // Render transparent invisible spacer for grid row alignment
     if ((item as any).isSpacer) {
       return <View style={[styles.card, { backgroundColor: "transparent", borderWidth: 0, shadowOpacity: 0, opacity: 0 }]} />;
     }
@@ -379,20 +378,28 @@ export default function PlayScreen() {
             contentFit="cover" 
           />
           
-          {/* Stitch Hover Overlay with MAIN Button (for other games) */}
+          {/* Locked Badge Overlay */}
+          {item.isLocked && (
+            <View style={styles.lockOverlay}>
+              <Ionicons name="lock-closed" size={24} color="#FF5E36" />
+              <Text style={styles.lockText}>{item.levelInfo}</Text>
+            </View>
+          )}
+          
+          {/* Hover Play Button (Stitch design style) */}
           {isHovered && !item.isLocked && !isRoboLink && (
             <View style={styles.hoverTitleOverlay}>
               <View style={styles.stitchPlayButton}>
-                <Text style={styles.stitchPlayButtonText}>MAIN</Text>
+                <Text style={styles.stitchPlayButtonText}>PLAY</Text>
               </View>
             </View>
           )}
 
-          {/* Pure HTML5 Video Highlight Preview for Robo Link on Hover */}
+          {/* HTML5 Video Highlight Preview for Robo Link/Maze on Hover */}
           {hasVideoPreview && isHovered && (
             <View style={[styles.videoHighlightOverlay, { zIndex: 99 }]}>
               {Platform.OS === "web" ? (
-                // @ts-ignore - web html5 video player
+                // @ts-ignore
                 <video
                   src={videoPreviewSrc}
                   autoPlay
@@ -406,15 +413,14 @@ export default function PlayScreen() {
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",
-                    borderRadius: 0,
                     pointerEvents: "none",
                   }}
                 />
               ) : (
                 <View style={styles.animatedCircuitPreview}>
-                  <Ionicons name="sparkles" size={24} color="#00F0FF" style={styles.previewSparkle} />
+                  <Ionicons name="sparkles" size={24} color="#0B84FF" style={styles.previewSparkle} />
                   <View style={styles.previewPulseCircle} />
-                  <Ionicons name="hardware-chip-outline" size={40} color="#26C6DA" />
+                  <Ionicons name="hardware-chip-outline" size={40} color="#0B84FF" />
                 </View>
               )}
               
@@ -426,17 +432,19 @@ export default function PlayScreen() {
           )}
         </View>
 
-        {/* Stitch Bottom Card Footer */}
+        {/* Card Footer */}
         <View style={styles.cardFooter}>
           <Text style={styles.cardFooterTitle} numberOfLines={1}>
             {item.title}
+          </Text>
+          <Text style={styles.cardFooterSub}>
+            {item.isLocked ? "Terkunci" : item.levelInfo}
           </Text>
         </View>
       </Pressable>
     );
   };
 
-  // Format games array with invisible dummy spacers so incomplete last row items match exact grid column width
   const formatDataWithSpacers = (dataList: GameItem[], cols: number) => {
     const fullRows = Math.floor(dataList.length / cols);
     let numberOfElementsLastRow = dataList.length - fullRows * cols;
@@ -465,7 +473,7 @@ export default function PlayScreen() {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={styles.headerSubtitle}>PILIH MISI GAME</Text>
-          <Text style={styles.headerTitle}>Petualangan Belajar</Text>
+          <Text style={styles.headerTitle}>Misi Belajar</Text>
         </View>
         
         <View style={styles.currencyBadge}>
@@ -481,7 +489,7 @@ export default function PlayScreen() {
             <Ionicons
               name={playtimeGuard.isCooldownActive ? "moon" : "time-sharp"}
               size={16}
-              color={playtimeGuard.isCooldownActive ? "#EF4444" : "#10B981"}
+              color={playtimeGuard.isCooldownActive ? "#EF4444" : "#0B84FF"}
             />
             <Text style={styles.playtimeTitle}>
               {playtimeGuard.isCooldownActive ? "WAKTU ISTIRAHAT AKTIF" : "WAKTU BERMAIN HARI INI"}
@@ -508,7 +516,7 @@ export default function PlayScreen() {
             }}
             style={styles.parentResetBtn}
           >
-            <Ionicons name="shield-checkmark" size={13} color="#00C3A0" />
+            <Ionicons name="shield-checkmark" size={13} color="#0B84FF" />
             <Text style={styles.parentResetText}>Orang Tua</Text>
           </Pressable>
         </View>
@@ -517,7 +525,7 @@ export default function PlayScreen() {
           <View style={styles.cooldownBanner}>
             <Ionicons name="lock-closed" size={14} color="#EF4444" />
             <Text style={styles.cooldownBannerText}>
-              Batas 1 jam terlampaui. Sisa waktu istirahat: {formatDurationHMS(playtimeGuard.cooldownRemainingSeconds)}
+              Batas bermain terlampaui. Istirahat: {formatDurationHMS(playtimeGuard.cooldownRemainingSeconds)}
             </Text>
           </View>
         ) : (
@@ -528,7 +536,7 @@ export default function PlayScreen() {
                   styles.progressBarFill,
                   {
                     width: `${Math.min(100, (playtimeGuard.playtimeSeconds / playtimeGuard.maxPlaytimeSeconds) * 100)}%`,
-                    backgroundColor: playtimeGuard.isWarning ? "#F59E0B" : "#10B981",
+                    backgroundColor: playtimeGuard.isWarning ? "#EF4444" : "#0B84FF",
                   },
                 ]}
               />
@@ -557,8 +565,8 @@ export default function PlayScreen() {
               >
                 <Ionicons 
                   name={cat.icon as any} 
-                  size={16} 
-                  color={isActive ? "#FFFFFF" : "#071E27"} 
+                  size={14} 
+                  color={isActive ? "#FFFFFF" : "#64748B"} 
                 />
                 <Text style={[styles.chipText, isActive ? styles.chipTextActive : styles.chipTextInactive]}>
                   {cat.name}
@@ -600,37 +608,105 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerSubtitle: {
-    fontSize: 11,
-    fontWeight: "700",
+    fontSize: 10,
+    fontWeight: "800",
     letterSpacing: 1.5,
-    color: "#006874",
+    color: "#0B84FF",
     textTransform: "uppercase",
     marginBottom: 2,
   },
   headerTitle: {
-    fontSize: 26,
-    fontWeight: "700",
-    color: "#071E27",
+    fontSize: 24,
+    fontWeight: "900",
+    color: "#1F2937",
   },
   currencyBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F3E24D",
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
     borderRadius: SHAPES.radiusRound,
     paddingVertical: 6,
     paddingHorizontal: SPACING.md,
     gap: 6,
-    borderBottomWidth: 3,
-    borderBottomColor: "#6D6400",
-    ...SHADOWS.light,
+    borderWidth: 1.5,
+    borderColor: "#E2E8F0",
   },
   currencyIcon: {
-    fontSize: 18,
+    fontSize: 16,
   },
   currencyText: {
-    fontSize: 15,
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#D97706",
+  },
+  playtimeCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: SHAPES.radiusLg,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+    padding: SPACING.md,
+    marginHorizontal: SPACING.lg,
+    marginBottom: SPACING.md,
+    ...SHADOWS.light,
+  },
+  playtimeHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  playtimeTitle: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#1F2937",
+    letterSpacing: 0.5,
+  },
+  parentResetBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#F1F5F9",
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
+  },
+  parentResetText: {
+    fontSize: 9,
     fontWeight: "700",
-    color: "#6D6400",
+    color: "#64748B",
+  },
+  cooldownBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  cooldownBannerText: {
+    fontSize: 11,
+    color: "#EF4444",
+    fontWeight: "700",
+  },
+  progressRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  progressBarBg: {
+    flex: 1,
+    height: 6,
+    backgroundColor: "#F1F5F9",
+    borderRadius: 3,
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    borderRadius: 3,
+  },
+  progressText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#64748B",
   },
   chipsContainer: {
     paddingVertical: SPACING.xs,
@@ -644,72 +720,64 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: SPACING.lg,
+    paddingVertical: 8,
+    paddingHorizontal: SPACING.md,
     borderRadius: SHAPES.radiusRound,
-    borderWidth: 2,
+    borderWidth: 1.5,
   },
   chipActive: {
-    backgroundColor: "#006874",
-    borderColor: "#006874",
-    borderBottomWidth: 4,
-    borderBottomColor: "#004E57",
+    backgroundColor: "#0B84FF",
+    borderColor: "#0B84FF",
   },
   chipInactive: {
-    backgroundColor: "#DBF1FE",
-    borderColor: "#BBC9CC",
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    borderColor: "#E2E8F0",
   },
   chipText: {
-    fontSize: 13,
-    fontWeight: "700",
+    fontSize: 12,
+    fontWeight: "800",
   },
   chipTextActive: {
     color: "#FFFFFF",
   },
   chipTextInactive: {
-    color: "#071E27",
+    color: "#64748B",
   },
   gridContainer: {
     paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.xxl,
+    paddingBottom: SPACING.xxl + 40,
   },
   rowWrapper: {
     flexDirection: "row",
     justifyContent: "flex-start",
-    gap: 14,
-    marginBottom: SPACING.md,
+    gap: 12,
+    marginBottom: SPACING.sm,
   },
   card: {
     flex: 1,
     backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    borderWidth: 1.5,
-    borderColor: "#DBF1FE",
-    borderBottomWidth: 3,
-    borderBottomColor: "#CFE6F2",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     overflow: "hidden",
     ...SHADOWS.light,
-    // @ts-ignore - web cursor
-    cursor: "pointer",
   },
   cardHovered: {
-    borderColor: "#006874",
-    borderBottomColor: "#006874",
-    shadowColor: "#006874",
+    borderColor: "#0B84FF",
+    shadowColor: "#0B84FF",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.1,
     shadowRadius: 8,
-    elevation: 6,
+    elevation: 3,
   },
   cardLocked: {
-    opacity: 0.7,
-    backgroundColor: "#E6F6FF",
+    opacity: 0.6,
   },
   cardImageContainer: {
     width: "100%",
-    height: 125,
+    height: 100,
     position: "relative",
-    backgroundColor: "#CFE6F2",
+    backgroundColor: "#F1F5F9",
     overflow: "hidden",
   },
   cardImage: {
@@ -717,269 +785,101 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   cardImageHovered: {
-    opacity: 0.9,
+    opacity: 0.85,
+  },
+  lockOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(255, 255, 255, 0.85)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  lockText: {
+    color: "#FF5E36",
+    fontSize: 9,
+    fontWeight: "800",
+    marginTop: 4,
   },
   videoHighlightOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(7, 30, 39, 0.85)",
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 10,
   },
   animatedCircuitPreview: {
     width: "100%",
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
-    position: "relative",
   },
   previewSparkle: {
     position: "absolute",
-    top: 8,
-    right: 10,
+    top: 6,
+    right: 8,
   },
   previewPulseCircle: {
     position: "absolute",
-    width: 54,
-    height: 54,
-    borderRadius: 27,
-    borderWidth: 2,
-    borderColor: "rgba(38, 198, 218, 0.6)",
-  },
-  previewPulseCircle2: {
-    position: "absolute",
-    width: 78,
-    height: 78,
-    borderRadius: 39,
-    borderWidth: 1,
-    borderColor: "rgba(38, 198, 218, 0.3)",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: "rgba(11, 132, 255, 0.3)",
   },
   liveBadge: {
     position: "absolute",
-    top: 6,
-    left: 6,
+    top: 4,
+    left: 4,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(7, 30, 39, 0.9)",
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 6,
-    gap: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    paddingHorizontal: 5,
+    paddingVertical: 1.5,
+    borderRadius: 4,
+    gap: 3,
     borderWidth: 1,
-    borderColor: "#26C6DA",
-    zIndex: 15,
+    borderColor: "#0B84FF",
   },
   liveDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: "#BA1A1A",
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#EF4444",
   },
   liveText: {
-    fontSize: 7,
-    fontWeight: "700",
-    color: "#26C6DA",
-    letterSpacing: 0.5,
+    fontSize: 6,
+    fontWeight: "800",
+    color: "#0B84FF",
   },
   hoverTitleOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(7, 30, 39, 0.75)",
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
     justifyContent: "center",
     alignItems: "center",
-    padding: SPACING.xs,
-    zIndex: 12,
   },
   stitchPlayButton: {
-    backgroundColor: "#006874",
+    backgroundColor: "#0B84FF",
     paddingHorizontal: SPACING.md,
     paddingVertical: 5,
-    borderRadius: SHAPES.radiusRound,
+    borderRadius: 12,
     borderBottomWidth: 3,
-    borderBottomColor: "#004E57",
-    marginBottom: 6,
-    ...SHADOWS.light,
+    borderBottomColor: "#0062C4",
   },
   stitchPlayButtonText: {
     color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 0.5,
-  },
-  hoverCardTitle: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#FFFFFF",
-    textAlign: "center",
-    marginBottom: 3,
-  },
-  hoverCategoryBadge: {
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.4)",
-    borderRadius: SHAPES.radiusSm,
-    paddingVertical: 1,
-    paddingHorizontal: 6,
-  },
-  hoverCategoryBadgeText: {
-    fontSize: 8,
-    fontWeight: "700",
-    color: "#98F0FF",
+    fontSize: 10,
+    fontWeight: "900",
   },
   cardFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: SPACING.sm,
-    paddingHorizontal: 8,
-    backgroundColor: "#FFFFFF",
+    padding: 8,
   },
   cardFooterTitle: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#071E27",
-    textAlign: "center",
-  },
-  lockedOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(7, 30, 39, 0.65)",
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 11,
-  },
-  lockCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-    borderColor: "#FFFFFF",
-  },
-  levelBadge: {
-    position: "absolute",
-    top: SPACING.sm,
-    left: SPACING.sm,
-    backgroundColor: "rgba(0, 195, 160, 0.85)",
-    paddingVertical: 2,
-    paddingHorizontal: SPACING.sm,
-    borderRadius: SHAPES.radiusSm,
-  },
-  levelBadgeText: {
-    fontSize: 9,
-    fontWeight: "900",
-    color: "#FFFFFF",
-  },
-  cardInfo: {
-    padding: SPACING.md,
-  },
-  cardTitle: {
-    ...FONTS.bodyBold,
-    fontSize: 13,
-    color: COLORS.textDark,
-    marginBottom: 6,
-  },
-  cardFooter: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  categoryBadge: {
-    backgroundColor: COLORS.bgPrimary,
-    borderWidth: 1,
-    borderColor: COLORS.borderLight,
-    borderRadius: SHAPES.radiusSm,
-    paddingVertical: 2,
-    paddingHorizontal: 6,
-  },
-  categoryBadgeText: {
-    fontSize: 8,
-    fontWeight: "700",
-    color: COLORS.textMedium,
-  },
-  coinsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-  },
-  coinsText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#D97706",
-  },
-  playtimeCard: {
-    marginHorizontal: SPACING.lg,
-    marginTop: SPACING.md,
-    backgroundColor: COLORS.cardWhite,
-    borderRadius: SHAPES.radiusLg,
-    borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
-    padding: SPACING.md,
-    ...SHADOWS.light,
-  },
-  playtimeHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  playtimeTitle: {
-    ...FONTS.caption,
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 1,
-    color: COLORS.textDark,
-  },
-  parentResetBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "#F1F5F9",
-    borderWidth: 1,
-    borderColor: "#CBD5E1",
-    paddingVertical: 3,
-    paddingHorizontal: 8,
-    borderRadius: SHAPES.radiusRound,
-  },
-  parentResetText: {
-    fontSize: 9,
-    fontWeight: "700",
-    color: COLORS.textMedium,
-  },
-  cooldownBanner: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "#FEF2F2",
-    borderWidth: 1,
-    borderColor: "#FCA5A5",
-    borderRadius: SHAPES.radiusSm,
-    paddingVertical: 6,
-    paddingHorizontal: SPACING.md,
-  },
-  cooldownBannerText: {
-    fontSize: 10,
-    fontWeight: "800",
-    color: "#DC2626",
-  },
-  progressRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.md,
-  },
-  progressBarBg: {
-    flex: 1,
-    height: 8,
-    backgroundColor: "#E2E8F0",
-    borderRadius: 4,
-    overflow: "hidden",
-  },
-  progressBarFill: {
-    height: "100%",
-    borderRadius: 4,
-  },
-  progressText: {
     fontSize: 11,
     fontWeight: "800",
-    color: COLORS.textMedium,
+    color: "#1F2937",
+  },
+  cardFooterSub: {
+    fontSize: 9,
+    fontWeight: "600",
+    color: "#64748B",
+    marginTop: 2,
   },
 });

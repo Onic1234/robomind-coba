@@ -11,6 +11,7 @@ import Robot3DModelView from "../../components/Robot3DModelView";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../../hooks/useAuth";
 
+type SimulationLevel = "Beginner" | "Intermediate" | "Advanced";
 
 export default function Index() {
   const router = useRouter();
@@ -127,7 +128,6 @@ export default function Index() {
     return pts.join(" ");
   });
 
-  type SimulationLevel = "Beginner" | "Intermediate" | "Advanced";
   const [selectedLevel, setSelectedLevel] = useState<SimulationLevel>("Intermediate");
 
   const levelsMetrics = {
@@ -196,11 +196,9 @@ export default function Index() {
 
   const activeMetrics = levelsMetrics[selectedLevel];
 
-
-
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <StatusBar barStyle="dark-content" backgroundColor={COLORS.bgPrimary} />
+      <StatusBar barStyle="dark-content" backgroundColor="#F3FAFF" />
 
       {/* Child Header HUD Panel */}
       <View style={styles.header}>
@@ -215,8 +213,8 @@ export default function Index() {
             ]}
           >
             {isSavingAvatar ? (
-              <View style={[styles.avatar, { justifyContent: "center", alignItems: "center", backgroundColor: `${COLORS.brandGreen}15` }]}>
-                <ActivityIndicator size="small" color={COLORS.brandGreen} />
+              <View style={[styles.avatar, { justifyContent: "center", alignItems: "center", backgroundColor: "rgba(11, 132, 255, 0.1)" }]}>
+                <ActivityIndicator size="small" color="#0B84FF" />
               </View>
             ) : (
               <Image
@@ -248,12 +246,26 @@ export default function Index() {
             <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
               <Text style={styles.greetingText}>Halo, {childName}! 👋</Text>
               {isLoggedIn && (
-                <Ionicons name="pencil-sharp" size={12} color={COLORS.textMedium} style={{ opacity: 0.6, marginTop: 2 }} />
+                <Ionicons name="pencil-sharp" size={12} color="#0B84FF" style={{ opacity: 0.8, marginTop: 2 }} />
               )}
             </View>
             <Text style={styles.levelText}>Level {childLevel} • Junior Explorer</Text>
           </Pressable>
         </View>
+
+        {/* Daily Spin Icon Badge */}
+        <Pressable 
+          onPress={() => alert("Daily Spin is ready!")}
+          style={({ pressed }) => [styles.dailySpinBadge, pressed && { opacity: 0.8 }]}
+        >
+          <View style={styles.dailySpinIconContainer}>
+            <MaterialCommunityIcons name="dharmachakra" size={16} color="#FF9F0A" />
+          </View>
+          <View style={{ marginLeft: 4 }}>
+            <Text style={styles.dailySpinTitle}>DAILY SPIN</Text>
+            <Text style={styles.dailySpinSub}>FREE</Text>
+          </View>
+        </Pressable>
       </View>
 
       {/* Quick stats HUD row (coins, energy, gems) */}
@@ -263,12 +275,12 @@ export default function Index() {
           <Text style={[styles.hudBadgeText, { color: "#D97706" }]}>{userCoins.toLocaleString("id-ID")}</Text>
         </View>
         
-        <View style={[styles.hudBadge, { backgroundColor: "#EFF6FF", borderColor: "#DBEAFE" }]}>
-          <Ionicons name="flash" size={14} color={COLORS.brandBlue} />
-          <Text style={[styles.hudBadgeText, { color: COLORS.brandBlue }]}>85/100</Text>
+        <View style={[styles.hudBadge, { borderColor: "#DBEAFE" }]}>
+          <Ionicons name="flash" size={14} color="#0B84FF" />
+          <Text style={[styles.hudBadgeText, { color: "#0B84FF" }]}>85/100</Text>
         </View>
         
-        <View style={[styles.hudBadge, { backgroundColor: "#FDF2F8", borderColor: "#FCE7F3" }]}>
+        <View style={[styles.hudBadge, { borderColor: "#FCE7F3" }]}>
           <Ionicons name="diamond" size={12} color="#EC4899" />
           <Text style={[styles.hudBadgeText, { color: "#DB2777" }]}>12</Text>
         </View>
@@ -278,43 +290,89 @@ export default function Index() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* Progress XP Bar Card */}
+        <View style={styles.progressCard}>
+          <View style={styles.progressHeader}>
+            <Text style={styles.progressCardTitle}>Progress Hari Ini</Text>
+            <Text style={styles.xpText}>+120 XP ⭐</Text>
+          </View>
+          <View style={styles.xpBarContainer}>
+            <View style={styles.xpBarWrapper}>
+              <View style={[styles.xpBarFill, { width: "60%" }]} />
+            </View>
+            <MaterialCommunityIcons name="robot" size={16} color="#00C3A0" style={styles.robotIndicator} />
+          </View>
+        </View>
 
+        {/* CHARACTER SECTION - CENTER ROBOT WITH FLOATING LEFT AND RIGHT MENUS */}
+        <View style={styles.gameCharacterWrapper}>
+          {/* Centered Robot character container */}
+          <View style={styles.centerCharacterContainer}>
+            <Robot3DModelView />
+          </View>
+
+          {/* Left Menu (Event, Shop, Pass) */}
+          <View style={styles.leftMenuSide}>
+            <Pressable onPress={() => alert("Event dibuka!")} style={styles.sideMenuBtn}>
+              <View style={styles.badgeOverlay}><Text style={styles.badgeText}>2</Text></View>
+              <Ionicons name="gift" size={20} color="#FF5E36" />
+              <Text style={styles.sideMenuBtnText}>EVENT</Text>
+            </Pressable>
+
+            <Pressable onPress={() => alert("Shop dibuka!")} style={styles.sideMenuBtn}>
+              <Ionicons name="cart" size={20} color="#0B84FF" />
+              <Text style={styles.sideMenuBtnText}>SHOP</Text>
+            </Pressable>
+
+            <Pressable onPress={() => alert("Pass dibuka!")} style={styles.sideMenuBtn}>
+              <Ionicons name="shield-checkmark" size={20} color="#00C3A0" />
+              <Text style={styles.sideMenuBtnText}>PASS</Text>
+            </Pressable>
+          </View>
+
+          {/* Right Menu (Mail, Quest, Friend) */}
+          <View style={styles.rightMenuSide}>
+            <Pressable onPress={() => alert("Mail dibuka!")} style={styles.sideMenuBtn}>
+              <View style={styles.badgeOverlay}><Text style={styles.badgeText}>2</Text></View>
+              <Ionicons name="mail" size={20} color="#4B5563" />
+              <Text style={styles.sideMenuBtnText}>MAIL</Text>
+            </Pressable>
+
+            <Pressable onPress={() => alert("Quest dibuka!")} style={styles.sideMenuBtn}>
+              <View style={styles.badgeOverlay}><Text style={styles.badgeText}>1</Text></View>
+              <Ionicons name="document-text" size={20} color="#F59E0B" />
+              <Text style={styles.sideMenuBtnText}>QUEST</Text>
+            </Pressable>
+
+            <Pressable onPress={() => alert("Friend dibuka!")} style={styles.sideMenuBtn}>
+              <Ionicons name="people" size={20} color="#FF8F36" />
+              <Text style={styles.sideMenuBtnText}>FRIEND</Text>
+            </Pressable>
+          </View>
+        </View>
 
         {/* Featured Game: Rogue Soul 2 Banner */}
         <Pressable
-          style={{
-            backgroundColor: "#78350F",
-            borderRadius: SHAPES.radiusLg,
-            borderWidth: 2,
-            borderColor: "#F59E0B",
-            padding: SPACING.lg,
-            marginBottom: SPACING.lg,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            ...SHADOWS.premium,
-          }}
+          style={({ pressed }) => [
+            styles.featuredBanner,
+            pressed && { transform: [{ scale: 0.98 }] }
+          ]}
           onPress={() => router.push("/rogue-soul")}
         >
           <View style={{ flex: 1, paddingRight: SPACING.md }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 }}>
-              <View style={{ backgroundColor: "#DC2626", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 }}>
-                <Text style={{ color: "#FFF", fontSize: 9, fontWeight: "900" }}>GAME BARU!</Text>
+              <View style={styles.tagNew}>
+                <Text style={styles.tagNewText}>GAME BARU!</Text>
               </View>
-              <Text style={{ color: "#FEF08A", fontSize: 10, fontWeight: "800" }}>2D ACTION PLATFORMER</Text>
+              <Text style={styles.bannerSubtitle}>2D ACTION PLATFORMER</Text>
             </View>
-            <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "900", letterSpacing: 0.5 }}>Rogue Soul II</Text>
-            <Text style={{ color: "#CBD5E1", fontSize: 11, marginTop: 2 }}>Parkour, tebasan pedang, pisau lempar & toko armor!</Text>
+            <Text style={styles.bannerTitle}>Rogue Soul II</Text>
+            <Text style={styles.bannerDesc}>Parkour, tebasan pedang, pisau lempar & toko armor!</Text>
           </View>
-          <View style={{ backgroundColor: "#16A34A", paddingVertical: 10, paddingHorizontal: 16, borderRadius: 20 }}>
-            <Text style={{ color: "#FFF", fontWeight: "900", fontSize: 12 }}>MAIN</Text>
+          <View style={styles.bannerActionBtn}>
+            <Text style={styles.bannerActionText}>PLAY</Text>
           </View>
         </Pressable>
-
-        {/* 3D Robot Model Section */}
-        <View style={styles.robotCardContainer}>
-          <Robot3DModelView />
-        </View>
 
         {/* Radar Chart Card (Skala Progress) */}
         <View style={styles.chartCard}>
@@ -364,7 +422,7 @@ export default function Index() {
 
           {/* Radar Chart Visual */}
           <View style={styles.svgWrapper}>
-            <Svg width={230} height={230} viewBox="0 0 220 220">
+            <Svg width={220} height={220} viewBox="0 0 220 220">
               {gridPolygons.map((pts, idx) => (
                 <Polygon
                   key={idx}
@@ -392,8 +450,8 @@ export default function Index() {
 
               <Polygon
                 points={valuePoints}
-                fill="rgba(13, 148, 136, 0.15)"
-                stroke="#0D9488"
+                fill="rgba(11, 132, 255, 0.1)"
+                stroke="#0B84FF"
                 strokeWidth="2"
               />
 
@@ -405,7 +463,7 @@ export default function Index() {
                     cx={x}
                     cy={y}
                     r="4.5"
-                    fill="#F59E0B"
+                    fill="#0B84FF"
                     stroke="#FFFFFF"
                     strokeWidth="1.5"
                   />
@@ -426,8 +484,8 @@ export default function Index() {
                     x={x}
                     y={idx === 0 ? y - 2 : y + 4}
                     fontSize="9"
-                    fontWeight="700"
-                    fill={COLORS.textMedium}
+                    fontWeight="800"
+                    fill="#4B5563"
                     textAnchor={textAnchor}
                   >
                     {lbl}
@@ -456,21 +514,17 @@ export default function Index() {
           </View>
         </View>
 
-
-
-        {/* Progress XP Bar Card */}
-        <View style={styles.progressCard}>
-          <View style={styles.progressHeader}>
-            <Text style={styles.progressCardTitle}>Progress Hari ini</Text>
-            <Text style={styles.xpText}>+120 XP ⭐</Text>
-          </View>
-          <View style={styles.xpBarContainer}>
-            <View style={styles.xpBarWrapper}>
-              <View style={[styles.xpBarFill, { width: "60%" }]} />
-            </View>
-            <MaterialCommunityIcons name="robot" size={18} color={COLORS.brandGreen} style={styles.robotIndicator} />
-          </View>
-        </View>
+        {/* Large Gold CTA button like stitch replicator's CLAIM button */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.goldClaimBtn,
+            pressed && { transform: [{ scale: 0.98 }], opacity: 0.95 }
+          ]}
+          onPress={() => router.push("/play")}
+        >
+          <Text style={styles.goldClaimText}>MULAI BELAJAR</Text>
+          <View style={styles.shineEffect} />
+        </Pressable>
 
       </ScrollView>
 
@@ -484,7 +538,7 @@ export default function Index() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.pencilIconCircle}>
-              <Ionicons name="pencil" size={24} color={COLORS.brandGreen} />
+              <Ionicons name="pencil" size={24} color="#0B84FF" />
             </View>
             
             <Text style={styles.modalTitle}>Ubah Nama Anak</Text>
@@ -496,7 +550,7 @@ export default function Index() {
               value={editName}
               onChangeText={setEditName}
               placeholder="Masukkan nama anak"
-              placeholderTextColor={COLORS.textLight}
+              placeholderTextColor="#9CA3AF"
               style={styles.nameInput}
               autoCapitalize="words"
               maxLength={20}
@@ -538,42 +592,82 @@ export default function Index() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: COLORS.bgPrimary,
+    backgroundColor: "#F3FAFF",
   },
   header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: SPACING.lg,
     paddingTop: SPACING.md,
     paddingBottom: SPACING.xs,
-    backgroundColor: COLORS.bgPrimary,
+    backgroundColor: "#F3FAFF",
   },
   profileSection: {
     flexDirection: "row",
     alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    borderRadius: 9999,
+    paddingRight: SPACING.lg,
+    paddingLeft: 4,
+    paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: "rgba(0, 104, 116, 0.12)",
   },
   avatarOutline: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     borderWidth: 2,
-    borderColor: `${COLORS.brandBlue}25`,
-    padding: 2,
-    marginRight: SPACING.md,
+    borderColor: "#0B84FF",
+    padding: 1.5,
+    marginRight: SPACING.sm,
+    position: "relative",
   },
   avatar: {
     width: "100%",
     height: "100%",
-    borderRadius: 22,
+    borderRadius: 19,
   },
   greetingText: {
-    ...FONTS.bodyBold,
-    fontSize: 15,
-    color: COLORS.textDark,
+    fontSize: 13,
+    fontWeight: "800",
+    color: "#1F2937",
   },
   levelText: {
-    ...FONTS.caption,
-    fontSize: 11,
-    color: COLORS.textMedium,
-    marginTop: 2,
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#6B7280",
+    marginTop: 1,
+  },
+  dailySpinBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
+    borderWidth: 1,
+    borderColor: "rgba(0, 104, 116, 0.12)",
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+  },
+  dailySpinIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(255, 159, 10, 0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dailySpinTitle: {
+    fontSize: 8,
+    fontWeight: "900",
+    color: "#1F2937",
+  },
+  dailySpinSub: {
+    fontSize: 7,
+    fontWeight: "800",
+    color: "#10B981",
+    marginTop: 0.5,
   },
   hudRow: {
     flexDirection: "row",
@@ -581,172 +675,168 @@ const styles = StyleSheet.create({
     paddingHorizontal: SPACING.lg,
     paddingVertical: SPACING.sm,
     borderBottomWidth: 1,
-    borderBottomColor: COLORS.borderLight,
+    borderBottomColor: "rgba(0, 0, 0, 0.05)",
     gap: SPACING.sm,
+    backgroundColor: "#F3FAFF",
   },
   hudBadge: {
     flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#FFF7ED",
+    backgroundColor: "rgba(255, 255, 255, 0.8)",
     borderWidth: 1.5,
-    borderColor: "#FFEDD5",
+    borderColor: "#E2E8F0",
     borderRadius: SHAPES.radiusMd,
-    paddingVertical: 6,
+    paddingVertical: 8,
     gap: 4,
-    ...SHADOWS.light,
   },
   hudBadgeText: {
-    ...FONTS.bodyBold,
     fontSize: 12,
+    fontWeight: "800",
   },
   scrollContent: {
     paddingVertical: SPACING.lg,
     paddingHorizontal: SPACING.lg,
+    paddingBottom: 40,
   },
-  robotHeroContainer: {
-    height: 200,
-    borderRadius: SHAPES.radiusXl,
-    overflow: "hidden",
+  gameCharacterWrapper: {
+    width: "100%",
+    height: 360,
     position: "relative",
-    borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
-    marginBottom: SPACING.xl,
-    ...SHADOWS.medium,
+    marginBottom: SPACING.lg,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  heroBackground: {
+  centerCharacterContainer: {
     width: "100%",
     height: "100%",
-    opacity: 0.85,
+    borderRadius: 24,
+    overflow: "hidden",
   },
-  heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(15, 23, 42, 0.15)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  robotModel: {
-    width: 140,
-    height: 140,
-  },
-  petBadge: {
+  leftMenuSide: {
     position: "absolute",
-    bottom: SPACING.md,
-    backgroundColor: "rgba(15, 23, 42, 0.75)",
-    paddingVertical: 4,
-    paddingHorizontal: SPACING.md,
-    borderRadius: SHAPES.radiusRound,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.15)",
+    left: 8,
+    top: 30,
+    bottom: 30,
+    justifyContent: "space-around",
+    zIndex: 10,
   },
-  petBadgeText: {
-    fontSize: 10,
-    fontWeight: "800",
+  rightMenuSide: {
+    position: "absolute",
+    right: 8,
+    top: 30,
+    bottom: 30,
+    justifyContent: "space-around",
+    zIndex: 10,
+  },
+  sideMenuBtn: {
+    width: 52,
+    height: 52,
+    borderRadius: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.85)",
+    borderWidth: 1.5,
+    borderColor: "rgba(0, 104, 116, 0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sideMenuBtnText: {
+    fontSize: 8,
+    fontWeight: "900",
+    color: "#4B5563",
+    marginTop: 2,
+    textAlign: "center",
+  },
+  badgeOverlay: {
+    position: "absolute",
+    top: -5,
+    right: -5,
+    backgroundColor: "#EF4444",
+    borderRadius: 10,
+    minWidth: 16,
+    height: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1.5,
+    borderColor: "#FFFFFF",
+  },
+  badgeText: {
     color: "#FFFFFF",
+    fontSize: 8,
+    fontWeight: "900",
+  },
+  featuredBanner: {
+    backgroundColor: "#FFF7ED",
+    borderRadius: SHAPES.radiusLg,
+    borderWidth: 1.5,
+    borderColor: "#FF9F0A",
+    padding: SPACING.lg,
+    marginBottom: SPACING.lg,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    shadowColor: "#FF9F0A",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  tagNew: {
+    backgroundColor: "#EF4444",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  tagNewText: {
+    color: "#FFF",
+    fontSize: 8,
+    fontWeight: "900",
+  },
+  bannerSubtitle: {
+    color: "#D97706",
+    fontSize: 9,
+    fontWeight: "800",
     letterSpacing: 0.5,
   },
-  missionsCard: {
-    backgroundColor: COLORS.cardWhite,
-    borderRadius: SHAPES.radiusLg,
-    borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
-    padding: SPACING.lg,
-    marginBottom: SPACING.xl,
-    ...SHADOWS.light,
+  bannerTitle: {
+    color: "#1F2937",
+    fontSize: 18,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+    marginTop: 4,
   },
-  missionsHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: SPACING.md,
-  },
-  missionsTitle: {
-    ...FONTS.subheading,
-    fontSize: 15,
-    color: COLORS.textDark,
-  },
-  missionsCounter: {
+  bannerDesc: {
+    color: "#4B5563",
     fontSize: 11,
-    fontWeight: "800",
-    color: COLORS.brandGreen,
+    marginTop: 2,
   },
-  missionsList: {
-    gap: SPACING.sm,
-    marginBottom: SPACING.lg,
+  bannerActionBtn: {
+    backgroundColor: "#0B84FF",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    borderBottomWidth: 3,
+    borderBottomColor: "#0062C4",
   },
-  missionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: COLORS.bgPrimary,
-    borderWidth: 1,
-    borderColor: COLORS.borderLight,
-    borderRadius: SHAPES.radiusMd,
-    padding: SPACING.md,
-  },
-  missionRowCompleted: {
-    borderColor: `${COLORS.brandGreen}30`,
-    backgroundColor: "#F0FDF4",
-  },
-  missionLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: SPACING.md,
-  },
-  missionIconCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#F1F5F9",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  missionText: {
-    ...FONTS.bodyBold,
-    fontSize: 12,
-    color: COLORS.textDark,
-  },
-  missionTextCompleted: {
-    color: COLORS.textMedium,
-  },
-  emptyCircle: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: COLORS.textLight,
-  },
-  playBtn: {
-    flexDirection: "row",
-    backgroundColor: COLORS.brandGreen,
-    borderRadius: SHAPES.radiusRound,
-    paddingVertical: SPACING.md,
-    justifyContent: "center",
-    alignItems: "center",
-    ...SHADOWS.light,
-  },
-  playBtnPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }],
-  },
-  playBtnText: {
-    ...FONTS.bodyBold,
-    fontSize: 13,
+  bannerActionText: {
     color: "#FFFFFF",
-  },
-  robotCardContainer: {
-    width: "100%",
-    marginBottom: SPACING.md,
+    fontWeight: "900",
+    fontSize: 12,
   },
   chartCard: {
-    backgroundColor: COLORS.cardWhite,
+    backgroundColor: "#FFFFFF",
     borderRadius: SHAPES.radiusLg,
-    borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     padding: SPACING.lg,
     alignItems: "center",
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.lg,
     ...SHADOWS.light,
   },
   chartHeaderRow: {
@@ -759,7 +849,7 @@ const styles = StyleSheet.create({
   simulasiLabel: {
     fontSize: 10,
     fontWeight: "800",
-    color: "#0F766E",
+    color: "#0B84FF",
     letterSpacing: 0.5,
   },
   syncBadge: {
@@ -775,12 +865,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: COLORS.success,
+    backgroundColor: "#10B981",
   },
   syncBadgeText: {
     fontSize: 9,
     fontWeight: "700",
-    color: COLORS.textMedium,
+    color: "#64748B",
   },
   simChipsRow: {
     flexDirection: "row",
@@ -797,13 +887,13 @@ const styles = StyleSheet.create({
     borderColor: "#E2E8F0",
   },
   simTabActive: {
-    backgroundColor: "#0D9488",
-    borderColor: "#0D9488",
+    backgroundColor: "#0B84FF",
+    borderColor: "#0B84FF",
   },
   simTabText: {
-    ...FONTS.bodyBold,
     fontSize: 10,
-    color: COLORS.textMedium,
+    fontWeight: "800",
+    color: "#64748B",
   },
   simTabTextActive: {
     color: "#FFFFFF",
@@ -821,35 +911,35 @@ const styles = StyleSheet.create({
     gap: SPACING.md,
   },
   robotAvatarOuter: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 2,
-    borderColor: "#0D9488",
-    padding: 2,
+    borderColor: "#0B84FF",
+    padding: 1.5,
     backgroundColor: "#E0F2FE",
   },
   robotAvatarImg: {
     width: "100%",
     height: "100%",
-    borderRadius: 25,
+    borderRadius: 20,
   },
   robotStatusTextContainer: {
     flex: 1,
   },
   robotStatusTitle: {
-    ...FONTS.bodyBold,
-    fontSize: 13,
-    color: COLORS.textDark,
+    fontSize: 12,
+    fontWeight: "800",
+    color: "#1F2937",
     marginBottom: 2,
   },
   robotStatusHighlight: {
-    color: "#F59E0B",
+    color: "#0B84FF",
   },
   robotStatusDesc: {
-    ...FONTS.bodyRegular,
     fontSize: 10,
-    color: COLORS.textMedium,
+    fontWeight: "500",
+    color: "#6B7280",
     lineHeight: 14,
   },
   svgWrapper: {
@@ -865,35 +955,34 @@ const styles = StyleSheet.create({
   },
   simMetricCard: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F8FAFC",
     borderWidth: 1.5,
     borderColor: "#E2E8F0",
     borderRadius: SHAPES.radiusMd,
     paddingVertical: SPACING.md,
     paddingHorizontal: 6,
     alignItems: "center",
-    ...SHADOWS.light,
   },
   simMetricValue: {
-    ...FONTS.heading,
     fontSize: 18,
-    color: "#0D9488",
+    fontWeight: "900",
+    color: "#0B84FF",
     marginBottom: 2,
   },
   simMetricLabel: {
     fontSize: 8,
     fontWeight: "800",
-    color: COLORS.textLight,
+    color: "#64748B",
     letterSpacing: 0.5,
     textAlign: "center",
   },
   progressCard: {
-    backgroundColor: COLORS.cardWhite,
+    backgroundColor: "#FFFFFF",
     borderRadius: SHAPES.radiusLg,
-    borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     padding: SPACING.lg,
-    marginBottom: SPACING.xl,
+    marginBottom: SPACING.lg,
     ...SHADOWS.light,
   },
   progressHeader: {
@@ -903,14 +992,14 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.sm,
   },
   progressCardTitle: {
-    ...FONTS.bodyBold,
     fontSize: 13,
-    color: COLORS.textDark,
+    fontWeight: "800",
+    color: "#1F2937",
   },
   xpText: {
     fontSize: 11,
     fontWeight: "800",
-    color: COLORS.brandGreen,
+    color: "#00C3A0",
   },
   xpBarContainer: {
     flexDirection: "row",
@@ -921,15 +1010,15 @@ const styles = StyleSheet.create({
   xpBarWrapper: {
     flex: 1,
     height: 8,
-    backgroundColor: COLORS.bgPrimary,
+    backgroundColor: "#F1F5F9",
     borderRadius: 4,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: COLORS.borderLight,
+    borderColor: "#E2E8F0",
   },
   xpBarFill: {
     height: "100%",
-    backgroundColor: COLORS.brandGreen,
+    backgroundColor: "#00C3A0",
     borderRadius: 4,
   },
   robotIndicator: {
@@ -937,55 +1026,85 @@ const styles = StyleSheet.create({
     right: 0,
   },
   
+  // Gold CTA Button Styling
+  goldClaimBtn: {
+    backgroundColor: "#FF9F0A",
+    height: 52,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: SPACING.sm,
+    borderBottomWidth: 4,
+    borderBottomColor: "#C77400",
+    position: "relative",
+    overflow: "hidden",
+    ...SHADOWS.medium,
+  },
+  goldClaimText: {
+    fontSize: 16,
+    fontWeight: "900",
+    color: "#FFFFFF",
+    letterSpacing: 1.5,
+  },
+  shineEffect: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    opacity: 0,
+  },
+
   // Modal & Edit Name Styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.4)",
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 30,
   },
   modalContent: {
-    backgroundColor: COLORS.cardWhite,
+    backgroundColor: "#FFFFFF",
     width: "100%",
     maxWidth: 320,
     borderRadius: SHAPES.radiusXl,
     padding: SPACING.xl + 4,
     alignItems: "center",
     borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
+    borderColor: "#E2E8F0",
     ...SHADOWS.medium,
   },
   pencilIconCircle: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#F0FDF4",
+    backgroundColor: "rgba(11, 132, 255, 0.1)",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1.5,
-    borderColor: "#DCFCE7",
+    borderColor: "rgba(11, 132, 255, 0.2)",
     marginBottom: SPACING.md,
   },
   modalTitle: {
-    ...FONTS.subheading,
     fontSize: 16,
-    color: COLORS.textDark,
+    fontWeight: "800",
+    color: "#1F2937",
     textAlign: "center",
     marginBottom: 6,
   },
   modalSubtitle: {
-    ...FONTS.bodyRegular,
     fontSize: 11,
-    color: COLORS.textMedium,
+    fontWeight: "500",
+    color: "#6B7280",
     textAlign: "center",
     lineHeight: 15,
     marginBottom: SPACING.lg,
   },
   nameInput: {
-    backgroundColor: COLORS.bgPrimary,
-    borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1,
+    borderColor: "#E2E8F0",
     borderRadius: SHAPES.radiusMd,
     width: "100%",
     height: 45,
@@ -993,12 +1112,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     fontSize: 14,
     fontWeight: "600",
-    color: COLORS.textDark,
+    color: "#1F2937",
     marginBottom: SPACING.sm,
   },
   errorText: {
     fontSize: 10,
-    color: COLORS.error,
+    color: "#EF4444",
     fontWeight: "700",
     textAlign: "center",
     marginBottom: SPACING.md,
@@ -1016,11 +1135,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalBtnPrimary: {
-    backgroundColor: COLORS.brandGreen,
+    backgroundColor: "#0B84FF",
   },
   modalBtnSecondary: {
     backgroundColor: "#F1F5F9",
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: "#E2E8F0",
   },
   modalBtnTextPrimary: {
@@ -1031,7 +1150,7 @@ const styles = StyleSheet.create({
   modalBtnTextSecondary: {
     fontSize: 12,
     fontWeight: "800",
-    color: COLORS.textMedium,
+    color: "#4B5563",
   },
   homeEditAvatarBadge: {
     position: "absolute",
@@ -1040,7 +1159,7 @@ const styles = StyleSheet.create({
     width: 16,
     height: 16,
     borderRadius: 8,
-    backgroundColor: COLORS.brandGreen,
+    backgroundColor: "#0B84FF",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1.5,
