@@ -11,15 +11,35 @@ interface Message {
 
 export default function ChatbotButton() {
   const [modalVisible, setModalVisible] = useState(false);
+  const [bottomOffset, setBottomOffset] = useState<number>(Platform.OS === "ios" ? 104 : 80);
   
   const pan = useRef(new Animated.ValueXY({ x: 0, y: 0 })).current;
   const offsetRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
+    const measureNavbar = () => {
+      if (Platform.OS === "web" && typeof document !== "undefined") {
+        const navbarEl = document.getElementById("bottomNavbar") || document.querySelector('[data-testid="bottomNavbar"]') || document.querySelector('div[role="tablist"]');
+        if (navbarEl) {
+          const rect = navbarEl.getBoundingClientRect();
+          if (rect && rect.height > 0) {
+            setBottomOffset(rect.height + 16);
+            return;
+          }
+        }
+      }
+      const defaultNavHeight = Platform.OS === "ios" ? 88 : 64;
+      setBottomOffset(defaultNavHeight + 16);
+    };
+
+    measureNavbar();
+    const timer = setTimeout(measureNavbar, 500);
+
     const listenerId = pan.addListener((value) => {
       offsetRef.current = value;
     });
     return () => {
+      clearTimeout(timer);
       pan.removeListener(listenerId);
     };
   }, [pan]);
@@ -46,7 +66,7 @@ export default function ChatbotButton() {
 
         const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
         const baselineX = screenWidth - 20 - 27; 
-        const baselineY = screenHeight - 24 - 54; 
+        const baselineY = screenHeight - bottomOffset - 54; 
 
         const currentTranslateX = offsetRef.current.x;
         const currentTranslateY = offsetRef.current.y;
@@ -61,7 +81,7 @@ export default function ChatbotButton() {
         }
 
         const minY = Platform.OS === "ios" ? 80 : 60;
-        const maxY = screenHeight - (Platform.OS === "ios" ? 140 : 120);
+        const maxY = screenHeight - bottomOffset - 30;
         
         const minTranslateY = minY - baselineY;
         const maxTranslateY = maxY - baselineY;
@@ -145,6 +165,7 @@ export default function ChatbotButton() {
         style={[
           styles.fabContainer,
           {
+            bottom: bottomOffset,
             transform: pan.getTranslateTransform(),
           },
         ]}
@@ -265,7 +286,6 @@ export default function ChatbotButton() {
 const styles = StyleSheet.create({
   fabContainer: {
     position: "absolute",
-    bottom: 24,
     right: 20,
     zIndex: 999,
   },

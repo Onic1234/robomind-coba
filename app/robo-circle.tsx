@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { HowToPlayModal } from "../components/HowToPlayModal";
 import * as Haptics from "expo-haptics";
 import Animated, {
   useSharedValue,
@@ -414,6 +415,7 @@ export default function RoboCircleScreen() {
   const [level, setLevel] = useState(1);
   const [userCoins, setUserCoins] = useState(1250);
   const [gameState, setGameState] = useState<"playing" | "victory" | "completed" | "failed">("playing");
+  const [showHelp, setShowHelp] = useState(true);
 
   const [onTrackRobots, setOnTrackRobots] = useState<TrackRobot[]>([]);
   const [queuedRobots, setQueuedRobots] = useState<QueuedRobot[]>([]);
@@ -716,6 +718,13 @@ export default function RoboCircleScreen() {
             style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
           >
             <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
+          </Pressable>
+
+          <Pressable
+            onPress={() => setShowHelp(true)}
+            style={({ pressed }) => [styles.resetBtn, pressed && { opacity: 0.7 }]}
+          >
+            <Ionicons name="help-circle" size={20} color="#FFFFFF" />
           </Pressable>
 
           <View style={styles.heartsRow}>
@@ -1214,6 +1223,25 @@ export default function RoboCircleScreen() {
           </View>
         </View>
       </Modal>
+
+      <HowToPlayModal
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Cara Main Robo Circle"
+        goal="Masukkan semua robot ke lintasan melingkar sebelum nyawamu habis!"
+        accentColor="#059669"
+        subtitleColor="#047857"
+        steps={[
+          { emoji: "1️⃣", text: "Tekan tombol \"LEPAS ROBOT\" saat ada celah kosong yang tepat berada di titik sambung." },
+          { emoji: "2️⃣", text: "Kalau robot menabrak robot lain, kamu kehilangan 1 nyawa (total 3 hati)." },
+          { emoji: "3️⃣", text: "Setiap robot yang berhasil masuk memberi +10 poin." },
+          { emoji: "4️⃣", text: "Capai target jumlah robot per level sebelum nyawa habis untuk menang!" },
+        ]}
+        tips={[
+          "Perhatikan ritme — tunggu celah yang paling lebar untuk melepas robot.",
+          "Semakin tinggi level, lintasannya berubah bentuk (kotak, lingkaran, kapsul, dll).",
+        ]}
+      />
     </SafeAreaView>
   );
 }

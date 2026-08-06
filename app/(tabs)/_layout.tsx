@@ -24,6 +24,9 @@ export default function TabsLayout() {
           shadowOpacity: 0.05,
           shadowRadius: 3,
         },
+        // @ts-ignore
+        id: "bottomNavbar",
+        nativeID: "bottomNavbar",
         tabBarLabelStyle: {
           fontSize: 11,
           ...FONTS.bodyBold,

@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { HowToPlayModal } from "../components/HowToPlayModal";
 import * as Haptics from "expo-haptics";
 import Animated, {
   useSharedValue,
@@ -241,6 +242,7 @@ export default function RobotEscapeScreen() {
   const [level, setLevel] = useState(1);
   const [robots, setRobots] = useState<RobotObject[]>([]);
   const [gameState, setGameState] = useState<"playing" | "victory" | "completed">("playing");
+  const [showHelp, setShowHelp] = useState(true);
   const [userCoins, setUserCoins] = useState(1250);
   const [coinsReward, setCoinsReward] = useState(0);
 
@@ -1637,6 +1639,16 @@ export default function RobotEscapeScreen() {
             <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
           </Pressable>
 
+          <Pressable
+            onPress={() => setShowHelp(true)}
+            style={({ pressed }) => [
+              styles.resetBtn,
+              pressed && { opacity: 0.7 }
+            ]}
+          >
+            <Ionicons name="help-circle" size={20} color="#FFFFFF" />
+          </Pressable>
+
           <View style={styles.heartsRow}>
             <Ionicons name="heart" size={22} color="#EF4444" />
             <Ionicons name="heart" size={22} color="#EF4444" />
@@ -1955,6 +1967,25 @@ export default function RobotEscapeScreen() {
           </View>
         </View>
       </Modal>
+
+      <HowToPlayModal
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Cara Main Robot Escape"
+        goal="Bantu semua robot keluar dari persimpangan lalu lintas tanpa menabrak!"
+        accentColor="#16A34A"
+        subtitleColor="#15803D"
+        steps={[
+          { emoji: "1️⃣", text: "Ketuk robot untuk menggerakkannya keluar sepanjang jalurnya (lurus atau belok)." },
+          { emoji: "2️⃣", text: "Perhatikan arah panah dan hindari tabrakan antar robot atau rintangan (kerucut, robot rusak)." },
+          { emoji: "3️⃣", text: "Kalau robot menabrak, dia kembali ke posisi awal — coba lagi!" },
+          { emoji: "4️⃣", text: "Keluarkan semua robot dari persimpangan untuk menyelesaikan level." },
+        ]}
+        tips={[
+          "Pilih robot yang jalannya paling bebas lebih dulu.",
+          "Urutan pelepasan itu kunci — bayangkan jalur tiap robot sebelum mengetuk.",
+        ]}
+      />
     </SafeAreaView>
   );
 }

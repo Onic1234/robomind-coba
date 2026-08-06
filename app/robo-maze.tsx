@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -11,11 +11,31 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { HowToPlayModal } from "../components/HowToPlayModal";
 
 export default function RoboMazeScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showHelp, setShowHelp] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const toggleFullscreen = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      el.requestFullscreen?.().then(() => setIsFullscreen(true)).catch(() => {});
+    } else {
+      document.exitFullscreen?.().then(() => setIsFullscreen(false)).catch(() => {});
+    }
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', handler);
+    return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
 
   useEffect(() => {
     const timeout = setTimeout(() => setLoading(false), 3000);
@@ -49,7 +69,7 @@ export default function RoboMazeScreen() {
   }
 
   return (
-    <View style={styles.webContainer} onClick={() => iframeRef.current?.focus()}>
+    <View ref={containerRef} style={styles.webContainer} onClick={() => iframeRef.current?.focus()}>
       <StatusBar hidden />
 
       {loading && (
@@ -74,6 +94,34 @@ export default function RoboMazeScreen() {
         <Ionicons name="exit-outline" size={20} color="#fff" />
         <Text style={styles.floatingExitText}>EXIT</Text>
       </Pressable>
+
+      <Pressable onPress={toggleFullscreen} style={styles.floatingFs}>
+        <Ionicons name={isFullscreen ? "contract" : "expand"} size={20} color="#fff" />
+        <Text style={styles.floatingFsText}>{isFullscreen ? "WINDOW" : "FULL"}</Text>
+      </Pressable>
+
+      <Pressable onPress={() => setShowHelp(true)} style={styles.floatingHelp}>
+        <Ionicons name="help-circle" size={22} color="#fff" />
+      </Pressable>
+
+      <HowToPlayModal
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Cara Main Robo Maze"
+        goal="Ingat posisi dinding labirin, lalu arahkan Robocube ke portal finish tanpa menabrak!"
+        accentColor="#0D9488"
+        subtitleColor="#0F766E"
+        steps={[
+          { emoji: "1️⃣", text: "Pada fase awal (8 detik) dinding terlihat — hafalkan jalurnya." },
+          { emoji: "2️⃣", text: "Setelah itu dinding jadi tak terlihat. Arahkan robot memakai D-pad / tombol panah." },
+          { emoji: "3️⃣", text: "Gunakan tombol \"Intip\" untuk melihat dinding 1,5 detik (jumlah terbatas per level)." },
+          { emoji: "4️⃣", text: "Jangan menabrak dinding tak terlihat — setiap tabrakan mengurangi Core (3 nyawa)." },
+        ]}
+        tips={[
+          "Gunakan kesempatan Intip saat ragu, jangan boros di awal.",
+          "Semakin tinggi level, semakin sedikit kesempatan Intip — hafalkan jalur dengan baik!",
+        ]}
+      />
     </View>
   );
 }
@@ -192,5 +240,42 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "800",
     fontSize: 14,
+  },
+  floatingFs: {
+    position: "absolute",
+    top: 16,
+    right: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(15, 23, 42, 0.85)",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    zIndex: 9999,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: "rgba(56, 189, 248, 0.4)",
+  },
+  floatingFsText: {
+    color: "#38bdf8",
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 1,
+  },
+  floatingHelp: {
+    position: "absolute",
+    top: 16,
+    left: 108,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(15, 23, 42, 0.85)",
+    zIndex: 9999,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: "rgba(56, 189, 248, 0.4)",
   },
 });
