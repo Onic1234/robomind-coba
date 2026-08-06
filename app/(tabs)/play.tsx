@@ -7,6 +7,7 @@ import { Alert, FlatList, Pressable, ScrollView, StatusBar, StyleSheet, Text, Vi
 import { SafeAreaView } from "react-native-safe-area-context";
 import { COLORS, FONTS, SHADOWS, SHAPES, SPACING } from "../../constants/Theme";
 import { useAuth } from "../../hooks/useAuth";
+import { usePlaytimeGuard, formatDurationHMS } from "../../hooks/usePlaytimeGuard";
 
 interface GameItem {
   id: string;
@@ -21,6 +22,8 @@ interface GameItem {
 export default function PlayScreen() {
   const { isLoggedIn } = useAuth();
   const router = useRouter();
+  const playtimeGuard = usePlaytimeGuard();
+
   const [selectedCategory, setSelectedCategory] = useState<string>("Semua");
   const [userCoins, setUserCoins] = useState(1250);
   const [robotEscapeLevel, setRobotEscapeLevel] = useState(1);
@@ -36,10 +39,37 @@ export default function PlayScreen() {
   const [poseMasterLevel, setPoseMasterLevel] = useState(1);
   const [roboBrosLevel, setRoboBrosLevel] = useState(1);
 
+  const [screwSpinCooldown, setScrewSpinCooldown] = useState(0);
+
+  const formatSecs = (totalSec: number) => {
+    const m = Math.floor(Math.max(0, totalSec) / 60);
+    const s = Math.max(0, totalSec) % 60;
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
+
   useFocusEffect(
     useCallback(() => {
+      let intervalId: NodeJS.Timeout;
+
+      const checkCooldowns = async () => {
+        try {
+          const val = await AsyncStorage.getItem("screw_spin_cooldown_until");
+          if (val) {
+            const until = parseInt(val, 10);
+            const rem = Math.ceil((until - Date.now()) / 1000);
+            setScrewSpinCooldown(rem > 0 ? rem : 0);
+          } else {
+            setScrewSpinCooldown(0);
+          }
+        } catch (e) {
+          console.error("Failed to check cooldown", e);
+        }
+      };
+
       const loadData = async () => {
         try {
+          await checkCooldowns();
+          await playtimeGuard.refreshPlaytimeStatus();
           const val = await AsyncStorage.getItem("user_coins_balance");
           if (val !== null) {
             setUserCoins(parseInt(val));
@@ -92,7 +122,13 @@ export default function PlayScreen() {
           console.error("Failed to load play screen data", e);
         }
       };
+
       loadData();
+      intervalId = setInterval(checkCooldowns, 1000);
+
+      return () => {
+        if (intervalId) clearInterval(intervalId);
+      };
     }, [])
   );
 
@@ -104,9 +140,13 @@ export default function PlayScreen() {
       title: "Screw Spin",
       category: "Kognitif",
       image: require("../../assets/images/Screw_Spin.png"),
-      levelInfo: `Level ${screwSpinLevel}`,
+      levelInfo: playtimeGuard.isCooldownActive
+        ? `🔒 ${formatDurationHMS(playtimeGuard.cooldownRemainingSeconds)}`
+        : screwSpinCooldown > 0
+        ? `🔒 ${formatSecs(screwSpinCooldown)}`
+        : `Level ${screwSpinLevel}`,
       coinsReward: 250,
-      isLocked: false,
+      isLocked: playtimeGuard.isCooldownActive || screwSpinCooldown > 0,
     },
     {
       id: "robo_bros",
@@ -228,7 +268,19 @@ export default function PlayScreen() {
         style={[styles.card, item.isLocked && styles.cardLocked]}
         onPress={() => {
           if (item.isLocked) {
-            alert("Misi game ini masih terkunci! Selesaikan misi sebelumnya.");
+            if (playtimeGuard.isCooldownActive) {
+              Alert.alert(
+                "Waktu Istirahat Aktif (1 Jam Bermain)",
+                `Anda sudah bermain selama 1 jam hari ini. Silakan istirahat sejenak selama ${formatDurationHMS(playtimeGuard.cooldownRemainingSeconds)} demi kesehatan mata dan otak!`
+              );
+            } else if (item.id === "screw_spin" && screwSpinCooldown > 0) {
+              Alert.alert(
+                "Game Terkunci (Cooldown)",
+                `Game Screw Spin sedang dalam masa cooldown. Silakan tunggu ${formatSecs(screwSpinCooldown)}!`
+              );
+            } else {
+              Alert.alert("Game Terkunci", "Misi game ini masih terkunci! Selesaikan misi sebelumnya.");
+            }
           } else {
             if (item.id === "screw_spin") {
               router.push("/screw-spin");
@@ -329,6 +381,72 @@ export default function PlayScreen() {
           <Ionicons name="cash" size={18} color="#F59E0B" />
           <Text style={styles.coinsHudText}>{userCoins.toLocaleString("id-ID")}</Text>
         </View>
+      </View>
+
+      {/* Playtime Guard Monitor HUD Card */}
+      <View style={styles.playtimeCard}>
+        <View style={styles.playtimeHeader}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Ionicons
+              name={playtimeGuard.isCooldownActive ? "moon" : "time-sharp"}
+              size={16}
+              color={playtimeGuard.isCooldownActive ? "#EF4444" : "#10B981"}
+            />
+            <Text style={styles.playtimeTitle}>
+              {playtimeGuard.isCooldownActive ? "WAKTU ISTIRAHAT AKTIF" : "WAKTU BERMAIN HARI INI"}
+            </Text>
+          </View>
+
+          <Pressable
+            onPress={() => {
+              Alert.alert(
+                "Akses Orang Tua",
+                "Apakah Anda (Orang Tua) ingin me-reset waktu bermain hari ini dan membuka kunci game?",
+                [
+                  { text: "Batal", style: "cancel" },
+                  {
+                    text: "Reset Waktu Bermain",
+                    style: "destructive",
+                    onPress: async () => {
+                      await playtimeGuard.resetPlaytimeGuard();
+                      Alert.alert("Sukses", "Durasi bermain 1 jam & status cooldown telah di-reset oleh Orang Tua.");
+                    },
+                  },
+                ]
+              );
+            }}
+            style={styles.parentResetBtn}
+          >
+            <Ionicons name="shield-checkmark" size={13} color="#00C3A0" />
+            <Text style={styles.parentResetText}>Orang Tua</Text>
+          </Pressable>
+        </View>
+
+        {playtimeGuard.isCooldownActive ? (
+          <View style={styles.cooldownBanner}>
+            <Ionicons name="lock-closed" size={14} color="#EF4444" />
+            <Text style={styles.cooldownBannerText}>
+              Batas 1 jam terlampaui. Sisa waktu istirahat: {formatDurationHMS(playtimeGuard.cooldownRemainingSeconds)}
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.progressRow}>
+            <View style={styles.progressBarBg}>
+              <View
+                style={[
+                  styles.progressBarFill,
+                  {
+                    width: `${Math.min(100, (playtimeGuard.playtimeSeconds / playtimeGuard.maxPlaytimeSeconds) * 100)}%`,
+                    backgroundColor: playtimeGuard.isWarning ? "#F59E0B" : "#10B981",
+                  },
+                ]}
+              />
+            </View>
+            <Text style={styles.progressText}>
+              {Math.floor(playtimeGuard.playtimeSeconds / 60)} / 60 Menit
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Category Chips Scroll */}
@@ -536,5 +654,81 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "700",
     color: "#D97706",
+  },
+  playtimeCard: {
+    marginHorizontal: SPACING.lg,
+    marginTop: SPACING.md,
+    backgroundColor: COLORS.cardWhite,
+    borderRadius: SHAPES.radiusLg,
+    borderWidth: 1.5,
+    borderColor: COLORS.borderLight,
+    padding: SPACING.md,
+    ...SHADOWS.light,
+  },
+  playtimeHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  playtimeTitle: {
+    ...FONTS.caption,
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 1,
+    color: COLORS.textDark,
+  },
+  parentResetBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "#F1F5F9",
+    borderWidth: 1,
+    borderColor: "#CBD5E1",
+    paddingVertical: 3,
+    paddingHorizontal: 8,
+    borderRadius: SHAPES.radiusRound,
+  },
+  parentResetText: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: COLORS.textMedium,
+  },
+  cooldownBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#FEF2F2",
+    borderWidth: 1,
+    borderColor: "#FCA5A5",
+    borderRadius: SHAPES.radiusSm,
+    paddingVertical: 6,
+    paddingHorizontal: SPACING.md,
+  },
+  cooldownBannerText: {
+    fontSize: 10,
+    fontWeight: "800",
+    color: "#DC2626",
+  },
+  progressRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: SPACING.md,
+  },
+  progressBarBg: {
+    flex: 1,
+    height: 8,
+    backgroundColor: "#E2E8F0",
+    borderRadius: 4,
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    borderRadius: 4,
+  },
+  progressText: {
+    fontSize: 11,
+    fontWeight: "800",
+    color: COLORS.textMedium,
   },
 });

@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   StyleSheet,
   View,
   Text,
   Pressable,
   Dimensions,
-  Platform,
   Modal,
   StatusBar,
+  LayoutChangeEvent,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -17,1940 +17,789 @@ import * as Haptics from "expo-haptics";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
   withTiming,
   withSequence,
-  withRepeat,
   cancelAnimation,
-  interpolateColor,
-  Easing,
   runOnJS,
+  type SharedValue,
 } from "react-native-reanimated";
-import Svg, { Path, Polygon, G, Circle, Line, Rect } from "react-native-svg";
-import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../constants/Theme";
+import Svg, { Path, Rect, Circle, G } from "react-native-svg";
+import { SPACING } from "../constants/Theme";
 import Button from "../components/ui/Button";
 
 const COINS_STORAGE_KEY = "user_coins_balance";
-const ROBOT_SIZE = 68;
-const ROBOT_HEIGHT = 75;
-const ROAD_WIDTH = 90;
-const COLLISION_THRESHOLD = 58;
+const STORAGE_KEY_LEVEL = "robot_escape_current_level";
 
-const RadarChart = ({ data }: { data: { axis: string; score: number }[] }) => {
-  const size = 200;
-  const center = size / 2;
-  const radius = 62;
-  const numAxes = data.length;
+const GRID = 7;
+const CENTER = { x: 3, y: 3 };
+const ROBOT_SIZE = 64;
+const MAX_ROBOTS = 8;
 
-  const getPolygonPoints = (rFactor: number) => {
-    return data
-      .map((_, i) => {
-        const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
-        const x = center + radius * rFactor * Math.cos(angle);
-        const y = center + radius * rFactor * Math.sin(angle);
-        return `${x},${y}`;
-      })
-      .join(" ");
-  };
+type Dir = "UP" | "DOWN" | "LEFT" | "RIGHT";
+type Turn = "straight" | "left" | "right";
 
-  const dataPoints = data
-    .map((d, i) => {
-      const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
-      const r = radius * (Math.min(100, Math.max(20, d.score)) / 100);
-      const x = center + r * Math.cos(angle);
-      const y = center + r * Math.sin(angle);
-      return `${x},${y}`;
-    })
-    .join(" ");
-
-  return (
-    <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
-      <Svg width={size} height={size}>
-        {[0.2, 0.4, 0.6, 0.8, 1.0].map((rFactor, idx) => (
-          <Polygon
-            key={idx}
-            points={getPolygonPoints(rFactor)}
-            fill="none"
-            stroke="rgba(56, 189, 248, 0.25)"
-            strokeWidth="1"
-          />
-        ))}
-
-        {data.map((_, i) => {
-          const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
-          const x = center + radius * Math.cos(angle);
-          const y = center + radius * Math.sin(angle);
-          return (
-            <Line
-              key={i}
-              x1={center}
-              y1={center}
-              x2={x}
-              y2={y}
-              stroke="rgba(56, 189, 248, 0.3)"
-              strokeWidth="1"
-            />
-          );
-        })}
-
-        <Polygon
-          points={dataPoints}
-          fill="rgba(168, 85, 247, 0.45)"
-          stroke="#C084FC"
-          strokeWidth="2.5"
-        />
-
-        {data.map((d, i) => {
-          const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
-          const r = radius * (Math.min(100, Math.max(20, d.score)) / 100);
-          const x = center + r * Math.cos(angle);
-          const y = center + r * Math.sin(angle);
-          return (
-            <G key={i}>
-              <Circle cx={x} cy={y} r="4.5" fill="#FFFFFF" stroke="#A855F7" strokeWidth="2" />
-            </G>
-          );
-        })}
-      </Svg>
-
-      {data.map((d, i) => {
-        const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
-        const labelR = radius + 22;
-        const x = center + labelR * Math.cos(angle) - 35;
-        const y = center + labelR * Math.sin(angle) - 8;
-        return (
-          <View
-            key={i}
-            style={{
-              position: "absolute",
-              left: x,
-              top: y,
-              width: 70,
-              alignItems: "center",
-            }}
-          >
-            <Text style={{ fontSize: 9.5, fontWeight: "800", color: "#F8FAFC", textAlign: "center" }}>
-              {d.axis}
-            </Text>
-          </View>
-        );
-      })}
-    </View>
-  );
-};
-
-interface RobotObject {
+interface EscapeRobot {
   id: number;
-  startX: number;
-  startY: number;
-  direction: "UP" | "DOWN" | "LEFT" | "RIGHT";
-  turn?: "straight" | "left" | "right" | "uturn";
-  status: "idle" | "moving" | "escaped" | "collided";
-}
-
-interface StaticObstacle {
-  id: number;
-  x: number;
-  y: number;
-  type: "cone" | "broken_robot";
+  cell: { x: number; y: number };
+  approach: Dir;
+  turn: Turn;
+  status: "idle" | "moving" | "escaped";
 }
 
 interface LevelConfig {
   level: number;
+  title: string;
+  tip: string;
   reward: number;
-  robots: RobotObject[];
-  staticObstacles?: StaticObstacle[];
+  par: number;
+  robots: Omit<EscapeRobot, "status">[];
 }
 
-// --- DECORATIVE MAP ASSETS ---
-const Tree = ({ style }: { style: any }) => (
-  <View style={[styles.treeContainer, style]}>
-    <View style={styles.treeTrunk} />
-    <View style={styles.treeLeavesBack} />
-    <View style={styles.treeLeavesFront} />
-  </View>
-);
-
-const Rock = ({ style }: { style: any }) => (
-  <View style={[styles.rock, style]} />
-);
-
-const Flower = ({ style, color = "#F472B6" }: { style: any; color?: string }) => (
-  <View style={[styles.flowerContainer, style]}>
-    <View style={[styles.flowerPetal, { backgroundColor: color, top: -4 }]} />
-    <View style={[styles.flowerPetal, { backgroundColor: color, left: -4 }]} />
-    <View style={[styles.flowerPetal, { backgroundColor: color, right: -4 }]} />
-    <View style={[styles.flowerPetal, { backgroundColor: color, bottom: -4 }]} />
-    <View style={styles.flowerCenter} />
-  </View>
-);
-
-const ChargingStation = ({ style }: { style: any }) => (
-  <View style={[styles.chargingContainer, style]}>
-    <View style={styles.chargingBase} />
-    <View style={styles.chargingScreen}>
-      <MaterialCommunityIcons name="lightning-bolt" size={14} color="#22D3EE" />
-    </View>
-    <View style={styles.chargingCable} />
-  </View>
-);
-
-const ZebraCrossing = ({ horizontal, style }: { horizontal?: boolean; style: any }) => (
-  <View style={[styles.zebraContainer, horizontal ? styles.zebraRow : styles.zebraColumn, style]}>
-    <View style={horizontal ? styles.zebraLineH : styles.zebraLineV} />
-    <View style={horizontal ? styles.zebraLineH : styles.zebraLineV} />
-    <View style={horizontal ? styles.zebraLineH : styles.zebraLineV} />
-    <View style={horizontal ? styles.zebraLineH : styles.zebraLineV} />
-  </View>
-);
-
-// --- CUSTOM SVG ARROW TURNS ---
-const TurnArrow = ({ direction, turn }: { direction: string; turn?: string }) => {
-  if (!turn) return null;
-
-  // Rotate arrow layout based on start lane heading direction
-  let rot = "0deg";
-  if (direction === "DOWN") rot = "180deg";
-  else if (direction === "LEFT") rot = "-90deg";
-  else if (direction === "RIGHT") rot = "90deg";
-
-  return (
-    <View style={{ transform: [{ rotate: rot }], width: 18, height: 18, justifyContent: "center", alignItems: "center" }}>
-      <Svg width="15" height="15" viewBox="0 0 24 24">
-        {turn === "straight" && (
-          <Path d="M12 3l-6 6h4v12h4V9h4z" fill="#FFFFFF" />
-        )}
-        {turn === "left" && (
-          <Path d="M5 12l5-5v3h7a3 3 0 0 1 3 3v7h-3v-7a1 1 0 0 0-1-1h-6v3z" fill="#FFFFFF" />
-        )}
-        {turn === "right" && (
-          <Path d="M19 12l-5-5v3H7a3 3 0 0 0-3 3v7h3v-7a1 1 0 0 1 1-1h6v3z" fill="#FFFFFF" />
-        )}
-        {turn === "uturn" && (
-          <Path d="M7 19l-4-4h3V9a6 6 0 0 1 12 0v10h-3V9a3 3 0 0 0-6 0v6h3z" fill="#FFFFFF" />
-        )}
-      </Svg>
-    </View>
-  );
+const DIRS: Record<Dir, [number, number]> = {
+  UP: [0, -1],
+  DOWN: [0, 1],
+  LEFT: [-1, 0],
+  RIGHT: [1, 0],
 };
+
+const applyTurn = (approach: Dir, turn: Turn): Dir => {
+  if (turn === "straight") return approach;
+  if (approach === "UP") return turn === "left" ? "LEFT" : "RIGHT";
+  if (approach === "DOWN") return turn === "left" ? "RIGHT" : "LEFT";
+  if (approach === "LEFT") return turn === "left" ? "DOWN" : "UP";
+  return turn === "left" ? "UP" : "DOWN";
+};
+
+const inGrid = (x: number, y: number) => x >= 0 && x < GRID && y >= 0 && y < GRID;
+const cellKey = (c: { x: number; y: number }) => `${c.x},${c.y}`;
+
+const pathCells = (r: { cell: { x: number; y: number }; approach: Dir; turn: Turn }) => {
+  const cells: { x: number; y: number }[] = [];
+  let cur = { ...r.cell };
+  while (!(cur.x === CENTER.x && cur.y === CENTER.y)) {
+    const [dx, dy] = DIRS[r.approach];
+    cur = { x: cur.x + dx, y: cur.y + dy };
+    if (!inGrid(cur.x, cur.y)) break;
+    cells.push(cur);
+  }
+  const newDir = applyTurn(r.approach, r.turn);
+  cur = { x: CENTER.x, y: CENTER.y };
+  for (let i = 0; i < GRID; i++) {
+    const [dx, dy] = DIRS[newDir];
+    cur = { x: cur.x + dx, y: cur.y + dy };
+    if (!inGrid(cur.x, cur.y)) break;
+    cells.push(cur);
+  }
+  return cells;
+};
+
+const canEscape = (r: EscapeRobot, all: EscapeRobot[]): boolean => {
+  const blockers = new Set(pathCells(r).map(cellKey));
+  return all.every((o) => o.id === r.id || o.status !== "idle" || !blockers.has(cellKey(o.cell)));
+};
+
+const LEVELS: LevelConfig[] = [
+  {
+    level: 1,
+    title: "Persimpangan Pertama",
+    tip: "Ketuk robot yang jalurnya kosong untuk membiarkannya keluar dari persimpangan.",
+    reward: 50,
+    par: 2,
+    robots: [
+      { id: 1, cell: { x: 3, y: 2 }, approach: "DOWN", turn: "straight" },
+      { id: 2, cell: { x: 2, y: 3 }, approach: "RIGHT", turn: "straight" },
+    ],
+  },
+  {
+    level: 2,
+    title: "Jalur Satu Arah",
+    tip: "Robot di depan harus keluar dulu sebelum robot di belakangnya bisa maju.",
+    reward: 80,
+    par: 3,
+    robots: [
+      { id: 1, cell: { x: 3, y: 0 }, approach: "DOWN", turn: "straight" },
+      { id: 2, cell: { x: 3, y: 2 }, approach: "DOWN", turn: "straight" },
+      { id: 3, cell: { x: 4, y: 3 }, approach: "LEFT", turn: "straight" },
+    ],
+  },
+  {
+    level: 3,
+    title: "Belokan Kanan",
+    tip: "Perhatikan arah panah. Robot yang belok bisa terhalang oleh robot di jalur keluarnya.",
+    reward: 100,
+    par: 4,
+    robots: [
+      { id: 1, cell: { x: 3, y: 0 }, approach: "DOWN", turn: "right" },
+      { id: 2, cell: { x: 4, y: 3 }, approach: "LEFT", turn: "straight" },
+      { id: 3, cell: { x: 3, y: 4 }, approach: "UP", turn: "straight" },
+      { id: 4, cell: { x: 3, y: 6 }, approach: "UP", turn: "straight" },
+    ],
+  },
+  {
+    level: 4,
+    title: "Dua Rantai",
+    tip: "Ada dua antrean sekaligus. Selesaikan antrean satu per satu.",
+    reward: 120,
+    par: 4,
+    robots: [
+      { id: 1, cell: { x: 3, y: 0 }, approach: "DOWN", turn: "straight" },
+      { id: 2, cell: { x: 3, y: 2 }, approach: "DOWN", turn: "straight" },
+      { id: 3, cell: { x: 0, y: 3 }, approach: "RIGHT", turn: "straight" },
+      { id: 4, cell: { x: 2, y: 3 }, approach: "RIGHT", turn: "straight" },
+    ],
+  },
+  {
+    level: 5,
+    title: "Belokan & Blokade",
+    tip: "Cari robot yang paling depan di antrean — itulah kunci untuk membuka jalur.",
+    reward: 150,
+    par: 4,
+    robots: [
+      { id: 1, cell: { x: 3, y: 0 }, approach: "DOWN", turn: "right" },
+      { id: 2, cell: { x: 3, y: 2 }, approach: "DOWN", turn: "straight" },
+      { id: 3, cell: { x: 3, y: 4 }, approach: "UP", turn: "right" },
+      { id: 4, cell: { x: 6, y: 3 }, approach: "LEFT", turn: "straight" },
+    ],
+  },
+  {
+    level: 6,
+    title: "Simpul Empat",
+    tip: "Robot yang belok ke jalur kanan terhalang oleh robot di jalur itu. Atur urutannya!",
+    reward: 180,
+    par: 5,
+    robots: [
+      { id: 1, cell: { x: 3, y: 0 }, approach: "DOWN", turn: "straight" },
+      { id: 2, cell: { x: 3, y: 2 }, approach: "DOWN", turn: "straight" },
+      { id: 3, cell: { x: 4, y: 3 }, approach: "LEFT", turn: "straight" },
+      { id: 4, cell: { x: 5, y: 3 }, approach: "LEFT", turn: "straight" },
+      { id: 5, cell: { x: 3, y: 4 }, approach: "UP", turn: "right" },
+    ],
+  },
+  {
+    level: 7,
+    title: "Antrean Tiga",
+    tip: "Tiga robot mengantre di satu jalur. Keluarkan dari yang paling dekat persimpangan.",
+    reward: 200,
+    par: 6,
+    robots: [
+      { id: 1, cell: { x: 3, y: 0 }, approach: "DOWN", turn: "straight" },
+      { id: 2, cell: { x: 3, y: 1 }, approach: "DOWN", turn: "straight" },
+      { id: 3, cell: { x: 3, y: 2 }, approach: "DOWN", turn: "straight" },
+      { id: 4, cell: { x: 4, y: 3 }, approach: "LEFT", turn: "straight" },
+      { id: 5, cell: { x: 6, y: 3 }, approach: "LEFT", turn: "straight" },
+      { id: 6, cell: { x: 3, y: 4 }, approach: "UP", turn: "right" },
+    ],
+  },
+  {
+    level: 8,
+    title: "Tiga Berjejer",
+    tip: "Kombinasi antrean panjang dan belokan. Analisis dulu baru bertindak!",
+    reward: 220,
+    par: 6,
+    robots: [
+      { id: 1, cell: { x: 3, y: 0 }, approach: "DOWN", turn: "straight" },
+      { id: 2, cell: { x: 3, y: 2 }, approach: "DOWN", turn: "straight" },
+      { id: 3, cell: { x: 4, y: 3 }, approach: "LEFT", turn: "straight" },
+      { id: 4, cell: { x: 5, y: 3 }, approach: "LEFT", turn: "straight" },
+      { id: 5, cell: { x: 6, y: 3 }, approach: "LEFT", turn: "straight" },
+      { id: 6, cell: { x: 3, y: 4 }, approach: "UP", turn: "right" },
+    ],
+  },
+  {
+    level: 9,
+    title: "Kemacetan Tujuh",
+    tip: "Tujuh robot di persimpangan. Tenang, selalu ada robot yang bisa keluar lebih dulu.",
+    reward: 250,
+    par: 7,
+    robots: [
+      { id: 1, cell: { x: 3, y: 0 }, approach: "DOWN", turn: "straight" },
+      { id: 2, cell: { x: 3, y: 1 }, approach: "DOWN", turn: "straight" },
+      { id: 3, cell: { x: 3, y: 2 }, approach: "DOWN", turn: "straight" },
+      { id: 4, cell: { x: 4, y: 3 }, approach: "LEFT", turn: "straight" },
+      { id: 5, cell: { x: 5, y: 3 }, approach: "LEFT", turn: "straight" },
+      { id: 6, cell: { x: 6, y: 3 }, approach: "LEFT", turn: "straight" },
+      { id: 7, cell: { x: 3, y: 4 }, approach: "UP", turn: "right" },
+    ],
+  },
+  {
+    level: 10,
+    title: "Persimpangan Super",
+    tip: "Delapan robot! Pecahkan rantai dari ujung jalur yang paling bebas.",
+    reward: 300,
+    par: 8,
+    robots: [
+      { id: 1, cell: { x: 3, y: 0 }, approach: "DOWN", turn: "straight" },
+      { id: 2, cell: { x: 3, y: 1 }, approach: "DOWN", turn: "straight" },
+      { id: 3, cell: { x: 3, y: 2 }, approach: "DOWN", turn: "straight" },
+      { id: 4, cell: { x: 4, y: 3 }, approach: "LEFT", turn: "straight" },
+      { id: 5, cell: { x: 5, y: 3 }, approach: "LEFT", turn: "straight" },
+      { id: 6, cell: { x: 6, y: 3 }, approach: "LEFT", turn: "straight" },
+      { id: 7, cell: { x: 3, y: 4 }, approach: "UP", turn: "right" },
+      { id: 8, cell: { x: 3, y: 6 }, approach: "UP", turn: "right" },
+    ],
+  },
+];
+
+const starsFor = (taps: number, n: number) => (taps <= n ? 3 : taps <= n + 2 ? 2 : 1);
+
+const dirAngle = (d: Dir) => (d === "UP" ? 0 : d === "RIGHT" ? 90 : d === "DOWN" ? 180 : 270);
+
+const RobotItem = React.memo(function RobotItem({
+  robot,
+  size,
+  blocked,
+  isHint,
+  x,
+  y,
+  rot,
+  shake,
+  flash,
+}: {
+  robot: EscapeRobot;
+  size: number;
+  blocked: boolean;
+  isHint: boolean;
+  x: SharedValue<number>;
+  y: SharedValue<number>;
+  rot: SharedValue<number>;
+  shake: SharedValue<number>;
+  flash: SharedValue<number>;
+}) {
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: x.value + shake.value },
+      { translateY: y.value },
+      { rotate: `${rot.value}deg` },
+      { scale: flash.value > 0 ? 1.05 : 1 },
+    ],
+  }));
+
+  const S = size;
+  const turn = robot.turn;
+  return (
+    <Animated.View style={[styles.robotContainer, { width: S, height: S }, animStyle]}>
+      <Svg width={S} height={S} viewBox={`0 0 64 64`}>
+        <G>
+          <Rect x={10} y={14} width={44} height={40} rx={12} fill={blocked ? "#FEE2E2" : "#E0F2FE"} stroke={blocked ? "#EF4444" : "#0284C7"} strokeWidth={3} />
+          <Rect x={6} y={20} width={7} height={28} rx={3} fill="#334155" />
+          <Rect x={51} y={20} width={7} height={28} rx={3} fill="#334155" />
+          <Rect x={9} y={15} width={46} height={12} rx={6} fill="#0F172A" />
+          <Rect x={14} y={19} width={36} height={4} rx={2} fill="#22D3EE" />
+          <Circle cx={20} cy={34} r={4} fill="#22D3EE" />
+          <Circle cx={44} cy={34} r={4} fill="#22D3EE" />
+          <Rect x={16} y={44} width={32} height={4} rx={2} fill="#0EA5E9" opacity={0.8} />
+          <Path
+            d={
+              turn === "straight"
+                ? "M32 8 L38 16 L35 16 L35 24 L29 24 L29 16 L26 16 Z"
+                : turn === "left"
+                ? "M32 6 L40 6 L32 12 L36 16 L30 20 L24 16 L28 12 L32 12 Z"
+                : "M32 6 L24 6 L32 12 L28 16 L34 20 L40 16 L36 12 L32 12 Z"
+            }
+            fill="#F59E0B"
+            stroke="#FFFFFF"
+            strokeWidth={1.5}
+          />
+        </G>
+      </Svg>
+      {isHint && <View style={styles.hintRing} />}
+    </Animated.View>
+  );
+});
 
 export default function RobotEscapeScreen() {
   const router = useRouter();
-  
-  // Game state
+
   const [level, setLevel] = useState(1);
-  const [robots, setRobots] = useState<RobotObject[]>([]);
-  const [gameState, setGameState] = useState<"playing" | "victory" | "completed">("playing");
+  const [robots, setRobots] = useState<EscapeRobot[]>([]);
+  const [taps, setTaps] = useState(0);
   const [userCoins, setUserCoins] = useState(1250);
   const [coinsReward, setCoinsReward] = useState(0);
+  const [gameState, setGameState] = useState<"playing" | "victory" | "completed">("playing");
+  const [showIntro, setShowIntro] = useState(true);
+  const [showPause, setShowPause] = useState(false);
+  const [blockedId, setBlockedId] = useState<number | null>(null);
+  const [hintId, setHintId] = useState<number | null>(null);
+  const [companionText, setCompanionText] = useState(
+    "Ketuk robot yang jalurnya kosong agar ia bisa keluar dari persimpangan! Perhatikan arah panahnya."
+  );
+  const [areaSize, setAreaSize] = useState({ w: Dimensions.get("window").width, h: Dimensions.get("window").height * 0.5 });
 
-  // Layout measurements
-  const { width: screenWidth, height: screenHeight } = Dimensions.get("window");
-  
-  const centerX = useMemo(() => screenWidth / 2, [screenWidth]);
-  const centerY = useMemo(() => screenHeight * 0.48, [screenHeight]);
+  const robotsRef = useRef<EscapeRobot[]>([]);
 
-  // Keep ref to robots state
-  const robotsRef = useRef<RobotObject[]>([]);
+  const rX0 = useSharedValue(0); const rX1 = useSharedValue(0); const rX2 = useSharedValue(0); const rX3 = useSharedValue(0);
+  const rX4 = useSharedValue(0); const rX5 = useSharedValue(0); const rX6 = useSharedValue(0); const rX7 = useSharedValue(0);
+  const rY0 = useSharedValue(0); const rY1 = useSharedValue(0); const rY2 = useSharedValue(0); const rY3 = useSharedValue(0);
+  const rY4 = useSharedValue(0); const rY5 = useSharedValue(0); const rY6 = useSharedValue(0); const rY7 = useSharedValue(0);
+  const rT0 = useSharedValue(0); const rT1 = useSharedValue(0); const rT2 = useSharedValue(0); const rT3 = useSharedValue(0);
+  const rT4 = useSharedValue(0); const rT5 = useSharedValue(0); const rT6 = useSharedValue(0); const rT7 = useSharedValue(0);
+  const rS0 = useSharedValue(0); const rS1 = useSharedValue(0); const rS2 = useSharedValue(0); const rS3 = useSharedValue(0);
+  const rS4 = useSharedValue(0); const rS5 = useSharedValue(0); const rS6 = useSharedValue(0); const rS7 = useSharedValue(0);
+  const rF0 = useSharedValue(0); const rF1 = useSharedValue(0); const rF2 = useSharedValue(0); const rF3 = useSharedValue(0);
+  const rF4 = useSharedValue(0); const rF5 = useSharedValue(0); const rF6 = useSharedValue(0); const rF7 = useSharedValue(0);
 
-  // --- REANIMATED SHARED VALUES (Max 6 robots supported) ---
-  const robotX = [
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-  ];
-  
-  const robotY = [
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-  ];
+  const robotX = useMemo(() => [rX0, rX1, rX2, rX3, rX4, rX5, rX6, rX7], [rX0, rX1, rX2, rX3, rX4, rX5, rX6, rX7]);
+  const robotY = useMemo(() => [rY0, rY1, rY2, rY3, rY4, rY5, rY6, rY7], [rY0, rY1, rY2, rY3, rY4, rY5, rY6, rY7]);
+  const robotRot = useMemo(() => [rT0, rT1, rT2, rT3, rT4, rT5, rT6, rT7], [rT0, rT1, rT2, rT3, rT4, rT5, rT6, rT7]);
+  const robotShake = useMemo(() => [rS0, rS1, rS2, rS3, rS4, rS5, rS6, rS7], [rS0, rS1, rS2, rS3, rS4, rS5, rS6, rS7]);
+  const robotFlash = useMemo(() => [rF0, rF1, rF2, rF3, rF4, rF5, rF6, rF7], [rF0, rF1, rF2, rF3, rF4, rF5, rF6, rF7]);
 
-  const robotShakeX = [
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-  ];
+  const currentLevel = useMemo(() => LEVELS.find((l) => l.level === level) || LEVELS[0], [level]);
 
-  const robotFlashRed = [
-    useSharedValue(0), // 0 is normal, 1 is flash red
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-  ];
+  const spacing = useMemo(() => {
+    const w = (areaSize.w - ROBOT_SIZE - 20) / (2 * 3);
+    const h = (areaSize.h - ROBOT_SIZE - 16) / (2 * 3);
+    return Math.max(34, Math.min(w, h, 58));
+  }, [areaSize]);
 
-  const robotRotate = [
-    useSharedValue(0), // Wobble rotation when running
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-  ];
+  const centerX = areaSize.w / 2;
+  const centerY = areaSize.h / 2;
 
-  // Dust smoke particles shared values
-  const dustScale = [
-    useSharedValue(0.2),
-    useSharedValue(0.2),
-    useSharedValue(0.2),
-    useSharedValue(0.2),
-    useSharedValue(0.2),
-    useSharedValue(0.2),
-  ];
-  const dustOpacity = [
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-    useSharedValue(0),
-  ];
+  const cellToPixel = useCallback(
+    (cell: { x: number; y: number }) => ({
+      x: centerX + (cell.x - CENTER.x) * spacing,
+      y: centerY + (cell.y - CENTER.y) * spacing,
+    }),
+    [centerX, centerY, spacing]
+  );
 
-  // Global shared values for idle breathing / floating loops
-  const idleHover = useSharedValue(0);
-  const idleScale = useSharedValue(1);
-
-  // Determine active roads layout styling dynamically
-  const getRoadLayoutType = () => {
-    if (level <= 3) return "single"; // Level 1 - 3
-    if (level <= 7) return "double-vertical"; // Level 4 - 7
-    if (level <= 9) return "double-horizontal"; // Level 8 - 9
-    return "double-both"; // Level 10
-  };
-
-  // --- GET LEVEL DATA CONFIGURATIONS (10 Levels with Turns & Deadlocks fixed) ---
-  const levels: LevelConfig[] = useMemo(() => {
-    return [
-      {
-        level: 1,
-        reward: 50,
-        robots: [
-          {
-            id: 1,
-            startX: centerX - ROBOT_SIZE / 2,
-            startY: centerY - 150,
-            direction: "DOWN",
-            turn: "straight",
-            status: "idle",
-          },
-          {
-            id: 2,
-            startX: centerX + 110,
-            startY: centerY - ROBOT_HEIGHT / 2,
-            direction: "LEFT",
-            turn: "straight",
-            status: "idle",
-          },
-        ],
-      },
-      {
-        level: 2,
-        reward: 80,
-        robots: [
-          {
-            id: 1,
-            startX: centerX - ROBOT_SIZE / 2,
-            startY: centerY - 165,
-            direction: "UP",
-            turn: "right",
-            status: "idle",
-          },
-          {
-            id: 2,
-            startX: centerX + 110,
-            startY: centerY - ROBOT_HEIGHT / 2,
-            direction: "LEFT",
-            turn: "straight",
-            status: "idle",
-          },
-          {
-            id: 3,
-            startX: centerX - ROBOT_SIZE / 2,
-            startY: centerY + 115,
-            direction: "DOWN",
-            turn: "left",
-            status: "idle",
-          },
-        ],
-      },
-      {
-        level: 3,
-        reward: 100,
-        robots: [
-          {
-            id: 1,
-            startX: centerX - ROBOT_SIZE / 2,
-            startY: centerY - 95,
-            direction: "UP",
-            turn: "left",
-            status: "idle",
-          },
-          {
-            id: 2,
-            startX: centerX + 110,
-            startY: centerY - ROBOT_HEIGHT / 2,
-            direction: "LEFT",
-            turn: "straight",
-            status: "idle",
-          },
-          {
-            id: 3,
-            startX: centerX - ROBOT_SIZE / 2,
-            startY: centerY + 40,
-            direction: "UP",
-            turn: "straight",
-            status: "idle",
-          },
-        ],
-        staticObstacles: [
-          {
-            id: 101,
-            x: centerX - ROBOT_SIZE / 2,
-            y: centerY + 115,
-            type: "cone",
-          },
-        ],
-      },
-      {
-        level: 4,
-        reward: 120,
-        robots: [
-          {
-            id: 1,
-            startX: centerX - 100 - ROBOT_SIZE / 2,
-            startY: centerY - 150,
-            direction: "DOWN",
-            turn: "left",
-            status: "idle",
-          },
-          {
-            id: 2,
-            startX: centerX + 150,
-            startY: centerY - ROBOT_HEIGHT / 2,
-            direction: "LEFT",
-            turn: "straight",
-            status: "idle",
-          },
-          {
-            id: 3,
-            startX: centerX + 100 - ROBOT_SIZE / 2,
-            startY: centerY + 120,
-            direction: "UP",
-            turn: "right",
-            status: "idle",
-          },
-        ],
-      },
-      {
-        level: 5,
-        reward: 150,
-        robots: [
-          {
-            id: 1,
-            startX: centerX - 100 - ROBOT_SIZE / 2,
-            startY: centerY + 40,
-            direction: "UP",
-            turn: "left",
-            status: "idle",
-          },
-          {
-            id: 2,
-            startX: centerX + 150,
-            startY: centerY - ROBOT_HEIGHT / 2,
-            direction: "LEFT",
-            turn: "straight",
-            status: "idle",
-          },
-          {
-            id: 3,
-            startX: centerX + 100 - ROBOT_SIZE / 2,
-            startY: centerY - 150,
-            direction: "DOWN",
-            turn: "right",
-            status: "idle",
-          },
-        ],
-        staticObstacles: [
-          {
-            id: 201,
-            x: centerX - 100 - ROBOT_SIZE / 2,
-            y: centerY + 110,
-            type: "broken_robot",
-          },
-        ],
-      },
-      {
-        level: 6,
-        reward: 180,
-        robots: [
-          {
-            id: 1,
-            startX: centerX - 100 - ROBOT_SIZE / 2,
-            startY: centerY - 150,
-            direction: "UP",
-            turn: "right",
-            status: "idle",
-          },
-          {
-            id: 2,
-            startX: centerX - 100 - ROBOT_SIZE / 2,
-            startY: centerY + 120,
-            direction: "DOWN",
-            turn: "left",
-            status: "idle",
-          },
-          {
-            id: 3,
-            startX: centerX + 150,
-            startY: centerY - ROBOT_HEIGHT / 2,
-            direction: "RIGHT",
-            turn: "straight",
-            status: "idle",
-          },
-          {
-            id: 4,
-            startX: centerX + 100 - ROBOT_SIZE / 2,
-            startY: centerY - 150,
-            direction: "DOWN",
-            turn: "right",
-            status: "idle",
-          },
-          {
-            id: 5,
-            startX: centerX - 150,
-            startY: centerY - ROBOT_HEIGHT / 2,
-            direction: "LEFT",
-            turn: "straight",
-            status: "idle",
-          },
-        ],
-      },
-      {
-        level: 7,
-        reward: 200,
-        robots: [
-          {
-            id: 1,
-            startX: centerX - 100 - ROBOT_SIZE / 2,
-            startY: centerY + 40,
-            direction: "UP",
-            turn: "left",
-            status: "idle",
-          },
-          {
-            id: 2,
-            startX: centerX + 150,
-            startY: centerY - ROBOT_HEIGHT / 2,
-            direction: "LEFT",
-            turn: "straight",
-            status: "idle",
-          },
-          {
-            id: 3,
-            startX: centerX + 100 - ROBOT_SIZE / 2,
-            startY: centerY + 45,
-            direction: "DOWN",
-            turn: "straight",
-            status: "idle",
-          },
-          {
-            id: 4,
-            startX: centerX - 100 - ROBOT_SIZE / 2,
-            startY: centerY - 150,
-            direction: "UP",
-            turn: "straight",
-            status: "idle",
-          },
-        ],
-        staticObstacles: [
-          {
-            id: 301,
-            x: centerX - 100 - ROBOT_SIZE / 2,
-            y: centerY + 110,
-            type: "cone",
-          },
-          {
-            id: 302,
-            x: centerX + 100 - ROBOT_SIZE / 2,
-            y: centerY - 150,
-            type: "cone",
-          },
-        ],
-      },
-      {
-        level: 8,
-        reward: 220,
-        robots: [
-          {
-            id: 1,
-            startX: centerX - ROBOT_SIZE / 2,
-            startY: centerY - 170,
-            direction: "UP",
-            turn: "right",
-            status: "idle",
-          },
-          {
-            id: 2,
-            startX: centerX + 140,
-            startY: centerY - 80 - ROBOT_HEIGHT / 2,
-            direction: "RIGHT",
-            turn: "straight",
-            status: "idle",
-          },
-          {
-            id: 3,
-            startX: centerX - 140,
-            startY: centerY + 80 - ROBOT_HEIGHT / 2,
-            direction: "LEFT",
-            turn: "straight",
-            status: "idle",
-          },
-          {
-            id: 4,
-            startX: centerX - ROBOT_SIZE / 2,
-            startY: centerY + 150,
-            direction: "DOWN",
-            turn: "left",
-            status: "idle",
-          },
-        ],
-      },
-      {
-        level: 9,
-        reward: 250,
-        robots: [
-          {
-            id: 1,
-            startX: centerX - ROBOT_SIZE / 2,
-            startY: centerY - 160,
-            direction: "UP",
-            turn: "left",
-            status: "idle",
-          },
-          {
-            id: 2,
-            startX: centerX + 140,
-            startY: centerY - 80 - ROBOT_HEIGHT / 2,
-            direction: "LEFT",
-            turn: "straight",
-            status: "idle",
-          },
-          {
-            id: 3,
-            startX: centerX - ROBOT_SIZE / 2,
-            startY: centerY + 155,
-            direction: "DOWN",
-            turn: "straight",
-            status: "idle",
-          },
-          {
-            id: 4,
-            startX: centerX - 60,
-            startY: centerY + 80 - ROBOT_HEIGHT / 2,
-            direction: "RIGHT",
-            turn: "straight",
-            status: "idle",
-          },
-        ],
-        staticObstacles: [
-          {
-            id: 401,
-            x: centerX - 140,
-            y: centerY + 80 - ROBOT_HEIGHT / 2,
-            type: "broken_robot",
-          },
-        ],
-      },
-      {
-        level: 10,
-        reward: 300,
-        robots: [
-          {
-            id: 1,
-            startX: centerX - 100 - ROBOT_SIZE / 2,
-            startY: centerY + 130,
-            direction: "UP",
-            turn: "straight",
-            status: "idle",
-          },
-          {
-            id: 2,
-            startX: centerX + 140,
-            startY: centerY - 80 - ROBOT_HEIGHT / 2,
-            direction: "LEFT",
-            turn: "straight",
-            status: "idle",
-          },
-          {
-            id: 3,
-            startX: centerX + 100 - ROBOT_SIZE / 2,
-            startY: centerY - 160,
-            direction: "DOWN",
-            turn: "straight",
-            status: "idle",
-          },
-          {
-            id: 4,
-            startX: centerX - 140,
-            startY: centerY + 80 - ROBOT_HEIGHT / 2,
-            direction: "RIGHT",
-            turn: "straight",
-            status: "idle",
-          },
-          {
-            id: 5,
-            startX: centerX - 100 - ROBOT_SIZE / 2,
-            startY: centerY - 160,
-            direction: "UP",
-            turn: "right",
-            status: "idle",
-          },
-        ],
-        staticObstacles: [
-          {
-            id: 501,
-            x: centerX - ROBOT_SIZE / 2,
-            y: centerY + 80 - ROBOT_HEIGHT / 2,
-            type: "cone",
-          },
-        ],
-      },
-    ];
-  }, [centerX, centerY]);
-
-  // --- STATIC REANIMATED HOOK STYLE CALLS ---
-  const animatedStyle0 = useAnimatedStyle(() => {
-    const isMoving = robots[0]?.status === "moving";
-    const translateYOffset = isMoving ? 0 : idleHover.value;
-    const scaleVal = isMoving ? 1 : idleScale.value;
-    const rotVal = isMoving ? robotRotate[0].value : 0;
-
-    const bodyColor = interpolateColor(robotFlashRed[0].value, [0, 1], ["#FFFFFF", "#FEE2E2"]);
-    const borderColor = interpolateColor(robotFlashRed[0].value, [0, 1], ["#0284C7", "#EF4444"]);
-    return {
-      transform: [
-        { translateX: robotX[0].value + robotShakeX[0].value },
-        { translateY: robotY[0].value + translateYOffset },
-        { scale: scaleVal },
-        { rotate: `${rotVal}deg` },
-      ],
-      backgroundColor: bodyColor,
-      borderColor: borderColor,
-    };
-  });
-
-  const animatedStyle1 = useAnimatedStyle(() => {
-    const isMoving = robots[1]?.status === "moving";
-    const translateYOffset = isMoving ? 0 : idleHover.value;
-    const scaleVal = isMoving ? 1 : idleScale.value;
-    const rotVal = isMoving ? robotRotate[1].value : 0;
-
-    const bodyColor = interpolateColor(robotFlashRed[1].value, [0, 1], ["#FFFFFF", "#FEE2E2"]);
-    const borderColor = interpolateColor(robotFlashRed[1].value, [0, 1], ["#0284C7", "#EF4444"]);
-    return {
-      transform: [
-        { translateX: robotX[1].value + robotShakeX[1].value },
-        { translateY: robotY[1].value + translateYOffset },
-        { scale: scaleVal },
-        { rotate: `${rotVal}deg` },
-      ],
-      backgroundColor: bodyColor,
-      borderColor: borderColor,
-    };
-  });
-
-  const animatedStyle2 = useAnimatedStyle(() => {
-    const isMoving = robots[2]?.status === "moving";
-    const translateYOffset = isMoving ? 0 : idleHover.value;
-    const scaleVal = isMoving ? 1 : idleScale.value;
-    const rotVal = isMoving ? robotRotate[2].value : 0;
-
-    const bodyColor = interpolateColor(robotFlashRed[2].value, [0, 1], ["#FFFFFF", "#FEE2E2"]);
-    const borderColor = interpolateColor(robotFlashRed[2].value, [0, 1], ["#0284C7", "#EF4444"]);
-    return {
-      transform: [
-        { translateX: robotX[2].value + robotShakeX[2].value },
-        { translateY: robotY[2].value + translateYOffset },
-        { scale: scaleVal },
-        { rotate: `${rotVal}deg` },
-      ],
-      backgroundColor: bodyColor,
-      borderColor: borderColor,
-    };
-  });
-
-  const animatedStyle3 = useAnimatedStyle(() => {
-    const isMoving = robots[3]?.status === "moving";
-    const translateYOffset = isMoving ? 0 : idleHover.value;
-    const scaleVal = isMoving ? 1 : idleScale.value;
-    const rotVal = isMoving ? robotRotate[3].value : 0;
-
-    const bodyColor = interpolateColor(robotFlashRed[3].value, [0, 1], ["#FFFFFF", "#FEE2E2"]);
-    const borderColor = interpolateColor(robotFlashRed[3].value, [0, 1], ["#0284C7", "#EF4444"]);
-    return {
-      transform: [
-        { translateX: robotX[3].value + robotShakeX[3].value },
-        { translateY: robotY[3].value + translateYOffset },
-        { scale: scaleVal },
-        { rotate: `${rotVal}deg` },
-      ],
-      backgroundColor: bodyColor,
-      borderColor: borderColor,
-    };
-  });
-
-  const animatedStyle4 = useAnimatedStyle(() => {
-    const isMoving = robots[4]?.status === "moving";
-    const translateYOffset = isMoving ? 0 : idleHover.value;
-    const scaleVal = isMoving ? 1 : idleScale.value;
-    const rotVal = isMoving ? robotRotate[4].value : 0;
-
-    const bodyColor = interpolateColor(robotFlashRed[4].value, [0, 1], ["#FFFFFF", "#FEE2E2"]);
-    const borderColor = interpolateColor(robotFlashRed[4].value, [0, 1], ["#0284C7", "#EF4444"]);
-    return {
-      transform: [
-        { translateX: robotX[4].value + robotShakeX[4].value },
-        { translateY: robotY[4].value + translateYOffset },
-        { scale: scaleVal },
-        { rotate: `${rotVal}deg` },
-      ],
-      backgroundColor: bodyColor,
-      borderColor: borderColor,
-    };
-  });
-
-  const animatedStyle5 = useAnimatedStyle(() => {
-    const isMoving = robots[5]?.status === "moving";
-    const translateYOffset = isMoving ? 0 : idleHover.value;
-    const scaleVal = isMoving ? 1 : idleScale.value;
-    const rotVal = isMoving ? robotRotate[5].value : 0;
-
-    const bodyColor = interpolateColor(robotFlashRed[5].value, [0, 1], ["#FFFFFF", "#FEE2E2"]);
-    const borderColor = interpolateColor(robotFlashRed[5].value, [0, 1], ["#0284C7", "#EF4444"]);
-    return {
-      transform: [
-        { translateX: robotX[5].value + robotShakeX[5].value },
-        { translateY: robotY[5].value + translateYOffset },
-        { scale: scaleVal },
-        { rotate: `${rotVal}deg` },
-      ],
-      backgroundColor: bodyColor,
-      borderColor: borderColor,
-    };
-  });
-
-  const animatedStyles = [
-    animatedStyle0,
-    animatedStyle1,
-    animatedStyle2,
-    animatedStyle3,
-    animatedStyle4,
-    animatedStyle5,
-  ];
-
-  // Static Dust Particle Styles
-  const dustStyle0 = useAnimatedStyle(() => ({
-    transform: [{ scale: dustScale[0].value }],
-    opacity: dustOpacity[0].value,
-  }));
-  const dustStyle1 = useAnimatedStyle(() => ({
-    transform: [{ scale: dustScale[1].value }],
-    opacity: dustOpacity[1].value,
-  }));
-  const dustStyle2 = useAnimatedStyle(() => ({
-    transform: [{ scale: dustScale[2].value }],
-    opacity: dustOpacity[2].value,
-  }));
-  const dustStyle3 = useAnimatedStyle(() => ({
-    transform: [{ scale: dustScale[3].value }],
-    opacity: dustOpacity[3].value,
-  }));
-  const dustStyle4 = useAnimatedStyle(() => ({
-    transform: [{ scale: dustScale[4].value }],
-    opacity: dustOpacity[4].value,
-  }));
-  const dustStyle5 = useAnimatedStyle(() => ({
-    transform: [{ scale: dustScale[5].value }],
-    opacity: dustOpacity[5].value,
-  }));
-
-  const dustStyles = [
-    dustStyle0,
-    dustStyle1,
-    dustStyle2,
-    dustStyle3,
-    dustStyle4,
-    dustStyle5,
-  ];
-
-  // Sound/Haptic feedback helper
-  const triggerHaptic = (type: "success" | "error" | "light") => {
-    try {
-      if (Platform.OS !== "web") {
-        if (type === "success") {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        } else if (type === "error") {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        } else {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        }
-      }
-    } catch {
-      // Ignored
-    }
-  };
-
-  // Load Coins on start
   useEffect(() => {
-    const loadGameData = async () => {
+    const load = async () => {
       try {
-        const storedCoins = await AsyncStorage.getItem(COINS_STORAGE_KEY);
-        if (storedCoins !== null) {
-          setUserCoins(parseInt(storedCoins));
+        const coins = await AsyncStorage.getItem(COINS_STORAGE_KEY);
+        if (coins !== null) setUserCoins(parseInt(coins));
+        const lvl = await AsyncStorage.getItem(STORAGE_KEY_LEVEL);
+        if (lvl !== null) {
+          const l = parseInt(lvl);
+          if (l >= 1 && l <= LEVELS.length) setLevel(l);
         }
-        const storedLevel = await AsyncStorage.getItem("robot_escape_current_level");
-        if (storedLevel !== null) {
-          setLevel(parseInt(storedLevel));
-        }
-      } catch (_e) {
-        console.error("Failed to load game data", _e);
+      } catch (e) {
+        console.error(e);
       }
     };
-    loadGameData();
+    load();
   }, []);
 
-  // Initialize global idle breathing loops on mount
   useEffect(() => {
-    idleHover.value = withRepeat(
-      withSequence(
-        withTiming(-3, { duration: 1100 }),
-        withTiming(3, { duration: 1100 })
-      ),
-      -1,
-      true
-    );
+    const init = currentLevel.robots.map((r) => ({ ...r, status: "idle" as const }));
+    setRobots(init);
+    robotsRef.current = init;
+    setTaps(0);
+    setGameState((prev) => (prev === "completed" ? prev : "playing"));
+    setBlockedId(null);
+    setHintId(null);
+    setShowIntro(true);
+    setCompanionText(`Misi Level ${level}: ${currentLevel.tip}`);
+    for (let i = 0; i < MAX_ROBOTS; i++) {
+      cancelAnimation(robotX[i]);
+      cancelAnimation(robotY[i]);
+      cancelAnimation(robotRot[i]);
+      cancelAnimation(robotShake[i]);
+      cancelAnimation(robotFlash[i]);
+      robotX[i].value = 0;
+      robotY[i].value = 0;
+      robotRot[i].value = i < init.length ? dirAngle(init[i].approach) : 0;
+      robotShake[i].value = 0;
+      robotFlash[i].value = 0;
+    }
+  }, [level, currentLevel, robotX, robotY, robotRot, robotShake, robotFlash]);
 
-    idleScale.value = withRepeat(
-      withSequence(
-        withTiming(1.04, { duration: 1300 }),
-        withTiming(0.96, { duration: 1300 })
-      ),
-      -1,
-      true
-    );
-  }, [idleHover, idleScale]);
+  const escapedCount = robots.filter((r) => r.status === "escaped").length;
 
-  // Initialize level
-  const initLevel = (levelIndex: number) => {
-    const targetLevel = levels.find((l) => l.level === levelIndex);
-    if (!targetLevel) return;
+  useEffect(() => {
+    if (escapedCount === robots.length && robots.length > 0 && gameState === "playing") {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setCompanionText("🎉 Semua robot berhasil keluar! Persimpangan bersih kembali!");
+      const t = setTimeout(() => {
+        setCoinsReward(currentLevel.reward);
+        if (level < LEVELS.length) setGameState("victory");
+        else setGameState("completed");
+      }, 800);
+      return () => clearTimeout(t);
+    }
+  }, [escapedCount, robots.length, gameState, level, currentLevel.reward]);
 
-    const initialRobots = targetLevel.robots.map((r) => ({ ...r, status: "idle" as const }));
-    setRobots(initialRobots);
-    robotsRef.current = initialRobots;
-    setGameState("playing");
-
-    // Initialize Shared values for each robot
-    initialRobots.forEach((r, index) => {
-      cancelAnimation(robotX[index]);
-      cancelAnimation(robotY[index]);
-      robotX[index].value = r.startX;
-      robotY[index].value = r.startY;
-      robotShakeX[index].value = 0;
-      robotFlashRed[index].value = 0;
-      dustScale[index].value = 0.2;
-      dustOpacity[index].value = 0;
-      cancelAnimation(robotRotate[index]);
-      robotRotate[index].value = 0;
+  const setRobotStatus = (id: number, status: EscapeRobot["status"]) => {
+    setRobots((prev) => {
+      const next = prev.map((r) => (r.id === id ? { ...r, status } : r));
+      robotsRef.current = next;
+      return next;
     });
   };
 
-  // Initialize Level on mount/update
-  useEffect(() => {
-    initLevel(level);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [level]);
+  const handleTap = useCallback(
+    (index: number) => {
+      if (gameState !== "playing") return;
+      const robot = robotsRef.current[index];
+      if (!robot || robot.status !== "idle") return;
 
-  // --- DETERMINISTIC GEOMETRIC COLLISION RESOLVER & MULTI-STAGE MOVEMENT ---
-  const handleEscape = (i: number) => {
-    cancelAnimation(robotX[i]);
-    cancelAnimation(robotY[i]);
-    cancelAnimation(robotRotate[i]);
-    robotRotate[i].value = 0;
+      setTaps((t) => t + 1);
+      setHintId(null);
+      const idx = index;
+      const blockList = robotsRef.current.filter((o) => o.id !== robot.id && o.status === "idle");
+      const path = pathCells(robot);
+      const pathSet = new Set(path.map(cellKey));
+      const blocker = blockList.find((o) => pathSet.has(cellKey(o.cell)));
 
-    const updated = [...robotsRef.current];
-    updated[i].status = "escaped";
-    setRobots(updated);
-    robotsRef.current = updated;
+      if (blocker) {
+        // BLOCKED
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+        const bIdx = robotsRef.current.findIndex((o) => o.id === blocker.id);
+        setBlockedId(robot.id);
+        setCompanionText(`🔒 Robot ini terhalang oleh robot di depannya. Keluarkan robot itu terlebih dahulu!`);
+        robotFlash[idx].value = withSequence(
+          withTiming(1, { duration: 90 }),
+          withTiming(0, { duration: 90 }),
+          withTiming(1, { duration: 90 }),
+          withTiming(0, { duration: 90 })
+        );
+        robotShake[idx].value = withSequence(
+          withTiming(-10, { duration: 45 }),
+          withTiming(10, { duration: 45 }),
+          withTiming(-8, { duration: 45 }),
+          withTiming(8, { duration: 45 }),
+          withTiming(0, { duration: 45 })
+        );
+        if (bIdx >= 0) {
+          robotFlash[bIdx].value = withSequence(
+            withTiming(1, { duration: 120 }),
+            withTiming(0, { duration: 120 }),
+            withTiming(1, { duration: 120 }),
+            withTiming(0, { duration: 120 })
+          );
+          robotShake[bIdx].value = withSequence(
+            withTiming(-8, { duration: 50 }),
+            withTiming(8, { duration: 50 }),
+            withTiming(0, { duration: 50 })
+          );
+        }
+        setTimeout(() => setBlockedId(null), 700);
+        return;
+      }
 
-    triggerHaptic("light");
+      // ESCAPE
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      setRobotStatus(robot.id, "moving");
+      setCompanionText(`🚀 Robot ${idx + 1} melaju keluar persimpangan!`);
 
-    const allEscaped = updated.every((r) => r.status === "escaped");
-    if (allEscaped) {
-      handleLevelWin();
+      const start = cellToPixel(robot.cell);
+      const center = { x: centerX, y: centerY };
+      const newDir = applyTurn(robot.approach, robot.turn);
+      const reach = Math.max(areaSize.w, areaSize.h) + 300;
+      const [ex, ey] = DIRS[newDir];
+      const exit = { x: center.x + ex * reach, y: center.y + ey * reach };
+
+      const d1 = Math.hypot(center.x - start.x, center.y - start.y);
+      const dur1 = Math.max(150, d1 / 0.9);
+      const d2 = Math.hypot(exit.x - center.x, exit.y - center.y);
+      const dur2 = Math.max(200, d2 / 1.6);
+
+      const stage2 = () => {
+        robotRot[idx].value = withTiming(dirAngle(newDir), { duration: 200 });
+        robotX[idx].value = withTiming(exit.x - start.x, { duration: dur2 }, (fin) => {
+          if (fin) runOnJS(done)();
+        });
+        robotY[idx].value = withTiming(exit.y - start.y, { duration: dur2 });
+      };
+      const done = () => {
+        setRobotStatus(robot.id, "escaped");
+      };
+      robotX[idx].value = withTiming(center.x - start.x, { duration: dur1 }, (fin) => {
+        if (fin) runOnJS(stage2)();
+      });
+      robotY[idx].value = withTiming(center.y - start.y, { duration: dur1 });
+    },
+    [gameState, cellToPixel, centerX, centerY, areaSize, robotX, robotY, robotRot, robotShake, robotFlash]
+  );
+
+  const handleHint = () => {
+    if (gameState !== "playing" || userCoins < 20) return;
+    const movable = robotsRef.current.find((r) => r.status === "idle" && canEscape(r, robotsRef.current));
+    const newCoins = userCoins - 20;
+    setUserCoins(newCoins);
+    AsyncStorage.setItem(COINS_STORAGE_KEY, String(newCoins));
+    if (movable) {
+      const idx = robotsRef.current.findIndex((r) => r.id === movable.id);
+      setHintId(movable.id);
+      setCompanionText(`💡 Petunjuk: robot di posisi ${idx + 1} bisa keluar duluan! Coba ketuk dia.`);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } else {
+      setCompanionText("💡 Semua robot masih terhalang. Periksa kembali panah setiap robot.");
     }
   };
 
-  const handleLevelWin = () => {
-    triggerHaptic("success");
-    const currentReward = levels.find((l) => l.level === level)?.reward || 50;
-    setCoinsReward(currentReward);
-
-    if (level < levels.length) {
-      setGameState("victory");
-    } else {
-      setGameState("completed");
+  const handleRestart = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    const init = currentLevel.robots.map((r) => ({ ...r, status: "idle" as const }));
+    setRobots(init);
+    robotsRef.current = init;
+    setTaps(0);
+    setBlockedId(null);
+    setHintId(null);
+    for (let i = 0; i < MAX_ROBOTS; i++) {
+      cancelAnimation(robotX[i]);
+      cancelAnimation(robotY[i]);
+      cancelAnimation(robotRot[i]);
+      robotX[i].value = 0;
+      robotY[i].value = 0;
+      robotRot[i].value = i < init.length ? dirAngle(init[i].approach) : 0;
     }
   };
 
   const handleNextLevel = async () => {
-    triggerHaptic("light");
     const nextLvl = level + 1;
-    const finalBalance = userCoins + coinsReward;
-    
-    try {
-      await AsyncStorage.setItem(COINS_STORAGE_KEY, finalBalance.toString());
-      await AsyncStorage.setItem("robot_escape_current_level", nextLvl.toString());
-      setUserCoins(finalBalance);
-      setLevel(nextLvl);
-    } catch (e) {
-      console.error("Failed to save reward coins", e);
-      setLevel(nextLvl);
-    }
-  };
-
-  const handleClaimAndExit = async () => {
-    triggerHaptic("success");
-    const finalBalance = userCoins + coinsReward;
-    
-    try {
-      await AsyncStorage.setItem(COINS_STORAGE_KEY, finalBalance.toString());
-      await AsyncStorage.setItem("robot_escape_current_level", "10"); // locked at Level 10 max
-      router.back();
-    } catch (e) {
-      console.error("Failed to save reward coins", e);
-      router.back();
-    }
-  };
-
-  const handleResetLevelProgress = async () => {
-    triggerHaptic("success");
-    try {
-      await AsyncStorage.setItem("robot_escape_current_level", "1");
+    const balance = userCoins + coinsReward;
+    setUserCoins(balance);
+    await AsyncStorage.setItem(COINS_STORAGE_KEY, String(balance));
+    if (nextLvl > LEVELS.length) {
+      setGameState("completed");
       setLevel(1);
-    } catch (e) {
-      console.error("Failed to reset level progress", e);
-    }
-  };
-
-  const updatedRobotStatus = (index: number, status: RobotObject["status"]) => {
-    const updated = [...robotsRef.current];
-    updated[index].status = status;
-    setRobots(updated);
-    robotsRef.current = updated;
-  };
-
-  // Helper: Get intersection center coordinate based on start lane
-  const getIntersectionPoint = (r: RobotObject) => {
-    const layout = getRoadLayoutType();
-    const rx = r.startX;
-    const ry = r.startY;
-    const dir = r.direction;
-
-    let ix = centerX;
-    let iy = centerY;
-
-    if (layout === "single") {
-      ix = centerX - ROBOT_SIZE / 2;
-      iy = centerY - ROBOT_HEIGHT / 2;
-    } else if (layout === "double-vertical") {
-      iy = centerY - ROBOT_HEIGHT / 2;
-      if (dir === "UP" || dir === "DOWN") {
-        ix = rx < centerX ? centerX - 100 - ROBOT_SIZE / 2 : centerX + 100 - ROBOT_SIZE / 2;
-      } else {
-        ix = dir === "LEFT" ? centerX + 100 - ROBOT_SIZE / 2 : centerX - 100 - ROBOT_SIZE / 2;
-      }
-    } else if (layout === "double-horizontal") {
-      ix = centerX - ROBOT_SIZE / 2;
-      if (dir === "LEFT" || dir === "RIGHT") {
-        iy = ry < centerY ? centerY - 80 - ROBOT_HEIGHT / 2 : centerY + 80 - ROBOT_HEIGHT / 2;
-      } else {
-        iy = dir === "DOWN" ? centerY - 80 - ROBOT_HEIGHT / 2 : centerY + 80 - ROBOT_HEIGHT / 2;
-      }
-    } else if (layout === "double-both") {
-      if (dir === "UP" || dir === "DOWN") {
-        ix = rx < centerX ? centerX - 100 - ROBOT_SIZE / 2 : centerX + 100 - ROBOT_SIZE / 2;
-        iy = dir === "DOWN" ? centerY - 80 - ROBOT_HEIGHT / 2 : centerY + 80 - ROBOT_HEIGHT / 2;
-      } else {
-        ix = dir === "LEFT" ? centerX + 100 - ROBOT_SIZE / 2 : centerX - 100 - ROBOT_SIZE / 2;
-        iy = ry < centerY ? centerY - 80 - ROBOT_HEIGHT / 2 : centerY + 80 - ROBOT_HEIGHT / 2;
-      }
-    }
-
-    return { ix, iy };
-  };
-
-  // Helper: get direction of motion after turning
-  const getTurnedDirection = (dir: string, turn?: string) => {
-    if (!turn || turn === "straight") return dir;
-
-    if (dir === "UP") {
-      if (turn === "left") return "LEFT";
-      if (turn === "right") return "RIGHT";
-      if (turn === "uturn") return "DOWN";
-    } else if (dir === "DOWN") {
-      if (turn === "left") return "RIGHT";
-      if (turn === "right") return "LEFT";
-      if (turn === "uturn") return "UP";
-    } else if (dir === "LEFT") {
-      if (turn === "left") return "DOWN";
-      if (turn === "right") return "UP";
-      if (turn === "uturn") return "RIGHT";
-    } else if (dir === "RIGHT") {
-      if (turn === "left") return "UP";
-      if (turn === "right") return "DOWN";
-      if (turn === "uturn") return "LEFT";
-    }
-    return dir;
-  };
-
-  // Trigger robot layout direction text update
-  const handleUpdateDirection = (index: number, nextDir: RobotObject["direction"]) => {
-    const updated = [...robotsRef.current];
-    updated[index].direction = nextDir;
-    setRobots(updated);
-    robotsRef.current = updated;
-  };
-
-  const handleTapRobot = (index: number) => {
-    const currentRobots = [...robotsRef.current];
-    if (currentRobots[index].status !== "idle") return;
-
-    const r = currentRobots[index];
-    const ax = r.startX;
-    const ay = r.startY;
-    const dir = r.direction;
-    const turn = r.turn || "straight";
-
-    const { ix: intX, iy: intY } = getIntersectionPoint(r);
-    const nextDir = getTurnedDirection(dir, turn);
-
-    const currentLevelData = levels.find((l) => l.level === level);
-    const obstacles = currentLevelData?.staticObstacles || [];
-
-    // --- COLLISION BLOCK DETECTOR ---
-    let blockerSegment1: { x: number; y: number; type: "robot" | "obstacle"; index?: number } | null = null;
-    let blockerSegment2: { x: number; y: number; type: "robot" | "obstacle"; index?: number } | null = null;
-
-    let closestDistS1 = Infinity;
-    let closestDistS2 = Infinity;
-
-    currentRobots.forEach((B, j) => {
-      if (j === index || B.status === "escaped") return;
-      const bx = robotX[j].value;
-      const by = robotY[j].value;
-
-      // 1. Check blocker on Segment 1 (initial road towards intersection)
-      if (dir === "UP") {
-        if (Math.abs(bx - ax) < COLLISION_THRESHOLD && by < ay && by >= intY) {
-          const dist = ay - by;
-          if (dist < closestDistS1) {
-            closestDistS1 = dist;
-            blockerSegment1 = { x: bx, y: by, type: "robot", index: j };
-          }
-        }
-      } else if (dir === "DOWN") {
-        if (Math.abs(bx - ax) < COLLISION_THRESHOLD && by > ay && by <= intY) {
-          const dist = by - ay;
-          if (dist < closestDistS1) {
-            closestDistS1 = dist;
-            blockerSegment1 = { x: bx, y: by, type: "robot", index: j };
-          }
-        }
-      } else if (dir === "LEFT") {
-        if (Math.abs(by - ay) < COLLISION_THRESHOLD && bx < ax && bx >= intX) {
-          const dist = ax - bx;
-          if (dist < closestDistS1) {
-            closestDistS1 = dist;
-            blockerSegment1 = { x: bx, y: by, type: "robot", index: j };
-          }
-        }
-      } else if (dir === "RIGHT") {
-        if (Math.abs(by - ay) < COLLISION_THRESHOLD && bx > ax && bx <= intX) {
-          const dist = bx - ax;
-          if (dist < closestDistS1) {
-            closestDistS1 = dist;
-            blockerSegment1 = { x: bx, y: by, type: "robot", index: j };
-          }
-        }
-      }
-
-      // 2. Check blocker on Segment 2 (after the intersection turn)
-      if (nextDir === "UP") {
-        if (Math.abs(bx - intX) < COLLISION_THRESHOLD && by < intY) {
-          const dist = intY - by;
-          if (dist < closestDistS2) {
-            closestDistS2 = dist;
-            blockerSegment2 = { x: bx, y: by, type: "robot", index: j };
-          }
-        }
-      } else if (nextDir === "DOWN") {
-        if (Math.abs(bx - intX) < COLLISION_THRESHOLD && by > intY) {
-          const dist = by - intY;
-          if (dist < closestDistS2) {
-            closestDistS2 = dist;
-            blockerSegment2 = { x: bx, y: by, type: "robot", index: j };
-          }
-        }
-      } else if (nextDir === "LEFT") {
-        if (Math.abs(by - intY) < COLLISION_THRESHOLD && bx < intX) {
-          const dist = intX - bx;
-          if (dist < closestDistS2) {
-            closestDistS2 = dist;
-            blockerSegment2 = { x: bx, y: by, type: "robot", index: j };
-          }
-        }
-      } else if (nextDir === "RIGHT") {
-        if (Math.abs(by - intY) < COLLISION_THRESHOLD && bx > intX) {
-          const dist = bx - intX;
-          if (dist < closestDistS2) {
-            closestDistS2 = dist;
-            blockerSegment2 = { x: bx, y: by, type: "robot", index: j };
-          }
-        }
-      }
-    });
-
-    // Check static obstacles blocker
-    obstacles.forEach((obs) => {
-      const bx = obs.x;
-      const by = obs.y;
-
-      if (dir === "UP") {
-        if (Math.abs(bx - ax) < COLLISION_THRESHOLD && by < ay && by >= intY) {
-          const dist = ay - by;
-          if (dist < closestDistS1) {
-            closestDistS1 = dist;
-            blockerSegment1 = { x: bx, y: by, type: "obstacle" };
-          }
-        }
-      } else if (dir === "DOWN") {
-        if (Math.abs(bx - ax) < COLLISION_THRESHOLD && by > ay && by <= intY) {
-          const dist = by - ay;
-          if (dist < closestDistS1) {
-            closestDistS1 = dist;
-            blockerSegment1 = { x: bx, y: by, type: "obstacle" };
-          }
-        }
-      } else if (dir === "LEFT") {
-        if (Math.abs(by - ay) < COLLISION_THRESHOLD && bx < ax && bx >= intX) {
-          const dist = ax - bx;
-          if (dist < closestDistS1) {
-            closestDistS1 = dist;
-            blockerSegment1 = { x: bx, y: by, type: "obstacle" };
-          }
-        }
-      } else if (dir === "RIGHT") {
-        if (Math.abs(by - ay) < COLLISION_THRESHOLD && bx > ax && bx <= intX) {
-          const dist = bx - ax;
-          if (dist < closestDistS1) {
-            closestDistS1 = dist;
-            blockerSegment1 = { x: bx, y: by, type: "obstacle" };
-          }
-        }
-      }
-
-      if (nextDir === "UP") {
-        if (Math.abs(bx - intX) < COLLISION_THRESHOLD && by < intY) {
-          const dist = intY - by;
-          if (dist < closestDistS2) {
-            closestDistS2 = dist;
-            blockerSegment2 = { x: bx, y: by, type: "obstacle" };
-          }
-        }
-      } else if (nextDir === "DOWN") {
-        if (Math.abs(bx - intX) < COLLISION_THRESHOLD && by > intY) {
-          const dist = by - intY;
-          if (dist < closestDistS2) {
-            closestDistS2 = dist;
-            blockerSegment2 = { x: bx, y: by, type: "obstacle" };
-          }
-        }
-      } else if (nextDir === "LEFT") {
-        if (Math.abs(by - intY) < COLLISION_THRESHOLD && bx < intX) {
-          const dist = intX - bx;
-          if (dist < closestDistS2) {
-            closestDistS2 = dist;
-            blockerSegment2 = { x: bx, y: by, type: "obstacle" };
-          }
-        }
-      } else if (nextDir === "RIGHT") {
-        if (Math.abs(by - intY) < COLLISION_THRESHOLD && bx > intX) {
-          const dist = bx - intX;
-          if (dist < closestDistS2) {
-            closestDistS2 = dist;
-            blockerSegment2 = { x: bx, y: by, type: "obstacle" };
-          }
-        }
-      }
-    });
-
-    triggerHaptic("light");
-
-    // Start run wobble
-    robotRotate[index].value = withRepeat(
-      withSequence(
-        withTiming(-6, { duration: 80 }),
-        withTiming(6, { duration: 80 })
-      ),
-      -1,
-      true
-    );
-
-    // Trigger launch smoke
-    dustScale[index].value = 0.2;
-    dustOpacity[index].value = 0.85;
-    dustScale[index].value = withTiming(1.5, { duration: 400 });
-    dustOpacity[index].value = withTiming(0, { duration: 400 });
-
-    const triggerDoubleCrashFeedback = (blocker: any) => {
-      if (blocker && blocker.type === "robot" && blocker.index !== undefined) {
-        const blockerIdx = blocker.index;
-        updatedRobotStatus(blockerIdx, "collided");
-
-        robotFlashRed[blockerIdx].value = withSequence(
-          withTiming(1, { duration: 100 }),
-          withTiming(0, { duration: 100 }),
-          withTiming(1, { duration: 100 }),
-          withTiming(0, { duration: 100 })
-        );
-        robotShakeX[blockerIdx].value = withSequence(
-          withTiming(-10, { duration: 50 }),
-          withTiming(10, { duration: 50 }),
-          withTiming(-8, { duration: 50 }),
-          withTiming(8, { duration: 50 }),
-          withTiming(0, { duration: 50 })
-        );
-
-        // Snap blocker robot back to start positions
-        setTimeout(() => {
-          const bRobot = currentRobots[blockerIdx];
-          robotX[blockerIdx].value = withSpring(bRobot.startX, { damping: 9, stiffness: 90 });
-          robotY[blockerIdx].value = withSpring(bRobot.startY, { damping: 9, stiffness: 90 });
-          setTimeout(() => {
-            updatedRobotStatus(blockerIdx, "idle");
-          }, 500);
-        }, 600);
-      }
-    };
-
-    const triggerSelfCrashVisuals = (onFinish: () => void) => {
-      cancelAnimation(robotRotate[index]);
-      robotRotate[index].value = 0;
-      updatedRobotStatus(index, "collided");
-      triggerHaptic("error");
-
-      robotFlashRed[index].value = withSequence(
-        withTiming(1, { duration: 100 }),
-        withTiming(0, { duration: 100 }),
-        withTiming(1, { duration: 100 }),
-        withTiming(0, { duration: 100 })
-      );
-      robotShakeX[index].value = withSequence(
-        withTiming(-12, { duration: 50 }),
-        withTiming(12, { duration: 50 }),
-        withTiming(-10, { duration: 50 }),
-        withTiming(10, { duration: 50 }),
-        withTiming(0, { duration: 50 })
-      );
-
-      setTimeout(onFinish, 600);
-    };
-
-    if (blockerSegment1) {
-      // --- CRASH ON SEGMENT 1 (Before reaching intersection) ---
-      updatedRobotStatus(index, "moving");
-
-      let targetX = ax;
-      let targetY = ay;
-      if (dir === "UP") targetY = blockerSegment1.y + COLLISION_THRESHOLD - 5;
-      else if (dir === "DOWN") targetY = blockerSegment1.y - COLLISION_THRESHOLD + 5;
-      else if (dir === "LEFT") targetX = blockerSegment1.x + COLLISION_THRESHOLD - 5;
-      else if (dir === "RIGHT") targetX = blockerSegment1.x - COLLISION_THRESHOLD + 5;
-
-      const crashS1Done = () => {
-        triggerDoubleCrashFeedback(blockerSegment1);
-        triggerSelfCrashVisuals(() => {
-          robotX[index].value = withSpring(r.startX, { damping: 9, stiffness: 90 });
-          robotY[index].value = withSpring(r.startY, { damping: 9, stiffness: 90 });
-          setTimeout(() => {
-            updatedRobotStatus(index, "idle");
-          }, 500);
-        });
-      };
-
-      if (dir === "UP" || dir === "DOWN") {
-        robotY[index].value = withTiming(targetY, { duration: 250, easing: Easing.linear }, (finished) => {
-          if (finished) runOnJS(crashS1Done)();
-        });
-      } else {
-        robotX[index].value = withTiming(targetX, { duration: 250, easing: Easing.linear }, (finished) => {
-          if (finished) runOnJS(crashS1Done)();
-        });
-      }
-
-    } else if (blockerSegment2) {
-      // --- CRASH ON SEGMENT 2 (After reaching intersection & turning) ---
-      updatedRobotStatus(index, "moving");
-
-      let targetX = intX;
-      let targetY = intY;
-      if (nextDir === "UP") targetY = blockerSegment2.y + COLLISION_THRESHOLD - 5;
-      else if (nextDir === "DOWN") targetY = blockerSegment2.y - COLLISION_THRESHOLD + 5;
-      else if (nextDir === "LEFT") targetX = blockerSegment2.x + COLLISION_THRESHOLD - 5;
-      else if (nextDir === "RIGHT") targetX = blockerSegment2.x - COLLISION_THRESHOLD + 5;
-
-      const runStage2Crash = () => {
-        runOnJS(handleUpdateDirection)(index, nextDir);
-
-        const crashS2Done = () => {
-          triggerDoubleCrashFeedback(blockerSegment2);
-          triggerSelfCrashVisuals(() => {
-            // Animate backward through turn
-            if (nextDir === "UP" || nextDir === "DOWN") {
-              robotY[index].value = withTiming(intY, { duration: 250, easing: Easing.linear }, (fin) => {
-                if (fin) {
-                  runOnJS(handleUpdateDirection)(index, dir);
-                  robotX[index].value = withSpring(r.startX, { damping: 9, stiffness: 90 });
-                  robotY[index].value = withSpring(r.startY, { damping: 9, stiffness: 90 });
-                  setTimeout(() => {
-                    runOnJS(updatedRobotStatus)(index, "idle");
-                  }, 500);
-                }
-              });
-            } else {
-              robotX[index].value = withTiming(intX, { duration: 250, easing: Easing.linear }, (fin) => {
-                if (fin) {
-                  runOnJS(handleUpdateDirection)(index, dir);
-                  robotX[index].value = withSpring(r.startX, { damping: 9, stiffness: 90 });
-                  robotY[index].value = withSpring(r.startY, { damping: 9, stiffness: 90 });
-                  setTimeout(() => {
-                    runOnJS(updatedRobotStatus)(index, "idle");
-                  }, 500);
-                }
-              });
-            }
-          });
-        };
-
-        if (nextDir === "UP" || nextDir === "DOWN") {
-          robotY[index].value = withTiming(targetY, { duration: 250, easing: Easing.linear }, (finished) => {
-            if (finished) runOnJS(crashS2Done)();
-          });
-        } else {
-          robotX[index].value = withTiming(targetX, { duration: 250, easing: Easing.linear }, (finished) => {
-            if (finished) runOnJS(crashS2Done)();
-          });
-        }
-      };
-
-      if (dir === "UP" || dir === "DOWN") {
-        robotY[index].value = withTiming(intY, { duration: 300, easing: Easing.linear }, (finished) => {
-          if (finished) runOnJS(runStage2Crash)();
-        });
-      } else {
-        robotX[index].value = withTiming(intX, { duration: 300, easing: Easing.linear }, (finished) => {
-          if (finished) runOnJS(runStage2Crash)();
-        });
-      }
-
+      await AsyncStorage.setItem(STORAGE_KEY_LEVEL, "1");
     } else {
-      // --- ESCAPE PATHWAY (Stage 1 to intersection, turn, Stage 2 to exit) ---
-      updatedRobotStatus(index, "moving");
-
-      let exitX = intX;
-      let exitY = intY;
-      if (nextDir === "DOWN") exitY = screenHeight + 150;
-      else if (nextDir === "UP") exitY = -150;
-      else if (nextDir === "LEFT") exitX = -150;
-      else if (nextDir === "RIGHT") exitX = screenWidth + 150;
-
-      const runStage2Escape = () => {
-        runOnJS(handleUpdateDirection)(index, nextDir);
-
-        const escapeDone = () => {
-          cancelAnimation(robotRotate[index]);
-          robotRotate[index].value = 0;
-          runOnJS(handleEscape)(index);
-        };
-
-        if (nextDir === "UP" || nextDir === "DOWN") {
-          robotY[index].value = withTiming(exitY, { duration: 400, easing: Easing.bezier(0.25, 0.1, 0.25, 1) }, (finished) => {
-            if (finished) runOnJS(escapeDone)();
-          });
-        } else {
-          robotX[index].value = withTiming(exitX, { duration: 400, easing: Easing.bezier(0.25, 0.1, 0.25, 1) }, (finished) => {
-            if (finished) runOnJS(escapeDone)();
-          });
-        }
-      };
-
-      if (dir === "UP" || dir === "DOWN") {
-        robotY[index].value = withTiming(intY, { duration: 350, easing: Easing.linear }, (finished) => {
-          if (finished) runOnJS(runStage2Escape)();
-        });
-      } else {
-        robotX[index].value = withTiming(intX, { duration: 350, easing: Easing.linear }, (finished) => {
-          if (finished) runOnJS(runStage2Escape)();
-        });
-      }
+      setLevel(nextLvl);
+      await AsyncStorage.setItem(STORAGE_KEY_LEVEL, String(nextLvl));
     }
   };
 
-  // Robot directional sasis visual rendering switch
-  const renderRobotVisuals = (direction: "UP" | "DOWN" | "LEFT" | "RIGHT", status: string) => {
-    const isMoving = status === "moving";
-    
-    if (direction === "DOWN") {
-      // FRONT VIEW
-      return (
-        <View style={styles.frontRobot}>
-          {/* Antenna */}
-          <View style={styles.antennaStick} />
-          <View style={styles.antennaBulb} />
-          {/* Head */}
-          <View style={styles.robotHead}>
-            <View style={styles.visorScreen}>
-              <View style={styles.eyesRow}>
-                <View style={styles.eyeCircle}>
-                  <View style={styles.pupil} />
-                </View>
-                <View style={styles.eyeCircle}>
-                  <View style={styles.pupil} />
-                </View>
-              </View>
-            </View>
-          </View>
-          {/* Neck */}
-          <View style={styles.neckJoint} />
-          {/* Torso */}
-          <View style={styles.robotTorso}>
-            <View style={styles.chestCore} />
-          </View>
-          {/* Base tracks */}
-          <View style={styles.tracksBase}>
-            <View style={styles.treadDot} />
-            <View style={styles.treadDot} />
-          </View>
-          {/* Drop Glow Shadow */}
-          {!isMoving && <View style={styles.hoverGlowShadow} />}
-        </View>
-      );
-    } else if (direction === "UP") {
-      // BACK VIEW
-      return (
-        <View style={styles.backRobot}>
-          {/* Antenna Back */}
-          <View style={styles.antennaStick} />
-          <View style={[styles.antennaBulb, { backgroundColor: "#D97706" }]} />
-          {/* Head Back */}
-          <View style={styles.robotHeadBack}>
-            <View style={styles.coolingVent} />
-            <View style={styles.coolingVent} />
-          </View>
-          {/* Neck */}
-          <View style={styles.neckJoint} />
-          {/* Torso Back */}
-          <View style={styles.robotTorsoBack}>
-            <View style={styles.backPlateGrid} />
-          </View>
-          {/* Base tracks */}
-          <View style={styles.tracksBase}>
-            <View style={styles.treadDot} />
-            <View style={styles.treadDot} />
-          </View>
-          {!isMoving && <View style={styles.hoverGlowShadow} />}
-        </View>
-      );
-    } else {
-      // SIDE PROFILE VIEW (LEFT/RIGHT)
-      const isLeft = direction === "LEFT";
-      return (
-        <View style={[styles.sideRobot, isLeft && { transform: [{ scaleX: -1 }] }]}>
-          {/* Antenna Side */}
-          <View style={[styles.antennaStick, { marginLeft: -6 }]} />
-          <View style={[styles.antennaBulb, { marginLeft: -11, backgroundColor: "#E11D48" }]} />
-          {/* Head Side */}
-          <View style={styles.robotHeadSide}>
-            <View style={styles.sideVisor}>
-              <View style={styles.sideEyeLed} />
-            </View>
-          </View>
-          {/* Neck */}
-          <View style={[styles.neckJoint, { width: 12 }]} />
-          {/* Torso Side */}
-          <View style={styles.robotTorsoSide}>
-            <View style={styles.sideShoulderJoint} />
-          </View>
-          {/* Side base tracks */}
-          <View style={styles.sideTracks}>
-            <View style={styles.treadDot} />
-            <View style={styles.treadDot} />
-          </View>
-          {!isMoving && <View style={styles.hoverGlowShadow} />}
-        </View>
-      );
-    }
+  const handleExit = async () => {
+    const balance = userCoins + coinsReward;
+    setUserCoins(balance);
+    await AsyncStorage.setItem(COINS_STORAGE_KEY, String(balance));
+    router.back();
   };
 
-  const roadLayout = getRoadLayoutType();
+  const onLayout = (e: LayoutChangeEvent) => {
+    const { width, height } = e.nativeEvent.layout;
+    setAreaSize({ w: width, h: height });
+  };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
-      <StatusBar barStyle="dark-content" backgroundColor="#A3E635" />
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+      <StatusBar barStyle="light-content" backgroundColor="#0B1120" />
 
-      {/* HEADER SECTION (Nyawa, Level, Koin) */}
       <View style={styles.header}>
-        {/* Tombol Back & Nyawa Hearts */}
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
-          <Pressable
-            onPress={() => {
-              triggerHaptic("light");
-              router.back();
-            }}
-            style={({ pressed }) => [
-              styles.backBtn,
-              pressed && { opacity: 0.7 }
-            ]}
-          >
-            <Ionicons name="arrow-back" size={20} color="#FFFFFF" />
-          </Pressable>
-
-          <View style={styles.heartsRow}>
-            <Ionicons name="heart" size={22} color="#EF4444" />
-            <Ionicons name="heart" size={22} color="#EF4444" />
-            <Ionicons name="heart" size={22} color="#EF4444" />
-          </View>
+        <Pressable style={styles.iconButton} onPress={() => setShowPause(true)}>
+          <Ionicons name="menu" size={22} color="#94A3B8" />
+        </Pressable>
+        <View style={styles.levelBadgeContainer}>
+          <Text style={styles.levelTag}>LEVEL {level}</Text>
+          <Text style={styles.levelTitle}>{currentLevel.title}</Text>
         </View>
-
-        {/* Level Badges & Reset Progress Button */}
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <View style={styles.levelBadge}>
-            <Text style={styles.levelBadgeText}>Level {level}</Text>
-          </View>
-          <Pressable
-            onPress={handleResetLevelProgress}
-            style={({ pressed }) => [
-              styles.resetBtn,
-              pressed && { opacity: 0.7 }
-            ]}
-          >
-            <Ionicons name="reload" size={18} color="#FFFFFF" />
-          </Pressable>
-        </View>
-
-        {/* Coins HUD */}
-        <View style={styles.coinsHeaderBadge}>
-          <MaterialCommunityIcons name="coin" size={18} color="#F59E0B" />
-          <Text style={styles.coinsHeaderVal}>{userCoins}</Text>
+        <View style={styles.coinsBadge}>
+          <MaterialCommunityIcons name="cash-multiple" size={17} color="#FBBF24" />
+          <Text style={styles.coinsText}>{userCoins}</Text>
         </View>
       </View>
 
-      {/* GAMEPLAY SCENE */}
-      <View style={styles.gameplayArea}>
-        {/* Scenery details to fill map background */}
-        <Tree style={{ left: 30, top: 25 }} />
-        <Tree style={{ right: 25, top: 125 }} />
-        <Rock style={{ right: 85, top: 165 }} />
-        <Flower style={{ left: 80, top: 90 }} color="#EC4899" />
-        <Flower style={{ left: 35, top: 145 }} color="#FBBF24" />
-        
-        <ChargingStation style={{ left: 25, bottom: 130 }} />
-        <Tree style={{ right: 30, bottom: 135 }} />
-        <Rock style={{ left: 100, bottom: 110 }} />
-        <Flower style={{ right: 100, bottom: 115 }} color="#3B82F6" />
-        <Flower style={{ right: 90, bottom: 200 }} color="#EC4899" />
-
-        {/* DYNAMIC ROAD DRAWING ENGINE */}
-        {roadLayout === "single" && (
-          // Single Intersection (Level 1 - 3)
-          <>
-            <View style={[styles.verticalRoad, { left: centerX - 45 }]} />
-            <View style={[styles.horizontalRoad, { top: centerY - 45 }]} />
-            <View style={[styles.intersectionCore, { left: centerX - 45, top: centerY - 45 }]} />
-            <View style={[styles.verticalRoadDivider, { left: centerX }]} />
-            <View style={[styles.horizontalRoadDivider, { top: centerY }]} />
-            
-            {/* Zebra crossings */}
-            <ZebraCrossing style={{ left: centerX - 45, top: centerY - 75 }} horizontal />
-            <ZebraCrossing style={{ left: centerX - 45, top: centerY + 58 }} horizontal />
-            <ZebraCrossing style={{ left: centerX - 75, top: centerY - 45 }} />
-            <ZebraCrossing style={{ left: centerX + 58, top: centerY - 45 }} />
-          </>
-        )}
-
-        {roadLayout === "double-vertical" && (
-          // 2 Vertical Roads, 1 Horizontal Road (Level 4 - 7)
-          <>
-            <View style={[styles.verticalRoad, { left: centerX - 100 - 45 }]} />
-            <View style={[styles.verticalRoad, { left: centerX + 100 - 45 }]} />
-            <View style={[styles.horizontalRoad, { top: centerY - 45 }]} />
-            
-            <View style={[styles.intersectionCore, { left: centerX - 100 - 45, top: centerY - 45 }]} />
-            <View style={[styles.intersectionCore, { left: centerX + 100 - 45, top: centerY - 45 }]} />
-            
-            <View style={[styles.verticalRoadDivider, { left: centerX - 100 }]} />
-            <View style={[styles.verticalRoadDivider, { left: centerX + 100 }]} />
-            <View style={[styles.horizontalRoadDivider, { top: centerY }]} />
-
-            {/* Zebra crossings */}
-            <ZebraCrossing style={{ left: centerX - 100 - 45, top: centerY - 75 }} horizontal />
-            <ZebraCrossing style={{ left: centerX - 100 - 45, top: centerY + 58 }} horizontal />
-            <ZebraCrossing style={{ left: centerX + 100 - 45, top: centerY - 75 }} horizontal />
-            <ZebraCrossing style={{ left: centerX + 100 - 45, top: centerY + 58 }} horizontal />
-            <ZebraCrossing style={{ left: centerX - 165, top: centerY - 45 }} />
-            <ZebraCrossing style={{ left: centerX + 148, top: centerY - 45 }} />
-          </>
-        )}
-
-        {roadLayout === "double-horizontal" && (
-          // 1 Vertical Road, 2 Horizontal Roads (Level 8 - 9)
-          <>
-            <View style={[styles.verticalRoad, { left: centerX - 45 }]} />
-            <View style={[styles.horizontalRoad, { top: centerY - 80 - 45 }]} />
-            <View style={[styles.horizontalRoad, { top: centerY + 80 - 45 }]} />
-            
-            <View style={[styles.intersectionCore, { left: centerX - 45, top: centerY - 80 - 45 }]} />
-            <View style={[styles.intersectionCore, { left: centerX - 45, top: centerY + 80 - 45 }]} />
-            
-            <View style={[styles.verticalRoadDivider, { left: centerX }]} />
-            <View style={[styles.horizontalRoadDivider, { top: centerY - 80 }]} />
-            <View style={[styles.horizontalRoadDivider, { top: centerY + 80 }]} />
-
-            {/* Zebra crossings */}
-            <ZebraCrossing style={{ left: centerX - 45, top: centerY - 80 - 75 }} horizontal />
-            <ZebraCrossing style={{ left: centerX - 45, top: centerY - 80 + 58 }} horizontal />
-            <ZebraCrossing style={{ left: centerX - 45, top: centerY + 80 - 75 }} horizontal />
-            <ZebraCrossing style={{ left: centerX - 45, top: centerY + 80 + 58 }} horizontal />
-            <ZebraCrossing style={{ left: centerX - 75, top: centerY - 80 - 45 }} />
-            <ZebraCrossing style={{ left: centerX + 58, top: centerY - 80 - 45 }} />
-            <ZebraCrossing style={{ left: centerX - 75, top: centerY + 80 - 45 }} />
-            <ZebraCrossing style={{ left: centerX + 58, top: centerY + 80 - 45 }} />
-          </>
-        )}
-
-        {roadLayout === "double-both" && (
-          // 2 Vertical Roads, 2 Horizontal Roads (Level 10) - Ultimate Grid
-          <>
-            <View style={[styles.verticalRoad, { left: centerX - 100 - 45 }]} />
-            <View style={[styles.verticalRoad, { left: centerX + 100 - 45 }]} />
-            <View style={[styles.horizontalRoad, { top: centerY - 80 - 45 }]} />
-            <View style={[styles.horizontalRoad, { top: centerY + 80 - 45 }]} />
-            
-            <View style={[styles.intersectionCore, { left: centerX - 100 - 45, top: centerY - 80 - 45 }]} />
-            <View style={[styles.intersectionCore, { left: centerX + 100 - 45, top: centerY - 80 - 45 }]} />
-            <View style={[styles.intersectionCore, { left: centerX - 100 - 45, top: centerY + 80 - 45 }]} />
-            <View style={[styles.intersectionCore, { left: centerX + 100 - 45, top: centerY + 80 - 45 }]} />
-            
-            <View style={[styles.verticalRoadDivider, { left: centerX - 100 }]} />
-            <View style={[styles.verticalRoadDivider, { left: centerX + 100 }]} />
-            <View style={[styles.horizontalRoadDivider, { top: centerY - 80 }]} />
-            <View style={[styles.horizontalRoadDivider, { top: centerY + 80 }]} />
-
-            {/* Zebra crossings */}
-            <ZebraCrossing style={{ left: centerX - 100 - 45, top: centerY - 80 - 75 }} horizontal />
-            <ZebraCrossing style={{ left: centerX - 100 - 45, top: centerY - 80 + 58 }} horizontal />
-            <ZebraCrossing style={{ left: centerX + 100 - 45, top: centerY - 80 - 75 }} horizontal />
-            <ZebraCrossing style={{ left: centerX + 100 - 45, top: centerY - 80 + 58 }} horizontal />
-            <ZebraCrossing style={{ left: centerX - 100 - 45, top: centerY + 80 - 75 }} horizontal />
-            <ZebraCrossing style={{ left: centerX - 100 - 45, top: centerY + 80 + 58 }} horizontal />
-            <ZebraCrossing style={{ left: centerX + 100 - 45, top: centerY + 80 - 75 }} horizontal />
-            <ZebraCrossing style={{ left: centerX + 100 - 45, top: centerY + 80 + 58 }} horizontal />
-            <ZebraCrossing style={{ left: centerX - 165, top: centerY - 80 - 45 }} />
-            <ZebraCrossing style={{ left: centerX + 148, top: centerY - 80 - 45 }} />
-            <ZebraCrossing style={{ left: centerX - 165, top: centerY + 80 - 45 }} />
-            <ZebraCrossing style={{ left: centerX + 148, top: centerY + 80 - 45 }} />
-          </>
-        )}
-
-        {/* Level Helper Guidelines */}
-        {level === 1 && (
-          <View style={styles.tutorialContainer} pointerEvents="none">
-            <Text style={styles.tutorialText}>TAP to move robots</Text>
-            <View style={[styles.tutorialHand, { left: centerX + 115, top: centerY + 10 }]}>
-              <MaterialCommunityIcons name="gesture-tap" size={32} color="#FFFFFF" />
-            </View>
-          </View>
-        )}
-
-        {/* Render Launch Dust Smoke Particles */}
-        {robots.map((robot, index) => {
-          if (robot.status === "escaped") return null;
-
-          let dustX = robot.startX + ROBOT_SIZE / 2 - 15;
-          let dustY = robot.startY + ROBOT_HEIGHT - 15;
-
-          return (
-            <Animated.View
-              key={`dust-${robot.id}`}
-              style={[
-                styles.dustParticle,
-                { left: dustX, top: dustY },
-                dustStyles[index],
-              ]}
-            />
-          );
-        })}
-
-        {/* Render Static Obstacles (Cones & Broken Robots) */}
-        {(levels.find((l) => l.level === level)?.staticObstacles || []).map((obs) => {
-          if (obs.type === "cone") {
-            return (
-              <View
-                key={obs.id}
-                style={[
-                  styles.obstacleCone,
-                  { left: obs.x, top: obs.y },
-                ]}
-              >
-                <View style={styles.coneTop} />
-                <View style={styles.coneMiddle} />
-                <View style={styles.coneBase} />
-              </View>
-            );
-          } else {
-            return (
-              <View
-                key={obs.id}
-                style={[
-                  styles.obstacleBrokenRobot,
-                  { left: obs.x, top: obs.y },
-                ]}
-              >
-                <View style={[styles.robotVisor, { width: 34, height: 20 }]}>
-                  <View style={styles.eyesRow}>
-                    <View style={[styles.eyeLed, { backgroundColor: "#475569" }]} />
-                    <View style={[styles.eyeLed, { backgroundColor: "#475569" }]} />
-                  </View>
-                </View>
-                <View style={styles.brokenSymbol}>
-                  <MaterialCommunityIcons name="lightning-bolt-off" size={16} color="#64748B" />
-                </View>
-              </View>
-            );
-          }
-        })}
-
-        {/* Render CSS Robots */}
-        {robots.map((robot, index) => {
-          if (robot.status === "escaped") return null;
-
-          const animatedStyle = animatedStyles[index];
-
-          return (
-            <Animated.View
-              key={robot.id}
-              style={[
-                styles.robotContainer,
-                animatedStyle,
-              ]}
-            >
-              <Pressable
-                onPress={() => handleTapRobot(index)}
-                style={styles.robotTapArea}
-                disabled={robot.status !== "idle"}
-              >
-                {/* Dynamically render front/back/side view of robot */}
-                {renderRobotVisuals(robot.direction, robot.status)}
-                
-                {/* Direction overlay arrows with custom SVG path turns */}
-                <View style={styles.directionArrowBadge}>
-                  <TurnArrow direction={robot.direction} turn={robot.turn || "straight"} />
-                </View>
-              </Pressable>
-            </Animated.View>
-          );
-        })}
-      </View>
-
-      {/* BOTTOM MISSION CARD (Rich Game UI) */}
-      <View style={styles.missionCardContainer}>
-        <View style={styles.missionCard}>
-          <View style={styles.missionCardHeader}>
-            <View style={styles.skillBadge}>
-              <Text style={styles.skillBadgeText}>🧩 LOGIKA</Text>
-            </View>
-            <Text style={styles.xpReward}>+15 XP</Text>
-          </View>
-          <Text style={styles.missionTitle}>Misi: Kemacetan Robot</Text>
-          <Text style={styles.missionDescription}>
-            Ketuk robot dalam urutan yang benar. Perhatikan arah belokan panah kustom pada sasis robot agar tidak menabrak rintangan!
+      <View style={styles.statusBar}>
+        <View style={styles.statusItem}>
+          <Ionicons name="trail-sign" size={16} color="#67E8F9" />
+          <Text style={styles.statusText}>
+            {escapedCount} / {robots.length} keluar
           </Text>
         </View>
+        <View style={styles.statusItem}>
+          <MaterialCommunityIcons name="gesture-tap-hold" size={16} color="#94A3B8" />
+          <Text style={styles.statusText}>Ketukan: {taps}</Text>
+        </View>
       </View>
 
-      {/* VICTORY MODAL OVERLAY */}
-      <Modal visible={gameState === "victory"} transparent animationType="fade">
+      <View style={styles.gameplayArea} onLayout={onLayout}>
+        {/* Roads */}
+        <View style={[styles.verticalRoad, { left: centerX - 45, height: areaSize.h }]} />
+        <View style={[styles.horizontalRoad, { top: centerY - 45, width: areaSize.w }]} />
+        <View style={[styles.intersection, { left: centerX - 45, top: centerY - 45 }]} />
+        <View style={[styles.laneDividerV, { left: centerX }]} />
+        <View style={[styles.laneDividerH, { top: centerY }]} />
+        <View style={[styles.zebra, { left: centerX - 45, top: centerY - 70, width: 90, flexDirection: "row", justifyContent: "space-evenly" }]}>
+          {[0, 1, 2, 3].map((i) => (
+            <View key={i} style={styles.zebraBarH} />
+          ))}
+        </View>
+        <View style={[styles.zebra, { left: centerX - 45, top: centerY + 54, width: 90, flexDirection: "row", justifyContent: "space-evenly" }]}>
+          {[0, 1, 2, 3].map((i) => (
+            <View key={i} style={styles.zebraBarH} />
+          ))}
+        </View>
+        <View style={[styles.zebra, { left: centerX - 70, top: centerY - 45, height: 90, justifyContent: "space-evenly" }]}>
+          {[0, 1, 2, 3].map((i) => (
+            <View key={i} style={styles.zebraBarV} />
+          ))}
+        </View>
+        <View style={[styles.zebra, { left: centerX + 54, top: centerY - 45, height: 90, justifyContent: "space-evenly" }]}>
+          {[0, 1, 2, 3].map((i) => (
+            <View key={i} style={styles.zebraBarV} />
+          ))}
+        </View>
+
+        {/* Robots */}
+        {robots.map((robot, index) => {
+          if (robot.status === "escaped") return null;
+          const start = cellToPixel(robot.cell);
+          return (
+            <Pressable
+              key={robot.id}
+              onPress={() => handleTap(index)}
+              disabled={robot.status !== "idle"}
+              style={[styles.robotHitbox, { left: start.x - ROBOT_SIZE / 2, top: start.y - ROBOT_SIZE / 2 }]}
+            >
+              <RobotItem
+                robot={robot}
+                size={ROBOT_SIZE}
+                blocked={blockedId === robot.id}
+                isHint={hintId === robot.id}
+                x={robotX[index]}
+                y={robotY[index]}
+                rot={robotRot[index]}
+                shake={robotShake[index]}
+                flash={robotFlash[index]}
+              />
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <View style={styles.companionPanel}>
+        <View style={styles.avatar}>
+          <Svg width="44" height="44" viewBox="0 0 64 64">
+            <Rect x="8" y="14" width="48" height="40" rx="14" fill="#00E5FF" stroke="#FFFFFF" strokeWidth="2.5" />
+            <Circle cx="22" cy="32" r="6" fill="#0B132B" />
+            <Circle cx="22" cy="32" r="2.5" fill="#00F0FF" />
+            <Circle cx="42" cy="32" r="6" fill="#0B132B" />
+            <Circle cx="42" cy="32" r="2.5" fill="#00F0FF" />
+            <Rect x="29" y="4" width="6" height="10" rx="3" fill="#FFD700" />
+            <Circle cx="32" cy="4" r="5" fill="#FFD700" />
+          </Svg>
+        </View>
+        <View style={styles.dialogBubble}>
+          <Text style={styles.dialogText}>{companionText}</Text>
+        </View>
+      </View>
+
+      <View style={styles.bottomBar}>
+        <Pressable style={styles.actionBtn} onPress={handleHint}>
+          <View style={[styles.actionIconBg, { backgroundColor: "rgba(245,158,11,0.2)", borderColor: "#F59E0B" }]}>
+            <Ionicons name="bulb" size={20} color="#FFFFFF" />
+          </View>
+          <Text style={styles.actionLabel}>Petunjuk (-20)</Text>
+        </Pressable>
+        <Pressable style={styles.actionBtn} onPress={handleRestart}>
+          <View style={[styles.actionIconBg, { backgroundColor: "rgba(239,68,68,0.2)", borderColor: "#EF4444" }]}>
+            <Ionicons name="refresh" size={20} color="#FFFFFF" />
+          </View>
+          <Text style={styles.actionLabel}>Ulangi</Text>
+        </Pressable>
+      </View>
+
+      <Modal visible={showIntro && gameState === "playing"} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.victoryIconCircle}>
-              <Ionicons name="trophy" size={48} color="#F59E0B" />
+          <View style={styles.modalCard}>
+            <View style={styles.introIcon}>
+              <MaterialCommunityIcons name="traffic-light" size={36} color="#22D3EE" />
             </View>
-            <Text style={styles.modalTitle}>LEVEL SELESAI!</Text>
-            <Text style={styles.modalSubtitle}>Persimpangan berhasil dibersihkan dari robot!</Text>
-
-            <View style={styles.rewardSummary}>
-              <Text style={styles.rewardLabel}>HADIAH</Text>
-              <View style={styles.rewardBadge}>
-                <MaterialCommunityIcons name="coin" size={20} color="#F59E0B" />
-                <Text style={styles.rewardBadgeText}>+{coinsReward} Koin</Text>
-              </View>
-            </View>
-
+            <Text style={styles.modalTitle}>Robot Escape</Text>
+            <Text style={[styles.modalSubtitle, { fontWeight: "900", color: "#0EA5E9", marginBottom: 10 }]}>
+              Level {level}: {currentLevel.title}
+            </Text>
+            <Text style={styles.introText}>{currentLevel.tip}</Text>
+            <Text style={styles.introHint}>
+              Panah di atas robot menunjukkan arah belokannya. Ketuk robot yang jalurnya kosong untuk mengeluarkannya.
+            </Text>
             <Button
-              title="Lanjut Level Berikutnya"
-              onPress={handleNextLevel}
-              variant="primary"
-              style={{ width: "100%" }}
+              title="Mulai"
+              onPress={() => setShowIntro(false)}
+              variant="accent"
+              style={{ width: "100%", marginTop: 16 }}
             />
           </View>
         </View>
       </Modal>
 
-      {/* COMPLETED ALL LEVELS MODAL OVERLAY */}
-      <Modal visible={gameState === "completed"} transparent animationType="fade">
+      <Modal visible={showPause} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={[styles.victoryIconCircle, { backgroundColor: "#FFF7ED" }]}>
-              <Ionicons name="medal" size={54} color="#D97706" />
-            </View>
-            <Text style={styles.modalTitle}>PETUALANGAN SELESAI!</Text>
-            <Text style={styles.modalSubtitle}>Luar biasa! Kamu menyelesaikan semua tingkat persimpangan robot!</Text>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>Game Berhenti</Text>
+            <Text style={[styles.modalSubtitle, { marginBottom: 24 }]}>Pilih opsi untuk melanjutkan:</Text>
+            <Button
+              title="Lanjutkan Bermain"
+              onPress={() => setShowPause(false)}
+              variant="primary"
+              style={{ width: "100%", marginBottom: 12 }}
+            />
+            <Button
+              title="Ulangi Level"
+              onPress={() => {
+                setShowPause(false);
+                handleRestart();
+              }}
+              variant="accent"
+              style={{ width: "100%", marginBottom: 12 }}
+            />
+            <Button
+              title="Kembali ke Menu Utama"
+              onPress={() => {
+                setShowPause(false);
+                router.back();
+              }}
+              variant="secondary"
+              style={{ width: "100%", backgroundColor: "#EF4444" }}
+            />
+          </View>
+        </View>
+      </Modal>
 
-            <View style={styles.rewardSummary}>
-              <Text style={styles.rewardLabel}>HADIAH TOTAL</Text>
-              <View style={styles.rewardBadge}>
-                <MaterialCommunityIcons name="coin" size={20} color="#F59E0B" />
-                <Text style={styles.rewardBadgeText}>+{coinsReward} Koin</Text>
+      <Modal visible={gameState === "victory"} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.victoryIcon}>
+              <Ionicons name="trophy" size={46} color="#FBBF24" />
+            </View>
+            <Text style={styles.modalTitle}>Persimpangan Bersih!</Text>
+            <Text style={styles.modalSubtitle}>{currentLevel.title} selesai — semua robot berhasil keluar.</Text>
+            <View style={styles.starRow}>
+              {[1, 2, 3].map((s) => (
+                <Ionicons
+                  key={s}
+                  name="star"
+                  size={s === 2 ? 54 : 42}
+                  color={s <= starsFor(taps, currentLevel.robots.length) ? "#FBBF24" : "#CBD5E1"}
+                  style={{ marginTop: s === 2 ? -15 : 0 }}
+                />
+              ))}
+            </View>
+            <View style={styles.rewardCard}>
+              <View style={styles.rewardItem}>
+                <MaterialCommunityIcons name="cash-multiple" size={26} color="#FBBF24" />
+                <Text style={styles.rewardAmount}>+{coinsReward} Koin</Text>
+              </View>
+              <View style={styles.rewardItem}>
+                <MaterialCommunityIcons name="trophy-outline" size={26} color="#38BDF8" />
+                <Text style={styles.rewardAmount}>+{15 + level * 5} XP</Text>
               </View>
             </View>
-
             <Button
-              title="Klaim Hadiah & Selesai"
-              onPress={handleClaimAndExit}
+              title={level === LEVELS.length ? "Selesai" : "Misi Berikutnya"}
+              onPress={handleNextLevel}
+              variant="accent"
+              style={styles.fullBtn}
+            />
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={gameState === "completed"} transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.victoryIcon}>
+              <Ionicons name="medal" size={54} color="#D97706" />
+            </View>
+            <Text style={styles.modalTitle}>Semua Selesai!</Text>
+            <Text style={styles.modalSubtitle}>Luar biasa! Kamu membersihkan semua persimpangan robot di kota RoboMind.</Text>
+            <Button
+              title="Klaim Hadiah & Keluar"
+              onPress={handleExit}
               variant="primary"
-              style={{ width: "100%" }}
+              style={styles.fullBtn}
             />
           </View>
         </View>
@@ -1959,713 +808,301 @@ export default function RobotEscapeScreen() {
   );
 }
 
+// worklet helper referenced from handlers
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: "#86EFAC", // Lawn green grass backdrop
+    backgroundColor: "#0B1120",
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
-    backgroundColor: "#A3E635", // Vibrant Lime Green Header
-    borderBottomWidth: 2,
-    borderBottomColor: "#84CC16",
-    zIndex: 10,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.sm,
+    backgroundColor: "#0F172A",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.08)",
   },
-  heartsRow: {
-    flexDirection: "row",
-    gap: 4,
+  iconButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.15)",
   },
-  levelBadge: {
-    backgroundColor: "rgba(30, 41, 59, 0.8)",
-    borderRadius: SHAPES.radiusRound,
-    paddingVertical: 6,
-    paddingHorizontal: SPACING.xl,
+  levelBadgeContainer: {
+    alignItems: "center",
   },
-  levelBadgeText: {
-    ...FONTS.bodyBold,
-    fontSize: 14,
+  levelTag: {
+    color: "#67E8F9",
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+  },
+  levelTitle: {
     color: "#FFFFFF",
+    fontWeight: "800",
+    fontSize: 14,
   },
-  coinsHeaderBadge: {
+  coinsBadge: {
+    height: 38,
+    paddingHorizontal: 12,
+    borderRadius: 19,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF7ED",
-    borderWidth: 1.5,
-    borderColor: "#FDBA74",
-    borderRadius: SHAPES.radiusRound,
-    paddingVertical: 4,
-    paddingHorizontal: SPACING.md,
-    gap: 4,
+    justifyContent: "center",
+    backgroundColor: "rgba(251, 191, 36, 0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(251, 191, 36, 0.4)",
+    gap: 6,
   },
-  coinsHeaderVal: {
-    ...FONTS.bodyBold,
-    fontSize: 13,
-    color: "#C2410C",
+  coinsText: {
+    color: "#FBBF24",
+    fontWeight: "900",
+    fontSize: 14,
   },
-
-  // GAMEPLAY SCENE LAYOUT
+  statusBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: 8,
+    backgroundColor: "rgba(15, 23, 42, 0.8)",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255, 255, 255, 0.05)",
+  },
+  statusItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  statusText: {
+    color: "#94A3B8",
+    fontSize: 12,
+    fontWeight: "800",
+  },
   gameplayArea: {
     flex: 1,
     position: "relative",
     overflow: "hidden",
+    backgroundColor: "#0B1120",
   },
   verticalRoad: {
     position: "absolute",
     top: 0,
-    bottom: 0,
-    width: ROAD_WIDTH,
-    backgroundColor: "#334155", // Premium Asphalt Grey
+    width: 90,
+    backgroundColor: "#1E293B",
     borderLeftWidth: 3,
-    borderLeftColor: "#E2E8F0",
+    borderLeftColor: "#334155",
     borderRightWidth: 3,
-    borderRightColor: "#E2E8F0",
+    borderRightColor: "#334155",
   },
   horizontalRoad: {
     position: "absolute",
     left: 0,
-    right: 0,
-    height: ROAD_WIDTH,
-    backgroundColor: "#334155",
+    height: 90,
+    backgroundColor: "#1E293B",
     borderTopWidth: 3,
-    borderTopColor: "#E2E8F0",
+    borderTopColor: "#334155",
     borderBottomWidth: 3,
-    borderBottomColor: "#E2E8F0",
+    borderBottomColor: "#334155",
   },
-  intersectionCore: {
+  intersection: {
     position: "absolute",
-    width: ROAD_WIDTH,
-    height: ROAD_WIDTH,
-    backgroundColor: "#334155",
+    width: 90,
+    height: 90,
+    backgroundColor: "#1E293B",
   },
-  verticalRoadDivider: {
+  laneDividerV: {
     position: "absolute",
     top: 0,
-    bottom: 0,
     width: 2,
     borderWidth: 1,
-    borderColor: "#FBBF24", // Double yellow center markings
+    borderColor: "#FBBF24",
     borderStyle: "dashed",
-    opacity: 0.8,
+    opacity: 0.7,
+    height: "100%",
   },
-  horizontalRoadDivider: {
+  laneDividerH: {
     position: "absolute",
     left: 0,
-    right: 0,
     height: 2,
     borderWidth: 1,
     borderColor: "#FBBF24",
     borderStyle: "dashed",
-    opacity: 0.8,
+    opacity: 0.7,
+    width: "100%",
   },
-
-  // ZEBRA CROSSING STRIPES
-  zebraContainer: {
+  zebra: {
     position: "absolute",
     zIndex: 1,
   },
-  zebraRow: {
-    flexDirection: "row",
-    gap: 4,
-    height: 18,
-    width: ROAD_WIDTH,
-    justifyContent: "center",
-  },
-  zebraColumn: {
-    flexDirection: "column",
-    gap: 4,
-    width: 18,
-    height: ROAD_WIDTH,
-    justifyContent: "center",
-  },
-  zebraLineH: {
+  zebraBarH: {
     width: 12,
-    height: 18,
-    backgroundColor: "rgba(255, 255, 255, 0.45)",
-  },
-  zebraLineV: {
-    width: 18,
-    height: 12,
-    backgroundColor: "rgba(255, 255, 255, 0.45)",
-  },
-
-  // SCENERY DECORATIVE SHAPES
-  treeContainer: {
-    position: "absolute",
-    alignItems: "center",
-    justifyContent: "flex-end",
-    width: 60,
-    height: 75,
-    zIndex: 5,
-  },
-  treeTrunk: {
-    width: 8,
-    height: 18,
-    backgroundColor: "#78350F",
-    borderRadius: 2,
-  },
-  treeLeavesBack: {
-    position: "absolute",
-    bottom: 12,
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: "#047857",
-  },
-  treeLeavesFront: {
-    position: "absolute",
-    bottom: 18,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "#059669",
-  },
-  rock: {
-    position: "absolute",
-    width: 34,
-    height: 22,
-    borderRadius: 12,
-    backgroundColor: "#94A3B8",
-    borderBottomWidth: 3,
-    borderBottomColor: "#64748B",
-    zIndex: 4,
-  },
-  flowerContainer: {
-    position: "absolute",
-    width: 12,
-    height: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 6,
-  },
-  flowerPetal: {
-    position: "absolute",
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  flowerCenter: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-    backgroundColor: "#FBBF24",
-    zIndex: 2,
-  },
-  chargingContainer: {
-    position: "absolute",
-    width: 44,
-    height: 60,
-    alignItems: "center",
-    justifyContent: "flex-end",
-    zIndex: 5,
-  },
-  chargingBase: {
-    width: 32,
-    height: 44,
-    backgroundColor: "#475569",
-    borderRadius: 6,
-    borderWidth: 2.5,
-    borderColor: "#64748B",
-  },
-  chargingScreen: {
-    width: 20,
     height: 16,
-    backgroundColor: "#0F172A",
-    borderRadius: 3,
-    position: "absolute",
-    top: 22,
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
   },
-  chargingCable: {
-    width: 6,
+  zebraBarV: {
+    width: 16,
     height: 12,
-    borderWidth: 2,
-    borderColor: "#F59E0B",
-    borderTopWidth: 0,
-    borderBottomLeftRadius: 5,
-    borderBottomRightRadius: 5,
-    marginTop: -2,
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
   },
-
-  // LAUNCH DUST PARTICLE
-  dustParticle: {
+  robotHitbox: {
     position: "absolute",
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: "rgba(241, 245, 249, 0.7)",
-    zIndex: 8,
-  },
-
-  // MAIN ROBOTS REDESIGNED (Size 68x75)
-  robotContainer: {
-    position: "absolute",
-    left: 0,
-    top: 0,
-    width: ROBOT_SIZE,
-    height: ROBOT_HEIGHT,
     zIndex: 50,
   },
-  robotTapArea: {
-    width: "100%",
-    height: "100%",
-    alignItems: "center",
-    justifyContent: "flex-end",
+  robotContainer: {
     position: "relative",
   },
-  directionArrowBadge: {
-    position: "absolute",
-    top: -12,
-    backgroundColor: "#F59E0B",
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: "#FFFFFF",
-    padding: 3,
-    justifyContent: "center",
-    alignItems: "center",
-    zIndex: 60,
-  },
-
-  // 1. FRONT VIEW ROBOT
-  frontRobot: {
-    width: "100%",
-    height: "100%",
-    alignItems: "center",
-    justifyContent: "flex-end",
-  },
-  antennaStick: {
-    width: 4,
-    height: 10,
-    backgroundColor: "#0284C7",
-  },
-  antennaBulb: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#F59E0B",
-    position: "absolute",
-    top: 4,
-  },
-  robotHead: {
-    width: 58,
-    height: 40,
-    borderRadius: 14,
-    backgroundColor: "#E0F2FE",
-    borderWidth: 2.5,
-    borderColor: "#0284C7",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  visorScreen: {
-    width: 42,
-    height: 24,
-    borderRadius: 8,
-    backgroundColor: "#0F172A",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  eyesRow: {
-    flexDirection: "row",
-    gap: 6,
-  },
-  eyeCircle: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: "#22D3EE",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  pupil: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#FFFFFF",
-  },
-  neckJoint: {
-    width: 18,
-    height: 6,
-    backgroundColor: "#0284C7",
-    zIndex: 4,
-    marginTop: -2,
-  },
-  robotTorso: {
-    width: 62,
-    height: 34,
-    borderRadius: 12,
-    backgroundColor: "#E0F2FE",
-    borderWidth: 2.5,
-    borderColor: "#0284C7",
-    marginTop: -2,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  chestCore: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: "#22D3EE",
-    borderWidth: 1.5,
-    borderColor: "#0284C7",
-  },
-  tracksBase: {
-    width: 52,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#334155",
-    borderWidth: 2,
-    borderColor: "#0284C7",
-    marginTop: -2,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    paddingHorizontal: 6,
-  },
-  treadDot: {
-    width: 4,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: "#94A3B8",
-  },
-  hoverGlowShadow: {
-    position: "absolute",
-    bottom: -6,
-    width: 44,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "rgba(34, 211, 238, 0.35)",
-    alignSelf: "center",
-    zIndex: -1,
-  },
-
-  // 2. BACK VIEW ROBOT
-  backRobot: {
-    width: "100%",
-    height: "100%",
-    alignItems: "center",
-    justifyContent: "flex-end",
-  },
-  robotHeadBack: {
-    width: 58,
-    height: 40,
-    borderRadius: 14,
-    backgroundColor: "#E0F2FE",
-    borderWidth: 2.5,
-    borderColor: "#0284C7",
-    justifyContent: "center",
-    paddingHorizontal: 8,
-    gap: 4,
-  },
-  coolingVent: {
-    height: 4,
-    backgroundColor: "#64748B",
-    borderRadius: 2,
-    opacity: 0.6,
-  },
-  robotTorsoBack: {
-    width: 62,
-    height: 34,
-    borderRadius: 12,
-    backgroundColor: "#E0F2FE",
-    borderWidth: 2.5,
-    borderColor: "#0284C7",
-    marginTop: -2,
-    padding: 4,
-  },
-  backPlateGrid: {
-    flex: 1,
-    backgroundColor: "#94A3B8",
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: "#64748B",
-    borderStyle: "dashed",
-    opacity: 0.7,
-  },
-
-  // 3. SIDE VIEW ROBOT (LEFT/RIGHT)
-  sideRobot: {
-    width: "100%",
-    height: "100%",
-    alignItems: "center",
-    justifyContent: "flex-end",
-  },
-  robotHeadSide: {
-    width: 44,
-    height: 40,
-    borderRadius: 14,
-    backgroundColor: "#E0F2FE",
-    borderWidth: 2.5,
-    borderColor: "#0284C7",
-    justifyContent: "center",
-    paddingLeft: 12,
-  },
-  sideVisor: {
-    width: 22,
-    height: 24,
-    borderRadius: 8,
-    backgroundColor: "#0F172A",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  sideEyeLed: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#22D3EE",
-  },
-  robotTorsoSide: {
-    width: 46,
-    height: 34,
-    borderRadius: 12,
-    backgroundColor: "#E0F2FE",
-    borderWidth: 2.5,
-    borderColor: "#0284C7",
-    marginTop: -2,
-    justifyContent: "center",
-    alignItems: "flex-end",
-    paddingRight: 6,
-  },
-  sideShoulderJoint: {
-    width: 10,
-    height: 18,
-    borderRadius: 5,
-    backgroundColor: "#0284C7",
-  },
-  sideTracks: {
-    width: 40,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#334155",
-    borderWidth: 2,
-    borderColor: "#0284C7",
-    marginTop: -2,
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "center",
-    paddingHorizontal: 4,
-  },
-
-  // OBSTACLES (CONE & BROKEN ROBOT)
-  obstacleCone: {
-    position: "absolute",
-    width: ROBOT_SIZE,
-    height: ROBOT_SIZE,
-    alignItems: "center",
-    justifyContent: "flex-end",
-    zIndex: 40,
-  },
-  coneTop: {
-    width: 12,
-    height: 16,
-    backgroundColor: "#F97316", // Orange
-    borderTopLeftRadius: 6,
-    borderTopRightRadius: 6,
-  },
-  coneMiddle: {
-    width: 26,
-    height: 16,
-    backgroundColor: "#FFFFFF", // White stripe
-    borderWidth: 3,
-    borderColor: "#F97316",
-  },
-  coneBase: {
-    width: 48,
-    height: 8,
-    backgroundColor: "#EA580C", // Dark Orange base
-    borderRadius: 3,
-  },
-  obstacleBrokenRobot: {
-    position: "absolute",
-    width: ROBOT_SIZE,
-    height: ROBOT_SIZE,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: "#64748B",
-    backgroundColor: "#CBD5E1", // Grey/deactivated color
-    alignItems: "center",
-    justifyContent: "center",
-    ...SHADOWS.light,
-    zIndex: 40,
-  },
-  eyeLed: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
-  },
-  brokenSymbol: {
-    position: "absolute",
-    bottom: 2,
-  },
-
-  // TUTORIAL OVERLAYS
-  tutorialContainer: {
+  hintRing: {
     ...StyleSheet.absoluteFillObject,
+    borderRadius: 18,
+    borderWidth: 3,
+    borderColor: "#FBBF24",
+    opacity: 0.9,
+  },
+  companionPanel: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: SPACING.md,
+    marginVertical: 8,
+    backgroundColor: "rgba(15, 23, 42, 0.85)",
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: "rgba(0, 240, 255, 0.3)",
+    padding: 12,
+  },
+  avatar: {
+    marginRight: 12,
+  },
+  dialogBubble: {
+    flex: 1,
+  },
+  dialogText: {
+    color: "#E2E8F0",
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18,
+  },
+  bottomBar: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    alignItems: "center",
+    paddingVertical: SPACING.sm,
+    backgroundColor: "#0F172A",
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.08)",
+  },
+  actionBtn: {
+    alignItems: "center",
+  },
+  actionIconBg: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    borderWidth: 1,
     justifyContent: "center",
     alignItems: "center",
-    zIndex: 99,
-  },
-  tutorialText: {
-    ...FONTS.heading,
-    fontSize: 22,
-    color: "#FFFFFF",
-    textShadowColor: "rgba(0, 0, 0, 0.4)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
-    position: "absolute",
-    top: "35%",
-  },
-  tutorialHand: {
-    position: "absolute",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-  },
-
-  // BOTTOM MISSION CARD PANEL
-  missionCardContainer: {
-    paddingHorizontal: SPACING.lg,
-    paddingBottom: SPACING.lg,
-    backgroundColor: "#86EFAC",
-  },
-  missionCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: SHAPES.radiusLg,
-    padding: SPACING.md + 2,
-    borderWidth: 1.5,
-    borderColor: "#E2E8F0",
-    ...SHADOWS.light,
-  },
-  missionCardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  skillBadge: {
-    backgroundColor: "#F1F5F9",
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  skillBadgeText: {
-    fontSize: 10,
-    fontWeight: "900",
-    color: "#475569",
-    letterSpacing: 0.8,
-  },
-  xpReward: {
-    fontSize: 12,
-    fontWeight: "900",
-    color: "#10B981",
-  },
-  missionTitle: {
-    ...FONTS.bodyBold,
-    fontSize: 15,
-    color: COLORS.brandDarkBlue,
     marginBottom: 4,
   },
-  missionDescription: {
-    ...FONTS.bodyRegular,
+  actionLabel: {
+    color: "#94A3B8",
     fontSize: 11,
-    color: COLORS.textMedium,
-    lineHeight: 15,
+    fontWeight: "700",
   },
-
-  // VICTORY MODALS
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(15, 23, 42, 0.5)",
+    backgroundColor: "rgba(11, 14, 23, 0.85)",
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 30,
+    padding: SPACING.lg,
   },
-  modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: SHAPES.radiusXl,
-    padding: SPACING.xl + 4,
+  modalCard: {
     width: "100%",
-    maxWidth: 320,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 24,
     alignItems: "center",
-    borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
-    ...SHADOWS.medium,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 15,
+    elevation: 10,
   },
-  victoryIconCircle: {
+  introIcon: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: "rgba(34, 211, 238, 0.15)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  introText: {
+    fontSize: 14,
+    color: "#475569",
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  introHint: {
+    fontSize: 12,
+    color: "#94A3B8",
+    textAlign: "center",
+    lineHeight: 18,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: "900",
+    color: "#1E2937",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: "#64748B",
+    textAlign: "center",
+    marginBottom: 18,
+    lineHeight: 19,
+  },
+  victoryIcon: {
     width: 80,
     height: 80,
     borderRadius: 40,
     backgroundColor: "#FFFBEB",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: SPACING.lg,
+    marginBottom: 12,
   },
-  modalTitle: {
-    ...FONTS.heading,
-    fontSize: 20,
-    color: COLORS.brandDarkBlue,
-    textAlign: "center",
-    marginBottom: 6,
-  },
-  modalSubtitle: {
-    ...FONTS.bodyRegular,
-    fontSize: 12,
-    color: COLORS.textMedium,
-    textAlign: "center",
-    lineHeight: 18,
-    marginBottom: SPACING.xl,
-  },
-  rewardSummary: {
-    backgroundColor: "#F9FAFB",
-    borderRadius: SHAPES.radiusLg,
-    padding: SPACING.md,
-    alignItems: "center",
-    width: "100%",
-    marginBottom: SPACING.xl,
-    borderWidth: 1,
-    borderColor: COLORS.borderLight,
-  },
-  rewardLabel: {
-    fontSize: 9,
-    fontWeight: "900",
-    color: COLORS.textLight,
-    letterSpacing: 1.5,
-    marginBottom: 4,
-  },
-  rewardBadge: {
+  starRow: {
     flexDirection: "row",
+    gap: 12,
     alignItems: "center",
-    backgroundColor: "#FFF7ED",
-    borderWidth: 1,
-    borderColor: "#FFEDD5",
-    borderRadius: SHAPES.radiusRound,
-    paddingVertical: 4,
-    paddingHorizontal: SPACING.lg,
-    gap: 6,
+    marginBottom: 20,
   },
-  rewardBadgeText: {
-    ...FONTS.bodyBold,
-    fontSize: 16,
-    color: "#D97706",
-  },
-  resetBtn: {
-    backgroundColor: "rgba(30, 41, 59, 0.8)",
-    width: 32,
-    height: 32,
+  rewardCard: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#F3F4F6",
     borderRadius: 16,
-    justifyContent: "center",
-    alignItems: "center",
+    padding: 16,
+    width: "100%",
+    marginBottom: 24,
   },
-  backBtn: {
-    backgroundColor: "rgba(30, 41, 59, 0.8)",
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: "center",
+  rewardItem: {
     alignItems: "center",
+    flex: 1,
+  },
+  rewardAmount: {
+    color: "#1F2937",
+    fontSize: 12,
+    fontWeight: "700",
+    marginTop: 6,
+  },
+  fullBtn: {
+    width: "100%",
   },
 });

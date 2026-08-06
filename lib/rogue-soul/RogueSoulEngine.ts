@@ -422,19 +422,56 @@ export class RogueSoulGameEngine {
     if (this.isGameOver || this.isVictory) return;
     if (this.player.daggers > 0 && this.player.throwCooldown <= 0) {
       this.player.daggers--;
-      this.player.throwCooldown = 15;
+      this.player.throwCooldown = 14;
       this.player.action = "throw";
       this.player.actionFrame = 0;
       RogueAudio.playThrowDagger();
 
       const dir = this.player.facingRight ? 1 : -1;
+      const startX = this.player.x + (dir > 0 ? 40 : -10);
+      const startY = this.player.y + 25;
+
+      // Smart Auto-Aiming: Scan for nearest active enemy in front of player
+      let targetEnemy: Enemy | null = null;
+      let minDistance = 550;
+
+      this.enemies.forEach((enemy) => {
+        if (enemy.hp <= 0) return;
+        const inFront = dir > 0 ? enemy.x > this.player.x - 20 : enemy.x < this.player.x + 20;
+        if (inFront) {
+          const dx = (enemy.x + enemy.w / 2) - startX;
+          const dy = (enemy.y + enemy.h / 2) - startY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < minDistance) {
+            minDistance = dist;
+            targetEnemy = enemy;
+          }
+        }
+      });
+
+      let vx = dir * 15;
+      let vy = -1.5;
+      let rotation = dir > 0 ? 0 : Math.PI;
+
+      if (targetEnemy) {
+        const targetX = targetEnemy.x + targetEnemy.w / 2;
+        const targetY = targetEnemy.y + targetEnemy.h / 2;
+        const angle = Math.atan2(targetY - startY, targetX - startX);
+        const speed = 17;
+        vx = Math.cos(angle) * speed;
+        vy = Math.sin(angle) * speed;
+        rotation = angle;
+
+        this.addFloatingText("AIMED!", startX, startY - 15, "#00E5FF");
+      }
+
       this.projectiles.push({
         id: this.nextId++,
-        x: this.player.x + (dir > 0 ? 40 : -10),
-        y: this.player.y + 25,
-        vx: dir * 14,
-        vy: -1.5,
-        rotation: dir > 0 ? 0 : Math.PI,
+        x: startX,
+        y: startY,
+        vx: vx,
+        vy: vy,
+        rotation: rotation,
         fromPlayer: true,
         active: true,
       });
@@ -487,10 +524,10 @@ export class RogueSoulGameEngine {
   public update(inputLeft: boolean, inputRight: boolean) {
     if (this.isGameOver || this.isVictory) return;
 
-    // Dynamic Speed Curve: Starts comfortable & controlled, then accelerates as distance & combos increase!
-    const distanceAccel = Math.min(4.0, (this.gameDistance / 400));
-    const comboBonus = Math.min(2.5, this.player.combo * 0.3);
-    const dynamicSpeed = (4.8 + distanceAccel + comboBonus) * this.player.skin.speedMultiplier;
+    // Dynamic Speed Curve: Balanced, smooth & controlled pacing!
+    const distanceAccel = Math.min(2.2, (this.gameDistance / 1000));
+    const comboBonus = Math.min(1.8, this.player.combo * 0.25);
+    const dynamicSpeed = (3.8 + distanceAccel + comboBonus) * this.player.skin.speedMultiplier;
 
     // Movement horizontal logic
     if (this.player.action !== "slide") {
@@ -676,40 +713,84 @@ export class RogueSoulGameEngine {
       }
     });
 
-    // 5. Enemy AI & Attack
+    // 5. Enemy AI, Gravity & Attack
     this.enemies.forEach((enemy) => {
       if (enemy.hp <= 0) return;
 
-      // Archer shoot arrows
+      // Despawn enemies left far behind camera
+      if (enemy.x < this.cameraX - 250) {
+        enemy.hp = 0;
+        return;
+      }
+
+      // Apply Enemy Gravity
+      enemy.vy = (enemy.vy || 0) + 0.6;
+      if (enemy.vy > 12) enemy.vy = 12;
+
+      // Enemy Platform Landing Collision
+      this.platforms.forEach((plat) => {
+        if (
+          enemy.x + enemy.w > plat.x &&
+          enemy.x < plat.x + plat.w &&
+          enemy.y + enemy.h >= plat.y &&
+          enemy.y + enemy.h - enemy.vy <= plat.y + 16 &&
+          enemy.vy >= 0
+        ) {
+          enemy.y = plat.y - enemy.h;
+          enemy.vy = 0;
+        }
+      });
+
+      // Archer AI: shoot arrows ONLY if player is ahead and in line of sight
       if (enemy.type === "archer") {
-        enemy.attackCooldown++;
-        if (enemy.attackCooldown >= 140) {
-          enemy.attackCooldown = 0;
-          const dir = enemy.x > this.player.x ? -1 : 1;
-          enemy.facingRight = dir > 0;
-          this.projectiles.push({
-            id: this.nextId++,
-            x: enemy.x,
-            y: enemy.y + 15,
-            vx: dir * 7,
-            vy: 0,
-            rotation: dir > 0 ? 0 : Math.PI,
-            fromPlayer: false,
-            active: true,
-          });
+        const isPlayerAhead = enemy.x > this.player.x;
+        const dist = Math.abs(enemy.x - this.player.x);
+        if (isPlayerAhead && dist < 450) {
+          enemy.facingRight = false;
+          enemy.attackCooldown++;
+          if (enemy.attackCooldown >= 140) {
+            enemy.attackCooldown = 0;
+            this.projectiles.push({
+              id: this.nextId++,
+              x: enemy.x,
+              y: enemy.y + 15,
+              vx: -7,
+              vy: 0,
+              rotation: Math.PI,
+              fromPlayer: false,
+              active: true,
+            });
+          }
         }
       }
 
-      // Bandit charge player
+      // Bandit AI: ONLY charge player if player is ahead of bandit!
       if (enemy.type === "bandit") {
-        const dist = Math.abs(enemy.x - this.player.x);
-        if (dist < 300) {
-          enemy.vx = enemy.x > this.player.x ? -3.5 : 3.5;
-          enemy.facingRight = enemy.vx > 0;
+        const isPlayerAhead = enemy.x > this.player.x + 20;
+        const dist = enemy.x - this.player.x;
+
+        if (isPlayerAhead && dist < 350) {
+          enemy.vx = -3.5; // Charge left towards player
+          enemy.facingRight = false;
+        } else {
+          // Player has passed the bandit -> Bandit stops chasing and decays speed!
+          enemy.vx *= 0.85;
+        }
+      }
+
+      // Guard AI: Walk slowly left to block player path
+      if (enemy.type === "guard") {
+        const isPlayerAhead = enemy.x > this.player.x + 20;
+        if (isPlayerAhead) {
+          enemy.vx = -1.2;
+          enemy.facingRight = false;
+        } else {
+          enemy.vx *= 0.85;
         }
       }
 
       enemy.x += enemy.vx;
+      enemy.y += enemy.vy;
 
       // Touch player attack
       if (this.player.invulnerableTimer <= 0 && this.checkAABB(this.player, enemy)) {

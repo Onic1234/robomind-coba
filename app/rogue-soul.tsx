@@ -496,11 +496,49 @@ export default function RogueSoulGameScreen() {
         ctx.fillStyle = "#FEF08A";
         ctx.fillRect(8, -40, 14, 6);
       } else {
-        // Bandit Slasher
-        ctx.fillStyle = "#DC2626";
-        ctx.fillRect(-16, -22, 32, 44);
+        // Red Bandit Slasher / Marauder Character Sprite
+        // Body Armor
+        ctx.fillStyle = "#991B1B"; // Dark Crimson Outfit
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(-15, -20, 30, 36, 6);
+        } else {
+          ctx.fillRect(-15, -20, 30, 36);
+        }
+        ctx.fill();
+
+        // Belt & Armor Straps
+        ctx.fillStyle = "#450A0A";
+        ctx.fillRect(-15, 2, 30, 4);
+
+        // Legs & Boots
         ctx.fillStyle = "#1E293B";
-        ctx.fillRect(0, -20, 14, 6); // Mask
+        ctx.fillRect(-10, 16, 8, 12);
+        ctx.fillRect(2, 16, 8, 12);
+        ctx.fillStyle = "#0F172A";
+        ctx.fillRect(-12, 24, 10, 5);
+        ctx.fillRect(0, 24, 10, 5);
+
+        // Red Hood & Face Mask
+        ctx.fillStyle = "#DC2626";
+        ctx.beginPath();
+        ctx.arc(0, -22, 14, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Dark Face Mask Slit & Glowing Evil Eyes
+        ctx.fillStyle = "#0F172A";
+        ctx.fillRect(-2, -26, 12, 8);
+        ctx.fillStyle = "#F59E0B"; // Glowing yellow eyes
+        ctx.fillRect(2, -24, 4, 3);
+
+        // Dagger Blade in Hand
+        ctx.fillStyle = "#CBD5E1";
+        ctx.beginPath();
+        ctx.moveTo(10, -4);
+        ctx.lineTo(24, 0);
+        ctx.lineTo(10, 4);
+        ctx.closePath();
+        ctx.fill();
       }
       ctx.restore();
     });
@@ -510,92 +548,332 @@ export default function RogueSoulGameScreen() {
       if (!proj.active) return;
       ctx.save();
       ctx.translate(proj.x, proj.y);
+      ctx.rotate(proj.rotation);
+
       if (proj.fromPlayer) {
-        // Player Dagger
-        ctx.fillStyle = "#F59E0B";
+        // High-Tech Spinning Dagger with Motion Glow Trail
+        ctx.shadowColor = "#00E5FF";
+        ctx.shadowBlur = 8;
+
+        // Dagger Blade
+        ctx.fillStyle = "#E2E8F0";
         ctx.beginPath();
-        ctx.moveTo(-10, -4);
-        ctx.lineTo(10, 0);
-        ctx.lineTo(-10, 4);
+        ctx.moveTo(14, 0);
+        ctx.lineTo(-6, -6);
+        ctx.lineTo(-2, 0);
+        ctx.lineTo(-6, 6);
         ctx.closePath();
         ctx.fill();
-        // Glowing Trail
-        ctx.fillStyle = "rgba(251, 191, 36, 0.4)";
-        ctx.fillRect(-22, -2, 12, 4);
+
+        // Dagger Gold Hilt & Crossguard
+        ctx.fillStyle = "#F59E0B";
+        ctx.fillRect(-6, -7, 4, 14);
+        ctx.fillStyle = "#78350F";
+        ctx.fillRect(-10, -3, 5, 6);
+
+        // Motion Light Trail Stream
+        ctx.fillStyle = "rgba(0, 229, 255, 0.4)";
+        ctx.fillRect(-28, -3, 20, 6);
+        ctx.shadowBlur = 0;
       } else {
-        // Enemy Arrow
+        // Enemy Arrow with Feather Fletching
         ctx.fillStyle = "#CBD5E1";
         ctx.fillRect(-12, -2, 24, 4);
         ctx.fillStyle = "#DC2626";
         ctx.beginPath();
-        ctx.moveTo(-12, -5);
-        ctx.lineTo(-18, 0);
-        ctx.lineTo(-12, 5);
+        ctx.moveTo(12, 0);
+        ctx.lineTo(4, -5);
+        ctx.lineTo(4, 5);
+        ctx.closePath();
+        ctx.fill();
+        // Feather fletching
+        ctx.fillStyle = "#F59E0B";
+        ctx.beginPath();
+        ctx.moveTo(-12, -6);
+        ctx.lineTo(-6, -2);
+        ctx.lineTo(-12, 2);
+        ctx.lineTo(-18, -2);
         ctx.fill();
       }
       ctx.restore();
     });
 
-    // 8. Player Character (Rogue Soul Hero with Smooth Animation)
+    // 8. HIGH-QUALITY 2D CYBER-NINJA HERO CHARACTER
     const p = engine.player;
     ctx.save();
     ctx.translate(p.x + p.width / 2, p.y + p.height / 2);
     if (!p.facingRight) ctx.scale(-1, 1);
 
-    // Flowing Cape Animation
-    const capeSwing = Math.sin(p.actionFrame * 0.4) * 8;
+    // Ground Soft Ellipse Shadow
+    ctx.save();
+    ctx.scale(1, 0.35);
+    ctx.fillStyle = "rgba(0, 0, 0, 0.4)";
+    ctx.beginPath();
+    ctx.arc(0, 75, 20, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // Elemental Aura Glow Ring
+    ctx.shadowColor = p.skin.colorScheme.glow;
+    ctx.shadowBlur = 14;
+
+    const frame = p.actionFrame || 0;
+    const runCycle = Math.sin(frame * 0.45);
+
+    // LAYER 1: Flowing Scarf & Dynamic Dual-Layered Cape
+    const capeSway1 = Math.sin(frame * 0.3) * 14;
+    const capeSway2 = Math.cos(frame * 0.3) * 10;
+
+    // Outer Scarf Ribbon Streamers
     ctx.fillStyle = p.skin.colorScheme.cape;
     ctx.beginPath();
-    ctx.moveTo(-14, -20);
-    ctx.lineTo(-28 + capeSwing, 15);
+    ctx.moveTo(-6, -26);
+    ctx.quadraticCurveTo(-25 + capeSway1, -30, -40 + capeSway1, -22 + capeSway2);
+    ctx.quadraticCurveTo(-22 + capeSway1, -16, -4, -20);
+    ctx.closePath();
+    ctx.fill();
+
+    // Inner Dark Cape Layer
+    ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+    ctx.beginPath();
+    ctx.moveTo(-10, -18);
+    ctx.quadraticCurveTo(-28 + capeSway1, 0, -36 + capeSway1, 24);
+    ctx.lineTo(-2, 26);
+    ctx.closePath();
+    ctx.fill();
+
+    // Main Cape with Gold Edge Trim
+    const capeGrad = ctx.createLinearGradient(-10, -20, -35 + capeSway1, 25);
+    capeGrad.addColorStop(0, p.skin.colorScheme.cape);
+    capeGrad.addColorStop(1, p.skin.colorScheme.secondary);
+    ctx.fillStyle = capeGrad;
+    ctx.beginPath();
+    ctx.moveTo(-12, -20);
+    ctx.quadraticCurveTo(-26 + capeSway1, -2, -34 + capeSway1, 22);
     ctx.lineTo(-4, 24);
     ctx.closePath();
     ctx.fill();
 
-    // Player Body
-    ctx.fillStyle = p.skin.colorScheme.primary;
+    ctx.strokeStyle = "#F59E0B";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // LAYER 2: Animated Legs & Cyber Boots (Running / Sliding / Air Stance)
     if (p.action === "slide") {
-      ctx.fillRect(-26, 2, 52, 18); // Low slide stance
+      // Low Stealth Dash Stance
+      ctx.fillStyle = p.skin.colorScheme.secondary;
+      ctx.fillRect(-28, 6, 56, 14);
+      ctx.fillStyle = "#F59E0B"; // Utility belt
+      ctx.fillRect(-28, 4, 56, 4);
+
+      // Boots Slide Spark Trail
+      ctx.fillStyle = "#0F172A";
+      ctx.fillRect(18, 12, 12, 8);
+      ctx.fillStyle = "#00E5FF";
+      ctx.fillRect(-28, 16, 50, 4);
+    } else if (p.action === "run" && p.grounded) {
+      // Realistic 2-Joint Bending Leg Cycle
+      const leg1Angle = runCycle * 0.6;
+      const leg2Angle = -runCycle * 0.6;
+
+      // Left Leg
+      ctx.save();
+      ctx.translate(-6, 12);
+      ctx.rotate(leg1Angle);
+      ctx.fillStyle = p.skin.colorScheme.secondary;
+      ctx.fillRect(-4, 0, 8, 14); // Thigh
+      ctx.fillStyle = "#1E293B";
+      ctx.fillRect(-4, 14, 8, 10); // Armored Shin
+      ctx.fillStyle = "#0F172A";
+      ctx.fillRect(-5, 20, 11, 6); // Boot
+      ctx.fillStyle = p.skin.colorScheme.glow;
+      ctx.fillRect(-2, 24, 6, 2); // Sole Thruster Glow
+      ctx.restore();
+
+      // Right Leg
+      ctx.save();
+      ctx.translate(6, 12);
+      ctx.rotate(leg2Angle);
+      ctx.fillStyle = p.skin.colorScheme.secondary;
+      ctx.fillRect(-4, 0, 8, 14); // Thigh
+      ctx.fillStyle = "#1E293B";
+      ctx.fillRect(-4, 14, 8, 10); // Armored Shin
+      ctx.fillStyle = "#0F172A";
+      ctx.fillRect(-5, 20, 11, 6); // Boot
+      ctx.fillStyle = p.skin.colorScheme.glow;
+      ctx.fillRect(-2, 24, 6, 2); // Sole Thruster Glow
+      ctx.restore();
     } else {
-      ctx.fillRect(-16, -22, 32, 44);
+      // Mid-Air Tucked Knees Stance
+      ctx.fillStyle = p.skin.colorScheme.secondary;
+      ctx.fillRect(-10, 12, 8, 14);
+      ctx.fillRect(4, 10, 8, 14);
+      ctx.fillStyle = "#0F172A";
+      ctx.fillRect(-12, 22, 10, 6);
+      ctx.fillRect(2, 20, 10, 6);
     }
 
-    // Legs Running Cycle
-    if (p.action === "run" && p.grounded) {
-      const legOffset = Math.sin(p.actionFrame * 0.5) * 10;
-      ctx.fillStyle = p.skin.colorScheme.secondary;
-      ctx.fillRect(-12 + legOffset, 22, 8, 12);
-      ctx.fillRect(4 - legOffset, 22, 8, 12);
-    } else if (!p.grounded) {
-      // Mid-Air Tucked Knees
-      ctx.fillStyle = p.skin.colorScheme.secondary;
-      ctx.fillRect(-12, 20, 10, 10);
-      ctx.fillRect(2, 18, 10, 10);
-    }
+    // LAYER 3: Mecha Armor Torso & Utility Straps
+    const armorGrad = ctx.createLinearGradient(-14, -18, 14, 18);
+    armorGrad.addColorStop(0, p.skin.colorScheme.primary);
+    armorGrad.addColorStop(0.6, p.skin.colorScheme.secondary);
+    armorGrad.addColorStop(1, "#0F172A");
 
-    // Hood & Head
-    ctx.fillStyle = p.skin.colorScheme.secondary;
+    ctx.fillStyle = armorGrad;
     ctx.beginPath();
-    ctx.arc(0, -22, 15, 0, Math.PI * 2);
+    if (ctx.roundRect) {
+      ctx.roundRect(-15, -20, 30, 34, 8);
+    } else {
+      ctx.fillRect(-15, -20, 30, 34);
+    }
     ctx.fill();
 
-    // Visor Glowing Eye
-    ctx.fillStyle = p.skin.colorScheme.glow;
-    ctx.fillRect(4, -24, 7, 4);
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
 
-    // Sword Weapon Slash Arc
+    // Cross-Body Leather Harness & Belt
+    ctx.fillStyle = "#78350F";
+    ctx.fillRect(-15, 4, 30, 5); // Utility Belt
+    ctx.fillStyle = "#F59E0B";
+    ctx.fillRect(-3, 3, 6, 7); // Gold Buckle
+
+    // Glowing Power Core Emblem on Chest
+    ctx.shadowColor = p.skin.colorScheme.glow;
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = p.skin.colorScheme.glow;
+    ctx.beginPath();
+    ctx.arc(0, -9, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.arc(0, -9, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    // Shoulder Pauldrons
+    ctx.fillStyle = p.skin.colorScheme.primary;
+    ctx.beginPath();
+    ctx.arc(-15, -16, 6, 0, Math.PI * 2);
+    ctx.arc(15, -16, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#F59E0B";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // LAYER 4: Rogue Assassin Hood & Cyber Visor
+    ctx.fillStyle = p.skin.colorScheme.secondary;
+    ctx.beginPath();
+    ctx.arc(0, -24, 15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Angular Cowl Overlay
+    ctx.fillStyle = p.skin.colorScheme.primary;
+    ctx.beginPath();
+    ctx.moveTo(-15, -24);
+    ctx.lineTo(0, -38);
+    ctx.lineTo(15, -24);
+    ctx.lineTo(12, -14);
+    ctx.lineTo(-12, -14);
+    ctx.closePath();
+    ctx.fill();
+
+    // Hood Gold Trim Line
+    ctx.strokeStyle = "#F59E0B";
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+
+    // Futuristic Glowing Cyber Eyes & Visor
+    ctx.shadowColor = p.skin.colorScheme.glow;
+    ctx.shadowBlur = 14;
+    ctx.fillStyle = p.skin.colorScheme.glow;
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(2, -26, 11, 5, 2);
+    } else {
+      ctx.fillRect(2, -26, 11, 5);
+    }
+    ctx.fill();
+
+    // White Lens Refraction Reflection
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fillRect(4, -25, 4, 3);
+    ctx.shadowBlur = 0;
+
+    // LAYER 5: Weapon & Epic Attack Slash Arc
+    ctx.save();
+    // Arm Holding Weapon
+    ctx.fillStyle = p.skin.colorScheme.secondary;
+    ctx.beginPath();
+    ctx.arc(12, -8, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Weapon Hilt & Guard
+    ctx.fillStyle = "#F59E0B"; // Gold Guard
+    ctx.fillRect(12, -12, 4, 14);
+    ctx.fillStyle = "#78350F";
+    ctx.fillRect(8, -7, 6, 4);
+
+    // Glowing Steel/Energy Blade
+    ctx.shadowColor = p.weapon.trailColor;
+    ctx.shadowBlur = 10;
+    const bladeGrad = ctx.createLinearGradient(16, 0, 16 + p.weapon.range * 0.45, 0);
+    bladeGrad.addColorStop(0, "#FFFFFF");
+    bladeGrad.addColorStop(0.4, p.weapon.bladeColor);
+    bladeGrad.addColorStop(1, "#FFFFFF");
+
+    ctx.fillStyle = bladeGrad;
+    ctx.beginPath();
+    ctx.moveTo(16, -8);
+    ctx.lineTo(16 + p.weapon.range * 0.45, -4);
+    ctx.lineTo(16 + p.weapon.range * 0.5, 0);
+    ctx.lineTo(16 + p.weapon.range * 0.45, 4);
+    ctx.lineTo(16, 8);
+    ctx.closePath();
+    ctx.fill();
+
+    // Blade Spine Center Line
+    ctx.strokeStyle = "#FFFFFF";
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(16, 0);
+    ctx.lineTo(16 + p.weapon.range * 0.48, 0);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    // LAYER 6: MASSIVE NEON SWORD SLASH ARC (270 Degrees)
     if (p.action === "slash") {
-      ctx.strokeStyle = p.weapon.bladeColor;
-      ctx.lineWidth = 5;
+      ctx.save();
       ctx.shadowColor = p.weapon.trailColor;
-      ctx.shadowBlur = 10;
+      ctx.shadowBlur = 24;
+
+      // Outer Glow Slash Wave
+      ctx.strokeStyle = p.weapon.bladeColor;
+      ctx.lineWidth = 12;
       ctx.beginPath();
-      ctx.arc(10, 0, p.weapon.range * 0.75, -Math.PI / 2.5, Math.PI / 2.5, false);
+      ctx.arc(0, -4, p.weapon.range * 0.9, -Math.PI * 0.65, Math.PI * 0.55, false);
       ctx.stroke();
+
+      // Middle Vibrant Energy Wave
+      ctx.strokeStyle = p.skin.colorScheme.glow;
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      ctx.arc(0, -4, p.weapon.range * 0.9, -Math.PI * 0.6, Math.PI * 0.5, false);
+      ctx.stroke();
+
+      // Inner Core White Slash Line
+      ctx.strokeStyle = "#FFFFFF";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(0, -4, p.weapon.range * 0.9, -Math.PI * 0.55, Math.PI * 0.45, false);
+      ctx.stroke();
+
       ctx.shadowBlur = 0;
+      ctx.restore();
     }
 
-    ctx.restore();
+    ctx.restore(); // Restore hero orientation/translation
 
     // 9. Particles (Dust, Sparks & Text Popups)
     engine.particles.forEach((pt) => {

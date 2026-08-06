@@ -102,25 +102,28 @@ export default function PickAndDropScreen() {
             .main-arena { flex: 1; display: flex; position: relative; overflow: hidden; padding: 12px; gap: 12px; z-index: 10; }
             .sidebar { width: 190px; display: flex; flex-direction: column; gap: 10px; }
             .cam-card {
-                width: 100%; aspect-ratio: 4/3; background: #000; border-radius: 16px;
-                overflow: hidden; position: relative; border: 2px solid #38BDF8;
-                box-shadow: 0 0 20px rgba(56, 189, 248, 0.35);
+                width: 100%; background: rgba(15, 23, 42, 0.85); border-radius: 12px;
+                overflow: hidden; position: relative; border: 1px solid rgba(56, 189, 248, 0.4);
+                padding: 10px 12px; display: flex; align-items: center; gap: 8px;
             }
             #input_video { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-            #output_canvas { width: 100%; height: 100%; transform: scaleX(-1); object-fit: cover; }
+            #output_canvas {
+                position: absolute; inset: 0; width: 100%; height: 100%;
+                transform: scaleX(-1); object-fit: cover;
+            }
             
-            .cam-hud-overlay {
-                position: absolute; inset: 0; pointer-events: none;
-                border: 1px solid rgba(56, 189, 248, 0.4);
-                background: radial-gradient(circle, transparent 60%, rgba(0, 0, 0, 0.5) 100%);
-            }
+            .cam-hud-overlay { position: absolute; inset: 0; pointer-events: none; background: transparent; }
             .cam-badge {
-                position: absolute; bottom: 6px; left: 6px; right: 6px;
-                background: rgba(15, 23, 42, 0.9); border: 1px solid #0284C7;
-                border-radius: 8px; padding: 3px 6px; font-size: 0.65rem; font-weight: 700;
-                color: #38BDF8; display: flex; align-items: center; gap: 4px;
+                display: flex; align-items: center; gap: 6px;
+                background: rgba(15, 23, 42, 0.6); border: 1px solid #0284C7;
+                border-radius: 8px; padding: 4px 10px; font-size: 0.7rem; font-weight: 700;
+                color: #38BDF8;
             }
-            .cam-dot { width: 6px; height: 6px; border-radius: 3px; background: #10B981; box-shadow: 0 0 8px #10B981; }
+            .cam-dot { width: 7px; height: 7px; border-radius: 4px; background: #10B981; box-shadow: 0 0 8px #10B981; }
+            .cam-tint {
+                position: absolute; inset: 0; pointer-events: none;
+                background: rgba(8, 15, 30, 0.45);
+            }
 
             /* Mode Switcher Buttons for Kids */
             .mode-switch-box {
@@ -145,11 +148,12 @@ export default function PickAndDropScreen() {
             }
 
             .game-viewport {
-                flex: 1; background: rgba(15, 23, 42, 0.85); border-radius: 20px;
+                flex: 1; background: #0B1120; border-radius: 20px;
                 border: 1px solid rgba(56, 189, 248, 0.3); position: relative; overflow: hidden;
-                box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.5);
             }
-            #game_canvas { width: 100%; height: 100%; cursor: none; touch-action: none; }
+            #output_canvas { z-index: 1; }
+            .cam-tint { z-index: 2; }
+            #game_canvas { position: relative; z-index: 3; width: 100%; height: 100%; cursor: none; touch-action: none; }
 
             #toast {
                 position: absolute; top: 16px; left: 50%; transform: translateX(-50%);
@@ -264,19 +268,15 @@ export default function PickAndDropScreen() {
                     gap: 6px;
                 }
                 .cam-card {
-                    width: 68px;
-                    height: 50px;
-                    aspect-ratio: auto;
-                    flex-shrink: 0;
+                    width: auto;
+                    padding: 6px 8px;
                     border-radius: 10px;
                 }
                 .cam-badge {
-                    font-size: 0.55rem;
-                    padding: 1px 3px;
-                    bottom: 2px; left: 2px; right: 2px;
-                    border-radius: 4px;
+                    font-size: 0.6rem;
+                    padding: 3px 6px;
+                    border-radius: 6px;
                 }
-                .cam-badge span { display: none; }
 
                 .mode-switch-box {
                     flex: 1;
@@ -361,11 +361,9 @@ export default function PickAndDropScreen() {
             <div class="sidebar">
                 <div class="cam-card">
                     <video id="input_video" playsinline></video>
-                    <canvas id="output_canvas"></canvas>
-                    <div class="cam-hud-overlay"></div>
                     <div class="cam-badge">
                         <div class="cam-dot"></div>
-                        <span id="cam_status">MediaPipe Active</span>
+                        <span id="cam_status">Menyiapkan Kamera...</span>
                     </div>
                 </div>
 
@@ -390,6 +388,8 @@ export default function PickAndDropScreen() {
             </div>
 
             <div class="game-viewport" id="arena_bounds">
+                <canvas id="output_canvas"></canvas>
+                <div class="cam-tint"></div>
                 <div id="toast">Feedback</div>
                 <canvas id="game_canvas"></canvas>
 
@@ -514,11 +514,7 @@ export default function PickAndDropScreen() {
                 const b = document.getElementById('arena_bounds');
                 if (b) {
                     canvas.width = b.clientWidth; canvas.height = b.clientHeight;
-                }
-                const camCard = document.querySelector('.cam-card');
-                if (camCard) {
-                    outCanvas.width = camCard.clientWidth || 190;
-                    outCanvas.height = camCard.clientHeight || 142;
+                    outCanvas.width = b.clientWidth; outCanvas.height = b.clientHeight;
                 }
             }
             window.onresize = resize; setTimeout(resize, 100); resize();
@@ -563,8 +559,8 @@ export default function PickAndDropScreen() {
                     }
                     const stream = await navigator.mediaDevices.getUserMedia({
                         video: {
-                            width: { ideal: 320 },
-                            height: { ideal: 240 },
+                            width: { ideal: 640 },
+                            height: { ideal: 480 },
                             facingMode: 'user'
                         }
                     });
@@ -594,23 +590,38 @@ export default function PickAndDropScreen() {
             startCameraFeed();
 
             function onResults(res) {
-                const cw = outCanvas.width || 190;
-                const ch = outCanvas.height || 142;
+                const cw = outCanvas.width || 320;
+                const ch = outCanvas.height || 240;
+                const imgW = (res.image && (res.image.videoWidth || res.image.width)) || cw;
+                const imgH = (res.image && (res.image.videoHeight || res.image.height)) || ch;
+
+                // Cover-crop the camera so it fills the whole game viewport without distortion
+                const scale = Math.max(cw / imgW, ch / imgH);
+                const dw = imgW * scale;
+                const dh = imgH * scale;
+                const dx = (cw - dw) / 2;
+                const dy = (ch - dh) / 2;
+
                 outCtx.save();
                 outCtx.clearRect(0, 0, cw, ch);
-                outCtx.drawImage(res.image, 0, 0, cw, ch);
+                outCtx.drawImage(res.image, dx, dy, dw, dh);
+
+                // Map normalized hand coords to the mirrored, cover-cropped background
+                const mx = (x) => cw - dx - x * dw;
+                const my = (y) => dy + y * dh;
+
                 if (res.multiHandLandmarks && res.multiHandLandmarks.length > 0) {
                     const lm = res.multiHandLandmarks[0];
                     const idx = lm[8], thm = lm[4];
-                    const cx = (1 - idx.x) * canvas.width;
-                    const cy = idx.y * canvas.height;
+                    cursor.x = mx(idx.x);
+                    cursor.y = my(idx.y);
                     const dist = Math.hypot(idx.x - thm.x, idx.y - thm.y);
-                    
+
                     // Uses Forgiving Pinch Threshold
                     const isPinch = dist < FORGIVING_PINCH_THRESH;
 
                     const wasPinch = cursor.pinching;
-                    cursor.x = cx; cursor.y = cy; cursor.pinching = isPinch;
+                    cursor.pinching = isPinch;
 
                     if (gameActive) {
                         if (currentControlMode === 'hover') {
@@ -644,8 +655,24 @@ export default function PickAndDropScreen() {
                             else if (!isPinch && wasPinch) tryDrop();
                         }
                     }
-                    drawConnectors(outCtx, lm, HAND_CONNECTIONS, { color: '#38BDF8', lineWidth: 1.5 });
-                    drawLandmarks(outCtx, lm, { color: '#10B981', lineWidth: 1, radius: 2 });
+
+                    // Draw hand skeleton aligned with the cover-cropped background
+                    HAND_CONNECTIONS.forEach(function (pair) {
+                        const a = lm[pair[0]];
+                        const b = lm[pair[1]];
+                        outCtx.beginPath();
+                        outCtx.moveTo(mx(a.x), my(a.y));
+                        outCtx.lineTo(mx(b.x), my(b.y));
+                        outCtx.strokeStyle = 'rgba(56, 189, 248, 0.9)';
+                        outCtx.lineWidth = 2.5;
+                        outCtx.stroke();
+                    });
+                    lm.forEach(function (pt) {
+                        outCtx.beginPath();
+                        outCtx.arc(mx(pt.x), my(pt.y), 4, 0, Math.PI * 2);
+                        outCtx.fillStyle = '#10B981';
+                        outCtx.fill();
+                    });
                 }
                 outCtx.restore();
             }

@@ -16,6 +16,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
+import { usePlaytimeGuard, formatDurationHMS } from "../hooks/usePlaytimeGuard";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -25,17 +26,37 @@ import Animated, {
   runOnJS,
   Easing,
 } from "react-native-reanimated";
-import Svg, { Rect, Circle, Path, Defs, LinearGradient, Stop, Polygon, Line, Text as SvgText } from "react-native-svg";
-import { COLORS } from "../constants/Theme";
+import Svg, {
+  Rect,
+  Circle,
+  Path,
+  Defs,
+  LinearGradient,
+  RadialGradient,
+  Stop,
+  Polygon,
+  Line,
+  G,
+  Text as SvgText,
+} from "react-native-svg";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const GAME_CANVAS_WIDTH = Math.min(SCREEN_WIDTH - 24, 380);
 const STORAGE_KEY_LEVEL = "screw_spin_current_level";
 const STORAGE_KEY_COINS = "user_coins_balance";
+const STORAGE_KEY_COOLDOWN = "screw_spin_cooldown_until";
 const TOTAL_LEVELS = 55;
 const BUFFER_CAPACITY = 5;
+const GAME_TIME_LIMIT_SEC = 90;
+const COOLDOWN_DURATION_SEC = 60;
 
-// Color Palette for Screws & Boxes matching reference image
+const formatTimeSeconds = (totalSec: number) => {
+  const m = Math.floor(Math.max(0, totalSec) / 60);
+  const s = Math.max(0, totalSec) % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+};
+
+// Vibrant Sci-Fi Metallic Screw Color Palette
 export interface ScrewColorDef {
   id: string;
   name: string;
@@ -43,17 +64,18 @@ export interface ScrewColorDef {
   dark: string;
   light: string;
   rim: string;
+  glow: string;
 }
 
 export const SCREW_COLORS: Record<string, ScrewColorDef> = {
-  green: { id: "green", name: "Hijau", primary: "#4CD964", dark: "#1E7E34", light: "#86F09B", rim: "#2CD050" },
-  purple: { id: "purple", name: "Ungu", primary: "#9D4EDD", dark: "#5A189A", light: "#E0AAFF", rim: "#7B2CBF" },
-  pink: { id: "pink", name: "Pink", primary: "#FF26D9", dark: "#B50095", light: "#FF99F0", rim: "#E91E63" },
-  cyan: { id: "cyan", name: "Cyan", primary: "#00D9FF", dark: "#00838F", light: "#84FFFF", rim: "#00B8D4" },
-  yellow: { id: "yellow", name: "Kuning", primary: "#FFCC00", dark: "#CC9900", light: "#FFEE58", rim: "#FFAB00" },
-  blue: { id: "blue", name: "Biru", primary: "#2979FF", dark: "#1565C0", light: "#82B1FF", rim: "#2962FF" },
-  orange: { id: "orange", name: "Oranye", primary: "#FF6D00", dark: "#E65100", light: "#FF9E80", rim: "#FF6D00" },
-  red: { id: "red", name: "Merah", primary: "#FF1744", dark: "#B71C1C", light: "#FF616F", rim: "#D50000" },
+  green: { id: "green", primary: "#10B981", dark: "#047857", light: "#A7F3D0", rim: "#059669", glow: "#34D399" },
+  purple: { id: "purple", name: "Ungu", primary: "#8B5CF6", dark: "#5B21B6", light: "#DDD6FE", rim: "#7C3AED", glow: "#C4B5FD" },
+  pink: { id: "pink", name: "Pink", primary: "#EC4899", dark: "#9D174D", light: "#FBCFE8", rim: "#DB2777", glow: "#F472B6" },
+  cyan: { id: "cyan", name: "Cyan", primary: "#06B6D4", dark: "#0E7490", light: "#CFFAFE", rim: "#0891B2", glow: "#67E8F9" },
+  yellow: { id: "yellow", name: "Kuning", primary: "#F59E0B", dark: "#B45309", light: "#FEF3C7", rim: "#D97706", glow: "#FBBF24" },
+  blue: { id: "blue", name: "Biru", primary: "#3B82F6", dark: "#1D4ED8", light: "#DBEAFE", rim: "#2563EB", glow: "#60A5FA" },
+  orange: { id: "orange", name: "Oranye", primary: "#F97316", dark: "#C2410C", light: "#FFEDD5", rim: "#EA580C", glow: "#FB923C" },
+  red: { id: "red", name: "Merah", primary: "#EF4444", dark: "#B91C1C", light: "#FEE2E2", rim: "#DC2626", glow: "#F87171" },
 };
 
 export interface CollectorBox {
@@ -76,6 +98,7 @@ export interface ScrewItem {
 export interface PlateItem {
   id: string;
   color: string;
+  borderColor?: string;
   x: number;
   y: number;
   width: number;
@@ -94,7 +117,340 @@ export interface LevelData {
   coinsReward: number;
 }
 
-// Generate Hand-crafted & Balanced Levels with multi-layered progressive difficulty (Level 1 to 55)
+// ----------------------------------------------------
+// 3D VIBRANT METALLIC SCREW SVG COMPONENT
+// ----------------------------------------------------
+const MetallicScrewHead = ({
+  colorId,
+  size = 48,
+}: {
+  colorId: string;
+  size?: number;
+}) => {
+  const colorDef = SCREW_COLORS[colorId] || SCREW_COLORS.green;
+
+  return (
+    <Svg width={size} height={size} viewBox="0 0 50 50">
+      <Defs>
+        {/* Stainless Steel Outer Flange Ring */}
+        <LinearGradient id={`steel_rim_${colorId}`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <Stop offset="0%" stopColor="#FFFFFF" />
+          <Stop offset="30%" stopColor="#E2E8F0" />
+          <Stop offset="65%" stopColor="#94A3B8" />
+          <Stop offset="90%" stopColor="#475569" />
+          <Stop offset="100%" stopColor="#CBD5E1" />
+        </LinearGradient>
+
+        {/* 3D Vibrant Screw Head Dome Gradient */}
+        <RadialGradient id={`screw_head_${colorId}`} cx="35%" cy="30%" r="70%">
+          <Stop offset="0%" stopColor={colorDef.light} />
+          <Stop offset="40%" stopColor={colorDef.primary} />
+          <Stop offset="85%" stopColor={colorDef.rim} />
+          <Stop offset="100%" stopColor={colorDef.dark} />
+        </RadialGradient>
+
+        {/* Specular White Gloss Arc */}
+        <RadialGradient id={`specular_${colorId}`} cx="30%" cy="25%" r="40%">
+          <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.9" />
+          <Stop offset="60%" stopColor="#FFFFFF" stopOpacity="0.2" />
+          <Stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+        </RadialGradient>
+      </Defs>
+
+      {/* 3D Elevation Drop Shadow */}
+      <Circle cx="25" cy="27" r="22" fill="#000000" opacity="0.4" />
+
+      {/* Steel Chrome Outer Ring */}
+      <Circle cx="25" cy="25" r="23" fill={`url(#steel_rim_${colorId})`} />
+      <Circle cx="25" cy="25" r="20" fill={colorDef.dark} opacity="0.5" />
+
+      {/* Main Vibrant 3D Screw Head Dome */}
+      <Circle cx="25" cy="25" r="19.5" fill={`url(#screw_head_${colorId})`} stroke={colorDef.light} strokeWidth="1" />
+
+      {/* Glossy Specular Highlight Arc */}
+      <Path
+        d="M 10 22 A 16 16 0 0 1 40 22 A 18 18 0 0 0 10 22 Z"
+        fill={`url(#specular_${colorId})`}
+      />
+
+      {/* Specular White Reflection Dot */}
+      <Circle cx="18" cy="15" r="2.8" fill="#FFFFFF" opacity="0.75" />
+
+      {/* Inset Philips Precision Cross Slot Drive */}
+      <G transform="rotate(45 25 25)">
+        {/* Recessed Socket Outline */}
+        <Circle cx="25" cy="25" r="9" fill={colorDef.dark} opacity="0.5" stroke={colorDef.primary} strokeWidth="0.8" />
+
+        {/* Bright Philips Cross Lines */}
+        <Rect x="16" y="23.2" width="18" height="3.6" rx="1.8" fill="#090E1A" />
+        <Rect x="17" y="23.8" width="16" height="2.4" rx="1.2" fill={colorDef.light} opacity="0.95" />
+
+        <Rect x="23.2" y="16" width="3.6" height="18" rx="1.8" fill="#090E1A" />
+        <Rect x="23.8" y="17" width="2.4" height="16" rx="1.2" fill={colorDef.light} opacity="0.95" />
+
+        {/* Center Metal Pin */}
+        <Circle cx="25" cy="25" r="2.8" fill="#F8FAFC" stroke={colorDef.dark} strokeWidth="0.8" />
+      </G>
+
+      {/* Bevel Outer Highlight Ring */}
+      <Circle cx="25" cy="25" r="23" fill="none" stroke="rgba(255, 255, 255, 0.6)" strokeWidth="0.8" />
+    </Svg>
+  );
+};
+
+// ----------------------------------------------------
+// COUNTERSUNK SCREW HOLE (Visual socket left on plates)
+// ----------------------------------------------------
+const CountersunkSocket = ({ size = 44 }: { size?: number }) => {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 44 44">
+      {/* Outer Shadow Inset */}
+      <Circle cx="22" cy="22" r="19" fill="#030712" opacity="0.8" />
+
+      {/* Metallic Countersink Edge */}
+      <Circle cx="22" cy="22" r="17" fill="none" stroke="#475569" strokeWidth="2.5" />
+      <Circle cx="22" cy="22" r="14" fill="#0F172A" />
+
+      {/* Thread Rings */}
+      <Circle cx="22" cy="22" r="11" fill="none" stroke="rgba(0, 229, 255, 0.3)" strokeWidth="1.2" strokeDasharray="5 3" />
+      <Circle cx="22" cy="22" r="7.5" fill="none" stroke="#1E293B" strokeWidth="1" />
+      <Circle cx="22" cy="22" r="4.5" fill="#020408" />
+
+      {/* Cross alignment marks in hole */}
+      <Line x1="14" y1="22" x2="30" y2="22" stroke="rgba(0, 229, 255, 0.25)" strokeWidth="1" />
+      <Line x1="22" y1="14" x2="22" y2="30" stroke="rgba(0, 229, 255, 0.25)" strokeWidth="1" />
+    </Svg>
+  );
+};
+
+// ----------------------------------------------------
+// ANIMATED SCI-FI MECHA SCREWDRIVER TOOL COMPONENT
+// ----------------------------------------------------
+const SciFiMechaScrewdriver = ({
+  x,
+  y,
+  visible,
+}: {
+  x: number;
+  y: number;
+  visible: boolean;
+}) => {
+  const rotation = useSharedValue(0);
+  const scale = useSharedValue(0);
+  const translateY = useSharedValue(-70);
+  const sparkScale = useSharedValue(0);
+
+  useEffect(() => {
+    if (visible) {
+      // Phase 1: Descend & Engage (0 -> 150ms)
+      scale.value = withTiming(1, { duration: 150, easing: Easing.out(Easing.back(1.2)) });
+      translateY.value = withSequence(
+        withTiming(0, { duration: 150, easing: Easing.out(Easing.quad) }),
+        // Phase 2: Back out / lift up while unscrewing (150 -> 550ms)
+        withTiming(-18, { duration: 400, easing: Easing.linear }),
+        // Phase 3: Lift off & retract (550 -> 700ms)
+        withTiming(-90, { duration: 150, easing: Easing.in(Easing.quad) })
+      );
+
+      // 3 Full Realistic Revolutions (1080 deg) over 450ms
+      rotation.value = withSequence(
+        withTiming(0, { duration: 120 }),
+        withTiming(1080, { duration: 450, easing: Easing.out(Easing.cubic) })
+      );
+
+      // Energy Spark Ring Pulse
+      sparkScale.value = withSequence(
+        withTiming(0, { duration: 120 }),
+        withTiming(1.4, { duration: 350, easing: Easing.out(Easing.quad) }),
+        withTiming(0, { duration: 150 })
+      );
+    } else {
+      scale.value = withTiming(0, { duration: 120 });
+      translateY.value = withTiming(-70, { duration: 120 });
+    }
+  }, [visible]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: x - 30 },
+        { translateY: y - 110 + translateY.value },
+        { scale: scale.value },
+      ],
+      opacity: scale.value,
+    };
+  });
+
+  const bitAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ rotate: `${rotation.value}deg` }],
+    };
+  });
+
+  const sparkAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ scale: sparkScale.value }],
+      opacity: Math.min(1, sparkScale.value),
+    };
+  });
+
+  if (!visible) return null;
+
+  return (
+    <Animated.View style={[styles.screwdriverContainer, animatedStyle]} pointerEvents="none">
+      {/* High-Tech Mecha Screwdriver Body */}
+      <Svg width={60} height={120} viewBox="0 0 60 120">
+        <Defs>
+          {/* Mecha Armor Plate Gradient */}
+          <LinearGradient id="mecha_armor" x1="0%" y1="0%" x2="100%" y2="100%">
+            <Stop offset="0%" stopColor="#1E293B" />
+            <Stop offset="30%" stopColor="#00E5FF" />
+            <Stop offset="70%" stopColor="#0F172A" />
+            <Stop offset="100%" stopColor="#090E1A" />
+          </LinearGradient>
+
+          {/* Steel Chrome Shaft */}
+          <LinearGradient id="chrome_shaft" x1="0%" y1="0%" x2="100%" y2="0%">
+            <Stop offset="0%" stopColor="#64748B" />
+            <Stop offset="30%" stopColor="#F8FAFC" />
+            <Stop offset="70%" stopColor="#CBD5E1" />
+            <Stop offset="100%" stopColor="#334155" />
+          </LinearGradient>
+
+          {/* Neon Glow Accent */}
+          <LinearGradient id="neon_accent" x1="0%" y1="0%" x2="0%" y2="100%">
+            <Stop offset="0%" stopColor="#00FF88" />
+            <Stop offset="100%" stopColor="#00E5FF" />
+          </LinearGradient>
+        </Defs>
+
+        {/* Ergonomic Mecha Tool Body */}
+        <Rect x="18" y="0" width="24" height="56" rx="10" fill="url(#mecha_armor)" stroke="#00E5FF" strokeWidth="1.8" />
+
+        {/* Carbon Fiber Grip Panels */}
+        <Rect x="16" y="12" width="28" height="4" rx="2" fill="#090E1A" />
+        <Rect x="16" y="22" width="28" height="4" rx="2" fill="#090E1A" />
+        <Rect x="16" y="32" width="28" height="4" rx="2" fill="#090E1A" />
+
+        {/* Neon Power Line */}
+        <Rect x="28" y="8" width="4" height="32" rx="2" fill="url(#neon_accent)" />
+
+        {/* LED Battery Status Lights */}
+        <Circle cx="30" cy="46" r="3.2" fill="#00FF88" stroke="#FFFFFF" strokeWidth="0.8" />
+        <Circle cx="22" cy="46" r="2" fill="#00E5FF" />
+        <Circle cx="38" cy="46" r="2" fill="#00E5FF" />
+
+        {/* Metallic Collar & Precision Rotary Chuck */}
+        <Rect x="20" y="56" width="20" height="14" rx="4" fill="#334155" stroke="#94A3B8" strokeWidth="1.2" />
+        <Line x1="20" y1="63" x2="40" y2="63" stroke="#64748B" strokeWidth="1" />
+
+        {/* Heavy Steel Drive Shaft */}
+        <Rect x="26.5" y="70" width="7" height="28" fill="url(#chrome_shaft)" stroke="#475569" strokeWidth="0.6" />
+
+        {/* Hardened Magnetic Bit Head Tip */}
+        <G transform="translate(30, 102)">
+          <Polygon points="-4,-6 4,-6 2.5,9 -2.5,9" fill="#F8FAFC" stroke="#475569" strokeWidth="1" />
+        </G>
+      </Svg>
+
+      {/* Rotating Magnetic Torque Bit Overlay */}
+      <Animated.View style={[styles.torqueBitOverlay, bitAnimatedStyle]}>
+        <Svg width={28} height={28} viewBox="0 0 28 28">
+          <Circle cx="14" cy="14" r="12" fill="none" stroke="#00E5FF" strokeWidth="1.8" strokeDasharray="6 4" />
+          <Polygon points="14,2 16.5,9 24,9 18,14 20.5,21 14,16.5 7.5,21 10,14 4,9 11.5,9" fill="none" stroke="#FFD700" strokeWidth="1.2" />
+        </Svg>
+      </Animated.View>
+
+      {/* Energy Sparks & Unbolting Pulse Effect at Tip */}
+      <Animated.View style={[styles.sparkPulseOverlay, sparkAnimatedStyle]}>
+        <Svg width={36} height={36} viewBox="0 0 36 36">
+          <Circle cx="18" cy="18" r="16" fill="none" stroke="#00FF88" strokeWidth="1.5" opacity="0.8" strokeDasharray="4 6" />
+          <Circle cx="18" cy="18" r="10" fill="none" stroke="#FFCC00" strokeWidth="1" opacity="0.6" />
+        </Svg>
+      </Animated.View>
+    </Animated.View>
+  );
+};
+
+// ----------------------------------------------------
+// SCI-FI DETACHABLE PLATE COMPONENT WITH PHYSICS DROP
+// ----------------------------------------------------
+const SciFiPlateView = ({
+  plate,
+  screws,
+}: {
+  plate: PlateItem;
+  screws: ScrewItem[];
+}) => {
+  const dropY = useSharedValue(0);
+  const rotateDeg = useSharedValue(0);
+  const opacity = useSharedValue(1);
+
+  useEffect(() => {
+    if (plate.isDetached) {
+      dropY.value = withTiming(350, { duration: 550, easing: Easing.in(Easing.quad) });
+      rotateDeg.value = withTiming(25, { duration: 550 });
+      opacity.value = withTiming(0, { duration: 500 });
+    }
+  }, [plate.isDetached]);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateY: dropY.value },
+        { rotate: `${rotateDeg.value}deg` },
+      ],
+      opacity: opacity.value,
+    };
+  });
+
+  if (opacity.value === 0 && plate.isDetached) return null;
+
+  // Find all screw locations attached to this plate to render countersunk holes
+  const plateScrews = screws.filter((s) => plate.screwIds.includes(s.id));
+
+  return (
+    <Animated.View
+      style={[
+        styles.plateView,
+        {
+          left: plate.x,
+          top: plate.y,
+          width: plate.width,
+          height: plate.height,
+          backgroundColor: plate.color,
+          borderRadius: plate.borderRadius || 20,
+          borderColor: plate.borderColor || "rgba(0, 229, 255, 0.45)",
+          zIndex: plate.layer * 2,
+        },
+        animatedStyle,
+      ]}
+    >
+      {/* Sci-Fi Glass Highlight & Metallic Frame Border */}
+      <View style={styles.plateGlassReflection} />
+      <View style={styles.plateCornerRivetTL} />
+      <View style={styles.plateCornerRivetTR} />
+      <View style={styles.plateCornerRivetBL} />
+      <View style={styles.plateCornerRivetBR} />
+
+      {/* Render Countersunk Holes at all screw positions on this plate */}
+      {plateScrews.map((screw) => {
+        const relX = screw.x - plate.x - 22;
+        const relY = screw.y - plate.y - 22;
+
+        return (
+          <View key={`socket_${screw.id}`} style={{ position: "absolute", left: relX, top: relY }}>
+            <CountersunkSocket size={44} />
+          </View>
+        );
+      })}
+    </Animated.View>
+  );
+};
+
+// ----------------------------------------------------
+// GENERATE BALANCED & HAND-CRAFTED LEVELS (1 TO 55)
+// ----------------------------------------------------
 const generateLevel = (levelNum: number): LevelData => {
   let plates: PlateItem[] = [];
   let screws: ScrewItem[] = [];
@@ -102,7 +458,7 @@ const generateLevel = (levelNum: number): LevelData => {
   if (levelNum === 1) {
     // Level 1: 1 Plate, 3 Screws
     plates = [
-      { id: "p1", color: "rgba(235, 175, 165, 0.75)", x: 35, y: 50, width: 220, height: 160, borderRadius: 24, layer: 0, screwIds: ["s1", "s2", "s3"] },
+      { id: "p1", color: "rgba(6, 182, 212, 0.25)", borderColor: "#00E5FF", x: 35, y: 50, width: 220, height: 160, borderRadius: 24, layer: 0, screwIds: ["s1", "s2", "s3"] },
     ];
     screws = [
       { id: "s1", colorId: "green", x: 65, y: 90, layer: 0, plateIds: ["p1"] },
@@ -112,8 +468,8 @@ const generateLevel = (levelNum: number): LevelData => {
   } else if (levelNum === 2) {
     // Level 2: 2 Plates (3 Green, 3 Purple)
     plates = [
-      { id: "p1", color: "rgba(235, 175, 165, 0.75)", x: 25, y: 30, width: 240, height: 100, borderRadius: 20, layer: 0, screwIds: ["s1", "s2", "s3"] },
-      { id: "p2", color: "rgba(235, 175, 165, 0.75)", x: 25, y: 140, width: 240, height: 100, borderRadius: 20, layer: 0, screwIds: ["s4", "s5", "s6"] },
+      { id: "p1", color: "rgba(16, 185, 129, 0.25)", borderColor: "#10B981", x: 25, y: 30, width: 240, height: 100, borderRadius: 20, layer: 0, screwIds: ["s1", "s2", "s3"] },
+      { id: "p2", color: "rgba(139, 92, 246, 0.25)", borderColor: "#8B5CF6", x: 25, y: 140, width: 240, height: 100, borderRadius: 20, layer: 0, screwIds: ["s4", "s5", "s6"] },
     ];
     screws = [
       { id: "s1", colorId: "green", x: 55, y: 80, layer: 0, plateIds: ["p1"] },
@@ -126,54 +482,30 @@ const generateLevel = (levelNum: number): LevelData => {
   } else if (levelNum === 3) {
     // Level 3: 2 Overlapping Plates (Layer 0 bottom bar + Layer 1 top bar)
     plates = [
-      { id: "p1", color: "rgba(200, 150, 140, 0.5)", x: 25, y: 30, width: 240, height: 120, borderRadius: 20, layer: 0, screwIds: ["s1", "s2", "s3"] },
-      { id: "p2", color: "rgba(235, 175, 165, 0.8)", x: 45, y: 100, width: 200, height: 140, borderRadius: 20, layer: 1, screwIds: ["s4", "s5", "s6", "s7"] },
+      { id: "p1", color: "rgba(6, 182, 212, 0.25)", borderColor: "#06B6D4", x: 25, y: 30, width: 240, height: 120, borderRadius: 20, layer: 0, screwIds: ["s1", "s2", "s3"] },
+      { id: "p2", color: "rgba(245, 158, 11, 0.25)", borderColor: "#F59E0B", x: 45, y: 100, width: 200, height: 140, borderRadius: 20, layer: 1, screwIds: ["s4", "s5", "s6", "s7"] },
     ];
     screws = [
-      // Layer 0 screws
       { id: "s1", colorId: "cyan", x: 55, y: 60, layer: 0, plateIds: ["p1"] },
       { id: "s2", colorId: "cyan", x: 145, y: 60, layer: 0, plateIds: ["p1"] },
       { id: "s3", colorId: "cyan", x: 235, y: 60, layer: 0, plateIds: ["p1"] },
-      // Layer 1 screws
       { id: "s4", colorId: "yellow", x: 65, y: 130, layer: 1, plateIds: ["p2"] },
       { id: "s5", colorId: "yellow", x: 225, y: 130, layer: 1, plateIds: ["p2"] },
       { id: "s6", colorId: "yellow", x: 65, y: 210, layer: 1, plateIds: ["p2"] },
       { id: "s7", colorId: "yellow", x: 225, y: 210, layer: 1, plateIds: ["p2"] },
     ];
-  } else if (levelNum === 4) {
-    // Level 4: 3 Plates (Layer 0 background + Layer 1 two top plates)
-    plates = [
-      { id: "p0", color: "rgba(180, 130, 120, 0.4)", x: 30, y: 20, width: 230, height: 250, borderRadius: 30, layer: 0, screwIds: ["sb1", "sb2", "sb3"] },
-      { id: "p1", color: "rgba(235, 175, 165, 0.8)", x: 45, y: 35, width: 200, height: 100, borderRadius: 20, layer: 1, screwIds: ["s1", "s2", "s3"] },
-      { id: "p2", color: "rgba(235, 175, 165, 0.8)", x: 45, y: 150, width: 200, height: 100, borderRadius: 20, layer: 1, screwIds: ["s4", "s5", "s6"] },
-    ];
-    screws = [
-      // Layer 0 (Hidden under top plates)
-      { id: "sb1", colorId: "green", x: 65, y: 85, layer: 0, plateIds: ["p0"] },
-      { id: "sb2", colorId: "purple", x: 145, y: 145, layer: 0, plateIds: ["p0"] },
-      { id: "sb3", colorId: "cyan", x: 225, y: 200, layer: 0, plateIds: ["p0"] },
-      // Layer 1 (Top plates)
-      { id: "s1", colorId: "green", x: 65, y: 55, layer: 1, plateIds: ["p1"] },
-      { id: "s2", colorId: "green", x: 145, y: 55, layer: 1, plateIds: ["p1"] },
-      { id: "s3", colorId: "purple", x: 225, y: 55, layer: 1, plateIds: ["p1"] },
-      { id: "s4", colorId: "purple", x: 65, y: 170, layer: 1, plateIds: ["p2"] },
-      { id: "s5", colorId: "cyan", x: 145, y: 170, layer: 1, plateIds: ["p2"] },
-      { id: "s6", colorId: "cyan", x: 225, y: 170, layer: 1, plateIds: ["p2"] },
-    ];
   } else {
-    // Level 8 & Multi-Layered Levels: Exact match to uploaded reference image!
-    // Layer 0: Central outer frame plate with 6 screws underneath
-    // Layer 1: 4 Corner square plates with 4 screws each
+    // Level 4 & Up: Multi-Layered Translucent Glass Grid Puzzle
     plates = [
-      { id: "p0", color: "rgba(200, 150, 140, 0.45)", x: 45, y: 10, width: 200, height: 260, borderRadius: 36, layer: 0, screwIds: ["sb1", "sb2", "sb3", "sb4", "sb5", "sb6"] },
-      { id: "p1", color: "rgba(235, 175, 165, 0.75)", x: 25, y: 20, width: 115, height: 115, borderRadius: 22, layer: 1, screwIds: ["s1", "s2", "s3", "s4"] },
-      { id: "p2", color: "rgba(235, 175, 165, 0.75)", x: 155, y: 20, width: 115, height: 115, borderRadius: 22, layer: 1, screwIds: ["s5", "s6", "s7", "s8"] },
-      { id: "p3", color: "rgba(235, 175, 165, 0.75)", x: 25, y: 150, width: 115, height: 115, borderRadius: 22, layer: 1, screwIds: ["s9", "s10", "s11", "s12"] },
-      { id: "p4", color: "rgba(235, 175, 165, 0.75)", x: 155, y: 150, width: 115, height: 115, borderRadius: 22, layer: 1, screwIds: ["s13", "s14", "s15", "s16"] },
+      { id: "p0", color: "rgba(15, 23, 42, 0.95)", borderColor: "rgba(0, 229, 255, 0.4)", x: 45, y: 10, width: 200, height: 260, borderRadius: 36, layer: 0, screwIds: ["sb1", "sb2", "sb3", "sb4", "sb5", "sb6"] },
+      { id: "p1", color: "rgba(59, 130, 246, 0.25)", borderColor: "#3B82F6", x: 25, y: 20, width: 115, height: 115, borderRadius: 22, layer: 1, screwIds: ["s1", "s2", "s3", "s4"] },
+      { id: "p2", color: "rgba(6, 182, 212, 0.25)", borderColor: "#06B6D4", x: 155, y: 20, width: 115, height: 115, borderRadius: 22, layer: 1, screwIds: ["s5", "s6", "s7", "s8"] },
+      { id: "p3", color: "rgba(139, 92, 246, 0.25)", borderColor: "#8B5CF6", x: 25, y: 150, width: 115, height: 115, borderRadius: 22, layer: 1, screwIds: ["s9", "s10", "s11", "s12"] },
+      { id: "p4", color: "rgba(16, 185, 129, 0.25)", borderColor: "#10B981", x: 155, y: 150, width: 115, height: 115, borderRadius: 22, layer: 1, screwIds: ["s13", "s14", "s15", "s16"] },
     ];
 
     screws = [
-      // Layer 0 Screws (Underneath - Faded until top plates detach!)
+      // Layer 0 Screws (Underneath)
       { id: "sb1", colorId: "yellow", x: 100, y: 35, layer: 0, plateIds: ["p0"] },
       { id: "sb2", colorId: "purple", x: 145, y: 35, layer: 0, plateIds: ["p0"] },
       { id: "sb3", colorId: "pink", x: 100, y: 90, layer: 0, plateIds: ["p0"] },
@@ -182,25 +514,21 @@ const generateLevel = (levelNum: number): LevelData => {
       { id: "sb6", colorId: "yellow", x: 195, y: 190, layer: 0, plateIds: ["p0"] },
 
       // Layer 1 Screws (Top Corner Plates)
-      // Plate 1 (Top Left)
       { id: "s1", colorId: "blue", x: 45, y: 40, layer: 1, plateIds: ["p1"] },
       { id: "s2", colorId: "purple", x: 120, y: 40, layer: 1, plateIds: ["p1"] },
       { id: "s3", colorId: "purple", x: 45, y: 115, layer: 1, plateIds: ["p1"] },
       { id: "s4", colorId: "yellow", x: 120, y: 115, layer: 1, plateIds: ["p1"] },
 
-      // Plate 2 (Top Right)
       { id: "s5", colorId: "cyan", x: 175, y: 40, layer: 1, plateIds: ["p2"] },
       { id: "s6", colorId: "green", x: 250, y: 40, layer: 1, plateIds: ["p2"] },
       { id: "s7", colorId: "purple", x: 175, y: 115, layer: 1, plateIds: ["p2"] },
       { id: "s8", colorId: "yellow", x: 250, y: 115, layer: 1, plateIds: ["p2"] },
 
-      // Plate 3 (Bottom Left)
       { id: "s9", colorId: "green", x: 45, y: 170, layer: 1, plateIds: ["p3"] },
       { id: "s10", colorId: "purple", x: 120, y: 170, layer: 1, plateIds: ["p3"] },
       { id: "s11", colorId: "purple", x: 45, y: 245, layer: 1, plateIds: ["p3"] },
       { id: "s12", colorId: "cyan", x: 120, y: 245, layer: 1, plateIds: ["p3"] },
 
-      // Plate 4 (Bottom Right)
       { id: "s13", colorId: "blue", x: 175, y: 170, layer: 1, plateIds: ["p4"] },
       { id: "s14", colorId: "purple", x: 250, y: 170, layer: 1, plateIds: ["p4"] },
       { id: "s15", colorId: "purple", x: 175, y: 245, layer: 1, plateIds: ["p4"] },
@@ -260,11 +588,121 @@ export default function ScrewSpinScreen() {
   const [screws, setScrews] = useState<ScrewItem[]>([]);
   const [plates, setPlates] = useState<PlateItem[]>([]);
   const [bufferSlots, setBufferSlots] = useState<(ScrewItem | null)[]>([null, null, null, null, null]);
-  
+
+  // Screwdriver Interactive State
+  const [activeScrewPos, setActiveScrewPos] = useState<{ x: number; y: number } | null>(null);
+  const [isScrewdriverActive, setIsScrewdriverActive] = useState(false);
+
   // Game Status Modals
   const [isVictoryModalVisible, setIsVictoryModalVisible] = useState(false);
   const [isDefeatModalVisible, setIsDefeatModalVisible] = useState(false);
   const [isSettingsModalVisible, setIsSettingsModalVisible] = useState(false);
+
+  // Playtime Guard (1 Hour Limit & Rest Cooldown)
+  const playtimeGuard = usePlaytimeGuard();
+
+  // Time Limit & Cooldown States
+  const [timeLeft, setTimeLeft] = useState(GAME_TIME_LIMIT_SEC);
+  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+  const [isDefeatDueToTimeout, setIsDefeatDueToTimeout] = useState(false);
+
+  // Effective Cooldown (takes maximum of level cooldown or 1-hour rest cooldown)
+  const activeCooldownRemaining = Math.max(cooldownRemaining, playtimeGuard.cooldownRemainingSeconds);
+
+  const startCooldown = async (durationSec = COOLDOWN_DURATION_SEC) => {
+    const until = Date.now() + durationSec * 1000;
+    await AsyncStorage.setItem(STORAGE_KEY_COOLDOWN, until.toString());
+    setCooldownRemaining(durationSec);
+  };
+
+  const clearCooldown = async () => {
+    await AsyncStorage.removeItem(STORAGE_KEY_COOLDOWN);
+    setCooldownRemaining(0);
+  };
+
+  const checkCooldownState = async () => {
+    try {
+      const val = await AsyncStorage.getItem(STORAGE_KEY_COOLDOWN);
+      if (val) {
+        const until = parseInt(val, 10);
+        const now = Date.now();
+        if (until > now) {
+          const rem = Math.ceil((until - now) / 1000);
+          setCooldownRemaining(rem);
+        } else {
+          setCooldownRemaining(0);
+        }
+      } else {
+        setCooldownRemaining(0);
+      }
+    } catch (err) {
+      console.error("Failed to read cooldown status", err);
+    }
+  };
+
+  useEffect(() => {
+    checkCooldownState();
+    const timer = setInterval(() => {
+      checkCooldownState();
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Show 50-minute warning alert
+  useEffect(() => {
+    if (playtimeGuard.isWarning && !playtimeGuard.isWarningShown) {
+      Alert.alert(
+        "⚠️ Peringatan Waktu Bermain",
+        "Anda sudah bermain selama 50 menit hari ini! Dalam 10 menit game akan terkunci untuk waktu istirahat (cooldown).",
+        [{ text: "Mengerti" }]
+      );
+      playtimeGuard.setIsWarningShown(true);
+    }
+  }, [playtimeGuard.isWarning, playtimeGuard.isWarningShown]);
+
+  // If 1-hour limit is reached while playing, trigger rest modal & exit gameplay
+  useEffect(() => {
+    if (playtimeGuard.isCooldownActive && isGameStarted) {
+      setIsGameStarted(false);
+      setIsDefeatModalVisible(true);
+      setIsDefeatDueToTimeout(true);
+    }
+  }, [playtimeGuard.isCooldownActive, isGameStarted]);
+
+  // Gameplay timer tick (ticks both level time and accumulated 1-hour playtime)
+  useEffect(() => {
+    if (!isGameStarted || isVictoryModalVisible || isDefeatModalVisible || isSettingsModalVisible) {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      playtimeGuard.tickPlaytime(1);
+      setTimeLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          handleTimeOut();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isGameStarted, isVictoryModalVisible, isDefeatModalVisible, isSettingsModalVisible, playtimeGuard.tickPlaytime]);
+
+  const handleTimeOut = () => {
+    if (soundEnabled) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    setIsDefeatDueToTimeout(true);
+    setIsDefeatModalVisible(true);
+    startCooldown(COOLDOWN_DURATION_SEC);
+  };
+
+  const triggerDefeat = (isTimeout = false) => {
+    if (soundEnabled) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+    setIsDefeatDueToTimeout(isTimeout);
+    setIsDefeatModalVisible(true);
+    startCooldown(COOLDOWN_DURATION_SEC);
+  };
 
   // Load Saved Progress
   useEffect(() => {
@@ -289,8 +727,12 @@ export default function ScrewSpinScreen() {
     setScrews(data.screws);
     setPlates(data.plates);
     setBufferSlots([null, null, null, null, null]);
+    setTimeLeft(GAME_TIME_LIMIT_SEC);
+    setIsDefeatDueToTimeout(false);
     setIsVictoryModalVisible(false);
     setIsDefeatModalVisible(false);
+    setIsScrewdriverActive(false);
+    setActiveScrewPos(null);
   };
 
   const handleStartGame = () => {
@@ -341,11 +783,24 @@ export default function ScrewSpinScreen() {
     });
   };
 
-  // Screw Click Handler
+  // Screw Click Handler with Screwdriver Unbolting Animation
   const handleScrewClick = (screw: ScrewItem) => {
-    if (screw.isRemoved || isScrewCovered(screw)) return;
-    if (soundEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (screw.isRemoved || isScrewCovered(screw) || isScrewdriverActive) return;
 
+    if (soundEnabled) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+
+    // Trigger Animated Screwdriver positioning & rotation
+    setActiveScrewPos({ x: screw.x, y: screw.y });
+    setIsScrewdriverActive(true);
+
+    // After screwdriver 3-phase animation completes (~650ms), execute removal
+    setTimeout(() => {
+      setIsScrewdriverActive(false);
+      processScrewRemoval(screw);
+    }, 650);
+  };
+
+  const processScrewRemoval = (screw: ScrewItem) => {
     // Check if screw matches any visible top box with remaining capacity
     const targetBoxIndex = boxesQueue.findIndex(
       (b) =>
@@ -367,8 +822,7 @@ export default function ScrewSpinScreen() {
       const emptySlotIdx = bufferSlots.findIndex((slot) => slot === null);
       if (emptySlotIdx === -1) {
         // Buffer full & no matching box -> Fail!
-        if (soundEnabled) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        setIsDefeatModalVisible(true);
+        triggerDefeat(false);
         return;
       }
 
@@ -387,8 +841,7 @@ export default function ScrewSpinScreen() {
         );
         if (!canAnyBufferClear) {
           setTimeout(() => {
-            if (soundEnabled) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-            setIsDefeatModalVisible(true);
+            triggerDefeat(false);
           }, 300);
         }
       }
@@ -415,7 +868,7 @@ export default function ScrewSpinScreen() {
     while (changed) {
       changed = false;
       const currentActive = nextQueue.filter((b) => b.currentCount < b.requiredCount).slice(0, 2);
-      
+
       for (let i = 0; i < nextBuffer.length; i++) {
         const bufScrew = nextBuffer[i];
         if (!bufScrew) continue;
@@ -486,7 +939,7 @@ export default function ScrewSpinScreen() {
   if (!isGameStarted) {
     return (
       <SafeAreaView style={styles.splashContainer}>
-        <StatusBar barStyle="light-content" backgroundColor="#4C1378" />
+        <StatusBar barStyle="light-content" backgroundColor="#090E1A" />
 
         {/* Top Header Buttons */}
         <View style={styles.splashHeader}>
@@ -522,12 +975,35 @@ export default function ScrewSpinScreen() {
             </Text>
           </View>
 
-          {/* Play Button */}
+          {/* Play / Cooldown Locked Button */}
           <Pressable
-            style={({ pressed }) => [styles.playButton3D, pressed && styles.playButton3DPressed]}
-            onPress={handleStartGame}
+            style={({ pressed }) => [
+              styles.playButton3D,
+              activeCooldownRemaining > 0 && styles.playButtonLocked,
+              pressed && activeCooldownRemaining === 0 && styles.playButton3DPressed,
+            ]}
+            onPress={() => {
+              if (activeCooldownRemaining > 0) {
+                Alert.alert(
+                  "Game Terkunci (Waktu Istirahat)",
+                  `Game sedang dalam masa cooldown istirahat (${formatTimeSeconds(activeCooldownRemaining)}). Silakan istirahat sejenak atau reset di menu Pengaturan.`,
+                  [{ text: "OK" }]
+                );
+                return;
+              }
+              handleStartGame();
+            }}
           >
-            <Text style={styles.playButtonText}>PLAY</Text>
+            {activeCooldownRemaining > 0 ? (
+              <View style={styles.lockedBtnRow}>
+                <Ionicons name="lock-closed" size={20} color="#FFFFFF" />
+                <Text style={styles.playButtonTextLocked}>
+                  LOCKED ({formatTimeSeconds(activeCooldownRemaining)})
+                </Text>
+              </View>
+            ) : (
+              <Text style={styles.playButtonText}>PLAY</Text>
+            )}
           </Pressable>
 
           {/* Reset progress note */}
@@ -544,9 +1020,9 @@ export default function ScrewSpinScreen() {
   // ----------------------------------------------------
   return (
     <SafeAreaView style={styles.gameContainer}>
-      <StatusBar barStyle="light-content" backgroundColor="#4C1378" />
+      <StatusBar barStyle="light-content" backgroundColor="#090E1A" />
 
-      {/* Outer Purple Frame Layout */}
+      {/* Outer Purple/Sci-Fi Frame Layout */}
       <View style={styles.gameCanvas}>
         {/* Game Header */}
         <View style={styles.gameHeader}>
@@ -559,6 +1035,30 @@ export default function ScrewSpinScreen() {
 
           <View style={styles.headerLevelContainer}>
             <Text style={styles.headerLevelText}>LEVEL.{String(currentLevel).padStart(2, "0")}</Text>
+          </View>
+
+          {/* Sci-Fi Neon Time Limit HUD */}
+          <View
+            style={[
+              styles.headerTimerContainer,
+              timeLeft <= 10 && styles.headerTimerDanger,
+              timeLeft <= 30 && timeLeft > 10 && styles.headerTimerWarning,
+            ]}
+          >
+            <Ionicons
+              name={timeLeft <= 10 ? "alert-circle" : "time-outline"}
+              size={16}
+              color={timeLeft <= 10 ? "#FF4081" : timeLeft <= 30 ? "#F59E0B" : "#00E5FF"}
+            />
+            <Text
+              style={[
+                styles.headerTimerText,
+                timeLeft <= 10 && { color: "#FF4081" },
+                timeLeft <= 30 && timeLeft > 10 && { color: "#F59E0B" },
+              ]}
+            >
+              {formatTimeSeconds(timeLeft)}
+            </Text>
           </View>
 
           <View style={styles.headerRightGroup}>
@@ -578,154 +1078,76 @@ export default function ScrewSpinScreen() {
           </View>
         </View>
 
-        {/* Top Area: Active Collector Boxes */}
+        {/* Top Area: Active Collector Boxes (Robotic Energy Modules) */}
         <View style={styles.boxesArea}>
           {activeBoxes.map((box) => {
             const colorDef = SCREW_COLORS[box.colorId] || SCREW_COLORS.green;
             return (
-              <View key={box.id} style={[styles.collectorBoxContainer, { backgroundColor: colorDef.primary }]}>
+              <View key={box.id} style={[styles.collectorBoxContainer, { borderColor: colorDef.glow }]}>
                 <View style={styles.collectorBoxInner}>
-                  {box.requiredCount === 3 ? (
-                    <View style={{ alignItems: "center", gap: 4 }}>
-                      <View
-                        style={[
-                          styles.hexSocket,
-                          { backgroundColor: 0 < box.currentCount ? colorDef.light : "#1A1A1A" },
-                        ]}
-                      >
-                        {0 < box.currentCount && <View style={[styles.hexScrewHead, { backgroundColor: colorDef.dark }]} />}
-                      </View>
-                      <View style={{ flexDirection: "row", gap: 6 }}>
-                        {[1, 2].map((idx) => {
-                          const isFilled = idx < box.currentCount;
-                          return (
-                            <View
-                              key={idx}
-                              style={[
-                                styles.hexSocket,
-                                { backgroundColor: isFilled ? colorDef.light : "#1A1A1A" },
-                              ]}
-                            >
-                              {isFilled && <View style={[styles.hexScrewHead, { backgroundColor: colorDef.dark }]} />}
+                  <View style={styles.socketsRow}>
+                    {Array.from({ length: box.requiredCount }).map((_, idx) => {
+                      const isFilled = idx < box.currentCount;
+                      return (
+                        <View
+                          key={idx}
+                          style={[
+                            styles.collectorSocketSlot,
+                            { borderColor: isFilled ? colorDef.glow : "rgba(0, 229, 255, 0.25)" },
+                          ]}
+                        >
+                          {isFilled ? (
+                            <MetallicScrewHead colorId={box.colorId} size={28} />
+                          ) : (
+                            <View style={styles.emptySocketSlotInner}>
+                              <Ionicons name="add" size={12} color="rgba(0, 229, 255, 0.3)" />
                             </View>
-                          );
-                        })}
-                      </View>
-                    </View>
-                  ) : box.requiredCount === 4 ? (
-                    <View style={{ alignItems: "center", gap: 4 }}>
-                      <View style={{ flexDirection: "row", gap: 6 }}>
-                        {[0, 1].map((idx) => {
-                          const isFilled = idx < box.currentCount;
-                          return (
-                            <View
-                              key={idx}
-                              style={[
-                                styles.hexSocket,
-                                { backgroundColor: isFilled ? colorDef.light : "#1A1A1A" },
-                              ]}
-                            >
-                              {isFilled && <View style={[styles.hexScrewHead, { backgroundColor: colorDef.dark }]} />}
-                            </View>
-                          );
-                        })}
-                      </View>
-                      <View style={{ flexDirection: "row", gap: 6 }}>
-                        {[2, 3].map((idx) => {
-                          const isFilled = idx < box.currentCount;
-                          return (
-                            <View
-                              key={idx}
-                              style={[
-                                styles.hexSocket,
-                                { backgroundColor: isFilled ? colorDef.light : "#1A1A1A" },
-                              ]}
-                            >
-                              {isFilled && <View style={[styles.hexScrewHead, { backgroundColor: colorDef.dark }]} />}
-                            </View>
-                          );
-                        })}
-                      </View>
-                    </View>
-                  ) : (
-                    <View style={styles.socketsRow}>
-                      {Array.from({ length: box.requiredCount }).map((_, idx) => {
-                        const isFilled = idx < box.currentCount;
-                        return (
-                          <View
-                            key={idx}
-                            style={[
-                              styles.hexSocket,
-                              { backgroundColor: isFilled ? colorDef.light : "#1A1A1A" },
-                            ]}
-                          >
-                            {isFilled && <View style={[styles.hexScrewHead, { backgroundColor: colorDef.dark }]} />}
-                          </View>
-                        );
-                      })}
-                    </View>
-                  )}
+                          )}
+                        </View>
+                      );
+                    })}
+                  </View>
                 </View>
               </View>
             );
           })}
         </View>
 
-        {/* Middle Buffer Row (5 Empty Slots) */}
+        {/* Middle Buffer Row (5 Electromagnetic Dock Slots) */}
         <View style={styles.bufferArea}>
           {bufferSlots.map((item, idx) => (
-            <View key={idx} style={styles.bufferSlotCircle}>
-              {item && (
-                <View
-                  style={[
-                    styles.screwBufferItem,
-                    { backgroundColor: (SCREW_COLORS[item.colorId] || SCREW_COLORS.green).primary },
-                  ]}
-                >
-                  <View
-                    style={[
-                      styles.screwBufferCross,
-                      { backgroundColor: (SCREW_COLORS[item.colorId] || SCREW_COLORS.green).dark },
-                    ]}
-                  />
+            <View
+              key={idx}
+              style={[
+                styles.bufferSlotCircle,
+                item && { borderColor: (SCREW_COLORS[item.colorId] || SCREW_COLORS.green).glow },
+              ]}
+            >
+              {item ? (
+                <MetallicScrewHead colorId={item.colorId} size={38} />
+              ) : (
+                <View style={styles.bufferSlotEmpty}>
+                  <Text style={styles.bufferSlotNumber}>{idx + 1}</Text>
                 </View>
               )}
             </View>
           ))}
         </View>
 
-        {/* Main Game Board (Plates & Screws) */}
+        {/* Main Game Board (Sci-Fi Metallic Grid & Plates) */}
         <View style={styles.boardArea}>
           <View style={styles.boardSurface}>
-            {/* Render Plates (Sorted by Layer) */}
+            {/* Render Sci-Fi Detachable Plates (Sorted by Layer) */}
             {plates
               .slice()
               .sort((a, b) => a.layer - b.layer)
-              .map((plate) => {
-                if (plate.isDetached) return null;
-                return (
-                  <View
-                    key={plate.id}
-                    style={[
-                      styles.plateView,
-                      {
-                        left: plate.x,
-                        top: plate.y,
-                        width: plate.width,
-                        height: plate.height,
-                        backgroundColor: plate.color,
-                        borderRadius: plate.borderRadius || 20,
-                        zIndex: plate.layer * 2,
-                      },
-                    ]}
-                  />
-                );
-              })}
+              .map((plate) => (
+                <SciFiPlateView key={plate.id} plate={plate} screws={screws} />
+              ))}
 
-            {/* Render Screws (With Layer Opacity and Covered State) */}
+            {/* Render 3D Realistic Metallic Screws */}
             {screws.map((screw) => {
               if (screw.isRemoved) return null;
-              const colorDef = SCREW_COLORS[screw.colorId] || SCREW_COLORS.green;
               const covered = isScrewCovered(screw);
 
               return (
@@ -734,8 +1156,8 @@ export default function ScrewSpinScreen() {
                   style={({ pressed }) => [
                     styles.screwWrapper,
                     {
-                      left: screw.x - 22,
-                      top: screw.y - 22,
+                      left: screw.x - 24,
+                      top: screw.y - 24,
                       opacity: covered ? 0.35 : 1,
                       zIndex: covered ? screw.layer * 2 + 1 : screw.layer * 2 + 10,
                     },
@@ -743,16 +1165,19 @@ export default function ScrewSpinScreen() {
                   ]}
                   onPress={() => handleScrewClick(screw)}
                 >
-                  <View style={[styles.screwOuterCircle, { backgroundColor: colorDef.primary }]}>
-                    <View style={[styles.screwInnerBevel, { backgroundColor: colorDef.light }]}>
-                      {/* Cross pattern */}
-                      <View style={[styles.screwCrossLineH, { backgroundColor: colorDef.dark }]} />
-                      <View style={[styles.screwCrossLineV, { backgroundColor: colorDef.dark }]} />
-                    </View>
-                  </View>
+                  <MetallicScrewHead colorId={screw.colorId} size={48} />
                 </Pressable>
               );
             })}
+
+            {/* Interactive Screwdriver Tool Overlay */}
+            {activeScrewPos && (
+              <SciFiMechaScrewdriver
+                x={activeScrewPos.x}
+                y={activeScrewPos.y}
+                visible={isScrewdriverActive}
+              />
+            )}
           </View>
         </View>
       </View>
@@ -926,21 +1351,47 @@ export default function ScrewSpinScreen() {
         </View>
       </Modal>
 
-      {/* DEFEAT MODAL */}
+      {/* DEFEAT / REST COOLDOWN MODAL */}
       <Modal visible={isDefeatModalVisible} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Ionicons name="alert-circle-sharp" size={60} color="#FF4081" />
-            <Text style={[styles.modalTitleText, { color: "#FF4081" }]}>LUBANG PENAMPUNG PENUH!</Text>
+            <Ionicons
+              name={playtimeGuard.isCooldownActive ? "moon" : isDefeatDueToTimeout ? "time" : "alert-circle-sharp"}
+              size={60}
+              color="#FF4081"
+            />
+            <Text style={[styles.modalTitleText, { color: "#FF4081" }]}>
+              {playtimeGuard.isCooldownActive
+                ? "SAATNYA BERISTIRAHAT!"
+                : isDefeatDueToTimeout
+                ? "WAKTU HABIS!"
+                : "LUBANG PENAMPUNG PENUH!"}
+            </Text>
             <Text style={styles.modalSubText}>
-              Semua 5 lubang cadangan telah terisi dan tidak ada tempat untuk baut lagi.
+              {playtimeGuard.isCooldownActive
+                ? "Batas waktu bermain 1 jam telah terlampaui. Saatnya mengistirahatkan mata dan tubuh sejenak!"
+                : isDefeatDueToTimeout
+                ? "Batas waktu 90 detik telah berakhir. Game terkunci untuk masa cooldown."
+                : "Semua 5 lubang cadangan telah terisi dan tidak ada tempat untuk baut lagi."}
             </Text>
 
+            {activeCooldownRemaining > 0 && (
+              <View style={styles.cooldownModalBadge}>
+                <Ionicons name="lock-closed" size={14} color="#FFD700" />
+                <Text style={styles.cooldownModalBadgeText}>
+                  Cooldown Istirahat: {formatTimeSeconds(activeCooldownRemaining)}
+                </Text>
+              </View>
+            )}
+
             <Pressable
-              style={({ pressed }) => [styles.modalPrimaryBtn, { backgroundColor: "#FF4081" }, pressed && styles.btnPressed]}
-              onPress={handleRestartLevel}
+              style={({ pressed }) => [styles.modalPrimaryBtn, { backgroundColor: "#FF4081", marginTop: 12 }, pressed && styles.btnPressed]}
+              onPress={() => {
+                setIsDefeatModalVisible(false);
+                setIsGameStarted(false);
+              }}
             >
-              <Text style={styles.modalPrimaryBtnText}>COBA LAGI</Text>
+              <Text style={styles.modalPrimaryBtnText}>KEMBALI KE MENU</Text>
             </Pressable>
           </View>
         </View>
@@ -958,6 +1409,26 @@ export default function ScrewSpinScreen() {
             >
               <Text style={styles.settingLabel}>Efek Suara / Suara</Text>
               <Ionicons name={soundEnabled ? "volume-high" : "volume-mute"} size={26} color="#4CD964" />
+            </Pressable>
+
+            {/* Parent Playtime & Cooldown Reset Button */}
+            <Pressable
+              style={[styles.settingRow, { borderColor: "rgba(0, 229, 255, 0.4)" }]}
+              onPress={async () => {
+                await playtimeGuard.resetPlaytimeGuard();
+                await clearCooldown();
+                Alert.alert("Reset Berhasil", "Waktu bermain 1 jam & status cooldown telah di-reset oleh Orang Tua.");
+              }}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.settingLabel, { color: "#00E5FF", fontWeight: "700" }]}>
+                  Reset Waktu Bermain (Orang Tua)
+                </Text>
+                <Text style={{ fontSize: 11, color: "#94A3B8" }}>
+                  Main Hari Ini: {formatDurationHMS(playtimeGuard.playtimeSeconds)} / 1 Jam
+                </Text>
+              </View>
+              <Ionicons name="shield-checkmark" size={26} color="#00E5FF" />
             </Pressable>
 
             <Pressable
@@ -1120,7 +1591,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  // Game Play Screen
+  // Game Play Screen Layout
   gameContainer: {
     flex: 1,
     backgroundColor: "#090E1A",
@@ -1179,30 +1650,37 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF1744",
   },
 
-  // Top Collector Boxes (Robotic Energy Battery Chambers)
+  // Top Collector Boxes (Robotic Energy Modules)
   boxesArea: {
     flexDirection: "row",
     gap: 16,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   collectorBoxContainer: {
-    width: 110,
-    height: 90,
-    borderRadius: 28,
+    width: 120,
+    height: 94,
+    borderRadius: 22,
+    backgroundColor: "rgba(11, 19, 43, 0.95)",
     alignItems: "center",
     justifyContent: "center",
     padding: 4,
-    elevation: 6,
+    elevation: 8,
     borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.2)",
+    shadowColor: "#00F0FF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    overflow: "hidden",
   },
   collectorBoxInner: {
     width: "100%",
     height: "100%",
-    backgroundColor: "rgba(15, 23, 42, 0.85)",
-    borderRadius: 24,
+    backgroundColor: "rgba(15, 23, 42, 0.92)",
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
+    paddingVertical: 4,
+    paddingHorizontal: 4,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.1)",
   },
@@ -1210,60 +1688,70 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
-    gap: 6,
+    alignItems: "center",
+    gap: 8,
+    maxWidth: 88,
   },
-  hexSocket: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+  collectorSocketSlot: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "rgba(11, 19, 43, 0.8)",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2,
-    borderColor: "#0B132B",
+    borderWidth: 1.5,
   },
-  hexScrewHead: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+  emptySocketSlotInner: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: "#050811",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(0, 229, 255, 0.15)",
   },
 
-  // Middle Buffer Row (High-Tech Electromagnetic Port Sockets)
+  // Middle Buffer Row (High-Tech Electromagnetic Dock Ports)
   bufferArea: {
     flexDirection: "row",
     gap: 10,
     marginBottom: 16,
-    paddingHorizontal: 16,
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    backgroundColor: "rgba(11, 19, 43, 0.8)",
+    backgroundColor: "rgba(11, 19, 43, 0.85)",
     borderRadius: 24,
     borderWidth: 1.5,
-    borderColor: "rgba(0, 229, 255, 0.25)",
+    borderColor: "rgba(0, 229, 255, 0.3)",
+    elevation: 4,
   },
   bufferSlotCircle: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#1E293B",
-    borderWidth: 2.5,
-    borderColor: "rgba(0, 229, 255, 0.3)",
+    backgroundColor: "#0B132B",
+    borderWidth: 2,
+    borderColor: "rgba(0, 229, 255, 0.35)",
     alignItems: "center",
     justifyContent: "center",
   },
-  screwBufferItem: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+  bufferSlotEmpty: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "rgba(15, 23, 42, 0.8)",
     alignItems: "center",
     justifyContent: "center",
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: "rgba(0, 229, 255, 0.2)",
   },
-  screwBufferCross: {
-    width: 12,
-    height: 4,
-    borderRadius: 2,
+  bufferSlotNumber: {
+    color: "rgba(0, 229, 255, 0.4)",
+    fontSize: 11,
+    fontWeight: "800",
   },
 
-  // Main Game Board (Robotic Grid Surface)
+  // Main Game Board (Sci-Fi Grid Surface)
   boardArea: {
     flex: 1,
     width: "92%",
@@ -1287,45 +1775,86 @@ const styles = StyleSheet.create({
   plateView: {
     position: "absolute",
     borderWidth: 2.5,
-    borderColor: "rgba(0, 229, 255, 0.5)",
+    overflow: "hidden",
+    shadowColor: "#00F0FF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+  },
+  plateGlassReflection: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: "40%",
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+  },
+  plateCornerRivetTL: {
+    position: "absolute",
+    top: 6,
+    left: 6,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#475569",
+    borderWidth: 0.8,
+    borderColor: "#94A3B8",
+  },
+  plateCornerRivetTR: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#475569",
+    borderWidth: 0.8,
+    borderColor: "#94A3B8",
+  },
+  plateCornerRivetBL: {
+    position: "absolute",
+    bottom: 6,
+    left: 6,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#475569",
+    borderWidth: 0.8,
+    borderColor: "#94A3B8",
+  },
+  plateCornerRivetBR: {
+    position: "absolute",
+    bottom: 6,
+    right: 6,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#475569",
+    borderWidth: 0.8,
+    borderColor: "#94A3B8",
   },
   screwWrapper: {
     position: "absolute",
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     alignItems: "center",
     justifyContent: "center",
-    zIndex: 10,
   },
-  screwOuterCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 6,
-    borderWidth: 2.5,
-    borderColor: "rgba(255, 255, 255, 0.8)",
-  },
-  screwInnerBevel: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-  },
-  screwCrossLineH: {
+  screwdriverContainer: {
     position: "absolute",
-    width: 14,
-    height: 4,
-    borderRadius: 2,
+    width: 60,
+    height: 120,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 99,
   },
-  screwCrossLineV: {
+  torqueBitOverlay: {
     position: "absolute",
-    width: 4,
-    height: 14,
-    borderRadius: 2,
+    bottom: 8,
+  },
+  sparkPulseOverlay: {
+    position: "absolute",
+    bottom: 4,
   },
 
   // Modals
@@ -1359,23 +1888,6 @@ const styles = StyleSheet.create({
     color: "#94A3B8",
     textAlign: "center",
     marginVertical: 12,
-  },
-  rewardContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: "rgba(0, 229, 255, 0.1)",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 16,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: "rgba(0, 229, 255, 0.3)",
-  },
-  rewardText: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: "#FFD700",
   },
   modalPrimaryBtn: {
     width: "100%",
@@ -1420,7 +1932,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 
-  // Victory / Mission Completed Popup Styles matching reference image
+  // Victory / Mission Completed Popup Styles
   victoryCardContainer: {
     width: Math.min(SCREEN_WIDTH - 20, 520),
     backgroundColor: "#0B132B",
@@ -1589,5 +2101,61 @@ const styles = StyleSheet.create({
     color: "#0F172A",
     fontSize: 11,
     fontWeight: "900",
+  },
+  playButtonLocked: {
+    backgroundColor: "#DC2626",
+    borderColor: "#EF4444",
+  },
+  lockedBtnRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  playButtonTextLocked: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "900",
+    letterSpacing: 1,
+  },
+  headerTimerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(0, 229, 255, 0.12)",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(0, 229, 255, 0.3)",
+  },
+  headerTimerWarning: {
+    backgroundColor: "rgba(245, 158, 11, 0.15)",
+    borderColor: "rgba(245, 158, 11, 0.4)",
+  },
+  headerTimerDanger: {
+    backgroundColor: "rgba(239, 68, 68, 0.2)",
+    borderColor: "#EF4444",
+  },
+  headerTimerText: {
+    color: "#00E5FF",
+    fontSize: 15,
+    fontWeight: "800",
+  },
+  cooldownModalBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(255, 215, 0, 0.15)",
+    borderColor: "rgba(255, 215, 0, 0.4)",
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginVertical: 8,
+  },
+  cooldownModalBadgeText: {
+    color: "#FFD700",
+    fontSize: 13,
+    fontWeight: "800",
   },
 });
