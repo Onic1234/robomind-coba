@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View, StyleSheet, Pressable, Platform } from "react-native";
+import { View, StyleSheet, Platform } from "react-native";
 import * as Haptics from "expo-haptics";
 import Animated, {
   useSharedValue,
@@ -10,8 +10,10 @@ import Animated, {
   withSequence,
   cancelAnimation,
   Easing,
+  runOnJS,
 } from "react-native-reanimated";
-import Svg, { Path } from "react-native-svg";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Svg, { Path, Circle as SvgCircle, Defs, RadialGradient, LinearGradient, Stop, Rect } from "react-native-svg";
 
 export default function Robot3DView() {
   // --- REANIMATED SHARED VALUES ---
@@ -24,10 +26,12 @@ export default function Robot3DView() {
   const eyeBlink = useSharedValue(1);
   const corePulse = useSharedValue(1);
 
-  // Background Cloud X Translation Positions
-  const cloud1X = useSharedValue(-60);
-  const cloud2X = useSharedValue(-120);
-  const cloud3X = useSharedValue(-200);
+  // Background geometric ring pulse
+  const ringPulse = useSharedValue(1);
+
+  // Drag-to-spin free rotation (Z-axis, full 360°)
+  const spinAngle = useSharedValue(0);
+  const savedSpinAngle = useSharedValue(0);
 
   // Hover Jet Booster Flame Pulse & Thruster vibration
   const boosterPulse = useSharedValue(1);
@@ -40,6 +44,7 @@ export default function Robot3DView() {
       { translateY: robotY.value + hoverVibration.value },
       { scaleX: robotScaleX.value },
       { scaleY: robotScaleY.value },
+      { rotate: `${spinAngle.value}deg` },
     ],
   }));
 
@@ -66,24 +71,17 @@ export default function Robot3DView() {
 
   const shadowStyle = useAnimatedStyle(() => {
     const scaleVal = 1 + robotY.value / 40;
-    const opacityVal = 0.6 + robotY.value / 80;
+    const opacityVal = 0.18 + robotY.value / 120;
     return {
       transform: [{ scaleX: scaleVal }],
       opacity: opacityVal,
     };
   });
 
-  // Animated Cloud Styles
-  const cloud1Style = useAnimatedStyle(() => ({
-    transform: [{ translateX: cloud1X.value }],
-  }));
-
-  const cloud2Style = useAnimatedStyle(() => ({
-    transform: [{ translateX: cloud2X.value }],
-  }));
-
-  const cloud3Style = useAnimatedStyle(() => ({
-    transform: [{ translateX: cloud3X.value }],
+  // Subtle pulsing ring behind robot
+  const ringStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: ringPulse.value }],
+    opacity: 0.15 + (ringPulse.value - 0.95) * 0.8,
   }));
 
   // Glowing Thruster Flame Style
@@ -163,21 +161,14 @@ export default function Robot3DView() {
       true
     );
 
-    // 6. Background Clouds Continuous Drifting Loops
-    cloud1X.value = withRepeat(
-      withTiming(360, { duration: 22000, easing: Easing.linear }),
+    // 6. Background ring gentle pulse
+    ringPulse.value = withRepeat(
+      withSequence(
+        withTiming(1.06, { duration: 3000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0.95, { duration: 3000, easing: Easing.inOut(Easing.ease) })
+      ),
       -1,
-      false
-    );
-    cloud2X.value = withRepeat(
-      withTiming(360, { duration: 32000, easing: Easing.linear }),
-      -1,
-      false
-    );
-    cloud3X.value = withRepeat(
-      withTiming(360, { duration: 16000, easing: Easing.linear }),
-      -1,
-      false
+      true
     );
 
     // 7. Jet Booster Plasma Flame Flickering & vibration loops
@@ -309,23 +300,106 @@ export default function Robot3DView() {
     return () => clearTimeout(resetTimeout);
   };
 
+  // --- GESTURE HANDLERS ---
+  // Pan gesture: click-hold and drag to spin robot freely (full 360°)
+  const panGesture = Gesture.Pan()
+    .minDistance(8)
+    .onStart(() => {
+      'worklet';
+      cancelAnimation(spinAngle);
+      savedSpinAngle.value = spinAngle.value;
+    })
+    .onUpdate((event) => {
+      'worklet';
+      // Horizontal drag controls rotation — no clamp, full 360°+
+      spinAngle.value = savedSpinAngle.value + event.translationX * 0.8;
+    })
+    .onEnd((event) => {
+      'worklet';
+      // Add momentum spin from velocity, then spring back to upright (0°)
+      const momentum = event.velocityX * 0.08;
+      const targetWithMomentum = spinAngle.value + momentum;
+      spinAngle.value = withSequence(
+        withTiming(targetWithMomentum, { duration: 200, easing: Easing.out(Easing.ease) }),
+        withSpring(0, { damping: 10, stiffness: 80, mass: 1 })
+      );
+    });
+
+  // Tap gesture: quick tap triggers jump interaction
+  const tapGesture = Gesture.Tap()
+    .onEnd(() => {
+      'worklet';
+      runOnJS(handleInteraction)();
+    });
+
+  // Race: pan wins if drag detected, otherwise tap wins
+  const composedGesture = Gesture.Race(panGesture, tapGesture);
+
   return (
     <View style={styles.outerContainer}>
-      {/* LANDSCAPE SCRAPPY BACKGROUND: Bukit, langit, awan & gelembung aura */}
-      <Animated.View style={[styles.cloud1, cloud1Style]} />
-      <Animated.View style={[styles.cloud2, cloud2Style]} />
-      <Animated.View style={[styles.cloud3, cloud3Style]} />
+      {/* RICH GRADIENT BACKGROUND with layered glows */}
+      <View style={styles.bgGradientLayer}>
+        <Svg width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+          <Defs>
+            {/* Base gradient: deep navy to indigo */}
+            <LinearGradient id="bgBase" x1="0%" y1="0%" x2="100%" y2="100%">
+              <Stop offset="0%" stopColor="#0F172A" />
+              <Stop offset="50%" stopColor="#1E1B4B" />
+              <Stop offset="100%" stopColor="#0C1222" />
+            </LinearGradient>
+            {/* Cyan center glow */}
+            <RadialGradient id="glowCyan" cx="50%" cy="40%" r="50%">
+              <Stop offset="0%" stopColor="#22D3EE" stopOpacity="0.25" />
+              <Stop offset="60%" stopColor="#0891B2" stopOpacity="0.08" />
+              <Stop offset="100%" stopColor="#0F172A" stopOpacity="0" />
+            </RadialGradient>
+            {/* Purple accent glow top-right */}
+            <RadialGradient id="glowPurple" cx="80%" cy="20%" r="45%">
+              <Stop offset="0%" stopColor="#A78BFA" stopOpacity="0.2" />
+              <Stop offset="70%" stopColor="#7C3AED" stopOpacity="0.05" />
+              <Stop offset="100%" stopColor="#1E1B4B" stopOpacity="0" />
+            </RadialGradient>
+            {/* Warm amber glow bottom-left */}
+            <RadialGradient id="glowAmber" cx="15%" cy="85%" r="40%">
+              <Stop offset="0%" stopColor="#F59E0B" stopOpacity="0.12" />
+              <Stop offset="70%" stopColor="#D97706" stopOpacity="0.04" />
+              <Stop offset="100%" stopColor="#0F172A" stopOpacity="0" />
+            </RadialGradient>
+          </Defs>
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#bgBase)" />
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#glowCyan)" />
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#glowPurple)" />
+          <Rect x="0" y="0" width="100%" height="100%" fill="url(#glowAmber)" />
+        </Svg>
+      </View>
 
-      <View style={styles.backHill} />
-      <View style={styles.frontHill} />
-      <View style={styles.grassGround} />
+      {/* Animated concentric rings with glow */}
+      <Animated.View style={[styles.geoRingsContainer, ringStyle]}>
+        <View style={styles.ringOuter} />
+        <View style={styles.ringMiddle} />
+        <View style={styles.ringInner} />
+      </Animated.View>
 
-      {/* Gelembung Aura transparan di belakang robot */}
-      <View style={styles.glassAura} />
+      {/* Floating glowing orbs */}
+      <View style={[styles.orb, { top: '8%', left: '15%', width: 8, height: 8, backgroundColor: '#22D3EE', opacity: 0.5 }]} />
+      <View style={[styles.orb, { top: '18%', right: '12%', width: 5, height: 5, backgroundColor: '#A78BFA', opacity: 0.45 }]} />
+      <View style={[styles.orb, { bottom: '25%', left: '10%', width: 6, height: 6, backgroundColor: '#F59E0B', opacity: 0.35 }]} />
+      <View style={[styles.orb, { top: '42%', right: '8%', width: 4, height: 4, backgroundColor: '#34D399', opacity: 0.4 }]} />
+      <View style={[styles.orb, { bottom: '12%', right: '20%', width: 7, height: 7, backgroundColor: '#22D3EE', opacity: 0.3 }]} />
+      <View style={[styles.orb, { top: '60%', left: '20%', width: 4, height: 4, backgroundColor: '#A78BFA', opacity: 0.35 }]} />
+      <View style={[styles.orb, { top: '15%', left: '50%', width: 3, height: 3, backgroundColor: '#FDE68A', opacity: 0.5 }]} />
+      <View style={[styles.orb, { bottom: '35%', right: '30%', width: 3, height: 3, backgroundColor: '#34D399', opacity: 0.3 }]} />
+
+      {/* Subtle grid lines for depth */}
+      <View style={styles.gridLineH1} />
+      <View style={styles.gridLineH2} />
+      <View style={styles.gridLineV1} />
+      <View style={styles.gridLineV2} />
 
       <View style={styles.robotContainer}>
-        {/* Pressable Robot Assembly */}
-        <Pressable onPress={handleInteraction} style={styles.robotTouchArea}>
+        {/* Interactive Robot Assembly: Tap to jump, Drag to rotate */}
+        <GestureDetector gesture={composedGesture}>
+          <Animated.View style={styles.robotTouchArea}>
           <Animated.View style={[styles.robotAssembly, robotTranslateStyle]}>
             {/* HEAD ASSEMBLY */}
             <Animated.View style={[styles.headContainer, headStyle]}>
@@ -402,9 +476,10 @@ export default function Robot3DView() {
               </Svg>
             </Animated.View>
           </Animated.View>
-        </Pressable>
+          </Animated.View>
+        </GestureDetector>
 
-        {/* Dynamic Shadow on the floor (Dark green shadow blending with grass) */}
+        {/* Minimal floor shadow */}
         <Animated.View style={[styles.floorShadow, shadowStyle]} />
       </View>
     </View>
@@ -417,97 +492,109 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 35,
-    backgroundColor: "#BAE6FD", // Soft Sky Blue
+    backgroundColor: "#0F172A",
     borderRadius: 24,
     borderWidth: 1.5,
-    borderColor: "#E2E8F0",
+    borderColor: "rgba(34, 211, 238, 0.2)",
     overflow: "hidden",
     position: "relative",
-    // Soft card shadow
-    shadowColor: "#000000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    // Cyan-tinted glow shadow
+    shadowColor: "#06B6D4",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 6,
   },
-  
-  // CLOUD SHAPES
-  cloud1: {
-    position: "absolute",
-    top: 25,
-    left: -50,
-    width: 36,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: "#FFFFFF",
-    opacity: 0.85,
-    zIndex: 0,
-  },
-  cloud2: {
-    position: "absolute",
-    top: 40,
-    left: -80,
-    width: 50,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: "#FFFFFF",
-    opacity: 0.85,
-    zIndex: 0,
-  },
-  cloud3: {
-    position: "absolute",
-    top: 15,
-    left: -40,
-    width: 30,
-    height: 15,
-    borderRadius: 8,
-    backgroundColor: "#FFFFFF",
-    opacity: 0.6,
+
+  // SVG gradient background layer
+  bgGradientLayer: {
+    ...StyleSheet.absoluteFillObject,
     zIndex: 0,
   },
 
-  // HILL SHAPES (Perbukitan Hijau bertumpuk)
-  backHill: {
+  // Concentric rings with visible glow
+  geoRingsContainer: {
     position: "absolute",
-    bottom: 30,
-    width: "150%",
-    height: 160,
-    borderRadius: 180,
-    backgroundColor: "#A7F3D0", // Soft green back hill
-    left: "-25%",
-    zIndex: 0,
-  },
-  frontHill: {
-    position: "absolute",
-    bottom: 12,
-    width: "160%",
-    height: 120,
-    borderRadius: 160,
-    backgroundColor: "#6EE7B7", // Medium green front hill
-    left: "-30%",
-    zIndex: 0,
-  },
-  grassGround: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 45,
-    backgroundColor: "#34D399", // Grass floor
-    zIndex: 0,
-  },
-
-  // Glass Aura Bubble behind the robot (Gelembung aura melayang)
-  glassAura: {
-    position: "absolute",
-    width: 210,
-    height: 210,
-    borderRadius: 105,
-    backgroundColor: "rgba(224, 242, 254, 0.42)",
-    borderWidth: 1.5,
-    borderColor: "rgba(14, 165, 233, 0.2)",
+    width: 280,
+    height: 280,
+    alignItems: "center",
+    justifyContent: "center",
     alignSelf: "center",
-    top: "14%",
+    top: "6%",
+    zIndex: 0,
+  },
+  ringOuter: {
+    position: "absolute",
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    borderWidth: 1,
+    borderColor: "rgba(34, 211, 238, 0.1)",
+  },
+  ringMiddle: {
+    position: "absolute",
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    borderWidth: 1.5,
+    borderColor: "rgba(34, 211, 238, 0.18)",
+  },
+  ringInner: {
+    position: "absolute",
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 1.5,
+    borderColor: "rgba(167, 139, 250, 0.22)",
+  },
+
+  // Floating glowing orbs
+  orb: {
+    position: "absolute",
+    borderRadius: 999,
+    zIndex: 0,
+    // Glow effect via shadow
+    shadowColor: "#22D3EE",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
+  },
+
+  // Subtle grid lines for depth
+  gridLineH1: {
+    position: "absolute",
+    width: "85%",
+    height: 1,
+    backgroundColor: "rgba(34, 211, 238, 0.04)",
+    top: "35%",
+    alignSelf: "center",
+    zIndex: 0,
+  },
+  gridLineH2: {
+    position: "absolute",
+    width: "60%",
+    height: 1,
+    backgroundColor: "rgba(167, 139, 250, 0.04)",
+    top: "65%",
+    alignSelf: "center",
+    zIndex: 0,
+  },
+  gridLineV1: {
+    position: "absolute",
+    width: 1,
+    height: "70%",
+    backgroundColor: "rgba(34, 211, 238, 0.04)",
+    left: "30%",
+    top: "15%",
+    zIndex: 0,
+  },
+  gridLineV2: {
+    position: "absolute",
+    width: 1,
+    height: "70%",
+    backgroundColor: "rgba(167, 139, 250, 0.04)",
+    left: "70%",
+    top: "15%",
     zIndex: 0,
   },
 
@@ -729,14 +816,18 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
 
-  // FLOOR SHADOW (Green-tinted grass shadow)
+  // Floor shadow with cyan tint
   floorShadow: {
     position: "absolute",
-    bottom: 2,
+    bottom: 6,
     width: 110,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "rgba(6, 78, 59, 0.22)", // Bayangan hijau gelap di atas rumput
+    backgroundColor: "rgba(34, 211, 238, 0.15)",
     zIndex: 1,
+    shadowColor: "#22D3EE",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
   },
 });

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Stack } from "expo-router";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import ChatbotButton from "../components/ChatbotButton";
 import AppIntroFlow from "../components/AppIntroFlow";
 
@@ -11,7 +12,7 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="parent-mode" options={{ headerShown: false }} />
@@ -24,6 +25,6 @@ export default function RootLayout() {
         <Stack.Screen name="robo-bros" options={{ headerShown: false }} />
       </Stack>
       <ChatbotButton />
-    </>
+    </GestureHandlerRootView>
   );
 }
