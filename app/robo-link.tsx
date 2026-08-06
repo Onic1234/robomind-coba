@@ -15,6 +15,8 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ARENA_SIZE = Math.min(360, SCREEN_WIDTH - 40);
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { GameBackButton } from "../components/GameBackButton";
+import { HowToPlayModal } from "../components/HowToPlayModal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -3981,6 +3983,7 @@ export default function RoboLinkScreen() {
   const [view, setView] = useState<"map" | "game">("map");
   const [userCoins, setUserCoins] = useState(1250);
   const [gameState, setGameState] = useState<"playing" | "victory" | "completed" | "failed" | "outOfLives">("playing");
+  const [showHelp, setShowHelp] = useState(true);
 
   const [tiles, setTiles] = useState<Tile[]>([]);
   const [timeCounter, setTimeCounter] = useState(0);
@@ -4381,13 +4384,17 @@ export default function RoboLinkScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: "#F0FDF4" }]} edges={["top", "bottom"]}>
         <StatusBar barStyle="dark-content" backgroundColor="#86EFAC" />
         <View style={[styles.header, { backgroundColor: "#86EFAC", borderBottomColor: "#4ADE80" }]}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}>
-              <Ionicons name="arrow-back" size={20} color="#166534" />
-            </Pressable>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <GameBackButton bgColor="#006874" borderColor="#006874" bottomBorderColor="#004E57" />
             <Text style={{ ...FONTS.heading, fontSize: 18, color: "#14532D" }}>Peta Sirkuit</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Pressable
+              onPress={() => setShowHelp(true)}
+              style={({ pressed }) => [styles.resetBtn, pressed && { opacity: 0.7 }]}
+            >
+              <Ionicons name="help-circle" size={18} color="#FFFFFF" />
+            </Pressable>
             <View style={[styles.coinsHeaderBadge, { borderColor: "#EF4444", backgroundColor: "#FEF2F2" }]}>
               <Ionicons name="heart" size={16} color="#EF4444" />
               <Text style={[styles.coinsHeaderVal, { color: "#B91C1C" }]}>{lives}</Text>
@@ -4493,6 +4500,24 @@ export default function RoboLinkScreen() {
           </View>
         </Modal>
 
+        <HowToPlayModal
+          visible={showHelp}
+          onClose={() => setShowHelp(false)}
+          title="Cara Main Robo Link"
+          goal="Sambungkan jalur sirkuit dari Robot sumber ke PC tujuan sebelum waktu habis!"
+          accentColor="#0D9488"
+          subtitleColor="#0F766E"
+          steps={[
+            { emoji: "1️⃣", text: "Ketuk ubin sirkuit untuk memutarnya sebesar 90°." },
+            { emoji: "2️⃣", text: "Putar hingga terbentuk jalur tersambung dari Robot (sumber) ke PC (tujuan)." },
+            { emoji: "3️⃣", text: "Waktu terbatas (30–45 detik). Jika waktu habis, nyawa berkurang — hati-hati ubin jebakan!" },
+            { emoji: "4️⃣", text: "Level terbuka berurutan. Nyawa pulih 1 setiap 15 menit (maksimal 5)." },
+          ]}
+          tips={[
+            "Mulai putar tile dari dekat sumber, lalu telusuri terus sampai ke PC.",
+            "Rencanakan jalur sebelum waktu habis — cek bentuk tile di sekitarnya.",
+          ]}
+        />
       </SafeAreaView>
     );
   }
@@ -4522,6 +4547,12 @@ export default function RoboLinkScreen() {
         </View>
 
         <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Pressable
+            onPress={() => setShowHelp(true)}
+            style={({ pressed }) => [styles.resetBtn, pressed && { opacity: 0.7 }]}
+          >
+            <Ionicons name="help-circle" size={18} color="#FFFFFF" />
+          </Pressable>
           <View style={styles.levelBadge}>
             <Text style={styles.levelBadgeText}>Level {level}</Text>
           </View>
@@ -5106,6 +5137,25 @@ export default function RoboLinkScreen() {
           </View>
         </View>
       </Modal>
+
+      <HowToPlayModal
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Cara Main Robo Link"
+        goal="Sambungkan jalur sirkuit dari Robot sumber ke PC tujuan sebelum waktu habis!"
+        accentColor="#0D9488"
+        subtitleColor="#0F766E"
+        steps={[
+          { emoji: "1️⃣", text: "Ketuk ubin sirkuit untuk memutarnya sebesar 90°." },
+          { emoji: "2️⃣", text: "Putar hingga terbentuk jalur tersambung dari Robot (sumber) ke PC (tujuan)." },
+          { emoji: "3️⃣", text: "Waktu terbatas (30–45 detik). Jika waktu habis, nyawa berkurang — hati-hati ubin jebakan!" },
+          { emoji: "4️⃣", text: "Level terbuka berurutan. Nyawa pulih 1 setiap 15 menit (maksimal 5)." },
+        ]}
+        tips={[
+          "Mulai putar tile dari dekat sumber, lalu telusuri terus sampai ke PC.",
+          "Rencanakan jalur sebelum waktu habis — cek bentuk tile di sekitarnya.",
+        ]}
+      />
     </SafeAreaView>
   );
 }

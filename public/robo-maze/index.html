@@ -116,9 +116,58 @@
       max-width: 129vh; /* 86vh * 1.5 aspect ratio */
       width: 100%;
     }
+
+    /* Rotate prompt overlay for mobile portrait */
+    #rotate-prompt {
+      position: fixed; inset: 0;
+      background: rgba(3, 7, 18, 0.96);
+      backdrop-filter: blur(24px);
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 30px;
+    }
+    .rotate-icon { font-size: 4.5rem; margin-bottom: 20px; animation: rotatePulse 2s infinite ease-in-out; }
+    @keyframes rotatePulse {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(90deg) scale(1.1); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+    .rotate-title { font-size: 1.6rem; font-weight: 900; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+    .rotate-desc { font-size: 0.9rem; color: #94a3b8; max-width: 340px; line-height: 1.5; }
+    @media screen and (orientation: landscape) {
+      #rotate-prompt { display: none !important; }
+    }
+
+    /* Landscape mobile: compact layout */
+    @media screen and (orientation: landscape) and (max-height: 500px) {
+      body { padding: 4px !important; }
+      #gameContainer { max-height: 96vh; padding: 6px !important; border-width: 2px !important; border-radius: 12px !important; }
+      #gameContainer .text-[10px] { font-size: 7px !important; }
+      #gameContainer .text-[9px] { font-size: 7px !important; }
+      #gameContainer .px-2\.5 { padding-left: 5px !important; padding-right: 5px !important; }
+      #gameContainer .py-1 { padding-top: 2px !important; padding-bottom: 2px !important; }
+      #mazeGrid { inset: 8px !important; }
+      .w-24 { width: 56px !important; }
+      .h-24 { height: 56px !important; }
+      .w-7 { width: 18px !important; }
+      .h-7 { height: 18px !important; }
+      .w-8 { width: 22px !important; }
+      .h-8 { height: 22px !important; }
+    }
   </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-2 md:p-4 text-white overflow-hidden bg-slate-950">
+
+  <!-- Rotate phone prompt overlay -->
+  <div id="rotate-prompt">
+    <div class="rotate-icon">🔄📱</div>
+    <div class="rotate-title">PUTAR HP KE LANSKAP</div>
+    <div class="rotate-desc">Sila miringkan / rotate HP Anda ke posisi <strong>Lanskap (Tidur)</strong> untuk bermain Robo Maze!</div>
+  </div>
 
   <!-- Overlay untuk efek kilatan merah saat menabrak -->
   <div id="flashOverlay" class="fixed inset-0 pointer-events-none z-50"></div>
@@ -1293,6 +1342,18 @@
       toggleModal(false);
       toggleLevelModal(true);
     });
+
+    // Orientation Check for Mobile
+    function checkOrientation() {
+      const prompt = document.getElementById('rotate-prompt');
+      if (!prompt) return;
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
+      const isPortrait = window.innerHeight > window.innerWidth;
+      prompt.style.display = (isMobile && isPortrait) ? 'flex' : 'none';
+    }
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    checkOrientation();
 
     // Jalankan Game Pertama kali
     window.addEventListener('DOMContentLoaded', () => {

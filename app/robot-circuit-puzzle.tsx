@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { HowToPlayModal } from "../components/HowToPlayModal";
 import * as Haptics from "expo-haptics";
 import Animated, {
   useSharedValue,
@@ -503,6 +504,8 @@ const TileView = React.memo(function TileView({
   }
 );
 
+ModuleItem.displayName = "ModuleItem";
+
 export default function RobotCircuitPuzzleScreen() {
   const router = useRouter();
 
@@ -517,6 +520,7 @@ export default function RobotCircuitPuzzleScreen() {
   const [quizAnswer, setQuizAnswer] = useState<number | null>(null);
   const [quizFeedback, setQuizFeedback] = useState<"" | "correct" | "wrong">("");
   const [hintCellId, setHintCellId] = useState<string | null>(null);
+  const [showHelp, setShowHelp] = useState(false);
   const [companionText, setCompanionText] = useState(
     "Putar kabel di papan sirkuit agar sinyal dari Sumber bisa sampai ke Lampu. Ketuk kabel untuk memutarnya 90°!"
   );
@@ -680,9 +684,14 @@ export default function RobotCircuitPuzzleScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#0B1120" />
 
       <View style={styles.header}>
-        <Pressable style={styles.iconButton} onPress={() => setShowPauseModal(true)}>
-          <Ionicons name="menu" size={22} color="#94A3B8" />
-        </Pressable>
+        <View style={styles.headerLeftRow}>
+          <Pressable style={styles.iconButton} onPress={() => setShowPauseModal(true)}>
+            <Ionicons name="menu" size={22} color="#94A3B8" />
+          </Pressable>
+          <Pressable style={styles.iconButton} onPress={() => setShowHelp(true)}>
+            <Ionicons name="help-circle-outline" size={22} color="#94A3B8" />
+          </Pressable>
+        </View>
         <View style={styles.levelBadgeContainer}>
           <Text style={styles.levelText}>SIRKUIT {String(level).padStart(2, "0")}</Text>
         </View>
@@ -920,6 +929,25 @@ export default function RobotCircuitPuzzleScreen() {
           </View>
         </View>
       </Modal>
+
+      <HowToPlayModal
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Cara Main Robot Circuit"
+        goal="Keluarkan semua modul robot dari papan sirkuit sebelum energi habis!"
+        accentColor="#F97316"
+        subtitleColor="#C2410C"
+        steps={[
+          { emoji: "1️⃣", text: "Ketuk modul robot yang panahnya menunjuk ke jalur kosong untuk menggesernya keluar." },
+          { emoji: "2️⃣", text: "Modul yang terhalang modul lain harus dilepas lebih dulu — pikirkan urutannya!" },
+          { emoji: "3️⃣", text: "Setiap langkah mengurangi energi (mulai dari 100, minimum 10)." },
+          { emoji: "4️⃣", text: "Gunakan tombol Undo, Petunjuk (−20 koin), dan Restart jika diperlukan." },
+        ]}
+        tips={[
+          "Cari modul yang panahnya langsung mengarah ke sisi luar papan.",
+          "Level 5 punya tantangan kuis komputasi — jawab dengan benar!",
+        ]}
+      />
     </SafeAreaView>
   );
 }
@@ -938,6 +966,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#0F172A",
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.08)",
+  },
+  headerLeftRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   iconButton: {
     width: 42,

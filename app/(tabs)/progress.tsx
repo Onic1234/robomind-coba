@@ -20,26 +20,27 @@ interface SkillData {
 export default function ProgressScreen() {
   const router = useRouter();
   const [selectedLevel, setSelectedLevel] = useState<SimulationLevel>("Intermediate");
+  const [userCoins, setUserCoins] = useState(1250);
 
   const levelsMetrics = {
     Beginner: {
       skills: "5",
       activities: "10",
-      curriculum: "5",
+      curriculum: "5 Misi",
       status: "Beginner Explorer 🚀",
       desc: "Anak dalam tahap pengenalan konsep dasar & logika!",
     },
     Intermediate: {
       skills: "12",
       activities: "24",
-      curriculum: "15",
+      curriculum: "15 Misi",
       status: "Intermediate Coder 🌟",
       desc: "Anak mulai mahir menguasai algoritma menengah!",
     },
     Advanced: {
       skills: "18",
       activities: "50",
-      curriculum: "24",
+      curriculum: "24 Misi",
       status: "Advanced Genius 👑",
       desc: "Mampu memecahkan masalah logika & coding kompleks!",
     },
@@ -162,17 +163,17 @@ export default function ProgressScreen() {
       <View style={styles.currencyRow}>
         <View style={[styles.currencyPill, { backgroundColor: "#FFF9E6", borderColor: "#FDE68A" }]}>
           <Text style={{ fontSize: 16 }}>🪙</Text>
-          <Text style={[styles.currencyText, { color: "#D97706" }]}>6.355</Text>
+          <Text style={[styles.currencyText, { color: "#D97706" }]}>{userCoins.toLocaleString("id-ID")} Koin</Text>
         </View>
 
         <View style={[styles.currencyPill, { backgroundColor: "#E0F2FE", borderColor: "#BAE6FD" }]}>
           <Text style={{ fontSize: 16 }}>⚡</Text>
-          <Text style={[styles.currencyText, { color: "#0284C7" }]}>85/100</Text>
+          <Text style={[styles.currencyText, { color: "#0284C7" }]}>85/100 Energi</Text>
         </View>
 
         <View style={[styles.currencyPill, { backgroundColor: "#FCE7F3", borderColor: "#FBCFE8" }]}>
           <Text style={{ fontSize: 16 }}>💎</Text>
-          <Text style={[styles.currencyText, { color: "#DB2777" }]}>12</Text>
+          <Text style={[styles.currencyText, { color: "#DB2777" }]}>12 Permata</Text>
         </View>
       </View>
 

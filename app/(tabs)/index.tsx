@@ -134,21 +134,21 @@ export default function Index() {
     Beginner: {
       skills: "5",
       activities: "10+",
-      curriculum: "5h",
+      curriculum: "5 Misi",
       status: "Beginner",
       desc: "Berkembang sesuai progres bermain anak.",
     },
     Intermediate: {
       skills: "12",
       activities: "24",
-      curriculum: "15",
+      curriculum: "15 Misi",
       status: "Intermediate",
       desc: "Anak mulai menguasai algoritma menengah.",
     },
     Advanced: {
       skills: "15+",
       activities: "50+",
-      curriculum: "24h",
+      curriculum: "24 Misi",
       status: "Advanced",
       desc: "Mampu memecahkan masalah logika kompleks.",
     },
@@ -462,7 +462,7 @@ export default function Index() {
         <View style={styles.progressCard}>
           <View style={styles.progressHeader}>
             <Text style={styles.progressCardTitle}>Progress Hari ini</Text>
-            <Text style={styles.xpText}>+120 XP</Text>
+            <Text style={styles.xpText}>+120 XP ⭐</Text>
           </View>
           <View style={styles.xpBarContainer}>
             <View style={styles.xpBarWrapper}>

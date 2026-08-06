@@ -1,191 +1,8 @@
-import React, { useState, useEffect } from "react";
-import {
-  StyleSheet,
-  View,
-  SafeAreaView,
-  TouchableOpacity,
-  Text,
-  StatusBar,
-  Platform,
-} from "react-native";
-import { WebView } from "react-native-webview";
-import { router } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Ionicons } from "@expo/vector-icons";
-
-const STORAGE_KEY_COINS = "robomind_user_coins";
-const STORAGE_KEY_LEVEL = "pose_master_current_level";
-
-export default function PoseMasterScreen() {
-  const [currentLevel, setCurrentLevel] = useState<number>(1);
-  const [userCoins, setUserCoins] = useState<number>(0);
-
-  useEffect(() => {
-    loadUserData();
-
-    if (Platform.OS === "web") {
-      const handleWebMessage = (e: MessageEvent) => {
-        try {
-          const data = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
-          if (data && data.type === "LEVEL_COMPLETE") {
-            handleLevelComplete(data.coins, data.level);
-          } else if (data && data.type === "GO_BACK") {
-            router.back();
-          }
-        } catch (err) {
-          // Ignore
-        }
-      };
-      window.addEventListener("message", handleWebMessage);
-      return () => window.removeEventListener("message", handleWebMessage);
-    }
-  }, []);
-
-  const loadUserData = async () => {
-    try {
-      const savedCoins = await AsyncStorage.getItem(STORAGE_KEY_COINS);
-      const savedLevel = await AsyncStorage.getItem(STORAGE_KEY_LEVEL);
-      if (savedCoins !== null) setUserCoins(parseInt(savedCoins, 10));
-      if (savedLevel !== null) setCurrentLevel(parseInt(savedLevel, 10));
-    } catch (e) {
-      console.warn("Failed to load user data:", e);
-    }
-  };
-
-  const handleLevelComplete = async (coinsGained: number, levelNum: number) => {
-    const newCoins = userCoins + (coinsGained || 100);
-    setUserCoins(newCoins);
-    await AsyncStorage.setItem(STORAGE_KEY_COINS, newCoins.toString());
-    if (levelNum >= currentLevel) {
-      const nextLvl = levelNum + 1;
-      setCurrentLevel(nextLvl);
-      await AsyncStorage.setItem(STORAGE_KEY_LEVEL, nextLvl.toString());
-    }
-  };
-
-  const handleWebViewMessage = (event: any) => {
-    try {
-      const data = JSON.parse(event.nativeEvent.data);
-      if (data.type === "LEVEL_COMPLETE") {
-        handleLevelComplete(data.coins, data.level);
-      } else if (data.type === "GO_BACK") {
-        router.back();
-      }
-    } catch (e) {
-      // Ignore
-    }
-  };
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
-      <View style={styles.topHeader}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={22} color="#F8FAFC" />
-        </TouchableOpacity>
-        <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Master Pose Tangan</Text>
-          <Text style={styles.headerSubtitle}>
-            Game Refleks & Motorik Anak • Level {currentLevel}
-          </Text>
-        </View>
-        <View style={styles.coinBadge}>
-          <Ionicons name="sparkles" size={14} color="#F59E0B" />
-          <Text style={styles.coinText}>{userCoins}</Text>
-        </View>
-      </View>
-
-      <View style={styles.webviewContainer}>
-        {Platform.OS === "web" ? (
-          <iframe
-            srcDoc={poseEngineHtml}
-            style={{ width: "100%", height: "100%", border: "none" }}
-          />
-        ) : (
-          <WebView
-            originWhitelist={["*"]}
-            source={{ html: poseEngineHtml }}
-            style={styles.webview}
-            javaScriptEnabled={true}
-            domStorageEnabled={true}
-            allowFileAccess={true}
-            allowUniversalAccessFromFileURLs={true}
-            mediaPlaybackRequiresUserAction={false}
-            allowsInlineMediaPlayback={true}
-            onMessage={handleWebViewMessage}
-          />
-        )}
-      </View>
-    </SafeAreaView>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0F172A",
-  },
-  topHeader: {
-    height: 52,
-    backgroundColor: "#0F172A",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(56, 189, 248, 0.2)",
-  },
-  backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  headerTitleContainer: {
-    alignItems: "center",
-  },
-  headerTitle: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#F8FAFC",
-  },
-  headerSubtitle: {
-    fontSize: 10,
-    color: "#94A3B8",
-  },
-  coinBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: "rgba(245, 158, 11, 0.15)",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "rgba(245, 158, 11, 0.3)",
-  },
-  coinText: {
-    fontSize: 12,
-    fontWeight: "bold",
-    color: "#F59E0B",
-  },
-  webviewContainer: {
-    flex: 1,
-    backgroundColor: "#0F172A",
-  },
-  webview: {
-    flex: 1,
-    backgroundColor: "#0F172A",
-  },
-});
-
-const poseEngineHtml = `<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Master Pose Tangan SD - Game Fokus Anak</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -202,7 +19,6 @@ const poseEngineHtml = `<!DOCTYPE html>
             font-family: 'Fredoka', cursive, sans-serif;
             user-select: none;
             background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
-            margin: 0; padding: 0; overflow: hidden; height: 100vh;
         }
 
         @keyframes pulse-glow {
@@ -214,6 +30,7 @@ const poseEngineHtml = `<!DOCTYPE html>
             animation: pulse-glow 1.5s infinite;
         }
 
+        /* Lane borders & hit flash effects */
         .lane-hit-flash {
             animation: flash-bg 0.25s ease-out;
         }
@@ -232,10 +49,20 @@ const poseEngineHtml = `<!DOCTYPE html>
             100% { background-color: transparent; }
         }
 
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.3); border-radius: 4px; }
+        /* Custom Scrollbar for scoreboard */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 4px;
+        }
 
+        /* Custom progress bar animation for system loading modal */
         @keyframes loading-bar-flow {
             0% { transform: translateX(-100%); }
             50% { transform: translateX(50%); }
@@ -322,34 +149,50 @@ const poseEngineHtml = `<!DOCTYPE html>
                 <div class="bg-indigo-950/60 p-3 rounded-2xl border border-indigo-500/30 flex flex-col items-center">
                     <span class="text-3xl mb-1">🤘</span>
                     <span class="text-xs font-bold text-yellow-300">Metal</span>
-                    <span class="text-[10px] text-indigo-300">3 Jari</span>
+                    <span class="text-[10px] text-indigo-300">Rock On</span>
                 </div>
             </div>
 
-            <!-- Level Selector -->
-            <div class="w-full mb-8">
-                <div class="text-xs font-bold text-indigo-300 uppercase tracking-widest mb-3">Pilih Tingkat Level:</div>
-                <div class="grid grid-cols-3 gap-3">
-                    <button onclick="selectLevel(1)" class="level-btn active p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-900/40 transition-all text-left flex flex-col justify-between">
+            <div class="w-full mb-6">
+                <h3 class="text-sm font-bold text-indigo-300 uppercase tracking-wider mb-3">Pilih Tingkat Level:</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <button onclick="selectLevel(1)" id="lvlBtn1" class="level-btn active p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-900/40 hover:bg-emerald-800/60 transition-all text-left flex flex-col justify-between">
                         <div>
-                            <div class="text-xs text-emerald-400 font-bold">LEVEL 1</div>
-                            <div class="text-lg font-black text-white">Santai</div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-emerald-300 text-lg">Level 1</span>
+                                <span class="bg-emerald-500/30 text-emerald-200 text-xs px-2 py-0.5 rounded-full">Mudah</span>
+                            </div>
+                            <p class="text-xs text-emerald-100">10 Simbol • Kecepatan Santai</p>
                         </div>
-                        <span class="text-[10px] text-emerald-300 mt-2">10 Simbol • Lambat</span>
+                        <div class="mt-3 text-xs text-emerald-300 font-semibold flex items-center gap-1">
+                            <i class="fas fa-heart text-red-400"></i> Max Salah: 3x
+                        </div>
                     </button>
-                    <button onclick="selectLevel(2)" class="level-btn p-4 rounded-2xl border-2 border-slate-700 bg-slate-800/40 hover:border-slate-500 transition-all text-left flex flex-col justify-between">
+
+                    <button onclick="selectLevel(2)" id="lvlBtn2" class="level-btn p-4 rounded-2xl border-2 border-slate-700 bg-slate-800/40 hover:bg-amber-900/40 hover:border-amber-500 transition-all text-left flex flex-col justify-between">
                         <div>
-                            <div class="text-xs text-amber-400 font-bold">LEVEL 2</div>
-                            <div class="text-lg font-black text-white">Sedang</div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-amber-300 text-lg">Level 2</span>
+                                <span class="bg-amber-500/30 text-amber-200 text-xs px-2 py-0.5 rounded-full">Sedang</span>
+                            </div>
+                            <p class="text-xs text-amber-100">15 Simbol • Kecepatan Agak Cepat</p>
                         </div>
-                        <span class="text-[10px] text-amber-300 mt-2">15 Simbol • Sedang</span>
+                        <div class="mt-3 text-xs text-amber-300 font-semibold flex items-center gap-1">
+                            <i class="fas fa-heart text-red-400"></i> Max Salah: 5x
+                        </div>
                     </button>
-                    <button onclick="selectLevel(3)" class="level-btn p-4 rounded-2xl border-2 border-slate-700 bg-slate-800/40 hover:border-slate-500 transition-all text-left flex flex-col justify-between">
+
+                    <button onclick="selectLevel(3)" id="lvlBtn3" class="level-btn p-4 rounded-2xl border-2 border-slate-700 bg-slate-800/40 hover:bg-rose-900/40 hover:border-rose-500 transition-all text-left flex flex-col justify-between">
                         <div>
-                            <div class="text-xs text-rose-400 font-bold">LEVEL 3</div>
-                            <div class="text-lg font-black text-white">Cepat</div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="font-bold text-rose-300 text-lg">Level 3</span>
+                                <span class="bg-rose-500/30 text-rose-200 text-xs px-2 py-0.5 rounded-full">Tantangan</span>
+                            </div>
+                            <p class="text-xs text-rose-100">20 Simbol • Kecepatan Cepat</p>
                         </div>
-                        <span class="text-[10px] text-rose-300 mt-2">20 Simbol • Cepat</span>
+                        <div class="mt-3 text-xs text-rose-300 font-semibold flex items-center gap-1">
+                            <i class="fas fa-heart text-red-400"></i> Max Salah: 6x
+                        </div>
                     </button>
                 </div>
             </div>
@@ -510,72 +353,42 @@ const poseEngineHtml = `<!DOCTYPE html>
         </div>
     </div>
 
-    <!-- Game Over / Mission Complete Modal with 5-Axis Radar Chart -->
-    <div id="resultModal" class="fixed inset-0 bg-slate-950/92 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-slate-900 border-2 border-indigo-500/60 rounded-3xl p-5 sm:p-7 max-w-2xl w-full text-center shadow-2xl relative">
+    <!-- Game Over / Victory Modal -->
+    <div id="resultModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border-2 border-indigo-500/60 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-center shadow-2xl relative">
             
-            <div class="text-[11px] font-black text-amber-400 uppercase tracking-widest mb-1">MISSION COMPLETED</div>
-            <h3 id="resultTitle" class="text-2xl sm:text-3xl font-black text-emerald-400 mb-0.5">LEVEL 1 CLEARED!</h3>
-            <p id="resultSubtitle" class="text-slate-400 text-xs mb-4">Master Pose Tangan SD → Selesai!</p>
+            <div id="resultIcon" class="text-7xl mb-2 animate-bounce">🏆</div>
+            <h3 id="resultTitle" class="text-3xl font-black text-yellow-300 mb-1">Hebat Sekali!</h3>
+            <p id="resultSubtitle" class="text-indigo-200 text-sm mb-6">Kamu berhasil menyelesaikan level ini dengan fokus tinggi!</p>
 
-            <!-- 2-Column Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5 text-left">
-                
-                <!-- Left Column: PENCAPAIAN MISI -->
-                <div class="bg-slate-950/70 p-4 rounded-2xl border border-indigo-900/50 flex flex-col justify-between">
-                    <div>
-                        <div class="text-xs font-black text-sky-400 uppercase tracking-wider mb-2 text-center">PENCAPAIAN MISI</div>
-                        <div id="resStars" class="text-2xl text-center mb-3">⭐⭐⭐</div>
-                        
-                        <div class="space-y-1.5 text-xs text-slate-200 mb-4">
-                            <div class="flex items-center justify-between">
-                                <span>⭐ Target Tepat:</span>
-                                <strong id="resTargetHit" class="text-emerald-400 font-bold">10/10</strong>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span>⭐ Akurasi Pose:</span>
-                                <strong id="resAccuracy" class="text-sky-400 font-bold">100%</strong>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span>⭐ Nyawa Tersisa:</span>
-                                <strong id="resLivesLeft" class="text-amber-400 font-bold">3 Nyawa</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="border-t border-dashed border-slate-700/60 pt-3">
-                        <div class="flex justify-between text-xs text-slate-300 mb-1">
-                            <span>Loot Koin Base:</span>
-                            <span id="resCoinBase" class="text-amber-400 font-bold">+150 Koin</span>
-                        </div>
-                        <div class="flex justify-between text-sm font-black text-emerald-400 border-t border-slate-800 pt-2">
-                            <span>TOTAL KOIN:</span>
-                            <span id="resCoinTotal" class="text-amber-400 font-black">200 KOIN</span>
-                        </div>
-                    </div>
+            <!-- Stats Box -->
+            <div class="grid grid-cols-3 gap-3 bg-slate-950/70 p-4 rounded-2xl border border-indigo-900/50 mb-6">
+                <div>
+                    <div class="text-[10px] text-indigo-400 font-bold uppercase">Total Skor</div>
+                    <div id="resScore" class="text-2xl font-black text-yellow-300">0</div>
                 </div>
-
-                <!-- Right Column: Analisis Perkembangan Otak (5-Axis Radar Chart) -->
-                <div class="bg-slate-950/70 p-4 rounded-2xl border border-indigo-900/50 flex flex-col items-center justify-center">
-                    <div class="text-xs font-black text-purple-300 uppercase tracking-wider mb-0.5 text-center">🧠 Analisis Perkembangan Otak</div>
-                    <div class="text-[10px] text-slate-400 mb-2 text-center">(Prefrontal Cortex & Motorik)</div>
-                    
-                    <div class="w-full flex justify-center items-center">
-                        <canvas id="radarChartCanvas" width="220" height="180"></canvas>
-                    </div>
+                <div>
+                    <div class="text-[10px] text-indigo-400 font-bold uppercase">Akurasi</div>
+                    <div id="resAccuracy" class="text-2xl font-black text-emerald-400">100%</div>
                 </div>
-
+                <div>
+                    <div class="text-[10px] text-indigo-400 font-bold uppercase">Level</div>
+                    <div id="resLevel" class="text-2xl font-black text-indigo-300">Lvl 1</div>
+                </div>
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                <button onclick="returnToStartMenu()" class="px-6 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-extrabold rounded-2xl text-xs transition-all">
-                    [ Kembali Ke Menu ]
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button onclick="restartLevel()" class="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold rounded-2xl transition-all flex items-center justify-center gap-2">
+                    <i class="fas fa-rotate-right"></i> Coba Lagi
                 </button>
-                <button id="nextLevelBtn" onclick="nextLevel()" class="flex-1 py-3 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-extrabold rounded-2xl text-xs shadow-lg transition-all flex items-center justify-center gap-2">
-                    [ CONTINUE (Lanjut Level) ➔ ]
+                <button id="nextLevelBtn" onclick="nextLevel()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-2xl transition-all flex items-center justify-center gap-2">
+                    Level Berikutnya <i class="fas fa-arrow-right"></i>
                 </button>
             </div>
+            <button onclick="returnToStartMenu()" class="w-full mt-3 py-2 text-indigo-400 hover:text-white font-semibold text-xs transition-all">
+                Kembali ke Menu Utama
+            </button>
         </div>
     </div>
 
@@ -717,14 +530,14 @@ const poseEngineHtml = `<!DOCTYPE html>
 
         function initMediaPipe() {
             handsDetector = new Hands({
-                locateFile: (file) => \`https://cdn.jsdelivr.net/npm/@mediapipe/hands/\${file}\`
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
             });
 
             handsDetector.setOptions({
-                maxNumHands: 1, // 1 Hand = 2x Faster Inference!
-                modelComplexity: 0, // 0 = Lite (Lite model for lowest latency)
-                minDetectionConfidence: 0.6,
-                minTrackingConfidence: 0.6
+                maxNumHands: 2,
+                modelComplexity: 0, // 0 = Lite (sangat cepat & hemat CPU), 1 = Full
+                minDetectionConfidence: 0.65,
+                minTrackingConfidence: 0.65
             });
 
             handsDetector.onResults(onHandResults);
@@ -736,8 +549,8 @@ const poseEngineHtml = `<!DOCTYPE html>
                 onFrame: async () => {
                     if (webcamElement && handsDetector) {
                         const now = Date.now();
-                        // Throttle inference to ~30 FPS max (33ms) to prevent thread choke
-                        if (isProcessingHand || (now - lastProcessingTime < 33)) {
+                        // Batasi deteksi maksimal ~20 FPS dan hindari eksekusi paralel yang bertumpukan
+                        if (isProcessingHand || (now - lastProcessingTime < 50)) {
                             return;
                         }
                         isProcessingHand = true;
@@ -751,8 +564,8 @@ const poseEngineHtml = `<!DOCTYPE html>
                         }
                     }
                 },
-                width: 320,
-                height: 240
+                width: 640,
+                height: 480
             });
 
             cameraUtils.start().then(() => {
@@ -772,11 +585,11 @@ const poseEngineHtml = `<!DOCTYPE html>
                 console.error("Camera access error:", err);
                 const loader = document.getElementById('camLoading');
                 if (loader) {
-                    loader.innerHTML = \`
+                    loader.innerHTML = `
                         <i class="fas fa-exclamation-triangle text-3xl text-amber-400 mb-2"></i>
                         <p class="text-xs font-bold text-amber-200">Gagal Membuka Kamera</p>
                         <p class="text-[10px] text-slate-300 mt-1">Gunakan tombol alternatif manual di bagian bawah layar.</p>
-                    \`;
+                    `;
                 }
 
                 // Sembunyikan pop-up memuat agar pengguna bisa melihat pesan error/fallback manual
@@ -975,7 +788,7 @@ const poseEngineHtml = `<!DOCTYPE html>
         function updateTargetCounterUI() {
             const config = LEVEL_CONFIGS[selectedLevel];
             const remaining = config.totalTiles - tilesHitCount;
-            document.getElementById('targetCounter').innerText = 'Sisa Target: ' + Math.max(0, remaining);
+            document.getElementById('targetCounter').innerText = `Sisa Target: ${Math.max(0, remaining)}`;
         }
 
         function scheduleNextTileSpawn() {
@@ -991,62 +804,36 @@ const poseEngineHtml = `<!DOCTYPE html>
             }
         }
 
-        let lastSpawnedLane = -1;
-
         function spawnTile() {
             const waterfall = document.getElementById('waterfallContainer');
             if (!waterfall) return;
 
-            // Pick a lane (0..3) preventing exact duplicate of previous tile if possible
-            let poseIndex = Math.floor(Math.random() * POSES.length);
-            if (poseIndex === lastSpawnedLane) {
-                poseIndex = (poseIndex + 1 + Math.floor(Math.random() * 3)) % POSES.length;
-            }
-
-            // Prevent Vertical Overlap: Check if any tile in the target lane is still near top (< 130px)
-            const isLaneBlockedNearTop = activeTiles.some(t => !t.hit && !t.missed && t.poseId === poseIndex && t.y < 130);
-            if (isLaneBlockedNearTop) {
-                const openLanes = [0, 1, 2, 3].filter(l => !activeTiles.some(t => !t.hit && !t.missed && t.poseId === l && t.y < 130));
-                if (openLanes.length > 0) {
-                    poseIndex = openLanes[Math.floor(Math.random() * openLanes.length)];
-                } else {
-                    // All lanes occupied near top, skip this spawn cycle to prevent stacking
-                    return;
-                }
-            }
-
-            lastSpawnedLane = poseIndex;
+            const poseIndex = Math.floor(Math.random() * POSES.length);
             const pose = POSES[poseIndex];
-
-            const laneWidth = waterfall.clientWidth / 4;
-            const tileWidth = Math.min(105, laneWidth - 8);
-            const tileHeight = 80;
-
-            // Align tile perfectly in the center of its respective lane
-            const laneStartX = poseIndex * laneWidth;
-            const tileX = laneStartX + (laneWidth - tileWidth) / 2;
 
             const tileEl = document.createElement('div');
             tileEl.className = 'tile-item absolute flex flex-col items-center justify-center rounded-xl bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900 border-2 border-amber-400/90 shadow-2xl text-white font-extrabold transition-transform z-20';
             
-            tileEl.style.width = tileWidth + 'px';
-            tileEl.style.height = tileHeight + 'px';
-            tileEl.style.left = tileX + 'px';
-            tileEl.style.top = '-' + (tileHeight + 10) + 'px';
+            const laneWidth = waterfall.clientWidth / 4;
+            const tileHeight = 85;
+            tileEl.style.width = `${laneWidth - 8}px`;
+            tileEl.style.height = `${tileHeight}px`;
+            tileEl.style.left = `${(poseIndex * laneWidth) + 4}px`;
+            tileEl.style.top = `-${tileHeight + 10}px`;
 
-            tileEl.innerHTML = '<span class="text-3xl sm:text-4xl drop-shadow-md leading-none mb-1">' + pose.emoji + '</span>' +
-                '<span class="text-[10px] font-black text-amber-300 tracking-wider uppercase">' + pose.name + '</span>';
+            tileEl.innerHTML = `
+                <span class="text-3xl sm:text-4xl drop-shadow-md leading-none mb-1">${pose.emoji}</span>
+                <span class="text-[10px] font-black text-amber-300 tracking-wider uppercase">${pose.name}</span>
+            `;
 
             waterfall.appendChild(tileEl);
 
-            const config = LEVEL_CONFIGS[selectedLevel];
-            const baseSpeed = 1.2 * config.speedMultiplier;
-            const speed = baseSpeed + (tilesHitCount * 0.08);
+            const baseSpeed = 2.5;
+            const speed = baseSpeed * LEVEL_CONFIGS[selectedLevel].speedMultiplier;
 
             activeTiles.push({
                 id: Date.now() + Math.random(),
                 poseId: poseIndex,
-                x: tileX,
                 y: -(tileHeight + 10),
                 height: tileHeight,
                 speed: speed,
@@ -1067,7 +854,7 @@ const poseEngineHtml = `<!DOCTYPE html>
                         const tile = activeTiles[i];
 
                         tile.y += tile.speed;
-                        tile.element.style.top = \`\${tile.y}px\`;
+                        tile.element.style.top = `${tile.y}px`;
 
                         if (tile.y > targetZoneBottom && !tile.hit && !tile.missed) {
                             tile.missed = true;
@@ -1134,7 +921,7 @@ const poseEngineHtml = `<!DOCTYPE html>
             }
 
             tile.element.className += ' scale-125 bg-emerald-500 border-white text-white duration-200';
-            tile.element.innerHTML = \`<span class="text-3xl">✨</span><span class="text-xs font-black">PAS!</span>\`;
+            tile.element.innerHTML = `<span class="text-3xl">✨</span><span class="text-xs font-black">PAS!</span>`;
 
             document.getElementById('scoreText').innerText = score;
             updateTargetCounterUI();
@@ -1170,166 +957,44 @@ const poseEngineHtml = `<!DOCTYPE html>
             }
         }
 
-        function drawRadarChart(accuracy, livesLeft, scoreVal) {
-            const chartCanvas = document.getElementById('radarChartCanvas');
-            if (!chartCanvas) return;
-            const ctx = chartCanvas.getContext('2d');
-            const w = chartCanvas.width;
-            const h = chartCanvas.height;
-
-            ctx.clearRect(0, 0, w, h);
-
-            const centerX = w / 2;
-            const centerY = h / 2 + 6;
-            const radius = Math.min(w, h) / 2 - 32;
-            const numAxes = 5;
-            const labels = ["Fokus", "Keputus", "Kontrol Diri", "Memori Kerja", "Spasial"];
-
-            // Metric Scores (0.4 to 1.0)
-            const accScore = Math.min(1, Math.max(0.4, accuracy / 100));
-            const livesScore = Math.min(1, Math.max(0.5, livesLeft / 3));
-            const speedScore = Math.min(1, Math.max(0.6, scoreVal / 1000));
-            const focusScore = Math.min(1, Math.max(0.5, (accScore + livesScore) / 2));
-            const memoryScore = Math.min(1, Math.max(0.5, accScore));
-
-            const values = [focusScore, speedScore, livesScore, memoryScore, accScore];
-
-            // 1. Draw Web Rings (3 Concentric Polygons)
-            for (let ring = 1; ring <= 3; ring++) {
-                const r = radius * (ring / 3);
-                ctx.beginPath();
-                for (let i = 0; i < numAxes; i++) {
-                    const angle = (i * 2 * Math.PI / numAxes) - Math.PI / 2;
-                    const x = centerX + r * Math.cos(angle);
-                    const y = centerY + r * Math.sin(angle);
-                    if (i === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
-                }
-                ctx.closePath();
-                ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
-                ctx.lineWidth = 1;
-                ctx.stroke();
-            }
-
-            // 2. Draw Axis Rays & Axis Labels
-            ctx.font = 'bold 9px Fredoka, sans-serif';
-            ctx.fillStyle = '#CBD5E1';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
-            for (let i = 0; i < numAxes; i++) {
-                const angle = (i * 2 * Math.PI / numAxes) - Math.PI / 2;
-                const rx = centerX + radius * Math.cos(angle);
-                const ry = centerY + radius * Math.sin(angle);
-
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.lineTo(rx, ry);
-                ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
-                ctx.stroke();
-
-                // Position Labels
-                const lx = centerX + (radius + 16) * Math.cos(angle);
-                const ly = centerY + (radius + 16) * Math.sin(angle);
-                ctx.fillText(labels[i], lx, ly);
-            }
-
-            // 3. Draw Player Skill Polygon (Filled Purple/Blue)
-            ctx.beginPath();
-            for (let i = 0; i < numAxes; i++) {
-                const angle = (i * 2 * Math.PI / numAxes) - Math.PI / 2;
-                const valRadius = radius * values[i];
-                const vx = centerX + valRadius * Math.cos(angle);
-                const vy = centerY + valRadius * Math.sin(angle);
-                if (i === 0) ctx.moveTo(vx, vy);
-                else ctx.lineTo(vx, vy);
-            }
-            ctx.closePath();
-
-            ctx.fillStyle = 'rgba(147, 51, 234, 0.45)';
-            ctx.fill();
-            ctx.strokeStyle = '#38BDF8';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-
-            // 4. Draw Data Points
-            for (let i = 0; i < numAxes; i++) {
-                const angle = (i * 2 * Math.PI / numAxes) - Math.PI / 2;
-                const valRadius = radius * values[i];
-                const vx = centerX + valRadius * Math.cos(angle);
-                const vy = centerY + valRadius * Math.sin(angle);
-
-                ctx.beginPath();
-                ctx.arc(vx, vy, 3.5, 0, 2 * Math.PI);
-                ctx.fillStyle = '#F59E0B';
-                ctx.fill();
-                ctx.strokeStyle = '#FFFFFF';
-                ctx.lineWidth = 1.5;
-                ctx.stroke();
-            }
-        }
-
         function gameOver(isVictory) {
             isGameRunning = false;
             if (spawnTimeout) clearTimeout(spawnTimeout);
 
             const resultModal = document.getElementById('resultModal');
+            const icon = document.getElementById('resultIcon');
             const title = document.getElementById('resultTitle');
             const subtitle = document.getElementById('resultSubtitle');
             const nextBtn = document.getElementById('nextLevelBtn');
 
+            document.getElementById('resScore').innerText = score;
+            document.getElementById('resLevel').innerText = `Lvl ${selectedLevel}`;
+
             const config = LEVEL_CONFIGS[selectedLevel];
-            const accuracy = Math.round((tilesHitCount / Math.max(1, config.totalTiles)) * 100) || 0;
-            const baseCoins = score;
-            const bonusCoins = isVictory ? 50 : 0;
-            const totalCoins = baseCoins + bonusCoins;
-
-            document.getElementById('resTargetHit').innerText = tilesHitCount + '/' + config.totalTiles;
-            document.getElementById('resAccuracy').innerText = accuracy + '%';
-            document.getElementById('resLivesLeft').innerText = Math.max(0, lives) + ' Nyawa';
-            document.getElementById('resCoinBase').innerText = '+' + baseCoins + ' Koin';
-            document.getElementById('resCoinTotal').innerText = totalCoins + ' KOIN';
-
-            // Calculate Stars (1 to 3 stars)
-            let starsStr = "⭐";
-            if (accuracy >= 80 && lives >= 2) starsStr = "⭐⭐⭐";
-            else if (accuracy >= 50 || lives >= 1) starsStr = "⭐⭐";
-            document.getElementById('resStars').innerText = starsStr;
+            const accuracy = Math.round((tilesHitCount / config.totalTiles) * 100) || 0;
+            document.getElementById('resAccuracy').innerText = `${accuracy}%`;
 
             if (isVictory) {
                 playSound('victory');
-                title.innerText = 'LEVEL ' + selectedLevel + ' CLEARED!';
-                title.className = "text-2xl sm:text-3xl font-black text-emerald-400 mb-0.5";
-                subtitle.innerText = "Master Pose Tangan SD → Selesai!";
-
-                const msg = JSON.stringify({
-                    type: 'LEVEL_COMPLETE',
-                    coins: totalCoins,
-                    level: selectedLevel
-                });
-                if (window.ReactNativeWebView) {
-                    window.ReactNativeWebView.postMessage(msg);
-                } else if (window.parent) {
-                    window.parent.postMessage(msg, '*');
-                }
+                icon.innerText = "🏆";
+                title.innerText = "Luar Biasa, Kamu Hebat!";
+                title.className = "text-3xl font-black text-yellow-300 mb-1";
+                subtitle.innerText = `Kamu berhasil menyelesaikan ${config.title} dengan fokus tinggi!`;
 
                 if (selectedLevel < 3) {
                     nextBtn.classList.remove('hidden');
                 } else {
                     nextBtn.classList.add('hidden');
-                    title.innerText = "🎉 BINTANG MASTER POSE!";
+                    title.innerText = "🎉 Bintang Master Tangan!";
                     subtitle.innerText = "Selamat! Kamu berhasil menamatkan SEMUA LEVEL!";
                 }
             } else {
-                playSound('miss');
-                title.innerText = 'LEVEL ' + selectedLevel + ' SELESAI!';
-                title.className = "text-2xl sm:text-3xl font-black text-amber-400 mb-0.5";
-                subtitle.innerText = "Nyawa habis. Tetap dapat koin dan hasil analisis!";
+                icon.innerText = "💔";
+                title.innerText = "Jangan Menyerah!";
+                title.className = "text-3xl font-black text-rose-400 mb-1";
+                subtitle.innerText = "Nyawa habis. Yuk coba latih fokusmu lagi!";
                 nextBtn.classList.add('hidden');
             }
-
-            // Always Draw 5-Axis Radar Chart
-            drawRadarChart(accuracy, lives, score);
 
             resultModal.classList.remove('hidden');
         }
@@ -1376,13 +1041,6 @@ const poseEngineHtml = `<!DOCTYPE html>
         function closeHelpModal() {
             document.getElementById('helpModal').classList.add('hidden');
         }
-
-        // Tampilkan panduan cara main otomatis saat game dibuka
-        window.addEventListener('DOMContentLoaded', function () {
-            setTimeout(function () {
-                showHelpModal();
-            }, 500);
-        });
     </script>
 </body>
-</html>`;
+</html>

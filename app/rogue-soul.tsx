@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { HowToPlayModal } from "../components/HowToPlayModal";
 import { COLORS, FONTS, SHAPES, SHADOWS } from "../constants/Theme";
 
 import {
@@ -48,6 +49,7 @@ export default function RogueSoulGameScreen() {
   const [userGems, setUserGems] = useState(15);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [musicEnabled, setMusicEnabled] = useState(true);
+  const [showHelp, setShowHelp] = useState(true);
 
   // Shop & Inventory State
   const [unlockedSkinIds, setUnlockedSkinIds] = useState<string[]>(["rogue_default"]);
@@ -313,9 +315,11 @@ export default function RogueSoulGameScreen() {
         ctx.fillRect(plat.x + 8, plat.y + 12, plat.w - 16, plat.h - 12);
         // Red Padded Top
         ctx.fillStyle = "#E11D48";
-        ctx.beginPath();
-        ctx.roundRect ? ctx.roundRect(plat.x, plat.y, plat.w, 12, 4) : ctx.fillRect(plat.x, plat.y, plat.w, 12);
-        ctx.fill();
+        if (ctx.roundRect) {
+          ctx.roundRect(plat.x, plat.y, plat.w, 12, 4);
+        } else {
+          ctx.fillRect(plat.x, plat.y, plat.w, 12);
+        }
         ctx.fillStyle = "#FEF08A";
         ctx.fillRect(plat.x + plat.w / 2 - 4, plat.y + 3, 8, 6);
       } else {
@@ -972,6 +976,12 @@ export default function RogueSoulGameScreen() {
 
         <View style={styles.headerRightActions}>
           <Pressable
+            onPress={() => setShowHelp(true)}
+            style={styles.iconBtn}
+          >
+            <Ionicons name="help-circle" size={18} color="#FEF08A" />
+          </Pressable>
+          <Pressable
             onPress={() => {
               RogueAudio.setSoundEnabled(!soundEnabled);
               setSoundEnabled(!soundEnabled);
@@ -1421,6 +1431,25 @@ export default function RogueSoulGameScreen() {
           )}
         </View>
       )}
+
+      <HowToPlayModal
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Cara Main Rogue Soul"
+        goal="Lari, lompat, dan bertarung sepanjang level sambil mengumpulkan koin dan permata!"
+        accentColor="#7C3AED"
+        subtitleColor="#6D28D9"
+        steps={[
+          { emoji: "1️⃣", text: "Di komputer: A/D atau panah untuk gerak, W/Spasi untuk lompat, S untuk meluncur." },
+          { emoji: "2️⃣", text: "Serang musuh dengan J (tebas pedang) dan lempar pisau dengan K." },
+          { emoji: "3️⃣", text: "Kumpulkan koin & permata, hindari panah musuh, dan capai garis finish tiap level." },
+          { emoji: "4️⃣", text: "Di HP/tablet gunakan tombol sentuh di layar. Buka toko Armory untuk membeli skin & senjata." },
+        ]}
+        tips={[
+          "Jaga HP — kalah berarti run berakhir (koin tetap tersimpan).",
+          "Lompat untuk menghindar, dan wall jump untuk mencapai tempat tinggi.",
+        ]}
+      />
     </SafeAreaView>
   );
 }

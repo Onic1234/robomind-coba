@@ -13,6 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { HowToPlayModal } from "../components/HowToPlayModal";
 import * as Haptics from "expo-haptics";
 import Animated, {
   useSharedValue,
@@ -313,6 +314,7 @@ export default function RobotEscapeScreen() {
   const [level, setLevel] = useState(1);
   const [robots, setRobots] = useState<EscapeRobot[]>([]);
   const [taps, setTaps] = useState(0);
+  const [showHelp, setShowHelp] = useState(false);
   const [userCoins, setUserCoins] = useState(1250);
   const [coinsReward, setCoinsReward] = useState(0);
   const [gameState, setGameState] = useState<"playing" | "victory" | "completed">("playing");
@@ -578,9 +580,14 @@ export default function RobotEscapeScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#0B1120" />
 
       <View style={styles.header}>
-        <Pressable style={styles.iconButton} onPress={() => setShowPause(true)}>
-          <Ionicons name="menu" size={22} color="#94A3B8" />
-        </Pressable>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <Pressable style={styles.iconButton} onPress={() => setShowPause(true)}>
+            <Ionicons name="menu" size={22} color="#94A3B8" />
+          </Pressable>
+          <Pressable style={styles.iconButton} onPress={() => setShowHelp(true)}>
+            <Ionicons name="help-circle" size={22} color="#94A3B8" />
+          </Pressable>
+        </View>
         <View style={styles.levelBadgeContainer}>
           <Text style={styles.levelTag}>LEVEL {level}</Text>
           <Text style={styles.levelTitle}>{currentLevel.title}</Text>
@@ -804,6 +811,25 @@ export default function RobotEscapeScreen() {
           </View>
         </View>
       </Modal>
+
+      <HowToPlayModal
+        visible={showHelp}
+        onClose={() => setShowHelp(false)}
+        title="Cara Main Robot Escape"
+        goal="Bantu semua robot keluar dari persimpangan lalu lintas tanpa menabrak!"
+        accentColor="#16A34A"
+        subtitleColor="#15803D"
+        steps={[
+          { emoji: "1️⃣", text: "Ketuk robot untuk menggerakkannya keluar sepanjang jalurnya (lurus atau belok)." },
+          { emoji: "2️⃣", text: "Perhatikan arah panah dan hindari tabrakan antar robot atau rintangan (kerucut, robot rusak)." },
+          { emoji: "3️⃣", text: "Kalau robot menabrak, dia kembali ke posisi awal — coba lagi!" },
+          { emoji: "4️⃣", text: "Keluarkan semua robot dari persimpangan untuk menyelesaikan level." },
+        ]}
+        tips={[
+          "Pilih robot yang jalannya paling bebas lebih dulu.",
+          "Urutan pelepasan itu kunci — bayangkan jalur tiap robot sebelum mengetuk.",
+        ]}
+      />
     </SafeAreaView>
   );
 }
