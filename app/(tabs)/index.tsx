@@ -7,7 +7,7 @@ import Svg, { Polygon, Line, Circle, Text as SvgText } from "react-native-svg";
 import { useFocusEffect, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../../constants/Theme";
-import Robot3DView from "../../components/Robot3DView";
+import Robot3DModelView from "../../components/Robot3DModelView";
 import * as ImagePicker from "expo-image-picker";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -311,9 +311,9 @@ export default function Index() {
           </View>
         </Pressable>
 
-        {/* Robot Section Placeholder Card */}
+        {/* 3D Robot Model Section */}
         <View style={styles.robotCardContainer}>
-          <Robot3DView />
+          <Robot3DModelView />
         </View>
 
         {/* Radar Chart Card (Skala Progress) */}
