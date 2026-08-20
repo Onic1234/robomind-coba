@@ -16,8 +16,8 @@ export default function RoboPoseScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const iframeRef = useRef<any>(null);
+  const containerRef = useRef<any>(null);
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
   floatingFsText: { color: "#a78bfa", fontSize: 12, fontWeight: "800", letterSpacing: 1 },
   iframe: {
     position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
-    border: "none", backgroundColor: "#1e1b4b",
+    borderWidth: 0, backgroundColor: "#1e1b4b",
   },
   loadingOverlay: {
     position: "absolute", inset: 0,
