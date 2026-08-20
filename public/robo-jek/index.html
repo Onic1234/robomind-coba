@@ -44,7 +44,7 @@
       align-items: center;
       justify-content: center;
       background: radial-gradient(circle at center, #0f172a 0%, #030712 100%);
-      overflow: visible;
+      overflow: hidden;
     }
 
     canvas {
@@ -147,92 +147,6 @@
     .btn-blue { background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); }
     .btn-green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
     .btn-ghost { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(148, 163, 184, 0.2); color: #e2e8f0; padding: 10px 24px; border-radius: 50px; font-weight: 700; cursor: pointer; }
-
-    /* SPEED MODE SELECTOR */
-    .speed-section {
-      width: 100%;
-      max-width: 520px;
-      margin-bottom: 24px;
-      text-align: center;
-    }
-    .speed-section-title {
-      font-size: 0.85rem;
-      font-weight: 800;
-      color: var(--primary-cyan);
-      margin-bottom: 10px;
-      letter-spacing: 1px;
-    }
-    .speed-grid {
-      display: flex;
-      gap: 12px;
-      justify-content: center;
-    }
-    .speed-card {
-      flex: 1;
-      background: rgba(15, 23, 42, 0.7);
-      border: 1.5px solid rgba(148, 163, 184, 0.2);
-      border-radius: 16px;
-      padding: 10px;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.2s ease;
-    }
-    .speed-card.selected {
-      border-color: var(--primary-cyan);
-      background: linear-gradient(180deg, rgba(6, 182, 212, 0.25) 0%, rgba(15, 23, 42, 0.9) 100%);
-      transform: translateY(-2px);
-      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);
-    }
-    .speed-badge {
-      font-size: 0.85rem;
-      font-weight: 900;
-      padding: 4px 8px;
-      border-radius: 20px;
-      margin-bottom: 4px;
-    }
-    .bg-green { color: #34d399; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); }
-    .bg-yellow { color: #f59e0b; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); }
-    .bg-red { color: #f43f5e; background: rgba(244, 63, 94, 0.15); border: 1px solid rgba(244, 63, 94, 0.3); }
-    .speed-desc {
-      font-size: 0.7rem;
-      color: var(--text-sub);
-      font-weight: 600;
-    }
-
-    /* LIVE HUD SPEEDOMETER */
-    #live-speedometer {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      background: rgba(15, 23, 42, 0.85);
-      border: 1.5px solid rgba(56, 189, 248, 0.4);
-      backdrop-filter: blur(10px);
-      padding: 8px 16px;
-      border-radius: 16px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      z-index: 9;
-      pointer-events: none;
-    }
-    .hud-speed-val {
-      font-size: 1.6rem;
-      font-weight: 900;
-      color: #38bdf8;
-      line-height: 1;
-    }
-    .hud-speed-unit {
-      font-size: 0.65rem;
-      font-weight: 800;
-      color: #94a3b8;
-      letter-spacing: 1px;
-    }
-    .hud-speed-mode {
-      font-size: 0.65rem;
-      font-weight: 800;
-      color: #f59e0b;
-      margin-top: 2px;
-    }
 
     .modal-box {
       width: 90%; max-width: 660px; background: var(--panel-glass);
@@ -358,13 +272,6 @@
       </div>
     </div>
 
-    <!-- LIVE HUD SPEEDOMETER -->
-    <div id="live-speedometer" class="hidden">
-      <div class="hud-speed-val" id="hud-speed-val">0</div>
-      <div class="hud-speed-unit">KM/H</div>
-      <div class="hud-speed-mode" id="hud-mode-tag">MIDDLE (Lvl 1)</div>
-    </div>
-
     <!-- SCREEN 1: VEHICLE SELECT -->
     <div id="screen-vehicle" class="overlay-screen">
       <div class="brand-tag">⚡ SIMULATOR KOGNITIF ANAK INDONESIA</div>
@@ -386,25 +293,6 @@
           <div class="vehicle-desc">Kokoh & Performa Stabil.</div>
           <div class="stat-row"><span>Kecepatan</span><div class="stat-bar-bg"><div class="stat-bar-fill" style="width: 75%;"></div></div></div>
           <div class="stat-row"><span>Kelincahan</span><div class="stat-bar-bg"><div class="stat-bar-fill" style="width: 60%;"></div></div></div>
-        </div>
-      </div>
-
-      <!-- SPEED MODE SELECTION -->
-      <div class="speed-section">
-        <div class="speed-section-title">⚡ PILIH MODE KECEPATAN:</div>
-        <div class="speed-grid">
-          <div class="speed-card" onclick="selectSpeedMode('low')" id="mode-low">
-            <div class="speed-badge bg-green">🟢 LOW</div>
-            <div class="speed-desc">Santai (50 km/h)</div>
-          </div>
-          <div class="speed-card selected" onclick="selectSpeedMode('middle')" id="mode-middle">
-            <div class="speed-badge bg-yellow">🟡 MIDDLE</div>
-            <div class="speed-desc">Sedang (100 km/h)</div>
-          </div>
-          <div class="speed-card" onclick="selectSpeedMode('faster')" id="mode-faster">
-            <div class="speed-badge bg-red">🔴 FASTER</div>
-            <div class="speed-desc">Ngebut (450 km/h)</div>
-          </div>
         </div>
       </div>
 
@@ -494,7 +382,7 @@
     mapImage.src = 'mapsfix.png';
 
     const jakartaMapImage = new Image();
-    jakartaMapImage.src = 'jakartaMapNewest.png';
+    jakartaMapImage.src = 'jakartaMapNewestNew.png';
 
     const roadMaskImage = new Image();
     roadMaskImage.crossOrigin = 'anonymous';
@@ -536,9 +424,9 @@
       { id: 'palembang', num: 4, name: 'Palembang', province: 'Sumatera Selatan', landmark: 'Jembatan Ampera', x: 180, y: 274, unlocked: false, levels: [{ id: 'palembang-1', title: 'Rute Ampera Express', goldTime: 35, maxHits: 1, stars: 0 }] },
       { id: 'lampung', num: 5, name: 'Lampung', province: 'Lampung', landmark: 'Menara Siger', x: 205, y: 335, unlocked: false, levels: [{ id: 'lampung-1', title: 'Rute Pelabuhan Bakauheni', goldTime: 35, maxHits: 1, stars: 0 }] },
       { id: 'jakarta', num: 6, name: 'Jakarta', province: 'DKI Jakarta', landmark: 'Monumen Nasional (Monas)', x: 279, y: 392, unlocked: true, levels: [
-        { id: 'jakarta-1', levelNum: 1, title: 'Level 1: Jam Kerja Santai', goldTime: 90, maxHits: 3, targetDeliveries: 2, npcCount: 5, npcSpeedMult: 0.8, stars: 0 },
-        { id: 'jakarta-2', levelNum: 2, title: 'Level 2: Jam Padat Monas', goldTime: 75, maxHits: 2, targetDeliveries: 3, npcCount: 8, npcSpeedMult: 1.1, stars: 0 },
-        { id: 'jakarta-3', levelNum: 3, title: 'Level 3: Rush Hour Jakarta (Tantangan Ekstrem)', goldTime: 60, maxHits: 1, targetDeliveries: 4, npcCount: 12, npcSpeedMult: 1.4, stars: 0 }
+        { id: 'jakarta-1', levelNum: 1, title: 'Level 1: Jam Kerja Santai', goldTime: 90, maxHits: 3, targetDeliveries: 2, npcCount: 15, npcSpeedMult: 0.8, stars: 0 },
+        { id: 'jakarta-2', levelNum: 2, title: 'Level 2: Jam Padat Monas', goldTime: 75, maxHits: 2, targetDeliveries: 3, npcCount: 22, npcSpeedMult: 1.1, stars: 0 },
+        { id: 'jakarta-3', levelNum: 3, title: 'Level 3: Rush Hour Jakarta (Tantangan Ekstrem)', goldTime: 60, maxHits: 1, targetDeliveries: 4, npcCount: 30, npcSpeedMult: 1.4, stars: 0 }
       ] },
       { id: 'bandung', num: 7, name: 'Bandung', province: 'Jawa Barat', landmark: 'Gedung Sate', x: 357, y: 421, unlocked: false, levels: [{ id: 'bandung-1', title: 'Rute Gedung Sate', goldTime: 35, maxHits: 1, stars: 0 }] },
       { id: 'semarang', num: 8, name: 'Semarang', province: 'Jawa Tengah', landmark: 'Lawang Sewu', x: 447, y: 437, unlocked: false, levels: [{ id: 'semarang-1', title: 'Rute Lawang Sewu', goldTime: 35, maxHits: 1, stars: 0 }] },
@@ -646,27 +534,6 @@
       document.getElementById('card-car').classList.toggle('selected', type === 'car');
     }
 
-    let selectedSpeedMode = 'middle'; // 'low', 'middle', 'faster'
-
-    function selectSpeedMode(mode) {
-      selectedSpeedMode = mode;
-      document.getElementById('mode-low').classList.toggle('selected', mode === 'low');
-      document.getElementById('mode-middle').classList.toggle('selected', mode === 'middle');
-      document.getElementById('mode-faster').classList.toggle('selected', mode === 'faster');
-    }
-
-    function getSpeedMultiplier() {
-      let targetKmh = 100;
-      if (selectedSpeedMode === 'low') targetKmh = 50;
-      if (selectedSpeedMode === 'middle') targetKmh = 100;
-      if (selectedSpeedMode === 'faster') targetKmh = 450;
-
-      let levelNum = (activeLevel && activeLevel.levelNum) ? activeLevel.levelNum : 1;
-      let levelMult = 1.0 + (levelNum - 1) * 0.10; // +10% speed boost per level!
-
-      return (targetKmh / 100) * levelMult;
-    }
-
     function showWorldMap() {
       currentScreen = 'worldmap';
       document.getElementById('screen-vehicle').classList.add('hidden');
@@ -718,39 +585,43 @@
     let camera = { x: 0, y: 0, shake: 0 };
 
     // === WAYPOINT ROAD NETWORK (roaddpalingbarujkt.png) ===
-    // Exact road centers: X = 34, 422, 827, 1221 | Y = 38, 364, 721, 998, 1228
+    // Exact road centers: X = 60, 456, 880, 1205 | Y = 50, 368, 695, 885, 1005, 1225
     const WAYPOINTS = [
-      // === ROW 1 (y=38) ===
-      { id: 0, x: 34, y: 38, connections: [1, 4] },
-      { id: 1, x: 422, y: 38, connections: [0, 2, 5] },
-      { id: 2, x: 827, y: 38, connections: [1, 3, 6] },
-      { id: 3, x: 1221, y: 38, connections: [2, 7] },
+      // === ROW 1 (y=50) ===
+      { id: 0, x: 60, y: 50, connections: [1, 4] },
+      { id: 1, x: 456, y: 50, connections: [0, 2, 5] },
+      { id: 2, x: 880, y: 50, connections: [1, 3, 6] },
+      { id: 3, x: 1205, y: 50, connections: [2, 7] },
 
-      // === ROW 2 (y=364) ===
-      { id: 4, x: 34, y: 364, connections: [0, 5, 8] },
-      { id: 5, x: 422, y: 364, connections: [1, 4, 6, 9] },   // Player spawn intersection
-      { id: 6, x: 827, y: 364, connections: [2, 5, 7, 10] },
-      { id: 7, x: 1221, y: 364, connections: [3, 6, 11] },
+      // === ROW 2 (y=368) ===
+      { id: 4, x: 60, y: 368, connections: [0, 5, 8] },
+      { id: 5, x: 456, y: 368, connections: [1, 4, 6, 9] },   // Player spawn intersection
+      { id: 6, x: 880, y: 368, connections: [2, 5, 7, 10] },
+      { id: 7, x: 1205, y: 368, connections: [3, 6, 11] },
 
-      // === ROW 3 (y=721) ===
-      { id: 8, x: 34, y: 721, connections: [4, 9, 12] },
-      { id: 9, x: 422, y: 721, connections: [5, 8, 10, 13] },
-      { id: 10, x: 827, y: 721, connections: [6, 9, 11, 14] },
-      { id: 11, x: 1221, y: 721, connections: [7, 10, 17] },
+      // === ROW 3 (y=695) ===
+      { id: 8, x: 60, y: 695, connections: [4, 9, 13] },
+      { id: 9, x: 456, y: 695, connections: [5, 8, 10, 22, 23] },
+      { id: 10, x: 880, y: 695, connections: [6, 9, 11, 15] },
+      { id: 11, x: 1205, y: 695, connections: [7, 10, 16] },
 
-      // === ROW 4 (y=998) ===
-      { id: 12, x: 34, y: 998, connections: [8, 13, 18] },
-      { id: 13, x: 422, y: 998, connections: [9, 12, 15, 19] },
-      { id: 14, x: 827, y: 998, connections: [10, 13, 16, 20] },
-      { id: 15, x: 770, y: 931, connections: [13, 14] },      // Roundabout left
-      { id: 16, x: 884, y: 931, connections: [10, 14] },      // Roundabout right
-      { id: 17, x: 1221, y: 998, connections: [11, 20] },
+      // === MID-BLOCK CROSSROAD & BOULEVARD (y=780..885) ===
+      { id: 22, x: 380, y: 780, connections: [9, 12] },       // West boulevard branch
+      { id: 23, x: 540, y: 780, connections: [9, 12] },       // East boulevard branch
+      { id: 12, x: 456, y: 885, connections: [22, 23, 14, 15] }, // Mid crossroad west
+      { id: 15, x: 880, y: 885, connections: [10, 12, 17] },     // Mid crossroad east
 
-      // === ROW 5 (y=1228) ===
-      { id: 18, x: 34, y: 1228, connections: [12, 19] },
-      { id: 19, x: 422, y: 1228, connections: [13, 18, 20] },
-      { id: 20, x: 827, y: 1228, connections: [14, 19, 21] },
-      { id: 21, x: 1221, y: 1228, connections: [17, 20] },
+      // === ROW 4 (y=1005) ===
+      { id: 13, x: 60, y: 1005, connections: [8, 14, 18] },
+      { id: 14, x: 456, y: 1005, connections: [12, 13, 17, 19] },
+      { id: 17, x: 880, y: 1005, connections: [15, 14, 16, 20] },
+      { id: 16, x: 1205, y: 1005, connections: [11, 17, 21] },
+
+      // === ROW 5 (y=1225) ===
+      { id: 18, x: 60, y: 1225, connections: [13, 19] },
+      { id: 19, x: 456, y: 1225, connections: [14, 18, 20] },
+      { id: 20, x: 880, y: 1225, connections: [17, 19, 21] },
+      { id: 21, x: 1205, y: 1225, connections: [16, 20] },
     ];
 
     function findShortestPath(startX, startY, targetX, targetY) {
@@ -800,35 +671,70 @@
       return points;
     }
 
-    function createNPC(startWaypointId, color, speedMult = 1.0) {
-      const wp = WAYPOINTS[startWaypointId];
-      const nextId = wp.connections[Math.floor(Math.random() * wp.connections.length)];
-      const nextWp = WAYPOINTS[nextId];
-      const ang = Math.atan2(nextWp.y - wp.y, nextWp.x - wp.x) * 180 / Math.PI + 90;
-      const baseSpd = (70 + Math.random() * 50) * speedMult;
+    // === PRECISION LANE-BASED NPC TRAFFIC SYSTEM ===
+    // Every vehicle drives strictly in its designated left-hand lane (12px offset from road centerline).
+    // Positions, speeds, and turns are calculated along verified road segments.
+    
+    function getSegmentData(fromId, toId, laneOffset = 12) {
+      const from = WAYPOINTS[fromId] || WAYPOINTS[0];
+      const to = WAYPOINTS[toId] || WAYPOINTS[1];
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const ux = dx / len;
+      const uy = dy / len;
+      // Perpendicular left vector for Indonesian left-hand driving:
+      const px = uy * laneOffset;
+      const py = -ux * laneOffset;
       return {
-        x: wp.x, y: wp.y, w: 14, h: 26,
-        baseSpeed: baseSpd,
-        currentSpeed: baseSpd,
-        angle: ang, color: color,
-        isBraking: false,
-        currentWaypoint: startWaypointId,
-        targetWaypoint: nextId,
-        stuckTimer: 0,
-        prevWaypoint: -1
+        startX: from.x + px,
+        startY: from.y + py,
+        endX: to.x + px,
+        endY: to.y + py,
+        ux, uy, len,
+        angle: Math.atan2(dy, dx) * 180 / Math.PI + 90
       };
     }
 
-    const NPC_COLORS = ['#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6', '#06b6d4', '#ec4899', '#10b981', '#f97316', '#a855f7', '#06b6d4', '#eab308', '#ef4444'];
+    function createNPC(startWpId, color, speedMult = 1.0) {
+      const fromNode = WAYPOINTS[startWpId];
+      const targetWpId = fromNode.connections[Math.floor(Math.random() * fromNode.connections.length)];
+      const seg = getSegmentData(startWpId, targetWpId);
+      const progress = Math.random() * 0.75 + 0.1;
+      const baseSpd = (60 + Math.random() * 25) * speedMult;
 
-    function spawnAllNPCs(count = 8, speedMult = 1.0) {
-      // Safe waypoints far from player spawn (422, 364)
-      const safeStarts = [0, 2, 3, 7, 8, 11, 12, 14, 17, 18, 20, 21];
+      return {
+        fromWpId: startWpId,
+        toWpId: targetWpId,
+        prevWpId: -1,
+        progress: progress,
+        segLen: seg.len,
+        x: seg.startX + (seg.endX - seg.startX) * progress,
+        y: seg.startY + (seg.endY - seg.startY) * progress,
+        w: 14, h: 24,
+        angle: seg.angle,
+        targetAngle: seg.angle,
+        baseSpeed: baseSpd,
+        currentSpeed: baseSpd,
+        color: color,
+        isBraking: false,
+        haltedTimer: 0
+      };
+    }
+
+    const NPC_COLORS = [
+      '#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6',
+      '#06b6d4', '#ec4899', '#10b981', '#f97316',
+      '#a855f7', '#eab308', '#14b8a6', '#e11d48'
+    ];
+
+    function spawnAllNPCs(count = 14, speedMult = 1.0) {
       const npcs = [];
+      const totalWp = WAYPOINTS.length;
       for (let i = 0; i < count; i++) {
-        const wpId = safeStarts[i % safeStarts.length];
+        const startWpId = (i * 2) % totalWp;
         const color = NPC_COLORS[i % NPC_COLORS.length];
-        npcs.push(createNPC(wpId, color, speedMult));
+        npcs.push(createNPC(startWpId, color, speedMult));
       }
       return npcs;
     }
@@ -836,12 +742,12 @@
     // === MULTI-PASSENGER SYSTEM ===
     // Semua posisi di jalan yang sudah terverifikasi aman
     const PASSENGER_POOL = [
-      { name: 'Pak Budi', pickupX: 827, pickupY: 38, dropoffX: 34, dropoffY: 998, fare: 15000 },
-      { name: 'Bu Sari', pickupX: 1221, pickupY: 364, dropoffX: 422, dropoffY: 721, fare: 12000 },
-      { name: 'Andi', pickupX: 34, pickupY: 721, dropoffX: 827, dropoffY: 1228, fare: 18000 },
-      { name: 'Dewi', pickupX: 827, pickupY: 998, dropoffX: 422, dropoffY: 38, fare: 20000 },
-      { name: 'Rizky', pickupX: 1221, pickupY: 1228, dropoffX: 34, dropoffY: 364, fare: 16000 },
-      { name: 'Maya', pickupX: 422, pickupY: 998, dropoffX: 1221, dropoffY: 721, fare: 14000 },
+      { name: 'Pak Budi', pickupX: 880, pickupY: 200, dropoffX: 60, dropoffY: 540, fare: 15000 },
+      { name: 'Bu Sari', pickupX: 1024, pickupY: 368, dropoffX: 456, dropoffY: 695, fare: 12000 },
+      { name: 'Andi', pickupX: 60, pickupY: 540, dropoffX: 1024, dropoffY: 1225, fare: 18000 },
+      { name: 'Dewi', pickupX: 880, pickupY: 885, dropoffX: 456, dropoffY: 50, fare: 20000 },
+      { name: 'Rizky', pickupX: 1205, pickupY: 1110, dropoffX: 250, dropoffY: 368, fare: 16000 },
+      { name: 'Maya', pickupX: 456, pickupY: 1005, dropoffX: 1205, dropoffY: 885, fare: 14000 },
     ];
 
     const DELIVERIES_TO_WIN = 3;
@@ -866,7 +772,7 @@
 
     let player = {
       x: 422, y: 364, width: 6, height: 14, angle: 0, speed: 0,
-      maxSpeed: 420, acceleration: 450, deceleration: 400, turnSpeed: 240, type: 'motor'
+      maxSpeed: 200, acceleration: 180, deceleration: 200, turnSpeed: 180, type: 'motor'
     };
 
     let trafficNPCs = spawnAllNPCs();
@@ -888,30 +794,22 @@
       document.getElementById('screen-city-modal').classList.add('hidden');
       document.getElementById('screen-result').classList.add('hidden');
       document.getElementById('mobile-controls').classList.remove('hidden');
-      document.getElementById('live-speedometer').classList.remove('hidden');
 
-      const mult = getSpeedMultiplier();
       const isMotor = selectedVehicleType === 'motor';
       player = {
-        x: 422, y: 364,
+        x: 456, y: 368,
         width: isMotor ? 6 : 12,
         height: isMotor ? 14 : 22,
         angle: 0, speed: 0,
-        maxSpeed: 112 * mult,
-        acceleration: 240 * Math.sqrt(mult),
-        deceleration: 260 * Math.sqrt(mult),
-        turnSpeed: (isMotor ? 220 : 180) * (1 + (mult - 1) * 0.15),
+        maxSpeed: isMotor ? 200 : 170,
+        acceleration: isMotor ? 180 : 140,
+        deceleration: isMotor ? 200 : 160,
+        turnSpeed: isMotor ? 180 : 140,
         type: selectedVehicleType
       };
 
-      // Update HUD Speedometer mode tag
-      const modeName = selectedSpeedMode.toUpperCase();
-      const levelNum = (activeLevel && activeLevel.levelNum) ? activeLevel.levelNum : 1;
-      const tagElem = document.getElementById('hud-mode-tag');
-      if (tagElem) tagElem.innerText = `${modeName} (Lvl ${levelNum})`;
-
       initPassengers();
-      const nCount = activeLevel.npcCount || 8;
+      const nCount = activeLevel.npcCount || 10;
       const nSpeedMult = activeLevel.npcSpeedMult || 1.0;
       trafficNPCs = spawnAllNPCs(nCount, nSpeedMult);
 
@@ -929,12 +827,35 @@
 
     function isPointOnRoad(px, py) {
       if (px < 10 || px > WORLD.width - 10 || py < 10 || py > WORLD.height - 10) return false;
-      if (!roadMaskData) return true;
-      const ix = Math.floor(px);
-      const iy = Math.floor(py);
-      const idx = (iy * 1254 + ix) * 4;
-      // Cek R channel (Red channel > 120 untuk toleransi halus canvas scaling)
-      return roadMaskData[idx] > 120;
+      
+      // If roadMaskData is loaded, use it
+      if (roadMaskData) {
+        const ix = Math.floor(px);
+        const iy = Math.floor(py);
+        const idx = (iy * 1254 + ix) * 4;
+        return roadMaskData[idx] > 120;
+      }
+      
+      // Fallback grid check: check if close to grid roads (width of road is approx 60px)
+      const roadWidth = 60;
+      const verticalRoads = [60, 456, 880, 1205];
+      const horizontalRoads = [50, 368, 695, 885, 1005, 1225];
+      
+      // Check vertical roads
+      for (const x of verticalRoads) {
+        if (Math.abs(px - x) < roadWidth / 2) return true;
+      }
+      // Check horizontal roads
+      for (const y of horizontalRoads) {
+        if (Math.abs(py - y) < roadWidth / 2) return true;
+      }
+      
+      // Check split boulevard branches
+      if (py >= 695 && py <= 885 && (Math.abs(px - 380) < 30 || Math.abs(px - 540) < 30)) {
+        return true;
+      }
+      
+      return false;
     }
 
     function isVehicleOnRoad(x, y, angle, width, height) {
@@ -965,176 +886,153 @@
 
       levelTime += dt;
 
-      // Live Speedometer HUD update
-      const displayKmh = Math.round(Math.abs(player.speed) * 0.9);
-      const speedValElem = document.getElementById('hud-speed-val');
-      if (speedValElem) speedValElem.innerText = displayKmh;
-
       const isUp = keys['w'] || keys['W'] || keys['ArrowUp'];
       const isDown = keys['s'] || keys['S'] || keys['ArrowDown'];
       const isLeft = keys['a'] || keys['A'] || keys['ArrowLeft'];
       const isRight = keys['d'] || keys['D'] || keys['ArrowRight'];
 
-      if (isUp) {
+      let inputX = 0;
+      let inputY = 0;
+      if (isLeft) inputX = -1;
+      if (isRight) inputX = 1;
+      if (isUp) inputY = -1;
+      if (isDown) inputY = 1;
+
+      const hasInput = inputX !== 0 || inputY !== 0;
+
+      if (hasInput) {
         player.speed = Math.min(player.speed + player.acceleration * dt, player.maxSpeed);
-      } else if (isDown) {
-        player.speed = Math.max(player.speed - player.acceleration * dt, -player.maxSpeed * 0.45);
-      } else {
-        if (player.speed > 0) player.speed = Math.max(0, player.speed - player.deceleration * dt);
-        else if (player.speed < 0) player.speed = Math.min(0, player.speed + player.deceleration * dt);
-      }
+        const len = Math.hypot(inputX, inputY);
+        const dirX = inputX / len;
+        const dirY = inputY / len;
 
-      // Check turn validity first or allow turn only if valid
-      let nextAngle = player.angle;
-      if (Math.abs(player.speed) > 10) {
-        const dir = player.speed >= 0 ? 1 : -1;
-        let testAngle = player.angle;
-        if (isLeft) testAngle -= player.turnSpeed * dt * dir;
-        if (isRight) testAngle += player.turnSpeed * dt * dir;
+        // Instantly rotate mecha/bike to face movement direction
+        player.angle = Math.atan2(dirY, dirX) * (180 / Math.PI) + 90;
 
-        if (isVehicleOnRoad(player.x, player.y, testAngle, player.width, player.height)) {
-          player.angle = testAngle;
+        const moveStep = player.speed * dt;
+        const dx = dirX * moveStep;
+        const dy = dirY * moveStep;
+
+        const nextX = player.x + dx;
+        const nextY = player.y + dy;
+
+        if (isVehicleOnRoad(nextX, nextY, player.angle, player.width, player.height)) {
+          player.x = nextX;
+          player.y = nextY;
+        } else if (isVehicleOnRoad(nextX, player.y, player.angle, player.width, player.height)) {
+          player.x = nextX;
+          player.speed *= 0.2;
+        } else if (isVehicleOnRoad(player.x, nextY, player.angle, player.width, player.height)) {
+          player.y = nextY;
+          player.speed *= 0.2;
+        } else {
+          const now = performance.now();
+          if (Math.abs(player.speed) > 10 && now - lastHitTime > 1000) {
+            collisions++;
+            lastHitTime = now;
+            camera.shake = 0.35;
+          }
+          player.speed = 0;
         }
-      }
-
-      const rad = (player.angle - 90) * (Math.PI / 180);
-      const moveStep = player.speed * dt;
-      const dx = Math.cos(rad) * moveStep;
-      const dy = Math.sin(rad) * moveStep;
-
-      const nextX = player.x + dx;
-      const nextY = player.y + dy;
-
-      if (isVehicleOnRoad(nextX, nextY, player.angle, player.width, player.height)) {
-        player.x = nextX;
-        player.y = nextY;
-      } else if (isVehicleOnRoad(nextX, player.y, player.angle, player.width, player.height)) {
-        player.x = nextX;
-        player.speed *= 0.2;
-      } else if (isVehicleOnRoad(player.x, nextY, player.angle, player.width, player.height)) {
-        player.y = nextY;
-        player.speed *= 0.2;
       } else {
-        const now = performance.now();
-        if (now - lastHitTime > 300) {
-          collisions++;
-          lastHitTime = now;
-          camera.shake = 0.2;
-        }
-        player.speed = 0; // Strictly stop vehicle from moving into black area!
+        player.speed = Math.max(0, player.speed - player.deceleration * dt);
       }
 
       trafficNPCs.forEach((npc, npcIdx) => {
-        const distToPlayer = Math.hypot(player.x - npc.x, player.y - npc.y);
+        const seg = getSegmentData(npc.fromWpId, npc.toWpId);
+        npc.segLen = seg.len;
+        npc.targetAngle = seg.angle;
 
-        // Brake near player
-        let shouldBrake = distToPlayer < 80;
-        let blockedByNPC = false;
+        // Smooth angle rotation (natural turn, no snapping)
+        let angleDiff = npc.targetAngle - npc.angle;
+        while (angleDiff > 180) angleDiff -= 360;
+        while (angleDiff < -180) angleDiff += 360;
+        npc.angle += angleDiff * Math.min(1, 12 * dt);
 
-        // NPC-NPC collision avoidance: brake if another NPC is close & ahead
-        if (!shouldBrake) {
-          for (let j = 0; j < trafficNPCs.length; j++) {
-            if (j === npcIdx) continue;
-            const other = trafficNPCs[j];
-            const distOther = Math.hypot(other.x - npc.x, other.y - npc.y);
-            if (distOther < 45) {
-              const npcFaceRad = (npc.angle - 90) * Math.PI / 180;
-              const toOtherX = other.x - npc.x;
-              const toOtherY = other.y - npc.y;
-              const dot = Math.cos(npcFaceRad) * toOtherX + Math.sin(npcFaceRad) * toOtherY;
-              if (dot > 0) { // other NPC is ahead
-                shouldBrake = true;
-                blockedByNPC = true;
-                break;
-              }
+        // Direction vector for vehicle heading
+        const faceRad = (npc.angle - 90) * Math.PI / 180;
+        const dirX = Math.cos(faceRad);
+        const dirY = Math.sin(faceRad);
+
+        // --- CAR FOLLOWING & COLLISION BRAKING ---
+        let shouldBrake = false;
+
+        // 1. Check other NPCs ahead in same corridor / lane
+        for (let j = 0; j < trafficNPCs.length; j++) {
+          if (j === npcIdx) continue;
+          const other = trafficNPCs[j];
+          const ox = other.x - npc.x;
+          const oy = other.y - npc.y;
+          const od = Math.hypot(ox, oy);
+          if (od < 50) {
+            const dot = dirX * ox + dirY * oy;
+            const cross = Math.abs(dirX * oy - dirY * ox);
+            const otherRad = (other.angle - 90) * Math.PI / 180;
+            const dotHeading = dirX * Math.cos(otherRad) + dirY * Math.sin(otherRad);
+            // Only brake for vehicles ahead in our lane, NOT oncoming traffic
+            if (dot > 0 && cross < 16 && dotHeading > -0.4) {
+              shouldBrake = true;
+              break;
             }
           }
         }
 
-        if (shouldBrake) {
+        // 2. Check Player ahead
+        const distToPlayer = Math.hypot(player.x - npc.x, player.y - npc.y);
+        if (distToPlayer < 50) {
+          const px = player.x - npc.x;
+          const py = player.y - npc.y;
+          const dot = dirX * px + dirY * py;
+          const cross = Math.abs(dirX * py - dirY * px);
+          if (dot > 0 && cross < 18) {
+            shouldBrake = true;
+          }
+        }
+
+        // --- SPEED & BRAKE DYNAMICS ---
+        if (npc.haltedTimer > 0) {
+          npc.haltedTimer -= dt;
+          npc.currentSpeed = 0;
           npc.isBraking = true;
-          npc.currentSpeed = Math.max(0, npc.currentSpeed - 350 * dt);
+        } else if (shouldBrake) {
+          npc.isBraking = true;
+          npc.currentSpeed = Math.max(0, npc.currentSpeed - 320 * dt);
         } else {
           npc.isBraking = false;
-          npc.currentSpeed = Math.min(npc.baseSpeed, npc.currentSpeed + 150 * dt);
+          npc.currentSpeed = Math.min(npc.baseSpeed, npc.currentSpeed + 160 * dt);
         }
 
-        // Deadlock resolver: If blocked by another NPC for more than 0.7s, force U-Turn / Reroute immediately!
-        if (blockedByNPC && npc.currentSpeed < 10) {
-          npc.stuckTimer += dt;
-          if (npc.stuckTimer > 0.7) {
-            // Swap target & current waypoints (Force U-turn away from deadlock)
-            const temp = npc.currentWaypoint;
-            npc.currentWaypoint = npc.targetWaypoint;
-            npc.targetWaypoint = temp;
-            npc.stuckTimer = 0;
-          }
+        // --- ADVANCE POSITION ALONG ROAD LANE ---
+        if (npc.segLen > 0) {
+          npc.progress += (npc.currentSpeed / npc.segLen) * dt;
         }
 
-        // Waypoint navigation with Right-Hand Traffic Lane Offset
-        const targetWp = WAYPOINTS[npc.targetWaypoint];
-        const currentWp = WAYPOINTS[npc.currentWaypoint];
-        
-        // Calculate lane offset (shift 6px to the right of movement direction)
-        const rawDx = targetWp.x - currentWp.x;
-        const rawDy = targetWp.y - currentWp.y;
-        const rawLen = Math.hypot(rawDx, rawDy) || 1;
-        const perpX = -rawDy / rawLen * 6; // perpendicular right vector
-        const perpY = rawDx / rawLen * 6;
-
-        const offsetTargetX = targetWp.x + perpX;
-        const offsetTargetY = targetWp.y + perpY;
-
-        const dxNpc = offsetTargetX - npc.x;
-        const dyNpc = offsetTargetY - npc.y;
-        const distToTarget = Math.hypot(dxNpc, dyNpc);
-
-        const targetAngle = Math.atan2(dyNpc, dxNpc) * 180 / Math.PI + 90;
-        let angleDiff = targetAngle - npc.angle;
-        while (angleDiff > 180) angleDiff -= 360;
-        while (angleDiff < -180) angleDiff += 360;
-        npc.angle += angleDiff * Math.min(1, 6 * dt);
-
-        // Move forward WITH ROAD COLLISION CHECK
-        const npcRad = (npc.angle - 90) * (Math.PI / 180);
-        const npcNewX = npc.x + Math.cos(npcRad) * npc.currentSpeed * dt;
-        const npcNewY = npc.y + Math.sin(npcRad) * npc.currentSpeed * dt;
-
-        if (isPointOnRoad(npcNewX, npcNewY)) {
-          npc.x = npcNewX;
-          npc.y = npcNewY;
-          if (!blockedByNPC) npc.stuckTimer = Math.max(0, npc.stuckTimer - dt);
-        } else {
-          npc.currentSpeed = 0;
-          npc.stuckTimer += dt;
-          if (npc.stuckTimer > 0.8) {
-            const wp = WAYPOINTS[npc.currentWaypoint];
-            let altCandidates = wp.connections.filter(c => c !== npc.targetWaypoint);
-            if (altCandidates.length === 0) altCandidates = wp.connections;
-            npc.targetWaypoint = altCandidates[Math.floor(Math.random() * altCandidates.length)];
-            npc.stuckTimer = 0;
-          }
+        // --- INTERSECTION / CORNER TRANSITION ---
+        if (npc.progress >= 1.0) {
+          npc.prevWpId = npc.fromWpId;
+          npc.fromWpId = npc.toWpId;
+          const currNode = WAYPOINTS[npc.fromWpId];
+          let candidates = currNode.connections.filter(id => id !== npc.prevWpId);
+          if (candidates.length === 0) candidates = currNode.connections;
+          npc.toWpId = candidates[Math.floor(Math.random() * candidates.length)];
+          npc.progress = 0.0;
         }
 
-        // Reached waypoint? Pick next one
-        if (distToTarget < 32) {
-          const prevId = npc.currentWaypoint;
-          npc.prevWaypoint = prevId;
-          npc.currentWaypoint = npc.targetWaypoint;
-          const wp = WAYPOINTS[npc.currentWaypoint];
-          let candidates = wp.connections.filter(c => c !== npc.prevWaypoint);
-          if (candidates.length === 0) candidates = wp.connections;
-          npc.targetWaypoint = candidates[Math.floor(Math.random() * candidates.length)];
-        }
+        // Compute current exact (X, Y) from segment geometry
+        const curSeg = getSegmentData(npc.fromWpId, npc.toWpId);
+        npc.x = curSeg.startX + (curSeg.endX - curSeg.startX) * Math.min(1, Math.max(0, npc.progress));
+        npc.y = curSeg.startY + (curSeg.endY - curSeg.startY) * Math.min(1, Math.max(0, npc.progress));
 
-        // Collision with player
-        if (distToPlayer < 20) {
+        // --- CRASH COLLISION WITH PLAYER ---
+        if (distToPlayer < 22) {
           const now = performance.now();
-          if (now - lastHitTime > 350) {
+          if (Math.abs(player.speed) > 10 && now - lastHitTime > 1000) {
             collisions++;
             lastHitTime = now;
-            camera.shake = 0.3;
+            camera.shake = 0.35;
             player.speed = -player.speed * 0.5;
+            npc.currentSpeed = 0;
+            npc.haltedTimer = 1.5;
           }
         }
       });
@@ -1145,7 +1043,7 @@
         for (const p of passengers) {
           if (p.status !== 'waiting') continue;
           const dist = Math.hypot(player.x - p.pickupX, player.y - p.pickupY);
-          if (dist < 40) {
+          if (dist < 18) {
             p.status = 'picked';
             currentPassenger = p;
             break;
@@ -1154,7 +1052,7 @@
       } else {
         // Ada penumpang — cek apakah sampai di dropoff
         const dist = Math.hypot(player.x - currentPassenger.dropoffX, player.y - currentPassenger.dropoffY);
-        if (dist < 45) {
+        if (dist < 22) {
           currentPassenger.status = 'delivered';
           deliveriesCompleted++;
           totalFare += currentPassenger.fare;
@@ -1177,8 +1075,7 @@
       let targetCamX = player.x - visibleW / 2;
       let targetCamY = player.y - visibleH / 2;
 
-      targetCamX = Math.max(0, Math.min(WORLD.width - visibleW, targetCamX));
-      targetCamY = Math.max(0, Math.min(WORLD.height - visibleH, targetCamY));
+
 
       camera.x += (targetCamX - camera.x) * 0.12;
       camera.y += (targetCamY - camera.y) * 0.12;
@@ -1406,6 +1303,10 @@
       }
       ctx.translate(-camera.x + shakeX, -camera.y + shakeY);
 
+      // OUTER WORLD LANDSCAPE (Draw behind the map)
+      ctx.fillStyle = '#1b3f22'; // Forest green
+      ctx.fillRect(-600, -600, WORLD.width + 1200, WORLD.height + 1200);
+
       // JAKARTA MAP BACKGROUND
       if (jakartaMapImage.complete && jakartaMapImage.naturalWidth > 0) {
         ctx.drawImage(jakartaMapImage, 0, 0, WORLD.width, WORLD.height);
@@ -1413,6 +1314,11 @@
         ctx.fillStyle = '#0f172a';
         ctx.fillRect(0, 0, WORLD.width, WORLD.height);
       }
+
+      // City Border Wall
+      ctx.strokeStyle = '#334155'; // Slate-700
+      ctx.lineWidth = 14;
+      ctx.strokeRect(0, 0, WORLD.width, WORLD.height);
 
       // DEBUG OVERLAY (Semi-transparent overlay: Red for non-road collision, Green for road)
       if (showDebugOverlay && roadMaskCanvas) {
@@ -1427,6 +1333,8 @@
         ctx.drawImage(roadMaskCanvas, 0, 0, WORLD.width, WORLD.height);
         ctx.restore();
       }
+
+
 
       // TRAFFIC CARS
       trafficNPCs.forEach(npc => {
@@ -1469,17 +1377,50 @@
           ctx.fillStyle = '#a5f3fc'; ctx.font = 'bold 8px "Outfit", sans-serif';
           ctx.fillText('Rp ' + (p.fare/1000) + 'k', p.pickupX, p.pickupY - 25);
 
-          // Glow
-          ctx.fillStyle = 'rgba(74, 222, 128, 0.3)';
-          ctx.beginPath(); ctx.arc(p.pickupX, p.pickupY, p.radius + 10 + pulse, 0, Math.PI * 2); ctx.fill();
+          // Glow (Pickup Zone)
+          ctx.fillStyle = 'rgba(34, 197, 94, 0.2)';
+          ctx.beginPath(); ctx.arc(p.pickupX, p.pickupY, 20 + pulse, 0, Math.PI * 2); ctx.fill();
 
-          // Circle
-          ctx.fillStyle = '#22c55e';
-          ctx.beginPath(); ctx.arc(p.pickupX, p.pickupY, p.radius, 0, Math.PI * 2); ctx.fill();
+          // Circle Base (Pickup Zone)
+          ctx.fillStyle = 'rgba(34, 197, 94, 0.4)';
+          ctx.strokeStyle = '#22c55e';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.arc(p.pickupX, p.pickupY, 15, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 
-          // Icon
-          ctx.fillStyle = '#ffffff'; ctx.font = 'bold 16px sans-serif';
-          ctx.fillText('🧑', p.pickupX, p.pickupY + 6);
+          // Stylized top-down character sprite (On road center)
+          ctx.save();
+          ctx.translate(p.pickupX, p.pickupY);
+
+          // Character shadow
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+          ctx.beginPath(); ctx.arc(2, 4, 6, 0, Math.PI * 2); ctx.fill();
+
+          // Shoulders / Shirt
+          ctx.fillStyle = '#ef4444'; // Red jacket
+          ctx.beginPath();
+          ctx.roundRect(-6, -4, 12, 8, 3);
+          ctx.fill();
+
+          // Skin Head
+          ctx.fillStyle = '#fdba74'; // Warm skin tone
+          ctx.beginPath(); ctx.arc(0, -5, 4, 0, Math.PI * 2); ctx.fill();
+
+          // Hair / Cap
+          ctx.fillStyle = '#1e293b'; // Slate cap
+          ctx.beginPath();
+          ctx.arc(0, -6, 4, Math.PI, 0);
+          ctx.fill();
+
+          // Animated Waving Hand
+          const wave = Math.sin(performance.now() / 120 + p.id) * 0.4 - 0.4;
+          ctx.save();
+          ctx.translate(-4, -1);
+          ctx.rotate(wave);
+          ctx.fillStyle = '#fdba74';
+          ctx.fillRect(-2, -5, 2.5, 6);
+          ctx.restore();
+
+          ctx.restore();
         });
       }
 
@@ -1796,7 +1737,7 @@
 
     function renderSpeedometerDial() {
       const centerX = VIEW.width - 90;
-      const centerY = 340;
+      const centerY = VIEW.height - 90;
       const radius = 65;
 
       ctx.save();

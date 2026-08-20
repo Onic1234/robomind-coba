@@ -70,7 +70,7 @@ export interface ScrewColorDef {
 }
 
 export const SCREW_COLORS: Record<string, ScrewColorDef> = {
-  green: { id: "green", primary: "#10B981", dark: "#047857", light: "#A7F3D0", rim: "#059669", glow: "#34D399" },
+  green: { id: "green", name: "Hijau", primary: "#10B981", dark: "#047857", light: "#A7F3D0", rim: "#059669", glow: "#34D399" },
   purple: { id: "purple", name: "Ungu", primary: "#8B5CF6", dark: "#5B21B6", light: "#DDD6FE", rim: "#7C3AED", glow: "#C4B5FD" },
   pink: { id: "pink", name: "Pink", primary: "#EC4899", dark: "#9D174D", light: "#FBCFE8", rim: "#DB2777", glow: "#F472B6" },
   cyan: { id: "cyan", name: "Cyan", primary: "#06B6D4", dark: "#0E7490", light: "#CFFAFE", rim: "#0891B2", glow: "#67E8F9" },

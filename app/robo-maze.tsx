@@ -18,8 +18,8 @@ export default function RoboMazeScreen() {
   const [loading, setLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showHelp, setShowHelp] = useState(true);
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const iframeRef = useRef<any>(null);
+  const containerRef = useRef<any>(null);
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
     left: 0,
     width: "100%",
     height: "100%",
-    border: "none",
+    borderWidth: 0,
     backgroundColor: "#111827",
   },
   loadingOverlay: {

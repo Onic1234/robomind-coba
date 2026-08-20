@@ -21,6 +21,7 @@ export default function RoboJekScreen() {
   const [showHelp, setShowHelp] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const iframeSrc = useRef(`/robo-jek/index.html?v=${Date.now()}`).current;
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;
@@ -83,7 +84,7 @@ export default function RoboJekScreen() {
 
       <iframe
         ref={iframeRef}
-        src="/robo-jek/index.html"
+        src={iframeSrc}
         style={styles.iframe}
         onLoad={() => {
           setLoading(false);

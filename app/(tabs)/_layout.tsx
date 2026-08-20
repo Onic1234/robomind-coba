@@ -11,7 +11,7 @@ export default function TabsLayout() {
         tabBarActiveTintColor: "#0B84FF",
         tabBarInactiveTintColor: "#64748B",
         headerShown: false,
-        tabBarStyle: {
+        tabBarStyle: Platform.OS === "web" ? { display: "none" } : {
           backgroundColor: "#FFFFFF",
           borderTopWidth: 1.5,
           borderTopColor: "#E2E8F0",
