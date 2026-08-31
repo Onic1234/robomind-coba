@@ -22,7 +22,7 @@ import Animated, {
   withSequence,
   cancelAnimation,
 } from "react-native-reanimated";
-import Svg, { Path, Circle, Rect, Polygon, G } from "react-native-svg";
+import Svg, { Path, Circle, Rect, Polygon, G, Line, Text as SvgText } from "react-native-svg";
 import { SPACING } from "../constants/Theme";
 import Button from "../components/ui/Button";
 
@@ -56,12 +56,7 @@ interface LevelConfig {
   grid: CircuitCell[];
 }
 
-interface Quiz {
-  question: string;
-  options: string[];
-  correctIndex: number;
-  explanation: string;
-}
+
 
 const ROT: Record<Port, Port> = { N: "E", E: "S", S: "W", W: "N" };
 const OPP: Record<Port, Port> = { N: "S", S: "N", E: "W", W: "E" };
@@ -158,20 +153,7 @@ const computeCircuit = (cells: CircuitCell[]): CircuitResult => {
   return { powered, targetValue, targetOn: targetValue === 1 };
 };
 
-const QUITS: Record<number, Quiz> = {
-  3: {
-    question: "Jika sinyal 1 melewati gerbang NOT, hasilnya menjadi?",
-    options: ["0", "1", "2", "Menyala"],
-    correctIndex: 0,
-    explanation: "Gerbang NOT membalik nilai sinyal: 1 menjadi 0, dan 0 menjadi 1.",
-  },
-  5: {
-    question: "Berapa gerbang NOT yang harus dilewati agar sinyal 1 kembali menjadi 1?",
-    options: ["1", "2", "3", "4"],
-    correctIndex: 1,
-    explanation: "Setiap NOT membalik nilai. Dua kali NOT mengembalikan 1 → 0 → 1.",
-  },
-};
+
 
 const LEVELS: LevelConfig[] = [
   {
@@ -517,8 +499,7 @@ export default function RobotCircuitPuzzleScreen() {
   const [gameState, setGameState] = useState<"playing" | "victory" | "completed">("playing");
   const [showPauseModal, setShowPauseModal] = useState(false);
   const [showTeachModal, setShowTeachModal] = useState(true);
-  const [quizAnswer, setQuizAnswer] = useState<number | null>(null);
-  const [quizFeedback, setQuizFeedback] = useState<"" | "correct" | "wrong">("");
+
   const [hintCellId, setHintCellId] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
   const [companionText, setCompanionText] = useState(
@@ -532,7 +513,7 @@ export default function RobotCircuitPuzzleScreen() {
   const cellSize = boardSize / GRID_SIZE;
 
   const currentLevel = useMemo(() => LEVELS.find((l) => l.level === level) || LEVELS[0], [level]);
-  const quiz = QUITS[currentLevel.level];
+
 
   const circuit = useMemo(() => computeCircuit(cells), [cells]);
 
@@ -560,8 +541,7 @@ export default function RobotCircuitPuzzleScreen() {
     setMoves(0);
     setGameState((prev) => (prev === "completed" ? prev : "playing"));
     setHintCellId(null);
-    setQuizAnswer(null);
-    setQuizFeedback("");
+
     setShowTeachModal(true);
     setCompanionText(
       `Misi Level ${level}: ${config.title}. ${config.teaches} Sinyal sumber bernilai 1, lampu menyala jika menerima 1.`
@@ -641,21 +621,7 @@ export default function RobotCircuitPuzzleScreen() {
     }
   };
 
-  const handleQuizAnswer = (idx: number) => {
-    if (quizAnswer !== null) return;
-    setQuizAnswer(idx);
-    if (idx === quiz?.correctIndex) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setQuizFeedback("correct");
-      const bonus = 10;
-      const newCoins = userCoins + bonus;
-      setUserCoins(newCoins);
-      AsyncStorage.setItem(STORAGE_KEY_COINS, String(newCoins));
-    } else {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      setQuizFeedback("wrong");
-    }
-  };
+
 
   const handleVictoryNext = async () => {
     const nextLevelNum = level + 1;
@@ -801,40 +767,7 @@ export default function RobotCircuitPuzzleScreen() {
               {currentLevel.title}
             </Text>
             <Text style={styles.teachText}>{currentLevel.teaches}</Text>
-            {quiz && (
-              <View style={styles.quizBox}>
-                <Text style={styles.quizTitle}>Tantangan Singkat</Text>
-                <Text style={styles.quizQuestion}>{quiz.question}</Text>
-                {quiz.options.map((opt, idx) => {
-                  const chosen = quizAnswer === idx;
-                  const isCorrect = quizAnswer !== null && idx === quiz.correctIndex;
-                  return (
-                    <Pressable
-                      key={idx}
-                      onPress={() => handleQuizAnswer(idx)}
-                      style={[
-                        styles.quizOption,
-                        chosen && { borderColor: "#38BDF8", backgroundColor: "rgba(56,189,248,0.15)" },
-                        isCorrect && { borderColor: "#10B981", backgroundColor: "rgba(16,185,129,0.18)" },
-                        quizAnswer !== null && idx === quiz.correctIndex && { borderColor: "#10B981", backgroundColor: "rgba(16,185,129,0.18)" },
-                      ]}
-                    >
-                      <Text style={styles.quizOptionText}>{opt}</Text>
-                      {isCorrect && <Ionicons name="checkmark-circle" size={18} color="#10B981" />}
-                      {quizAnswer === idx && quizFeedback === "wrong" && idx !== quiz.correctIndex && (
-                        <Ionicons name="close-circle" size={18} color="#EF4444" />
-                      )}
-                    </Pressable>
-                  );
-                })}
-                {quizFeedback === "correct" && (
-                  <Text style={styles.quizFeedbackCorrect}>✓ Benar! +10 koin bonus</Text>
-                )}
-                {quizFeedback === "wrong" && (
-                  <Text style={styles.quizFeedbackWrong}>Jawaban: {quiz.options[quiz.correctIndex]}. {quiz.explanation}</Text>
-                )}
-              </View>
-            )}
+
             <Button
               title="Mulai Bermain"
               onPress={() => setShowTeachModal(false)}
@@ -878,38 +811,176 @@ export default function RobotCircuitPuzzleScreen() {
         </View>
       </Modal>
 
+      {/* VICTORY / MISSION COMPLETED MODAL WITH COGNITIVE RADAR CHART */}
       <Modal visible={gameState === "victory"} transparent animationType="fade">
         <View style={styles.modalOverlay}>
-          <View style={styles.victoryCard}>
-            <Text style={styles.victoryTitle}>Sirkuit Terhubung!</Text>
-            <Text style={styles.victorySubtitle}>Lampu menyala! Kamu berhasil merangkai sirkuit.</Text>
-            <View style={styles.starRow}>
-              {[1, 2, 3].map((s) => (
-                <Ionicons
-                  key={s}
-                  name="star"
-                  size={s === 2 ? 54 : 42}
-                  color={s <= starsFor(moves, currentLevel.par) ? "#FBBF24" : "#CBD5E1"}
-                  style={{ marginTop: s === 2 ? -15 : 0 }}
-                />
-              ))}
-            </View>
-            <View style={styles.rewardCardContainer}>
-              <View style={styles.rewardItem}>
-                <Ionicons name="sparkles" size={26} color="#FBBF24" />
-                <Text style={styles.rewardAmount}>+{currentLevel.rewardCoins} Koin</Text>
+          <View style={styles.victoryCardContainer}>
+            {/* Header Tag & Title */}
+            <Text style={styles.missionTagText}>MISSION COMPLETED</Text>
+            <Text style={styles.victoryTitleText}>
+              EXCELLENT! SIRKUIT {String(level).padStart(2, "0")} CLEARED!
+            </Text>
+            <Text style={styles.victorySubText}>
+              Transmisi Robot Circuit: Level {level} → Selesai!
+            </Text>
+
+            {/* Main Content Row */}
+            <View style={{ width: "100%", maxHeight: 420 }}>
+              <View style={styles.victoryContentRow}>
+                {/* Left Column: Mission Achievements */}
+                <View style={styles.victoryLeftCol}>
+                  <Text style={styles.columnTitle}>PENCAPAIAN MISI</Text>
+
+                  {/* 3 Stars */}
+                  <View style={styles.starRowGroup}>
+                    {[1, 2, 3].map((s) => (
+                      <Ionicons
+                        key={s}
+                        name="star"
+                        size={s === 2 ? 32 : 26}
+                        color={s <= starsFor(moves, currentLevel.par) ? "#FFD700" : "#475569"}
+                        style={{ marginTop: s === 2 ? -4 : 0 }}
+                      />
+                    ))}
+                  </View>
+
+                  {/* Checklist */}
+                  <View style={styles.checklistGroup}>
+                    <View style={styles.checkItem}>
+                      <Ionicons name="star" size={12} color="#FFD700" />
+                      <Text style={styles.checkText}>Sirkuit Terhubung (100%)</Text>
+                    </View>
+                    <View style={styles.checkItem}>
+                      <Ionicons name="star" size={12} color="#FFD700" />
+                      <Text style={styles.checkText}>Efisiensi Gerbang NOT</Text>
+                    </View>
+                    <View style={styles.checkItem}>
+                      <Ionicons name="star" size={12} color="#FFD700" />
+                      <Text style={styles.checkText}>Selesai Dalam {moves} Langkah (Par: {currentLevel.par})</Text>
+                    </View>
+                  </View>
+
+                  {/* Loot Breakdown */}
+                  <View style={styles.lootDivider} />
+                  <View style={styles.lootRow}>
+                    <Text style={styles.lootLabel}>Loot Koin Terkumpul:</Text>
+                    <Text style={styles.lootValue}>+{currentLevel.rewardCoins} Koin</Text>
+                  </View>
+                  <View style={styles.lootRow}>
+                    <Text style={styles.lootLabel}>Bonus Transmisi XP:</Text>
+                    <Text style={styles.lootValue}>+{currentLevel.rewardXP} XP</Text>
+                  </View>
+                  <View style={[styles.lootRow, { marginTop: 6 }]}>
+                    <Text style={styles.totalLabel}>TOTAL SOULONS / KOIN:</Text>
+                    <Text style={styles.totalValue}>{currentLevel.rewardCoins + currentLevel.rewardXP} KOIN</Text>
+                  </View>
+                </View>
+
+                {/* Right Column: Brain Cognitive Analysis Radar Chart */}
+                <View style={styles.victoryRightCol}>
+                  <Text style={styles.columnTitle}>🧠 Analisis Perkembangan Otak</Text>
+                  <Text style={styles.columnSubTitle}>(Prefrontal Cortex & Logika Sirkuit)</Text>
+
+                  {/* SVG Radar Chart */}
+                  <View style={styles.victoryRadarWrapper}>
+                    <Svg width={180} height={180} viewBox="0 0 200 200">
+                      {/* Grid Pentagons */}
+                      {[0.3, 0.6, 1.0].map((lvlVal, idx) => {
+                        const pts = [0, 1, 2, 3, 4].map((i) => {
+                          const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+                          const x = 100 + 55 * lvlVal * Math.cos(angle);
+                          const y = 100 + 55 * lvlVal * Math.sin(angle);
+                          return `${x.toFixed(1)},${y.toFixed(1)}`;
+                        }).join(" ");
+
+                        return (
+                          <Polygon
+                            key={idx}
+                            points={pts}
+                            fill="none"
+                            stroke="rgba(56, 189, 248, 0.3)"
+                            strokeWidth="1"
+                            strokeDasharray={idx < 2 ? "3 3" : "0"}
+                          />
+                        );
+                      })}
+
+                      {/* Axis Spoke Lines */}
+                      {[0, 1, 2, 3, 4].map((i) => {
+                        const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+                        const endX = 100 + 55 * Math.cos(angle);
+                        const endY = 100 + 55 * Math.sin(angle);
+                        return (
+                          <Line key={i} x1={100} y1={100} x2={endX} y2={endY} stroke="rgba(56, 189, 248, 0.3)" strokeWidth="1" />
+                        );
+                      })}
+
+                      {/* Polygon Fill */}
+                      {(() => {
+                        const vals = [0.9, 0.94, 0.88, 0.92, 0.96];
+                        const pts = vals.map((val, i) => {
+                          const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+                          const x = 100 + 55 * val * Math.cos(angle);
+                          const y = 100 + 55 * val * Math.sin(angle);
+                          return `${x.toFixed(1)},${y.toFixed(1)}`;
+                        }).join(" ");
+
+                        return (
+                          <Polygon
+                            points={pts}
+                            fill="rgba(168, 85, 247, 0.45)"
+                            stroke="#C084FC"
+                            strokeWidth="2.5"
+                          />
+                        );
+                      })()}
+
+                      {/* Data Node Dots */}
+                      {[0, 1, 2, 3, 4].map((i) => {
+                        const vals = [0.9, 0.94, 0.88, 0.92, 0.96];
+                        const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+                        const x = 100 + 55 * vals[i] * Math.cos(angle);
+                        const y = 100 + 55 * vals[i] * Math.sin(angle);
+                        return <Circle key={i} cx={x} cy={y} r="3.5" fill="#FFFFFF" stroke="#A855F7" strokeWidth="1.5" />;
+                      })}
+
+                      {/* Axis Text Labels */}
+                      {["Spasial", "Keputusan", "Kontrol Diri", "Memori Kerja", "Fokus"].map((lbl, i) => {
+                        const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+                        const x = 100 + (55 + 18) * Math.cos(angle);
+                        const y = 100 + (55 + 14) * Math.sin(angle);
+                        let anchor: "middle" | "start" | "end" = "middle";
+                        if (i === 1 || i === 2) anchor = "start";
+                        if (i === 3 || i === 4) anchor = "end";
+
+                        return (
+                          <SvgText key={i} x={x} y={i === 0 ? y - 2 : y + 3} fontSize="9" fontWeight="800" fill="#E2E8F0" textAnchor={anchor}>
+                            {lbl}
+                          </SvgText>
+                        );
+                      })}
+                    </Svg>
+                  </View>
+                </View>
               </View>
-              <View style={styles.rewardItem}>
-                <MaterialCommunityIcons name="trophy-outline" size={26} color="#60A5FA" />
-                <Text style={styles.rewardAmount}>+{currentLevel.rewardXP} XP</Text>
-              </View>
             </View>
-            <Button
-              title={level === LEVELS.length ? "Selesai" : "Misi Berikutnya"}
-              onPress={handleVictoryNext}
-              variant="accent"
-              style={styles.nextLevelButton}
-            />
+
+            {/* Bottom Action Buttons */}
+            <View style={styles.victoryActionRow}>
+              <Pressable
+                style={({ pressed }) => [styles.backToMapBtn, pressed && styles.btnPressed]}
+                onPress={() => router.back()}
+              >
+                <Text style={styles.backToMapText}>[ Kembali Ke Menu Utama ]</Text>
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => [styles.continueBtn, pressed && styles.btnPressed]}
+                onPress={handleVictoryNext}
+              >
+                <Text style={styles.continueText}>[ CONTINUE (Lanjut Level) → ]</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
       </Modal>
@@ -1169,57 +1240,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 12,
   },
-  quizBox: {
-    width: "100%",
-    backgroundColor: "#F8FAFC",
-    borderRadius: 16,
-    padding: 16,
-    marginTop: 6,
-  },
-  quizTitle: {
-    fontSize: 14,
-    fontWeight: "900",
-    color: "#0EA5E9",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  quizQuestion: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#334155",
-    marginBottom: 12,
-    lineHeight: 19,
-  },
-  quizOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderWidth: 2,
-    borderColor: "#E2E8F0",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    marginBottom: 8,
-  },
-  quizOptionText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#334155",
-  },
-  quizFeedbackCorrect: {
-    color: "#059669",
-    fontWeight: "800",
-    fontSize: 13,
-    marginTop: 6,
-    textAlign: "center",
-  },
-  quizFeedbackWrong: {
-    color: "#DC2626",
-    fontWeight: "700",
-    fontSize: 12,
-    marginTop: 6,
-    lineHeight: 17,
-  },
+
   victoryTitle: {
     fontSize: 24,
     fontWeight: "900",
@@ -1260,5 +1281,180 @@ const styles = StyleSheet.create({
   },
   nextLevelButton: {
     width: "100%",
+  },
+
+  // Victory / Mission Completed Popup Styles
+  btnPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.98 }],
+  },
+  victoryCardContainer: {
+    width: Math.min(Dimensions.get("window").width - 20, 520),
+    backgroundColor: "#0B132B",
+    borderRadius: 24,
+    borderWidth: 2,
+    borderColor: "rgba(56, 189, 248, 0.4)",
+    padding: 16,
+    alignItems: "center",
+    elevation: 12,
+    shadowColor: "#38BDF8",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+  },
+  missionTagText: {
+    color: "#FFB703",
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 2,
+    marginBottom: 2,
+  },
+  victoryTitleText: {
+    color: "#38BDF8",
+    fontSize: 20,
+    fontWeight: "900",
+    letterSpacing: 1.5,
+    textAlign: "center",
+    textShadowColor: "#38BDF8",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 6,
+  },
+  victorySubText: {
+    color: "#94A3B8",
+    fontSize: 11,
+    fontWeight: "600",
+    marginBottom: 14,
+    textAlign: "center",
+  },
+  victoryContentRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+    justifyContent: "center",
+  },
+  victoryLeftCol: {
+    flex: 1,
+    minWidth: 210,
+    backgroundColor: "rgba(15, 23, 42, 0.8)",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(56, 189, 248, 0.2)",
+    padding: 12,
+  },
+  victoryRightCol: {
+    flex: 1,
+    minWidth: 210,
+    backgroundColor: "rgba(15, 23, 42, 0.8)",
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(56, 189, 248, 0.2)",
+    padding: 12,
+    alignItems: "center",
+  },
+  columnTitle: {
+    fontSize: 12,
+    fontWeight: "900",
+    color: "#38BDF8",
+    marginBottom: 6,
+    textAlign: "center",
+  },
+  columnSubTitle: {
+    fontSize: 9,
+    fontWeight: "600",
+    color: "#94A3B8",
+    marginBottom: 4,
+    textAlign: "center",
+  },
+  starRowGroup: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 6,
+    marginVertical: 6,
+  },
+  checklistGroup: {
+    gap: 4,
+    marginVertical: 6,
+  },
+  checkItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  checkText: {
+    color: "#E2E8F0",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  lootDivider: {
+    height: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    marginVertical: 8,
+  },
+  lootRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 2,
+  },
+  lootLabel: {
+    color: "#94A3B8",
+    fontSize: 10,
+    fontWeight: "500",
+  },
+  lootValue: {
+    color: "#FFD700",
+    fontSize: 10,
+    fontWeight: "800",
+  },
+  totalLabel: {
+    color: "#00FF88",
+    fontSize: 11,
+    fontWeight: "900",
+  },
+  totalValue: {
+    color: "#00FF88",
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  victoryRadarWrapper: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginVertical: 4,
+  },
+  victoryActionRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    width: "100%",
+    marginTop: 14,
+    justifyContent: "center",
+  },
+  backToMapBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
+  },
+  backToMapText: {
+    color: "#CBD5E1",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  continueBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: "#38BDF8",
+    alignItems: "center",
+    elevation: 4,
+  },
+  continueText: {
+    color: "#0F172A",
+    fontSize: 11,
+    fontWeight: "900",
   },
 });

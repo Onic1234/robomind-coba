@@ -9,6 +9,8 @@ import {
   Modal,
   StatusBar,
   ScrollView,
+  Image,
+  Animated,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -50,6 +52,11 @@ export default function RogueSoulGameScreen() {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [musicEnabled, setMusicEnabled] = useState(true);
   const [showHelp, setShowHelp] = useState(true);
+  const [rotatePrompt, setRotatePrompt] = useState(false);
+  const fullscreenRef = useRef(false);
+  const robotSpriteRef = useRef<HTMLImageElement | null>(null);
+  const robotCropRef = useRef<{ sx: number; sy: number; sw: number; sh: number } | null>(null);
+  const titleGlow = useRef(new Animated.Value(0)).current;
 
   // Shop & Inventory State
   const [unlockedSkinIds, setUnlockedSkinIds] = useState<string[]>(["rogue_default"]);
@@ -68,7 +75,16 @@ export default function RogueSoulGameScreen() {
   // Gameplay Overlay & Results
   const [isPaused, setIsPaused] = useState(false);
   const [gameResult, setGameResult] = useState<"victory" | "defeat" | null>(null);
-  const [resultStats, setResultStats] = useState({ stars: 0, coins: 0, gems: 0, score: 0 });
+  const [resultStats, setResultStats] = useState({
+    stars: 0,
+    coins: 0,
+    gems: 0,
+    score: 0,
+    distance: 0,
+    enemies: 0,
+    maxCombo: 0,
+    time: 0,
+  });
 
   // References for HTML5 Canvas engine
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -117,6 +133,60 @@ export default function RogueSoulGameScreen() {
     await AsyncStorage.setItem(GEMS_KEY, newGems.toString());
   };
 
+  // Auto-switch to landscape whenever the game mode is entered on a phone
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof window === "undefined") return;
+    if (viewState !== "playing") return;
+
+    const isMobile = () => /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+    const isPortrait = () => window.innerHeight > window.innerWidth;
+
+    const lockLandscape = async () => {
+      try {
+        if (!fullscreenRef.current && document.fullscreenElement === null) {
+          await document.documentElement.requestFullscreen?.();
+          fullscreenRef.current = true;
+        }
+      } catch (e) {
+        // Fullscreen needs a user gesture; the rotate button retries
+      }
+      try {
+        const so = (screen as any).orientation;
+        if (so && so.lock) {
+          await so.lock("landscape");
+        }
+      } catch (e) {
+        // Orientation lock not supported (e.g. iOS Safari) — rotate prompt covers it
+      }
+    };
+
+    const updatePrompt = () => {
+      setRotatePrompt(isMobile() && isPortrait());
+    };
+
+    updatePrompt();
+    const t = setTimeout(() => {
+      if (isMobile()) lockLandscape();
+    }, 300);
+    window.addEventListener("resize", updatePrompt);
+    window.addEventListener("orientationchange", updatePrompt);
+
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("resize", updatePrompt);
+      window.removeEventListener("orientationchange", updatePrompt);
+      try {
+        const so = (screen as any).orientation;
+        if (so && so.unlock) so.unlock();
+      } catch (e) {}
+      if (fullscreenRef.current && document.fullscreenElement) {
+        document.exitFullscreen?.();
+      }
+      fullscreenRef.current = false;
+      setRotatePrompt(false);
+    };
+  }, [viewState]);
+
   // Keyboard Event Listeners for Desktop Play
   useEffect(() => {
     if (viewState !== "playing") return;
@@ -143,6 +213,75 @@ export default function RogueSoulGameScreen() {
       window.removeEventListener("keyup", handleKeyUp);
     };
   }, [viewState]);
+
+  // Preload & chroma-key the RoboMind robot sprite for canvas rendering
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof document === "undefined") return;
+    try {
+      const asset = Image.resolveAssetSource(require("../robot_robomind.jpeg"));
+      const img = new window.Image();
+      img.src = asset.uri;
+      img.onload = () => {
+        try {
+          const c = document.createElement("canvas");
+          c.width = img.width;
+          c.height = img.height;
+          const g = c.getContext("2d");
+          if (!g) return;
+          g.drawImage(img, 0, 0);
+          const id = g.getImageData(0, 0, c.width, c.height);
+          const d = id.data;
+          for (let i = 0; i < d.length; i += 4) {
+            const r = d[i], gv = d[i + 1], b = d[i + 2];
+            const greenness = gv - Math.max(r, b);
+            if (greenness >= 14) {
+              const fade = Math.min(1, (greenness - 14) / 8);
+              d[i + 3] = Math.round(d[i + 3] * (1 - fade));
+            }
+          }
+          g.putImageData(id, 0, 0);
+
+          // Auto-crop to the visible (non-transparent) sprite bounds
+          let minX = c.width, minY = c.height, maxX = 0, maxY = 0;
+          for (let y = 0; y < c.height; y++) {
+            for (let x = 0; x < c.width; x++) {
+              if (d[(y * c.width + x) * 4 + 3] > 30) {
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+              }
+            }
+          }
+          if (minX < maxX && minY < maxY) {
+            robotCropRef.current = { sx: minX, sy: minY, sw: maxX - minX + 1, sh: maxY - minY + 1 };
+          }
+
+          const keyed = new window.Image();
+          keyed.src = c.toDataURL();
+          keyed.onload = () => {
+            robotSpriteRef.current = keyed;
+          };
+        } catch (err) {
+          robotSpriteRef.current = img;
+        }
+      };
+    } catch (e) {
+      console.error("Failed to load robot sprite:", e);
+    }
+  }, []);
+
+  // Pulsing glow animation for the menu title signboard
+  useEffect(() => {
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(titleGlow, { toValue: 1, duration: 1200, useNativeDriver: true }),
+        Animated.timing(titleGlow, { toValue: 0, duration: 1200, useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [titleGlow]);
 
   // Start Gameplay Session
   const startLevelSession = (level: LevelData, endless: boolean = false) => {
@@ -217,7 +356,16 @@ export default function RogueSoulGameScreen() {
     const stars = engine.player.hp >= engine.player.maxHp ? 3 : engine.player.coins >= selectedLevel.targetCoins ? 2 : 1;
 
     setGameResult("victory");
-    setResultStats({ stars, coins: coinsEarned, gems: gemsEarned, score: engine.player.score });
+    setResultStats({
+      stars,
+      coins: coinsEarned,
+      gems: gemsEarned,
+      score: engine.player.score,
+      distance: Math.round(engine.gameDistance / 10),
+      enemies: engine.enemiesDefeated,
+      maxCombo: engine.maxCombo,
+      time: Math.round(engine.runTime),
+    });
 
     const newCoins = userCoins + coinsEarned;
     const newGems = userGems + gemsEarned;
@@ -232,7 +380,16 @@ export default function RogueSoulGameScreen() {
 
   const handleLevelDefeat = (engine: RogueSoulGameEngine) => {
     setGameResult("defeat");
-    setResultStats({ stars: 0, coins: engine.player.coins, gems: engine.player.gems, score: engine.player.score });
+    setResultStats({
+      stars: 0,
+      coins: engine.player.coins,
+      gems: engine.player.gems,
+      score: engine.player.score,
+      distance: Math.round(engine.gameDistance / 10),
+      enemies: engine.enemiesDefeated,
+      maxCombo: engine.maxCombo,
+      time: Math.round(engine.runTime),
+    });
     saveCoinsGems(userCoins + engine.player.coins, userGems + engine.player.gems);
   };
 
@@ -262,6 +419,67 @@ export default function RogueSoulGameScreen() {
     }
     ctx.fillStyle = skyGradient;
     ctx.fillRect(0, 0, width, height);
+
+    // 1.5 Ambient Sky Elements: Celestial Body + Twinkling Stars + Drifting Clouds
+    const skyTime = Date.now() * 0.0004;
+    const isDarkSky = env === "dungeon" || env === "ramparts" || env === "keep";
+
+    // Sun / Moon with soft radial glow
+    const celestialX = width * 0.76 - camX * 0.015;
+    const celestialY = 88;
+    const glowRadius = 86;
+    if (env === "dungeon") {
+      const moonGlow = ctx.createRadialGradient(celestialX, celestialY, 4, celestialX, celestialY, glowRadius);
+      moonGlow.addColorStop(0, "rgba(226, 232, 240, 0.95)");
+      moonGlow.addColorStop(0.35, "rgba(148, 163, 184, 0.55)");
+      moonGlow.addColorStop(1, "rgba(148, 163, 184, 0)");
+      ctx.fillStyle = moonGlow;
+      ctx.fillRect(celestialX - glowRadius, celestialY - glowRadius, glowRadius * 2, glowRadius * 2);
+    } else if (env === "keep") {
+      const bloodGlow = ctx.createRadialGradient(celestialX, celestialY, 4, celestialX, celestialY, glowRadius);
+      bloodGlow.addColorStop(0, "rgba(254, 202, 202, 0.95)");
+      bloodGlow.addColorStop(0.4, "rgba(220, 38, 38, 0.6)");
+      bloodGlow.addColorStop(1, "rgba(220, 38, 38, 0)");
+      ctx.fillStyle = bloodGlow;
+      ctx.fillRect(celestialX - glowRadius, celestialY - glowRadius, glowRadius * 2, glowRadius * 2);
+    } else {
+      const sunGlow = ctx.createRadialGradient(celestialX, celestialY, 4, celestialX, celestialY, glowRadius);
+      sunGlow.addColorStop(0, "rgba(255, 251, 235, 0.98)");
+      sunGlow.addColorStop(0.3, "rgba(253, 224, 71, 0.75)");
+      sunGlow.addColorStop(0.65, "rgba(249, 115, 22, 0.28)");
+      sunGlow.addColorStop(1, "rgba(249, 115, 22, 0)");
+      ctx.fillStyle = sunGlow;
+      ctx.fillRect(celestialX - glowRadius, celestialY - glowRadius, glowRadius * 2, glowRadius * 2);
+    }
+
+    // Twinkling stars
+    for (let i = 0; i < 60; i++) {
+      const starX = (i * 137.5) % width;
+      const starY = 10 + ((i * 73.1) % (height * 0.55));
+      const twinkle = 0.35 + 0.65 * Math.abs(Math.sin(skyTime * 2.5 + i * 1.7));
+      ctx.fillStyle = `rgba(226, 232, 240, ${(isDarkSky ? 0.75 : 0.28) * twinkle})`;
+      ctx.beginPath();
+      ctx.arc(starX, starY, 0.6 + (i % 3), 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Drifting parallax clouds
+    for (let i = 0; i < 6; i++) {
+      const cloudW = 130 + (i % 3) * 70;
+      const cloudY = 55 + (i % 4) * 42;
+      const drift = (skyTime * (9 + i * 3)) % (width + 320);
+      const baseX = (((i * 300 - camX * 0.04) % (width + 320)) + width + 320) % (width + 320);
+      const cloudX = baseX - drift;
+      ctx.fillStyle =
+        env === "keep" ? "rgba(127, 29, 29, 0.30)" :
+        env === "dungeon" ? "rgba(71, 85, 105, 0.32)" :
+        "rgba(255, 255, 255, 0.22)";
+      ctx.beginPath();
+      ctx.ellipse(cloudX, cloudY, cloudW * 0.5, cloudW * 0.13, 0, 0, Math.PI * 2);
+      ctx.ellipse(cloudX - cloudW * 0.28, cloudY - 8, cloudW * 0.26, cloudW * 0.11, 0, 0, Math.PI * 2);
+      ctx.ellipse(cloudX + cloudW * 0.26, cloudY - 6, cloudW * 0.22, cloudW * 0.1, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // 2. Parallax Background Layers (Mountains & Castle Turrets)
     ctx.fillStyle = env === "keep" ? "rgba(69, 10, 10, 0.45)" : "rgba(15, 23, 42, 0.35)";
@@ -352,6 +570,86 @@ export default function RogueSoulGameScreen() {
         ctx.fillRect(plat.x, plat.y + 18, plat.w, 6);
       }
     });
+
+    // 3.5 FINISH LINE GATE (visible target at every campaign level)
+    if (!engine.isEndless && engine.currentLevelData && engine.finishX != null) {
+      const fx = engine.finishX;
+      const groundY = 420;
+      const pulse = 0.55 + 0.45 * Math.sin(Date.now() * 0.006);
+      const gateCx = fx + 44;
+      const square = 18;
+
+      // Checkered strip painted on the ground in front of the gate
+      for (let s = 0; s < 90; s += square) {
+        for (let r = 0; r < 3; r++) {
+          ctx.fillStyle = (Math.floor(s / square) + r) % 2 === 0 ? "#F8FAFC" : "#0F172A";
+          ctx.fillRect(fx + s, groundY + r * square, square, square);
+        }
+      }
+
+      // Ground beacon glow
+      ctx.save();
+      ctx.shadowColor = "#F59E0B";
+      ctx.shadowBlur = 24 * pulse;
+      ctx.fillStyle = `rgba(245, 158, 11, ${0.25 + 0.2 * pulse})`;
+      ctx.beginPath();
+      ctx.ellipse(gateCx, groundY + 6, 80, 14, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Left & right gate posts
+      const postW = 16;
+      const postH = 170;
+      ctx.fillStyle = "#1E293B";
+      ctx.fillRect(gateCx - 44, groundY - postH, postW, postH);
+      ctx.fillRect(gateCx + 44 - postW, groundY - postH, postW, postH);
+      // Post caps
+      ctx.fillStyle = "#F59E0B";
+      ctx.fillRect(gateCx - 48, groundY - postH - 8, 24, 10);
+      ctx.fillRect(gateCx + 44 - 16, groundY - postH - 8, 24, 10);
+
+      // Checkered band across the posts
+      for (let s = 0; s < 88; s += 16) {
+        ctx.fillStyle = Math.floor(s / 16) % 2 === 0 ? "#F8FAFC" : "#0F172A";
+        ctx.fillRect(gateCx - 44, groundY - postH + 12 + s, 16, 16);
+        ctx.fillRect(gateCx + 28, groundY - postH + 12 + s, 16, 16);
+      }
+
+      // Top banner with FINISH text
+      const bannerY = groundY - postH - 46;
+      ctx.save();
+      ctx.shadowColor = "#F59E0B";
+      ctx.shadowBlur = 16 * pulse;
+      ctx.fillStyle = "#0F172A";
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(gateCx - 60, bannerY, 120, 40, 8);
+      } else {
+        ctx.fillRect(gateCx - 60, bannerY, 120, 40);
+      }
+      ctx.fill();
+      ctx.strokeStyle = "#F59E0B";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.fillStyle = "#FEF08A";
+      ctx.font = "900 20px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("FINISH", gateCx, bannerY + 27);
+
+      // Flag pole on top with waving pennant
+      ctx.fillStyle = "#CBD5E1";
+      ctx.fillRect(gateCx - 2, bannerY - 46, 4, 46);
+      const wave = Math.sin(Date.now() * 0.008) * 4;
+      ctx.fillStyle = "#10B981";
+      ctx.beginPath();
+      ctx.moveTo(gateCx + 2, bannerY - 46);
+      ctx.lineTo(gateCx + 34 + wave, bannerY - 40);
+      ctx.lineTo(gateCx + 2, bannerY - 32);
+      ctx.closePath();
+      ctx.fill();
+    }
 
     // 4. Collectibles (Animated Spinning Coins, Gems & Potions)
     const time = Date.now() * 0.005;
@@ -602,7 +900,7 @@ export default function RogueSoulGameScreen() {
       ctx.restore();
     });
 
-    // 8. HIGH-QUALITY 2D CYBER-NINJA HERO CHARACTER
+    // 8. ROBOMIND ROBOT HERO SPRITE (rendered from robot_robomind.jpeg)
     const p = engine.player;
     ctx.save();
     ctx.translate(p.x + p.width / 2, p.y + p.height / 2);
@@ -617,236 +915,70 @@ export default function RogueSoulGameScreen() {
     ctx.fill();
     ctx.restore();
 
-    // Elemental Aura Glow Ring
-    ctx.shadowColor = p.skin.colorScheme.glow;
-    ctx.shadowBlur = 14;
-
     const frame = p.actionFrame || 0;
-    const runCycle = Math.sin(frame * 0.45);
+    const robotImg = robotSpriteRef.current;
 
-    // LAYER 1: Flowing Scarf & Dynamic Dual-Layered Cape
-    const capeSway1 = Math.sin(frame * 0.3) * 14;
-    const capeSway2 = Math.cos(frame * 0.3) * 10;
-
-    // Outer Scarf Ribbon Streamers
-    ctx.fillStyle = p.skin.colorScheme.cape;
-    ctx.beginPath();
-    ctx.moveTo(-6, -26);
-    ctx.quadraticCurveTo(-25 + capeSway1, -30, -40 + capeSway1, -22 + capeSway2);
-    ctx.quadraticCurveTo(-22 + capeSway1, -16, -4, -20);
-    ctx.closePath();
-    ctx.fill();
-
-    // Inner Dark Cape Layer
-    ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
-    ctx.beginPath();
-    ctx.moveTo(-10, -18);
-    ctx.quadraticCurveTo(-28 + capeSway1, 0, -36 + capeSway1, 24);
-    ctx.lineTo(-2, 26);
-    ctx.closePath();
-    ctx.fill();
-
-    // Main Cape with Gold Edge Trim
-    const capeGrad = ctx.createLinearGradient(-10, -20, -35 + capeSway1, 25);
-    capeGrad.addColorStop(0, p.skin.colorScheme.cape);
-    capeGrad.addColorStop(1, p.skin.colorScheme.secondary);
-    ctx.fillStyle = capeGrad;
-    ctx.beginPath();
-    ctx.moveTo(-12, -20);
-    ctx.quadraticCurveTo(-26 + capeSway1, -2, -34 + capeSway1, 22);
-    ctx.lineTo(-4, 24);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.strokeStyle = "#F59E0B";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // LAYER 2: Animated Legs & Cyber Boots (Running / Sliding / Air Stance)
-    if (p.action === "slide") {
-      // Low Stealth Dash Stance
-      ctx.fillStyle = p.skin.colorScheme.secondary;
-      ctx.fillRect(-28, 6, 56, 14);
-      ctx.fillStyle = "#F59E0B"; // Utility belt
-      ctx.fillRect(-28, 4, 56, 4);
-
-      // Boots Slide Spark Trail
-      ctx.fillStyle = "#0F172A";
-      ctx.fillRect(18, 12, 12, 8);
-      ctx.fillStyle = "#00E5FF";
-      ctx.fillRect(-28, 16, 50, 4);
-    } else if (p.action === "run" && p.grounded) {
-      // Realistic 2-Joint Bending Leg Cycle
-      const leg1Angle = runCycle * 0.6;
-      const leg2Angle = -runCycle * 0.6;
-
-      // Left Leg
-      ctx.save();
-      ctx.translate(-6, 12);
-      ctx.rotate(leg1Angle);
-      ctx.fillStyle = p.skin.colorScheme.secondary;
-      ctx.fillRect(-4, 0, 8, 14); // Thigh
-      ctx.fillStyle = "#1E293B";
-      ctx.fillRect(-4, 14, 8, 10); // Armored Shin
-      ctx.fillStyle = "#0F172A";
-      ctx.fillRect(-5, 20, 11, 6); // Boot
-      ctx.fillStyle = p.skin.colorScheme.glow;
-      ctx.fillRect(-2, 24, 6, 2); // Sole Thruster Glow
-      ctx.restore();
-
-      // Right Leg
-      ctx.save();
-      ctx.translate(6, 12);
-      ctx.rotate(leg2Angle);
-      ctx.fillStyle = p.skin.colorScheme.secondary;
-      ctx.fillRect(-4, 0, 8, 14); // Thigh
-      ctx.fillStyle = "#1E293B";
-      ctx.fillRect(-4, 14, 8, 10); // Armored Shin
-      ctx.fillStyle = "#0F172A";
-      ctx.fillRect(-5, 20, 11, 6); // Boot
-      ctx.fillStyle = p.skin.colorScheme.glow;
-      ctx.fillRect(-2, 24, 6, 2); // Sole Thruster Glow
-      ctx.restore();
-    } else {
-      // Mid-Air Tucked Knees Stance
-      ctx.fillStyle = p.skin.colorScheme.secondary;
-      ctx.fillRect(-10, 12, 8, 14);
-      ctx.fillRect(4, 10, 8, 14);
-      ctx.fillStyle = "#0F172A";
-      ctx.fillRect(-12, 22, 10, 6);
-      ctx.fillRect(2, 20, 10, 6);
+    // Living animation: run bob & tilt, air pitch, slide squash, hurt blink
+    let bob = 0;
+    let tilt = 0;
+    let squashX = 1;
+    let squashY = 1;
+    if (p.action === "run" && p.grounded) {
+      bob = Math.sin(frame * 0.45) * 2.5;
+      tilt = Math.sin(frame * 0.45) * 0.06;
+    } else if (p.action === "slide") {
+      squashX = 1.3;
+      squashY = 0.78;
+    } else if (!p.grounded) {
+      bob = -3;
+      tilt = Math.max(-0.4, Math.min(0.4, p.vy * 0.03));
     }
 
-    // LAYER 3: Mecha Armor Torso & Utility Straps
-    const armorGrad = ctx.createLinearGradient(-14, -18, 14, 18);
-    armorGrad.addColorStop(0, p.skin.colorScheme.primary);
-    armorGrad.addColorStop(0.6, p.skin.colorScheme.secondary);
-    armorGrad.addColorStop(1, "#0F172A");
-
-    ctx.fillStyle = armorGrad;
+    // Elemental Aura Glow Ring behind the robot
+    ctx.strokeStyle = p.skin.colorScheme.glow;
+    ctx.globalAlpha = 0.45;
+    ctx.lineWidth = 2;
     ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(-15, -20, 30, 34, 8);
+    ctx.arc(0, -10, 34 + Math.sin(frame * 0.3) * 4, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+    if (p.invulnerableTimer > 0) ctx.globalAlpha = 0.45 + 0.4 * Math.sin(Date.now() * 0.03);
+
+    if (robotImg && robotImg.width > 0) {
+      ctx.translate(0, bob);
+      ctx.rotate(tilt);
+      ctx.scale(squashX, squashY);
+      const crop = robotCropRef.current;
+      const srcW = crop ? crop.sw : robotImg.width;
+      const srcH = crop ? crop.sh : robotImg.height;
+      const drawH = 66;
+      const drawW = (srcW / srcH) * drawH;
+      if (crop) {
+        ctx.drawImage(robotImg, crop.sx, crop.sy, crop.sw, crop.sh, -drawW / 2, -drawH + 3, drawW, drawH);
+      } else {
+        ctx.drawImage(robotImg, -drawW / 2, -drawH + 3, drawW, drawH);
+      }
     } else {
-      ctx.fillRect(-15, -20, 30, 34);
+      // Fallback glowing placeholder while sprite loads
+      ctx.shadowColor = p.skin.colorScheme.glow;
+      ctx.shadowBlur = 14;
+      ctx.fillStyle = p.skin.colorScheme.primary;
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(-15, -20, 30, 34, 8);
+      } else {
+        ctx.fillRect(-15, -20, 30, 34);
+      }
+      ctx.fill();
+      ctx.fillStyle = p.skin.colorScheme.secondary;
+      ctx.beginPath();
+      ctx.arc(0, -24, 15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
     }
-    ctx.fill();
+    ctx.globalAlpha = 1;
 
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
-    ctx.lineWidth = 1.2;
-    ctx.stroke();
-
-    // Cross-Body Leather Harness & Belt
-    ctx.fillStyle = "#78350F";
-    ctx.fillRect(-15, 4, 30, 5); // Utility Belt
-    ctx.fillStyle = "#F59E0B";
-    ctx.fillRect(-3, 3, 6, 7); // Gold Buckle
-
-    // Glowing Power Core Emblem on Chest
-    ctx.shadowColor = p.skin.colorScheme.glow;
-    ctx.shadowBlur = 12;
-    ctx.fillStyle = p.skin.colorScheme.glow;
-    ctx.beginPath();
-    ctx.arc(0, -9, 5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#FFFFFF";
-    ctx.beginPath();
-    ctx.arc(0, -9, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-
-    // Shoulder Pauldrons
-    ctx.fillStyle = p.skin.colorScheme.primary;
-    ctx.beginPath();
-    ctx.arc(-15, -16, 6, 0, Math.PI * 2);
-    ctx.arc(15, -16, 6, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#F59E0B";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // LAYER 4: Rogue Assassin Hood & Cyber Visor
-    ctx.fillStyle = p.skin.colorScheme.secondary;
-    ctx.beginPath();
-    ctx.arc(0, -24, 15, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Angular Cowl Overlay
-    ctx.fillStyle = p.skin.colorScheme.primary;
-    ctx.beginPath();
-    ctx.moveTo(-15, -24);
-    ctx.lineTo(0, -38);
-    ctx.lineTo(15, -24);
-    ctx.lineTo(12, -14);
-    ctx.lineTo(-12, -14);
-    ctx.closePath();
-    ctx.fill();
-
-    // Hood Gold Trim Line
-    ctx.strokeStyle = "#F59E0B";
-    ctx.lineWidth = 1.8;
-    ctx.stroke();
-
-    // Futuristic Glowing Cyber Eyes & Visor
-    ctx.shadowColor = p.skin.colorScheme.glow;
-    ctx.shadowBlur = 14;
-    ctx.fillStyle = p.skin.colorScheme.glow;
-    ctx.beginPath();
-    if (ctx.roundRect) {
-      ctx.roundRect(2, -26, 11, 5, 2);
-    } else {
-      ctx.fillRect(2, -26, 11, 5);
-    }
-    ctx.fill();
-
-    // White Lens Refraction Reflection
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillRect(4, -25, 4, 3);
-    ctx.shadowBlur = 0;
-
-    // LAYER 5: Weapon & Epic Attack Slash Arc
-    ctx.save();
-    // Arm Holding Weapon
-    ctx.fillStyle = p.skin.colorScheme.secondary;
-    ctx.beginPath();
-    ctx.arc(12, -8, 4.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Weapon Hilt & Guard
-    ctx.fillStyle = "#F59E0B"; // Gold Guard
-    ctx.fillRect(12, -12, 4, 14);
-    ctx.fillStyle = "#78350F";
-    ctx.fillRect(8, -7, 6, 4);
-
-    // Glowing Steel/Energy Blade
-    ctx.shadowColor = p.weapon.trailColor;
-    ctx.shadowBlur = 10;
-    const bladeGrad = ctx.createLinearGradient(16, 0, 16 + p.weapon.range * 0.45, 0);
-    bladeGrad.addColorStop(0, "#FFFFFF");
-    bladeGrad.addColorStop(0.4, p.weapon.bladeColor);
-    bladeGrad.addColorStop(1, "#FFFFFF");
-
-    ctx.fillStyle = bladeGrad;
-    ctx.beginPath();
-    ctx.moveTo(16, -8);
-    ctx.lineTo(16 + p.weapon.range * 0.45, -4);
-    ctx.lineTo(16 + p.weapon.range * 0.5, 0);
-    ctx.lineTo(16 + p.weapon.range * 0.45, 4);
-    ctx.lineTo(16, 8);
-    ctx.closePath();
-    ctx.fill();
-
-    // Blade Spine Center Line
-    ctx.strokeStyle = "#FFFFFF";
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.moveTo(16, 0);
-    ctx.lineTo(16 + p.weapon.range * 0.48, 0);
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-    ctx.restore();
-
-    // LAYER 6: MASSIVE NEON SWORD SLASH ARC (270 Degrees)
+    // MASSIVE NEON SWORD SLASH ARC (kept for combat feedback)
     if (p.action === "slash") {
       ctx.save();
       ctx.shadowColor = p.weapon.trailColor;
@@ -898,9 +1030,33 @@ export default function RogueSoulGameScreen() {
       ctx.restore();
     });
 
+    // 9.5 Ambient Floating Motes (world space, parallax with camera)
+    const moteCount = 16;
+    const moteTime = Date.now() * 0.02;
+    const moteColor =
+      env === "keep" ? "239, 68, 68" :
+      env === "dungeon" ? "148, 163, 184" :
+      "254, 240, 138";
+    for (let i = 0; i < moteCount; i++) {
+      const mx = (((i * 137.5 + camX * 0.5) % (width + 160)) + width + 160) % (width + 160) - 80;
+      const my = 120 + ((i * 47.3 + moteTime) % (height * 0.62));
+      const mPulse = 0.25 + 0.6 * Math.abs(Math.sin(moteTime * 0.09 + i));
+      ctx.fillStyle = `rgba(${moteColor}, ${mPulse})`;
+      ctx.beginPath();
+      ctx.arc(mx, my, 1.5 + (i % 3), 0, Math.PI * 2);
+      ctx.fill();
+    }
+
     ctx.restore(); // Restore camera translation
 
-    // 10. IN-CANVAS HUD OVERLAY (Health, Daggers, Combo Streak & Distance Progress)
+    // 9.75 Cinematic Vignette Overlay
+    const vignette = ctx.createRadialGradient(width / 2, height / 2, height * 0.32, width / 2, height / 2, height * 1.0);
+    vignette.addColorStop(0, "rgba(0, 0, 0, 0)");
+    vignette.addColorStop(1, "rgba(0, 0, 0, 0.42)");
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, width, height);
+
+    // 10. IN-CANVAS HUD OVERLAY (Health, Daggers, Combo, Progress & Live Stats)
     // Health Hearts Top-Left
     for (let h = 0; h < engine.player.maxHp; h++) {
       const heartX = 20 + h * 28;
@@ -914,41 +1070,121 @@ export default function RogueSoulGameScreen() {
       ctx.fill();
     }
 
-    // Dagger Count Badges
-    ctx.fillStyle = "#0284C7";
-    ctx.fillRect(20, 42, 60, 20);
+    // Dagger Count Badge
+    ctx.fillStyle = "#0C4A6E";
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(16, 42, 96, 22, 8);
+    } else {
+      ctx.fillRect(16, 42, 96, 22);
+    }
+    ctx.fill();
+    ctx.strokeStyle = "rgba(56, 189, 248, 0.5)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
     ctx.fillStyle = "#FFF";
     ctx.font = "900 11px sans-serif";
-    ctx.fillText(`DAGGER: ${engine.player.daggers}/${engine.player.maxDaggers}`, 24, 56);
+    ctx.textAlign = "left";
+    ctx.fillText(`🗡 ${engine.player.daggers}/${engine.player.maxDaggers}`, 24, 57);
 
-    // Combo streak popup
+    // Combo streak (centered popup)
     if (engine.player.combo >= 2) {
+      ctx.textAlign = "center";
+      ctx.save();
+      ctx.shadowColor = "#F59E0B";
+      ctx.shadowBlur = 14;
       ctx.fillStyle = "#F59E0B";
       ctx.font = "900 22px sans-serif";
-      ctx.fillText(`${engine.player.combo}x COMBO!`, width - 180, 45);
+      ctx.fillText(`${engine.player.combo}x COMBO!`, width / 2, 62);
+      ctx.restore();
     }
 
-    // Distance Level Progress Bar Top-Center
+    // Level Progress Bar Top-Center with FINISH marker & remaining distance
     if (engine.currentLevelData && !engine.isEndless) {
-      const progressRatio = Math.min(1, engine.player.x / engine.currentLevelData.targetDistance);
-      const barW = 260;
+      const target = engine.finishX ?? engine.currentLevelData.targetDistance;
+      const progressRatio = Math.min(1, engine.player.x / target);
+      const barW = 240;
       const barX = width / 2 - barW / 2;
-      const barY = 20;
+      const barY = 18;
 
-      ctx.fillStyle = "rgba(15, 23, 42, 0.6)";
-      ctx.fillRect(barX, barY, barW, 12);
+      ctx.fillStyle = "rgba(15, 23, 42, 0.7)";
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(barX, barY, barW, 12, 6);
+      } else {
+        ctx.fillRect(barX, barY, barW, 12);
+      }
+      ctx.fill();
       ctx.fillStyle = "#10B981";
-      ctx.fillRect(barX, barY, barW * progressRatio, 12);
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(barX, barY, Math.max(8, barW * progressRatio), 12, 6);
+      } else {
+        ctx.fillRect(barX, barY, Math.max(8, barW * progressRatio), 12);
+      }
+      ctx.fill();
       ctx.strokeStyle = "#FFFFFF";
       ctx.lineWidth = 1.5;
       ctx.strokeRect(barX, barY, barW, 12);
 
-      // Moving Player Head Icon on Progress Bar
+      // Moving player head icon
       ctx.fillStyle = "#F59E0B";
       ctx.beginPath();
       ctx.arc(barX + barW * progressRatio, barY + 6, 8, 0, Math.PI * 2);
       ctx.fill();
+
+      // FINISH label at the bar's right end
+      ctx.fillStyle = "#F59E0B";
+      ctx.font = "900 10px sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("🏁 FINISH", barX + barW + 8, barY + 10);
+
+      // Remaining distance text below the bar
+      const remaining = Math.max(0, Math.ceil((target - engine.player.x) / 10));
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#FEF08A";
+      ctx.font = "900 12px sans-serif";
+      ctx.fillText(remaining > 0 ? `SISA ${remaining}m KE FINISH` : "TERUS MAJU KE GARIS FINISH!", width / 2, barY + 34);
     }
+
+    // Live Stats Panel Top-Right (Coins, Gems, Score)
+    const statsW = 150;
+    const statsH = 76;
+    const statsX = width - statsW - 12;
+    const statsY = 12;
+    ctx.fillStyle = "rgba(15, 23, 42, 0.82)";
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(statsX, statsY, statsW, statsH, 12);
+    } else {
+      ctx.fillRect(statsX, statsY, statsW, statsH);
+    }
+    ctx.fill();
+    ctx.strokeStyle = "rgba(245, 158, 11, 0.45)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    const drawStatRow = (y: number, color: string, icon: string, label: string, value: number) => {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(statsX + 18, y, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#1E293B";
+      ctx.font = "900 9px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(icon, statsX + 18, y + 3);
+      ctx.fillStyle = "#F8FAFC";
+      ctx.font = "900 13px sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(String(value), statsX + 34, y + 4);
+      ctx.fillStyle = "#94A3B8";
+      ctx.font = "700 9px sans-serif";
+      ctx.textAlign = "right";
+      ctx.fillText(label, statsX + statsW - 10, y + 4);
+    };
+    drawStatRow(statsY + 20, "#F59E0B", "$", "KOIN", engine.player.coins);
+    drawStatRow(statsY + 42, "#EC4899", "◆", "GEM", engine.player.gems);
+    drawStatRow(statsY + 64, "#38BDF8", "★", "SKOR", engine.player.score);
   };
 
   // --- MENU COMPONENT RENDERING (Matches User Screenshot) ---
@@ -1012,12 +1248,20 @@ export default function RogueSoulGameScreen() {
           </View>
 
           {/* Wooden Sign Board Header */}
-          <View style={styles.titleSignBoard}>
+          <View style={styles.titleWrapper}>
+            <Animated.View
+              style={[
+                styles.titleGlowPulse,
+                { opacity: titleGlow.interpolate({ inputRange: [0, 1], outputRange: [0.25, 0.8] }) },
+              ]}
+            />
+            <View style={styles.titleSignBoard}>
             <View style={styles.titleRivetLeft} />
             <View style={styles.titleRivetRight} />
             <Text style={styles.titleTextMain}>ROGUE SOUL</Text>
             <View style={styles.titleBadgeTwo}>
               <Text style={styles.titleBadgeTwoText}>II</Text>
+            </View>
             </View>
           </View>
 
@@ -1392,9 +1636,37 @@ export default function RogueSoulGameScreen() {
                   ))}
                 </View>
 
-                <Text style={styles.resultStatLine}>Koin Diperoleh: +{resultStats.coins}</Text>
-                <Text style={styles.resultStatLine}>Permata: +{resultStats.gems}</Text>
-                <Text style={styles.resultStatLine}>Total Skor: {resultStats.score}</Text>
+                <Text style={styles.resultStatLine}>Statistik Misi:</Text>
+                <View style={styles.statsGrid}>
+                  <View style={styles.statCell}>
+                    <Text style={[styles.statValue, { color: "#F59E0B" }]}>+{resultStats.coins}</Text>
+                    <Text style={styles.statLabel}>Koin</Text>
+                  </View>
+                  <View style={styles.statCell}>
+                    <Text style={[styles.statValue, { color: "#EC4899" }]}>+{resultStats.gems}</Text>
+                    <Text style={styles.statLabel}>Permata</Text>
+                  </View>
+                  <View style={styles.statCell}>
+                    <Text style={[styles.statValue, { color: "#38BDF8" }]}>{resultStats.score}</Text>
+                    <Text style={styles.statLabel}>Skor</Text>
+                  </View>
+                  <View style={styles.statCell}>
+                    <Text style={[styles.statValue, { color: "#10B981" }]}>{resultStats.distance}m</Text>
+                    <Text style={styles.statLabel}>Jarak</Text>
+                  </View>
+                  <View style={styles.statCell}>
+                    <Text style={[styles.statValue, { color: "#EF4444" }]}>{resultStats.enemies}</Text>
+                    <Text style={styles.statLabel}>Musuh</Text>
+                  </View>
+                  <View style={styles.statCell}>
+                    <Text style={[styles.statValue, { color: "#A855F7" }]}>{resultStats.maxCombo}x</Text>
+                    <Text style={styles.statLabel}>Kombo</Text>
+                  </View>
+                  <View style={styles.statCell}>
+                    <Text style={[styles.statValue, { color: "#CBD5E1" }]}>{resultStats.time}s</Text>
+                    <Text style={styles.statLabel}>Waktu</Text>
+                  </View>
+                </View>
 
                 <View style={styles.resultButtonsRow}>
                   <Pressable style={styles.resultBtn} onPress={() => startLevelSession(selectedLevel)}>
@@ -1415,8 +1687,29 @@ export default function RogueSoulGameScreen() {
                 <Ionicons name="skull" size={56} color="#EF4444" />
                 <Text style={[styles.resultTitleText, { color: "#EF4444" }]}>KAMU GUGUR!</Text>
 
-                <Text style={styles.resultStatLine}>Koin Dikumpulkan: +{resultStats.coins}</Text>
-                <Text style={styles.resultStatLine}>Skor: {resultStats.score}</Text>
+                <Text style={styles.resultStatLine}>Statistik Misi:</Text>
+                <View style={styles.statsGrid}>
+                  <View style={styles.statCell}>
+                    <Text style={[styles.statValue, { color: "#F59E0B" }]}>+{resultStats.coins}</Text>
+                    <Text style={styles.statLabel}>Koin</Text>
+                  </View>
+                  <View style={styles.statCell}>
+                    <Text style={[styles.statValue, { color: "#10B981" }]}>{resultStats.distance}m</Text>
+                    <Text style={styles.statLabel}>Jarak</Text>
+                  </View>
+                  <View style={styles.statCell}>
+                    <Text style={[styles.statValue, { color: "#38BDF8" }]}>{resultStats.score}</Text>
+                    <Text style={styles.statLabel}>Skor</Text>
+                  </View>
+                  <View style={styles.statCell}>
+                    <Text style={[styles.statValue, { color: "#EF4444" }]}>{resultStats.enemies}</Text>
+                    <Text style={styles.statLabel}>Musuh</Text>
+                  </View>
+                  <View style={styles.statCell}>
+                    <Text style={[styles.statValue, { color: "#CBD5E1" }]}>{resultStats.time}s</Text>
+                    <Text style={styles.statLabel}>Waktu</Text>
+                  </View>
+                </View>
 
                 <View style={styles.resultButtonsRow}>
                   <Pressable style={[styles.resultBtn, { backgroundColor: "#EF4444" }]} onPress={() => startLevelSession(selectedLevel)}>
@@ -1429,6 +1722,37 @@ export default function RogueSoulGameScreen() {
               </View>
             </View>
           )}
+        </View>
+      )}
+
+      {rotatePrompt && (
+        <View style={styles.rotateOverlay}>
+          <MaterialCommunityIcons name="rotate-orbit" size={56} color="#F59E0B" />
+          <Text style={styles.rotateTitle}>Putar HP ke LANDSCAPE</Text>
+          <Text style={styles.rotateDesc}>
+            Rogue Soul adalah game aksi 2D. Miringkan HP-mu ke posisi mendatar untuk pengalaman terbaik.
+          </Text>
+          <Pressable
+            style={styles.rotateBtn}
+            onPress={() => {
+              (async () => {
+                try {
+                  if (document.fullscreenElement === null) {
+                    await document.documentElement.requestFullscreen?.();
+                    fullscreenRef.current = true;
+                  }
+                  const so = (screen as any).orientation;
+                  if (so && so.lock) {
+                    await so.lock("landscape");
+                  }
+                } catch (e) {}
+                setRotatePrompt(false);
+              })();
+            }}
+          >
+            <Ionicons name="expand" size={20} color="#fff" />
+            <Text style={styles.rotateBtnText}>MASUK LANDSCAPE</Text>
+          </Pressable>
         </View>
       )}
 
@@ -1540,6 +1864,19 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     backgroundColor: "rgba(249, 115, 22, 0.25)",
   },
+  titleWrapper: {
+    position: "relative",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 30,
+  },
+  titleGlowPulse: {
+    position: "absolute",
+    width: 360,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "rgba(245, 158, 11, 0.45)",
+  },
   titleSignBoard: {
     width: 320,
     backgroundColor: "#78350F",
@@ -1549,7 +1886,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: "center",
     position: "relative",
-    marginBottom: 30,
     ...SHADOWS.premium,
   },
   titleRivetLeft: {
@@ -1957,6 +2293,35 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 4,
   },
+  statsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 8,
+    marginVertical: 10,
+    width: "100%",
+  },
+  statCell: {
+    minWidth: 76,
+    backgroundColor: "#0F172A",
+    borderWidth: 1,
+    borderColor: "#334155",
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    alignItems: "center",
+  },
+  statValue: {
+    fontSize: 16,
+    fontWeight: "900",
+  },
+  statLabel: {
+    color: "#94A3B8",
+    fontSize: 9,
+    fontWeight: "800",
+    marginTop: 2,
+    textTransform: "uppercase",
+  },
   resultButtonsRow: {
     flexDirection: "row",
     gap: 12,
@@ -1995,5 +2360,50 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "800",
     textAlign: "center",
+  },
+  rotateOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+    backgroundColor: "rgba(10, 14, 26, 0.94)",
+    zIndex: 50,
+  },
+  rotateTitle: {
+    color: "#F59E0B",
+    fontSize: 22,
+    fontWeight: "900",
+    marginTop: 14,
+    textAlign: "center",
+    letterSpacing: 1,
+  },
+  rotateDesc: {
+    color: "#CBD5E1",
+    fontSize: 14,
+    lineHeight: 21,
+    textAlign: "center",
+    marginTop: 10,
+    maxWidth: 340,
+  },
+  rotateBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#D97706",
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    borderRadius: 50,
+    marginTop: 24,
+    elevation: 6,
+  },
+  rotateBtnText: {
+    color: "#FFFFFF",
+    fontWeight: "900",
+    fontSize: 14,
+    letterSpacing: 0.5,
   },
 });

@@ -151,9 +151,14 @@ function setAwal(){
 	game.hero.animJatuh = dataGambar.fall;
 	game.hero.animMati = dataGambar.hit;
 	game.skalaSprite = 2;	
-	//setPlatform(map_1, dataGambar.tileset, 32, game.hero);
 	setPlatform(this["map_"+game.level], dataGambar.tileset, 32, game.hero);
-	game.gameOver = ulangiPermainan;
+
+	// Automatically show Defeat Statistics Modal when player dies!
+	game.gameOver = function() {
+		game.aktif = false;
+		showBrosResultModal(false);
+	};
+
 	//set item
 	setPlatformItem(1, dataGambar.item1);
 	setPlatformItem(2, dataGambar.item2);
@@ -212,7 +217,8 @@ function cekItem(){
 	if (game.triggerID == 1){
 		game.triggerID = 0;
 		game.aktif = false;
-		showBrosResultModal();
+		// Automatically show Victory Statistics Modal when player reaches finish flag!
+		showBrosResultModal(true);
 	}
 }
 
@@ -220,33 +226,43 @@ function drawBrosRadarChart(canvasId, scores) {
 	const canvas = document.getElementById(canvasId);
 	if (!canvas) return;
 	const ctx = canvas.getContext('2d');
-	const width = canvas.width;
-	const height = canvas.height;
-	const center = width / 2;
-	const radius = 52;
-	ctx.clearRect(0, 0, width, height);
+	const dpr = window.devicePixelRatio || 1;
+
+	const cssWidth = 210;
+	const cssHeight = 190;
+	canvas.width = cssWidth * dpr;
+	canvas.height = cssHeight * dpr;
+	canvas.style.width = cssWidth + 'px';
+	canvas.style.height = cssHeight + 'px';
+
+	ctx.scale(dpr, dpr);
+	ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+	const centerX = cssWidth / 2;
+	const centerY = cssHeight / 2 + 2;
+	const radius = 55;
 
 	const axes = [
-		{ name: "Spasial", val: scores.spasial || 88 },
-		{ name: "Keputusan", val: scores.keputusan || 92 },
-		{ name: "Kontrol Diri", val: scores.kontrolDiri || 85 },
-		{ name: "Memori Kerja", val: scores.memori || 90 },
-		{ name: "Fokus", val: scores.fokus || 95 }
+		{ name: "Spasial", val: scores.spasial || 88, align: "center", dy: -12 },
+		{ name: "Keputusan", val: scores.keputusan || 92, align: "left", dy: 2 },
+		{ name: "Kontrol Diri", val: scores.kontrolDiri || 85, align: "left", dy: 10 },
+		{ name: "Memori Kerja", val: scores.memori || 90, align: "right", dy: 10 },
+		{ name: "Fokus", val: scores.fokus || 95, align: "right", dy: 2 }
 	];
 	const numAxes = axes.length;
 
-	// Grid rings
-	[0.2, 0.4, 0.6, 0.8, 1.0].forEach(rFactor => {
+	// Grid Pentagon rings
+	[0.25, 0.5, 0.75, 1.0].forEach((rFactor, idx) => {
 		ctx.beginPath();
 		for (let i = 0; i < numAxes; i++) {
 			const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
-			const x = center + radius * rFactor * Math.cos(angle);
-			const y = center + radius * rFactor * Math.sin(angle);
+			const x = centerX + radius * rFactor * Math.cos(angle);
+			const y = centerY + radius * rFactor * Math.sin(angle);
 			if (i === 0) ctx.moveTo(x, y);
 			else ctx.lineTo(x, y);
 		}
 		ctx.closePath();
-		ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+		ctx.strokeStyle = idx === 3 ? 'rgba(168, 85, 247, 0.4)' : 'rgba(56, 189, 248, 0.2)';
 		ctx.lineWidth = 1;
 		ctx.stroke();
 	});
@@ -254,22 +270,22 @@ function drawBrosRadarChart(canvasId, scores) {
 	// Axis Spokes
 	for (let i = 0; i < numAxes; i++) {
 		const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
-		const x = center + radius * Math.cos(angle);
-		const y = center + radius * Math.sin(angle);
+		const x = centerX + radius * Math.cos(angle);
+		const y = centerY + radius * Math.sin(angle);
 		ctx.beginPath();
-		ctx.moveTo(center, center);
+		ctx.moveTo(centerX, centerY);
 		ctx.lineTo(x, y);
 		ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
 		ctx.stroke();
 	}
 
-	// Filled Polygon
+	// Filled Translucent Polygon
 	ctx.beginPath();
 	axes.forEach((axis, i) => {
 		const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
 		const r = radius * (Math.min(100, Math.max(20, axis.val)) / 100);
-		const x = center + r * Math.cos(angle);
-		const y = center + r * Math.sin(angle);
+		const x = centerX + r * Math.cos(angle);
+		const y = centerY + r * Math.sin(angle);
 		if (i === 0) ctx.moveTo(x, y);
 		else ctx.lineTo(x, y);
 	});
@@ -280,12 +296,12 @@ function drawBrosRadarChart(canvasId, scores) {
 	ctx.lineWidth = 2.5;
 	ctx.stroke();
 
-	// Glowing Data Points
+	// Glowing Nodes
 	axes.forEach((axis, i) => {
 		const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
 		const r = radius * (Math.min(100, Math.max(20, axis.val)) / 100);
-		const x = center + r * Math.cos(angle);
-		const y = center + r * Math.sin(angle);
+		const x = centerX + r * Math.cos(angle);
+		const y = centerY + r * Math.sin(angle);
 		ctx.beginPath();
 		ctx.arc(x, y, 4, 0, Math.PI * 2);
 		ctx.fillStyle = '#ffffff';
@@ -295,57 +311,121 @@ function drawBrosRadarChart(canvasId, scores) {
 		ctx.stroke();
 	});
 
-	// Axis Labels
-	ctx.font = 'bold 9px system-ui, sans-serif';
-	ctx.fillStyle = '#f8fafc';
-	ctx.textAlign = 'center';
-	ctx.textBaseline = 'middle';
+	// Axis Text Labels
+	ctx.font = 'bold 9.5px system-ui, sans-serif';
+	ctx.fillStyle = '#e2e8f0';
 
 	axes.forEach((axis, i) => {
 		const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
 		const labelR = radius + 18;
-		const x = center + labelR * Math.cos(angle);
-		const y = center + labelR * Math.sin(angle);
+		const x = centerX + labelR * Math.cos(angle);
+		const y = centerY + labelR * Math.sin(angle) + (axis.dy || 0);
+		ctx.textAlign = axis.align || 'center';
 		ctx.fillText(axis.name, x, y);
 	});
 }
 
-function showBrosResultModal() {
-	const modal = document.getElementById('resultModal');
-	if (modal) {
-		modal.style.display = 'flex';
-		document.getElementById('modalLevelTitle').innerText = `LEVEL 0${game.level} CLEARED!`;
-		document.getElementById('modalScoreText').innerText = `+${game.score} Skor`;
-		document.getElementById('modalCoinText').innerText = `${game.score} KOIN`;
+var lastModalResultWin = true;
 
-		const btnNext = document.getElementById('btnNextLevel');
-		if (game.level >= 2) {
+function showBrosResultModal(isWin) {
+	if (typeof isWin === 'undefined') isWin = true;
+	lastModalResultWin = isWin;
+
+	const modal = document.getElementById('resultModal');
+	if (!modal) return;
+
+	modal.style.display = 'flex';
+	const currentLvl = (game && game.level) ? game.level : 1;
+	const baseScore = (game && game.score) ? game.score : (isWin ? 170 : 50);
+	const bonusScore = isWin ? 44 : 0;
+	const totalScore = baseScore + bonusScore;
+
+	const missionTagEl = document.getElementById('modalMissionTag');
+	if (missionTagEl) {
+		missionTagEl.innerText = isWin ? "MISSION COMPLETED" : "MISSION FAILED";
+		missionTagEl.style.color = isWin ? "#F59E0B" : "#EF4444";
+	}
+
+	const titleEl = document.getElementById('modalLevelTitle');
+	if (titleEl) {
+		titleEl.innerText = isWin ? `EXCELLENT! LEVEL ${currentLvl} CLEARED!` : `ROBOT TERHENTI! LEVEL ${currentLvl}`;
+		titleEl.style.color = isWin ? "#34D399" : "#EF4444";
+	}
+
+	const subTextEl = document.getElementById('modalSubText');
+	if (subTextEl) {
+		subTextEl.innerText = isWin ? "Petualangan Robo-Bros → Selesai!" : "Robot Terkena Rintangan / Jatuh Ke Jurang";
+	}
+
+	const starEl = document.getElementById('modalStars');
+	if (starEl) {
+		starEl.innerText = isWin ? "⭐ ⭐ ⭐" : "⭐ ☆ ☆";
+	}
+
+	const fruitEl = document.getElementById('resFruitCount');
+	if (fruitEl) fruitEl.innerText = isWin ? "8/8 Buah Segar" : `${Math.floor(baseScore / 10)} Buah Segar`;
+
+	const accuracyEl = document.getElementById('resAccuracy');
+	if (accuracyEl) accuracyEl.innerText = isWin ? "100% Bebas Luka" : "Terkena Luka Rintangan";
+
+	const timeEl = document.getElementById('resTimeBonus');
+	if (timeEl) timeEl.innerText = isWin ? "+27s" : "+0s";
+
+	const scoreTextEl = document.getElementById('modalScoreText');
+	if (scoreTextEl) scoreTextEl.innerText = `+${baseScore} Koin`;
+
+	const bonusTextEl = document.getElementById('modalBonusText');
+	if (bonusTextEl) bonusTextEl.innerText = `+${bonusScore} Koin`;
+
+	const coinTextEl = document.getElementById('modalCoinText');
+	if (coinTextEl) coinTextEl.innerText = `${totalScore} KOIN`;
+
+	const btnNext = document.getElementById('btnNextLevel');
+	if (btnNext) {
+		if (!isWin) {
+			btnNext.innerText = "[ 🔄 COBA LAGI (Ulangi Level) ]";
+			btnNext.style.background = "linear-gradient(135deg, #EF4444, #DC2626)";
+		} else if (currentLvl >= 2) {
 			btnNext.innerText = "[ SELESAI & KLAIM HADIAH 🏆 ]";
+			btnNext.style.background = "linear-gradient(135deg, #10B981, #059669)";
 		} else {
 			btnNext.innerText = "[ CONTINUE (Lanjut Level) ➔ ]";
+			btnNext.style.background = "linear-gradient(135deg, #0284C7, #0B84FF)";
 		}
-
-		setTimeout(() => {
-			drawBrosRadarChart('brosRadarCanvas', {
-				spasial: 88,
-				keputusan: 92,
-				kontrolDiri: 85,
-				memori: 90,
-				fokus: 95
-			});
-		}, 50);
 	}
+
+	setTimeout(() => {
+		drawBrosRadarChart('brosRadarCanvas', isWin ? {
+			spasial: 88,
+			keputusan: 92,
+			kontrolDiri: 85,
+			memori: 90,
+			fokus: 95
+		} : {
+			spasial: 62,
+			keputusan: 55,
+			kontrolDiri: 58,
+			memori: 70,
+			fokus: 60
+		});
+	}, 50);
 }
 
 function continueNextLevel() {
 	const modal = document.getElementById('resultModal');
 	if (modal) modal.style.display = 'none';
 
-	game.level++;
-	if (game.level >= 3) {
-		game.level = 1;
-		jalankan(halamanCover);
+	if (lastModalResultWin) {
+		game.level++;
+		if (game.level >= 3) {
+			game.level = 1;
+			jalankan(halamanCover);
+		} else {
+			game.status = "mulai";
+			setAwal();
+		}
 	} else {
+		// Retry level on defeat
 		game.status = "mulai";
 		setAwal();
 	}

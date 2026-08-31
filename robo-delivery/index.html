@@ -1,0 +1,1851 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Robo Delivery - Labirin Menara Arsitektural</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      margin: 0;
+      padding: 0;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Comic Sans MS', 'Chalkboard SE', 'Segoe UI', sans-serif;
+      background: #ffffff;
+      color: #0f172a;
+    }
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #ffffff;
+    }
+    canvas {
+      display: block;
+      touch-action: none;
+    }
+
+    .sketch-badge {
+      background: #38bdf8;
+      border: 3px solid #000000;
+      border-radius: 18px;
+      padding: 6px 16px;
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 4px 4px 0px #000000;
+      text-shadow: 1px 1px 0px #000;
+    }
+
+    .sketch-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 3px solid #000000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      cursor: pointer;
+      box-shadow: 4px 4px 0px #000000;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .sketch-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px #000000;
+    }
+
+    .hud-top-left {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 50;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .hud-top-right {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 50;
+      display: flex;
+      gap: 12px;
+    }
+    .hud-bottom-right {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      z-index: 50;
+    }
+
+    .carrying-hud {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ffffff;
+      border: 3px solid #000000;
+      border-radius: 30px;
+      padding: 8px 24px;
+      color: #0f172a;
+      font-weight: 900;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 4px 4px 0px #000000;
+      z-index: 50;
+      pointer-events: none;
+    }
+
+    .instruction-banner {
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ffffff;
+      border: 3px solid #000000;
+      padding: 8px 22px;
+      border-radius: 20px;
+      font-weight: 900;
+      font-size: 1rem;
+      color: #000000;
+      box-shadow: 4px 4px 0px #000000;
+      pointer-events: none;
+      animation: bounceText 2s infinite;
+      z-index: 40;
+    }
+    @keyframes bounceText {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(-6px); }
+    }
+
+    .overlay-screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      opacity: 1;
+      transition: opacity 0.3s ease;
+    }
+    .overlay-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .card-modal {
+      background: #ffffff;
+      border: 4px solid #000000;
+      border-radius: 28px;
+      padding: 32px;
+      text-align: center;
+      box-shadow: 8px 8px 0px #000000;
+      max-width: 440px;
+      width: 90%;
+      animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.7); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .title-logo {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: #000000;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+    }
+    .subtitle-logo {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #64748b;
+      margin-bottom: 20px;
+    }
+
+    .btn-main {
+      background: #38bdf8;
+      color: #ffffff;
+      font-size: 1.25rem;
+      font-weight: 900;
+      border: 3px solid #000000;
+      padding: 12px 36px;
+      border-radius: 99px;
+      cursor: pointer;
+      box-shadow: 4px 4px 0px #000000;
+      transition: transform 0.1s, box-shadow 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin: 8px;
+      text-shadow: 1px 1px 0px #000;
+    }
+    .btn-main:active {
+      transform: translate(2px, 2px);
+      box-shadow: 2px 2px 0px #000000;
+    }
+    .btn-secondary {
+      background: #ffffff;
+      color: #000000;
+      font-size: 1rem;
+      font-weight: 800;
+      border: 3px solid #000000;
+      padding: 10px 24px;
+      border-radius: 99px;
+      cursor: pointer;
+      margin: 6px;
+      box-shadow: 3px 3px 0px #000000;
+      transition: all 0.15s;
+    }
+    .btn-secondary:hover {
+      background: #f1f5f9;
+    }
+
+    .level-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .level-btn {
+      background: #ffffff;
+      border: 3px solid #000000;
+      border-radius: 16px;
+      padding: 14px;
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: #000000;
+      cursor: pointer;
+      box-shadow: 3px 3px 0px #000000;
+      transition: all 0.15s;
+    }
+    .level-btn.locked {
+      background: #f1f5f9;
+      color: #94a3b8;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .level-btn.active {
+      background: #38bdf8;
+      color: #ffffff;
+      text-shadow: 1px 1px 0px #000;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="hud-top-left">
+      <div id="hudTimer" class="sketch-badge">
+        ⏱️ <span id="timerVal">06:55</span>
+      </div>
+      <div id="hudLevel" class="sketch-badge" style="background: #ffffff; color: #000000; text-shadow: none;">
+        🗺️ <span id="levelVal">Level 1</span>
+      </div>
+    </div>
+
+    <div class="hud-top-right">
+      <button class="sketch-btn" onclick="toggleAudio()" id="soundToggleBtn">🔊</button>
+      <button class="sketch-btn" onclick="showSettingsModal()">⚙️</button>
+    </div>
+
+    <div class="hud-bottom-right">
+      <button class="sketch-btn" onclick="toggleZoom()" id="zoomBtn" title="Zoom Map">🔍</button>
+    </div>
+
+    <div class="carrying-hud">
+      <div id="carryingIcon" style="font-size: 1.5rem;">🤖</div>
+      <div>
+        <div style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">STATUS ROBOT</div>
+        <div id="carryingText">Tangan Kosong</div>
+      </div>
+    </div>
+
+    <div id="instructionBanner" class="instruction-banner">
+      SENTUH LINGKARAN UNTUK BERGERAK
+    </div>
+
+    <div id="screenTitle" class="overlay-screen">
+      <div class="card-modal">
+        <div style="font-size: 3.5rem; margin-bottom: 6px;">🤖📦🍕</div>
+        <div class="title-logo">ROBO DELIVERY</div>
+        <div class="subtitle-logo">Labirin Menara Arsitektural Isometrik</div>
+        <div style="margin-bottom: 20px; font-size: 0.95rem; color: #475569; line-height: 1.5;">
+          Jelajahi labirin menara bertingkat dengan koridor berliku, ambil makanan, dan antar ke orang yang menunggu di puncaknya sebelum timer habis!
+          <br><span style="color: #ef4444; font-weight: 800;">⚠️ Hati-hati menabrak orang berjalan!</span>
+        </div>
+        <button class="btn-main" onclick="startGame()">PLAY ▶</button>
+        <button class="btn-secondary" onclick="showLevelSelect()">PILIH LEVEL 🗺️</button>
+      </div>
+    </div>
+
+    <div id="screenLevelSelect" class="overlay-screen hidden">
+      <div class="card-modal">
+        <div class="title-logo">PILIH LEVEL MAP</div>
+        <div class="subtitle-logo">Pilih tantangan maze pengantaran makanan</div>
+        <div class="level-grid" id="levelGridContainer"></div>
+        <button class="btn-secondary" onclick="hideLevelSelect()">Kembali</button>
+      </div>
+    </div>
+
+    <div id="screenWin" class="overlay-screen hidden">
+      <div class="card-modal">
+        <div style="font-size: 3rem; margin-bottom: 6px;">⭐⭐⭐</div>
+        <div class="title-logo" style="color: #16a34a;">MISI SUKSES!</div>
+        <div class="subtitle-logo">Semua makanan berhasil diantar tepat waktu!</div>
+        
+        <div style="background: #f0fdf4; border: 3px solid #000000; border-radius: 18px; padding: 14px; margin: 14px 0; font-weight: 900; font-size: 1.1rem; box-shadow: 3px 3px 0px #000000;">
+          🪙 Reward: <span id="rewardCoinsVal">+350</span> Koin RoboMind!
+        </div>
+
+        <button class="btn-main" onclick="nextLevel()">LEVEL NEXT ▶</button>
+        <button class="btn-secondary" onclick="retryLevel()">Ulangi Level 🔄</button>
+      </div>
+    </div>
+
+    <div id="screenLose" class="overlay-screen hidden">
+      <div class="card-modal">
+        <div style="font-size: 3.5rem; margin-bottom: 6px;">⏱️❌</div>
+        <div class="title-logo" style="color: #dc2626;">WAKTU HABIS!</div>
+        <div class="subtitle-logo">Robot gagal mengantar semua makanan sebelum timer habis.</div>
+        <button class="btn-main" style="background: #dc2626;" onclick="retryLevel()">COBA LAGI 🔄</button>
+        <button class="btn-secondary" onclick="showTitleScreen()">Menu Utama 🏠</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    /* ==========================================================================
+       AUDIO SYNTHESIZER (Web Audio API)
+       ========================================================================== */
+    let audioCtx = null;
+    let audioMuted = false;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function toggleAudio() {
+      audioMuted = !audioMuted;
+      document.getElementById('soundToggleBtn').innerText = audioMuted ? '🔇' : '🔊';
+    }
+
+    function playSound(type) {
+      if (audioMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'step') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.05);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      } else if (type === 'pickup') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.setValueAtTime(659.25, now + 0.08);
+        osc.frequency.setValueAtTime(783.99, now + 0.16);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      } else if (type === 'deliver') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, now);
+        osc.frequency.setValueAtTime(880.00, now + 0.1);
+        osc.frequency.setValueAtTime(1174.66, now + 0.2);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        osc.start(now);
+        osc.stop(now + 0.4);
+      } else if (type === 'bump') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(200, now);
+        osc.frequency.exponentialRampToValueAtTime(70, now + 0.25);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      } else if (type === 'win') {
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, i) => {
+          const o = audioCtx.createOscillator();
+          const g = audioCtx.createGain();
+          o.connect(g);
+          g.connect(audioCtx.destination);
+          o.type = 'triangle';
+          o.frequency.setValueAtTime(freq, now + i * 0.12);
+          g.gain.setValueAtTime(0.25, now + i * 0.12);
+          g.gain.exponentialRampToValueAtTime(0.01, now + i * 0.12 + 0.25);
+          o.start(now + i * 0.12);
+          o.stop(now + i * 0.12 + 0.25);
+        });
+      } else if (type === 'lose') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(280, now);
+        osc.frequency.exponentialRampToValueAtTime(90, now + 0.4);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        osc.start(now);
+        osc.stop(now + 0.4);
+      }
+    }
+
+    /* ==========================================================================
+       MAP DATA — LABIRIN MENARA ARSITEKTURAL
+       Platform = poligon kontinu (bukan blok grid). Dinding lavender naik dari
+       tepi setiap platform. Tangga asli 8-15 anak tangga. Jembatan lengkung biru,
+       taman & pohon, karakter kecil, dan collectible hadiah merah.
+       ========================================================================== */
+    const FOOD_TYPES = {
+      PIZZA: { name: 'Pizza', icon: '🍕' },
+      BURGER: { name: 'Burger', icon: '🍔' },
+      GIFT: { name: 'Hadiah', icon: '🎁' },
+      JUICE: { name: 'Jus Segar', icon: '🥤' },
+      BENTO: { name: 'Bento Box', icon: '🍱' },
+      CAKE: { name: 'Kue Manis', icon: '🍰' }
+    };
+
+    /* ------------------------------------------------------------------------
+       PLATFORM POLYGONS — koridor kontinu NARROW (lebar ~1.5-2 unit) + bentuk L
+       Level z=1..6. Dinding lavender TINGGI naik dari tepi tiap koridor.
+       ------------------------------------------------------------------------ */
+    const MAZE_PLATFORMS = [
+      /* ========== LEVEL 1 (z=1) — base lebar, labirin bawah ========== */
+      { z: 1, wall: 1.35, pts: [[0,0],[9,0],[9,1.5],[0,1.5]] },                    // koridor bawah-kiri
+      { z: 1, wall: 1.35, pts: [[9.5,0],[17,0],[17,1.5],[9.5,1.5]] },              // koridor bawah-kanan
+      { z: 1, wall: 1.25, pts: [[1,2],[3,2],[3,4],[1,4]] },                        // blok kiri
+      { z: 1, wall: 1.45, pts: [[5,2],[6.5,2],[6.5,4],[5,4]] },                    // blok kecil
+      { z: 1, wall: 1.35, pts: [[11,2],[13,2],[13,4],[11,4]] },                    // blok kanan
+      { z: 1, wall: 1.25, pts: [[15,2],[16.5,2],[16.5,4],[15,4]] },                // blok kanan kecil
+      { z: 1, wall: 1.35, pts: [[1,5],[4,5],[4,7],[1,7]] },                        // koridor L kiri
+      { z: 1, wall: 1.45, pts: [[5.5,5],[8,5],[8,7],[5.5,7]] },                    // koridor tengah
+      { z: 1, wall: 1.25, pts: [[9.5,5],[12,5],[12,7],[9.5,7]] },                  // koridor tengah-kanan
+      { z: 1, wall: 1.35, pts: [[13.5,5],[16.5,5],[16.5,7],[13.5,7]] },            // koridor kanan
+      { z: 1, wall: 1.35, pts: [[0,8.5],[2,8.5],[2,10.5],[0,10.5]] },              // blok kiri-bawah
+      { z: 1, wall: 1.25, pts: [[4,8.5],[6.5,8.5],[6.5,10.5],[4,10.5]] },          // blok tengah
+      { z: 1, wall: 1.45, pts: [[8,8.5],[10,8.5],[10,10.5],[8,10.5]] },            // blok tengah
+      { z: 1, wall: 1.35, pts: [[12,8.5],[14,8.5],[14,10.5],[12,10.5]] },          // blok kanan
+      { z: 1, wall: 1.25, pts: [[1,11.5],[3.5,11.5],[3.5,13],[1,13]] },            // blok terpisah kiri-bawah
+      { z: 1, wall: 1.35, pts: [[9,11.5],[12,11.5],[12,13],[9,13]] },              // blok terpisah tengah-bawah
+      { z: 1, wall: 1.45, pts: [[14,11.5],[16.5,11.5],[16.5,13],[14,13]] },        // blok terpisah kanan-bawah
+
+      /* ========== LEVEL 2 (z=2) — koridor offset ========== */
+      { z: 2, wall: 1.35, pts: [[2,1],[5,1],[5,3],[2,3]] },                        // koridor kiri
+      { z: 2, wall: 1.25, pts: [[7,1],[10,1],[10,3],[7,3]] },                      // koridor tengah-kiri
+      { z: 2, wall: 1.35, pts: [[12,1],[15,1],[15,3],[12,3]] },                    // koridor kanan
+      { z: 2, wall: 1.45, pts: [[3,4.5],[6,4.5],[6,6.5],[3,6.5]] },                // L tengah
+      { z: 2, wall: 1.25, pts: [[8,4.5],[11,4.5],[11,6.5],[8,6.5]] },              // koridor
+      { z: 2, wall: 1.35, pts: [[13,4.5],[16,4.5],[16,6.5],[13,6.5]] },            // koridor kanan
+      { z: 2, wall: 1.35, pts: [[2,8],[4,8],[4,10],[2,10]] },                      // blok kiri
+      { z: 2, wall: 1.25, pts: [[6,8],[8.5,8],[8.5,10],[6,10]] },                  // blok tengah
+      { z: 2, wall: 1.45, pts: [[11,8],[14,8],[14,10],[11,10]] },                  // blok kanan
+      { z: 2, wall: 1.35, pts: [[5,11],[7.5,11],[7.5,12.5],[5,12.5]] },            // blok bawah
+
+      /* ========== LEVEL 3 (z=3) — koridor berkelok ========== */
+      { z: 3, wall: 1.35, pts: [[1,2],[4,2],[4,4],[1,4]] },                        // koridor kiri
+      { z: 3, wall: 1.45, pts: [[6,2],[8,2],[8,4],[6,4]] },                        // blok
+      { z: 3, wall: 1.25, pts: [[10,2],[13,2],[13,4],[10,4]] },                    // koridor
+      { z: 3, wall: 1.35, pts: [[15,2],[16.5,2],[16.5,4],[15,4]] },                // blok kanan
+      { z: 3, wall: 1.35, pts: [[2,5.5],[5,5.5],[5,7.5],[2,7.5]] },                // L kiri
+      { z: 3, wall: 1.25, pts: [[7,5.5],[10,5.5],[10,7.5],[7,7.5]] },              // koridor tengah
+      { z: 3, wall: 1.45, pts: [[12,5.5],[15,5.5],[15,7.5],[12,7.5]] },            // koridor kanan
+      { z: 3, wall: 1.35, pts: [[1,9],[3.5,9],[3.5,11],[1,11]] },                  // blok kiri
+      { z: 3, wall: 1.25, pts: [[6,9],[9,9],[9,11],[6,11]] },                      // blok tengah
+      { z: 3, wall: 1.35, pts: [[11,9],[13.5,9],[13.5,11],[11,11]] },              // blok kanan
+      { z: 3, wall: 1.45, pts: [[4,12],[6.5,12],[6.5,13.5],[4,13.5]] },            // blok bawah
+
+      /* ========== LEVEL 4 (z=4) — koridor sempit ========== */
+      { z: 4, wall: 1.45, pts: [[2,2.5],[5,2.5],[5,4.5],[2,4.5]] },                // koridor kiri
+      { z: 4, wall: 1.25, pts: [[7,2.5],[10,2.5],[10,4.5],[7,4.5]] },              // koridor
+      { z: 4, wall: 1.35, pts: [[12,2.5],[15,2.5],[15,4.5],[12,4.5]] },            // koridor kanan
+      { z: 4, wall: 1.35, pts: [[3,6],[6,6],[6,8],[3,8]] },                        // L tengah
+      { z: 4, wall: 1.45, pts: [[8,6],[11,6],[11,8],[8,8]] },                      // koridor
+      { z: 4, wall: 1.25, pts: [[13,6],[16,6],[16,8],[13,8]] },                    // koridor kanan
+      { z: 4, wall: 1.35, pts: [[2,9.5],[4.5,9.5],[4.5,11.5],[2,11.5]] },          // blok kiri
+      { z: 4, wall: 1.45, pts: [[7,9.5],[10,9.5],[10,11.5],[7,11.5]] },            // blok tengah
+      { z: 4, wall: 1.35, pts: [[12,9.5],[15,9.5],[15,11.5],[12,11.5]] },          // blok kanan
+
+      /* ========== LEVEL 5 (z=5) — koridor atas ========== */
+      { z: 5, wall: 1.45, pts: [[3,3],[6,3],[6,5],[3,5]] },                        // koridor kiri
+      { z: 5, wall: 1.35, pts: [[8,3],[11,3],[11,5],[8,5]] },                      // koridor tengah
+      { z: 5, wall: 1.35, pts: [[13,3],[16,3],[16,5],[13,5]] },                    // koridor kanan
+      { z: 5, wall: 1.35, pts: [[4,6.5],[7,6.5],[7,8.5],[4,8.5]] },                // L tengah-kiri
+      { z: 5, wall: 1.45, pts: [[9,6.5],[12,6.5],[12,8.5],[9,8.5]] },              // koridor tengah
+      { z: 5, wall: 1.25, pts: [[14,6.5],[16,6.5],[16,8.5],[14,8.5]] },            // koridor kanan
+      { z: 5, wall: 1.35, pts: [[5,10],[8,10],[8,12],[5,12]] },                    // blok bawah
+
+      /* ========== LEVEL 6 (z=6) — puncak ========== */
+      { z: 6, wall: 1.45, pts: [[5,4.5],[8,4.5],[8,6.5],[5,6.5]] },                // puncak kiri
+      { z: 6, wall: 1.35, pts: [[10,4.5],[13,4.5],[13,6.5],[10,6.5]] },            // puncak kanan
+      { z: 6, wall: 1.45, pts: [[7,2],[9,2],[9,3.5],[7,3.5]] },                    // puncak tengah
+      { z: 6, wall: 1.35, pts: [[8,8],[10,8],[10,9.5],[8,9.5]] }                   // puncak kecil
+    ];
+
+    /* ------------------------------------------------------------------------
+       TANGGA (staircases) — tiap tangga = 8-15 anak tangga naik dari (x1,y1,z1)
+       ke (x2,y2,z2). Menghubungkan dua level platform.
+       ------------------------------------------------------------------------ */
+    const MAZE_STAIRS = [
+      /* z1 -> z2 */
+      { x1: 3, y1: 6, z1: 1, x2: 3.5, y2: 5, z2: 2, n: 9 },
+      { x1: 8, y1: 6, z1: 1, x2: 8.5, y2: 5.3, z2: 2, n: 9 },
+      { x1: 14, y1: 6, z1: 1, x2: 14, y2: 5.5, z2: 2, n: 9 },
+      { x1: 3, y1: 3, z1: 1, x2: 3, y2: 2, z2: 2, n: 8 },
+      { x1: 12, y1: 3, z1: 1, x2: 12, y2: 2, z2: 2, n: 8 },
+      { x1: 10, y1: 9.5, z1: 1, x2: 10, y2: 9, z2: 2, n: 8 },
+      { x1: 2, y1: 9.5, z1: 1, x2: 2, y2: 9, z2: 2, n: 8 },
+      { x1: 14, y1: 9.5, z1: 1, x2: 14, y2: 9, z2: 2, n: 8 },
+      /* z2 -> z3 */
+      { x1: 3, y1: 2, z1: 2, x2: 3, y2: 3, z2: 3, n: 8 },
+      { x1: 8, y1: 2, z1: 2, x2: 8, y2: 3, z2: 3, n: 8 },
+      { x1: 12, y1: 2, z1: 2, x2: 12, y2: 3, z2: 3, n: 8 },
+      { x1: 4, y1: 6, z1: 2, x2: 4, y2: 7, z2: 3, n: 9 },
+      { x1: 9, y1: 6, z1: 2, x2: 9, y2: 7, z2: 3, n: 9 },
+      { x1: 14, y1: 6, z1: 2, x2: 14, y2: 7, z2: 3, n: 9 },
+      { x1: 3, y1: 9, z1: 2, x2: 3, y2: 10, z2: 3, n: 8 },
+      { x1: 7, y1: 9, z1: 2, x2: 7, y2: 10, z2: 3, n: 8 },
+      { x1: 12, y1: 9, z1: 2, x2: 12, y2: 10, z2: 3, n: 8 },
+      /* z3 -> z4 */
+      { x1: 3, y1: 3, z1: 3, x2: 3, y2: 3.5, z2: 4, n: 8 },
+      { x1: 8, y1: 3, z1: 3, x2: 8, y2: 3.5, z2: 4, n: 8 },
+      { x1: 13, y1: 3, z1: 3, x2: 13, y2: 3.5, z2: 4, n: 8 },
+      { x1: 4, y1: 6.5, z1: 3, x2: 4.5, y2: 7, z2: 4, n: 9 },
+      { x1: 9, y1: 6.5, z1: 3, x2: 9.5, y2: 7, z2: 4, n: 9 },
+      { x1: 14, y1: 6.5, z1: 3, x2: 14.5, y2: 7, z2: 4, n: 9 },
+      { x1: 3, y1: 10, z1: 3, x2: 3.5, y2: 10.5, z2: 4, n: 8 },
+      { x1: 8, y1: 10, z1: 3, x2: 8.5, y2: 10.5, z2: 4, n: 8 },
+      { x1: 13, y1: 10, z1: 3, x2: 13.5, y2: 10.5, z2: 4, n: 8 },
+      /* z4 -> z5 */
+      { x1: 4, y1: 3.5, z1: 4, x2: 4.5, y2: 4, z2: 5, n: 8 },
+      { x1: 9, y1: 3.5, z1: 4, x2: 9.5, y2: 4, z2: 5, n: 8 },
+      { x1: 14, y1: 3.5, z1: 4, x2: 14.5, y2: 4, z2: 5, n: 8 },
+      { x1: 5, y1: 7, z1: 4, x2: 5.5, y2: 7.5, z2: 5, n: 9 },
+      { x1: 10, y1: 7, z1: 4, x2: 10.5, y2: 7.5, z2: 5, n: 9 },
+      { x1: 15, y1: 7, z1: 4, x2: 15, y2: 7.5, z2: 5, n: 9 },
+      { x1: 4.5, y1: 10.5, z1: 4, x2: 5, y2: 11, z2: 5, n: 8 },
+      /* z5 -> z6 */
+      { x1: 5, y1: 4.5, z1: 5, x2: 5.5, y2: 5, z2: 6, n: 8 },
+      { x1: 10, y1: 4.5, z1: 5, x2: 10, y2: 5, z2: 6, n: 8 },
+      { x1: 6, y1: 7, z1: 5, x2: 6, y2: 6, z2: 6, n: 8 },
+      { x1: 9, y1: 7.5, z1: 5, x2: 9, y2: 8.5, z2: 6, n: 8 }
+    ];
+
+    /* ------------------------------------------------------------------------
+       JEMBATAN LENGKUNG BIRU (kecil, tipis) — menghubungkan dua bagian platform
+       ------------------------------------------------------------------------ */
+    const MAZE_BRIDGES = [
+      { x1: 4.3, y1: 6, x2: 5.2, y2: 6, z: 1 },
+      { x1: 8.3, y1: 6, x2: 9.2, y2: 6, z: 1 },
+      { x1: 12.3, y1: 6, x2: 13.2, y2: 6, z: 1 },
+      { x1: 6.3, y1: 5.5, x2: 7.7, y2: 5.5, z: 2 },
+      { x1: 8.8, y1: 5.5, x2: 10.7, y2: 5.5, z: 2 },
+      { x1: 5.3, y1: 6.5, x2: 6.7, y2: 6.5, z: 3 },
+      { x1: 10.3, y1: 6.5, x2: 11.7, y2: 6.5, z: 3 },
+      { x1: 6.3, y1: 7, x2: 7.7, y2: 7, z: 4 },
+      { x1: 11.3, y1: 7, x2: 12.7, y2: 7, z: 4 },
+      { x1: 7.3, y1: 7.5, x2: 8.7, y2: 7.5, z: 5 },
+      { x1: 8.3, y1: 5.5, x2: 9.7, y2: 5.5, z: 6 }
+    ];
+
+    /* ------------------------------------------------------------------------
+       TAMAN (green garden patches) — ditanam di platform lebar
+       ------------------------------------------------------------------------ */
+    const MAZE_GARDENS = [
+      { x: 2, y: 0.8, z: 1, n: 5, w: 2.6, h: 1.2 },   // lower-left
+      { x: 10, y: 0.8, z: 1, n: 5, w: 2.4, h: 1.2 },  // lower-middle
+      { x: 15, y: 0.8, z: 1, n: 4, w: 1.6, h: 1.2 },  // lower-right
+      { x: 6, y: 6, z: 1, n: 5, w: 1.8, h: 1.4 },     // middle-center
+      { x: 12.5, y: 9.5, z: 1, n: 4, w: 1.6, h: 1.4 },// middle-right
+      { x: 4.5, y: 5.5, z: 2, n: 4, w: 1.6, h: 1.4 }, // middle-left
+      { x: 9, y: 5.5, z: 2, n: 4, w: 1.6, h: 1.4 },   // middle-center
+      { x: 14, y: 5.5, z: 2, n: 4, w: 1.6, h: 1.4 },  // middle-right
+      { x: 9, y: 7, z: 4, n: 5, w: 1.8, h: 1.4 },     // upper-middle
+      { x: 6, y: 7.5, z: 5, n: 4, w: 1.6, h: 1.4 }    // upper-left
+    ];
+
+    /* ------------------------------------------------------------------------
+       KARAKTER KECIL (mini characters)
+       ------------------------------------------------------------------------ */
+    const MAZE_CHARACTERS = [
+      { x: 0.5, y: 1, z: 1 },    { x: 8, y: 1, z: 1 },
+      { x: 16, y: 1, z: 1 },     { x: 2.7, y: 3, z: 1 },
+      { x: 6, y: 3, z: 1 },      { x: 12, y: 3, z: 1 },
+      { x: 15.5, y: 3, z: 1 },   { x: 3, y: 6, z: 1 },
+      { x: 7, y: 6, z: 1 },      { x: 11, y: 6, z: 1 },
+      { x: 15, y: 6, z: 1 },     { x: 1, y: 9.5, z: 1 },
+      { x: 5, y: 9.5, z: 1 },    { x: 9, y: 9.5, z: 1 },
+      { x: 13, y: 9.5, z: 1 },   { x: 10, y: 12, z: 1 },
+      { x: 2.5, y: 12, z: 1 },   { x: 15, y: 12, z: 1 },
+      { x: 3, y: 2, z: 2 },      { x: 9, y: 2, z: 2 },
+      { x: 13, y: 2, z: 2 },     { x: 4, y: 5.5, z: 2 },
+      { x: 9, y: 5.5, z: 2 },    { x: 14, y: 5.5, z: 2 },
+      { x: 3, y: 9, z: 2 },      { x: 7, y: 9, z: 2 },
+      { x: 12, y: 9, z: 2 },     { x: 2, y: 3, z: 3 },
+      { x: 7.7, y: 3, z: 3 },      { x: 12, y: 3, z: 3 },
+      { x: 4, y: 6.5, z: 3 },    { x: 9, y: 6.5, z: 3 },
+      { x: 14, y: 6.5, z: 3 },   { x: 3, y: 10, z: 3 },
+      { x: 8, y: 10, z: 3 },     { x: 12, y: 10, z: 3 },
+      { x: 4, y: 3.5, z: 4 },    { x: 9, y: 3.5, z: 4 },
+      { x: 14, y: 3.5, z: 4 },   { x: 5, y: 7, z: 4 },
+      { x: 10, y: 7, z: 4 },     { x: 15, y: 7, z: 4 },
+      { x: 3, y: 10.5, z: 4 },   { x: 8, y: 10.5, z: 4 },
+      { x: 13, y: 10.5, z: 4 },  { x: 4, y: 4, z: 5 },
+      { x: 9, y: 4, z: 5 },      { x: 14, y: 4, z: 5 },
+      { x: 5, y: 7.5, z: 5 },    { x: 10, y: 7.5, z: 5 },
+      { x: 15, y: 7.5, z: 5 },   { x: 6, y: 11, z: 5 },
+      { x: 6, y: 5.5, z: 6 },    { x: 11, y: 5.5, z: 6 },
+      { x: 8, y: 2.8, z: 6 },    { x: 9, y: 8.8, z: 6 }
+    ];
+
+    /* ------------------------------------------------------------------------
+       COLLECTIBLES — hadiah merah kecil
+       ------------------------------------------------------------------------ */
+    const MAZE_COLLECTIBLES = [
+      { x: 6.5, y: 5, z: 6 },
+      { x: 11.5, y: 5, z: 6 },
+      { x: 7, y: 3, z: 6 },
+      { x: 8.5, y: 8.5, z: 6 },
+      { x: 6, y: 10.5, z: 5 },
+      { x: 6, y: 11, z: 5 },
+      { x: 14.5, y: 4, z: 4 },
+      { x: 2.5, y: 4, z: 4 },
+      { x: 13, y: 6, z: 3 },
+      { x: 3, y: 7, z: 3 },
+      { x: 10.5, y: 6, z: 2 },
+      { x: 3, y: 9.5, z: 2 },
+      { x: 11, y: 12, z: 1 },
+      { x: 3, y: 12, z: 1 },
+      { x: 16, y: 6, z: 1 }
+    ];
+
+    /* ==========================================================================
+       LEVEL DEFINITIONS (gameplay: node & edge jalan)
+       ========================================================================== */
+    const LEVELS = [
+      {
+        id: 1,
+        title: "Labirin Menara",
+        timeLimit: 300,
+        rewardCoins: 350,
+        nodes: [
+          { id: 0, x: 3, y: 6, z: 1, isPortal: true },
+          { id: 1, x: 7, y: 6, z: 1 },
+          { id: 2, x: 11, y: 6, z: 1 },
+          { id: 3, x: 15, y: 6, z: 1 },
+          { id: 4, x: 2.7, y: 3, z: 1 },
+          { id: 5, x: 6, y: 3, z: 1 },
+          { id: 6, x: 12, y: 3, z: 1 },
+          { id: 7, x: 15.5, y: 3, z: 1 },
+          { id: 8, x: 1, y: 9.5, z: 1 },
+          { id: 9, x: 5, y: 9.5, z: 1 },
+          { id: 10, x: 9, y: 9.5, z: 1 },
+          { id: 11, x: 13, y: 9.5, z: 1 },
+          { id: 12, x: 10.5, y: 12, z: 1 },
+          { id: 13, x: 2.5, y: 12, z: 1 },
+          { id: 14, x: 16, y: 1, z: 1 },
+          { id: 15, x: 8, y: 1, z: 1 },
+          { id: 16, x: 0.5, y: 1, z: 1 },
+          { id: 17, x: 3, y: 2, z: 2 },
+          { id: 18, x: 8, y: 2, z: 2 },
+          { id: 19, x: 12, y: 2, z: 2 },
+          { id: 20, x: 4, y: 5.5, z: 2 },
+          { id: 21, x: 9, y: 5.5, z: 2 },
+          { id: 22, x: 14, y: 5.5, z: 2 },
+          { id: 23, x: 3, y: 9, z: 2 },
+          { id: 24, x: 7, y: 9, z: 2 },
+          { id: 25, x: 12, y: 9, z: 2 },
+          { id: 26, x: 3, y: 3, z: 3 },
+          { id: 27, x: 7.7, y: 3, z: 3 },
+          { id: 28, x: 12, y: 3, z: 3 },
+          { id: 29, x: 4, y: 6.5, z: 3 },
+          { id: 30, x: 9, y: 6.5, z: 3 },
+          { id: 31, x: 14, y: 6.5, z: 3 },
+          { id: 32, x: 3, y: 10, z: 3 },
+          { id: 33, x: 8, y: 10, z: 3 },
+          { id: 34, x: 12, y: 10, z: 3 },
+          { id: 35, x: 4, y: 3.5, z: 4 },
+          { id: 36, x: 9, y: 3.5, z: 4 },
+          { id: 37, x: 14, y: 3.5, z: 4 },
+          { id: 38, x: 5, y: 7, z: 4 },
+          { id: 39, x: 10, y: 7, z: 4 },
+          { id: 40, x: 15, y: 7, z: 4 },
+          { id: 41, x: 3, y: 10.5, z: 4 },
+          { id: 42, x: 8, y: 10.5, z: 4 },
+          { id: 43, x: 13, y: 10.5, z: 4 },
+          { id: 44, x: 4, y: 4, z: 5 },
+          { id: 45, x: 9, y: 4, z: 5 },
+          { id: 46, x: 14, y: 4, z: 5 },
+          { id: 47, x: 5, y: 7.5, z: 5 },
+          { id: 48, x: 10, y: 7.5, z: 5 },
+          { id: 49, x: 15, y: 7.5, z: 5 },
+          { id: 50, x: 6, y: 11, z: 5 },
+          { id: 51, x: 6, y: 5.5, z: 6 },
+          { id: 52, x: 11, y: 5.5, z: 6 },
+          { id: 53, x: 8, y: 2.8, z: 6 },
+          { id: 54, x: 9, y: 8.8, z: 6 }
+        ],
+        edges: [
+          // Level 1 — koridor
+          [0, 1], [1, 2], [2, 3], [4, 5], [5, 6], [6, 7],
+          [8, 9], [9, 10], [10, 11], [12, 11], [13, 8], [14, 15], [15, 16],
+          [0, 4], [1, 5], [2, 6], [3, 7], [9, 13], [10, 12], [3, 14], [16, 4],
+          // z1 -> z2
+          [4, 17], [5, 20], [2, 21], [3, 22], [6, 19], [10, 24], [11, 25], [8, 23],
+          // Level 2 — koridor
+          [17, 18], [18, 19], [20, 21], [21, 22], [23, 24], [24, 25],
+          [17, 20], [18, 21], [19, 22],
+          // z2 -> z3
+          [17, 26], [18, 27], [19, 28], [20, 29], [21, 30], [22, 31], [23, 32], [24, 33], [25, 34],
+          // Level 3 — koridor
+          [26, 27], [27, 28], [29, 30], [30, 31], [32, 33], [33, 34],
+          [26, 29], [27, 30], [28, 31],
+          // z3 -> z4
+          [26, 35], [27, 36], [28, 37], [29, 38], [30, 39], [31, 40], [32, 41], [33, 42], [34, 43],
+          // Level 4 — koridor
+          [35, 36], [36, 37], [38, 39], [39, 40], [41, 42], [42, 43],
+          [35, 38], [36, 39], [37, 40],
+          // z4 -> z5
+          [35, 44], [36, 45], [37, 46], [38, 47], [39, 48], [40, 49], [41, 50],
+          // Level 5 — koridor
+          [44, 45], [45, 46], [47, 48], [48, 49],
+          [44, 47], [45, 48], [46, 49], [48, 50],
+          // z5 -> z6
+          [44, 51], [45, 52], [47, 51], [48, 54], [49, 52],
+          // Level 6
+          [51, 53], [52, 54]
+        ],
+        startNode: 0,
+        foodStations: [
+          { nodeId: 16, food: FOOD_TYPES.PIZZA },
+          { nodeId: 34, food: FOOD_TYPES.GIFT },
+          { nodeId: 46, food: FOOD_TYPES.JUICE }
+        ],
+        customers: [
+          { id: 'c1', nodeId: 9, wantsFood: FOOD_TYPES.PIZZA, delivered: false, gender: 'female' },
+          { id: 'c2', nodeId: 37, wantsFood: FOOD_TYPES.GIFT, delivered: false, gender: 'male' },
+          { id: 'c3', nodeId: 51, wantsFood: FOOD_TYPES.JUICE, delivered: false, gender: 'female' }
+        ],
+        obstacles: [
+          { id: 'obs1', path: [4, 5, 6, 7], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.012, icon: '🚶‍♂️' },
+          { id: 'obs2', path: [0, 1, 2, 3], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.013, icon: '🚶‍♀️' },
+          { id: 'obs3', path: [30, 39, 48, 45], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.012, icon: '🚶‍♀️' }
+        ]
+      },
+      {
+        id: 2,
+        title: "Puncak Menara",
+        timeLimit: 330,
+        rewardCoins: 450,
+        nodes: [
+          { id: 0, x: 3, y: 6, z: 1, isPortal: true },
+          { id: 1, x: 7, y: 6, z: 1 },
+          { id: 2, x: 11, y: 6, z: 1 },
+          { id: 3, x: 15, y: 6, z: 1 },
+          { id: 4, x: 2.7, y: 3, z: 1 },
+          { id: 5, x: 6, y: 3, z: 1 },
+          { id: 6, x: 12, y: 3, z: 1 },
+          { id: 7, x: 15.5, y: 3, z: 1 },
+          { id: 8, x: 1, y: 9.5, z: 1 },
+          { id: 9, x: 5, y: 9.5, z: 1 },
+          { id: 10, x: 9, y: 9.5, z: 1 },
+          { id: 11, x: 13, y: 9.5, z: 1 },
+          { id: 12, x: 10.5, y: 12, z: 1 },
+          { id: 13, x: 2.5, y: 12, z: 1 },
+          { id: 14, x: 16, y: 1, z: 1 },
+          { id: 15, x: 8, y: 1, z: 1 },
+          { id: 16, x: 0.5, y: 1, z: 1 },
+          { id: 17, x: 3, y: 2, z: 2 },
+          { id: 18, x: 8, y: 2, z: 2 },
+          { id: 19, x: 12, y: 2, z: 2 },
+          { id: 20, x: 4, y: 5.5, z: 2 },
+          { id: 21, x: 9, y: 5.5, z: 2 },
+          { id: 22, x: 14, y: 5.5, z: 2 },
+          { id: 23, x: 3, y: 9, z: 2 },
+          { id: 24, x: 7, y: 9, z: 2 },
+          { id: 25, x: 12, y: 9, z: 2 },
+          { id: 26, x: 3, y: 3, z: 3 },
+          { id: 27, x: 7.7, y: 3, z: 3 },
+          { id: 28, x: 12, y: 3, z: 3 },
+          { id: 29, x: 4, y: 6.5, z: 3 },
+          { id: 30, x: 9, y: 6.5, z: 3 },
+          { id: 31, x: 14, y: 6.5, z: 3 },
+          { id: 32, x: 3, y: 10, z: 3 },
+          { id: 33, x: 8, y: 10, z: 3 },
+          { id: 34, x: 12, y: 10, z: 3 },
+          { id: 35, x: 4, y: 3.5, z: 4 },
+          { id: 36, x: 9, y: 3.5, z: 4 },
+          { id: 37, x: 14, y: 3.5, z: 4 },
+          { id: 38, x: 5, y: 7, z: 4 },
+          { id: 39, x: 10, y: 7, z: 4 },
+          { id: 40, x: 15, y: 7, z: 4 },
+          { id: 41, x: 3, y: 10.5, z: 4 },
+          { id: 42, x: 8, y: 10.5, z: 4 },
+          { id: 43, x: 13, y: 10.5, z: 4 },
+          { id: 44, x: 4, y: 4, z: 5 },
+          { id: 45, x: 9, y: 4, z: 5 },
+          { id: 46, x: 14, y: 4, z: 5 },
+          { id: 47, x: 5, y: 7.5, z: 5 },
+          { id: 48, x: 10, y: 7.5, z: 5 },
+          { id: 49, x: 15, y: 7.5, z: 5 },
+          { id: 50, x: 6, y: 11, z: 5 },
+          { id: 51, x: 6, y: 5.5, z: 6 },
+          { id: 52, x: 11, y: 5.5, z: 6 },
+          { id: 53, x: 8, y: 2.8, z: 6 },
+          { id: 54, x: 9, y: 8.8, z: 6 }
+        ],
+        edges: [
+          [0, 1], [1, 2], [2, 3], [4, 5], [5, 6], [6, 7],
+          [8, 9], [9, 10], [10, 11], [12, 11], [13, 8], [14, 15], [15, 16],
+          [0, 4], [1, 5], [2, 6], [3, 7], [9, 13], [10, 12], [3, 14], [16, 4],
+          [4, 17], [5, 20], [2, 21], [3, 22], [6, 19], [10, 24], [11, 25], [8, 23],
+          [17, 18], [18, 19], [20, 21], [21, 22], [23, 24], [24, 25],
+          [17, 20], [18, 21], [19, 22],
+          [17, 26], [18, 27], [19, 28], [20, 29], [21, 30], [22, 31], [23, 32], [24, 33], [25, 34],
+          [26, 27], [27, 28], [29, 30], [30, 31], [32, 33], [33, 34],
+          [26, 29], [27, 30], [28, 31],
+          [26, 35], [27, 36], [28, 37], [29, 38], [30, 39], [31, 40], [32, 41], [33, 42], [34, 43],
+          [35, 36], [36, 37], [38, 39], [39, 40], [41, 42], [42, 43],
+          [35, 38], [36, 39], [37, 40],
+          [35, 44], [36, 45], [37, 46], [38, 47], [39, 48], [40, 49], [41, 50],
+          [44, 45], [45, 46], [47, 48], [48, 49],
+          [44, 47], [45, 48], [46, 49], [48, 50],
+          [44, 51], [45, 52], [47, 51], [48, 54], [49, 52],
+          [51, 53], [52, 54]
+        ],
+        startNode: 0,
+        foodStations: [
+          { nodeId: 12, food: FOOD_TYPES.BURGER },
+          { nodeId: 42, food: FOOD_TYPES.CAKE },
+          { nodeId: 53, food: FOOD_TYPES.BENTO }
+        ],
+        customers: [
+          { id: 'c1', nodeId: 14, wantsFood: FOOD_TYPES.BURGER, delivered: false, gender: 'male' },
+          { id: 'c2', nodeId: 49, wantsFood: FOOD_TYPES.CAKE, delivered: false, gender: 'female' },
+          { id: 'c3', nodeId: 0, wantsFood: FOOD_TYPES.BENTO, delivered: false, gender: 'female' }
+        ],
+        obstacles: [
+          { id: 'obs1', path: [5, 6, 7], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.013, icon: '🚶‍♂️' },
+          { id: 'obs2', path: [30, 39, 48, 45], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.014, icon: '🚶‍♀️' }
+        ]
+      }
+    ];
+
+    /* ==========================================================================
+       CANVAS CORE ENGINE & RENDERER
+       ========================================================================== */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let currentLevelIndex = 0;
+    let currentLevelData = null;
+    let unlockedLevels = [1];
+    let isZoomedIn = false;
+    let scaleFactor = 1.0;
+
+    let robotState = {
+      currentNodeId: 0,
+      prevNodeId: 0,
+      targetNodeId: null,
+      x: 0, y: 0, z: 0,
+      moveProgress: 0,
+      isMoving: false,
+      carryingFood: null,
+      bumpAnim: 0
+    };
+
+    let hoveredNodeId = null;
+    let timerSeconds = 0;
+    let timerInterval = null;
+    let isGameRunning = false;
+    let deliveredCount = 0;
+    let totalCustomers = 0;
+
+    /* Isometric geometry: 1 world unit = 55px width at scale 1 */
+    const HEIGHT_STEP = 42;
+    const UNIT_X = 55;    // TILE_W / 2
+    const UNIT_Y = 27.5;  // TILE_H / 2
+
+    let camCx = 0, camCy = 0;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      computeCamera();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    function computeCamera() {
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      const touch = (x, y, z, extraY = 0) => {
+        const wx = (x - y) * UNIT_X;
+        const wy = (x + y) * UNIT_Y - z * HEIGHT_STEP;
+        minX = Math.min(minX, wx - 30);
+        maxX = Math.max(maxX, wx + 30);
+        minY = Math.min(minY, wy - 30);
+        maxY = Math.max(maxY, wy + 30 + extraY);
+      };
+      MAZE_PLATFORMS.forEach(p => {
+        p.pts.forEach(([x, y]) => touch(x, y, p.z, p.wall * HEIGHT_STEP + 20));
+      });
+      MAZE_STAIRS.forEach(s => { touch(s.x1, s.y1, s.z1); touch(s.x2, s.y2, s.z2); });
+      MAZE_BRIDGES.forEach(b => { touch(b.x1, b.y1, b.z); touch(b.x2, b.y2, b.z); });
+      MAZE_GARDENS.forEach(g => touch(g.x, g.y, g.z));
+      MAZE_CHARACTERS.forEach(c => touch(c.x, c.y, c.z));
+      MAZE_COLLECTIBLES.forEach(c => touch(c.x, c.y, c.z));
+      (currentLevelData ? currentLevelData.nodes : []).forEach(n => touch(n.x, n.y, n.z));
+
+      camCx = (minX + maxX) / 2;
+      camCy = (minY + maxY) / 2;
+      const worldW = Math.max(maxX - minX, 1);
+      const worldH = Math.max(maxY - minY, 1);
+      const baseScale = Math.min(canvas.width / (worldW * 1.06), canvas.height / (worldH * 1.12));
+      scaleFactor = baseScale * (isZoomedIn ? 1.3 : 1.0);
+    }
+
+    function toggleZoom() {
+      isZoomedIn = !isZoomedIn;
+      computeCamera();
+      document.getElementById('zoomBtn').innerText = isZoomedIn ? '🔍➖' : '🔍➕';
+    }
+
+    function proj(x, y, z = 0) {
+      const wx = (x - y) * UNIT_X - camCx;
+      const wy = (x + y) * UNIT_Y - z * HEIGHT_STEP - camCy;
+      return {
+        x: canvas.width / 2 + wx * scaleFactor,
+        y: canvas.height / 2 - 20 + wy * scaleFactor
+      };
+    }
+
+    /* ==========================================================================
+       GAME LOAD & HUD UPDATES
+       ========================================================================== */
+    function loadLevel(levelIndex) {
+      currentLevelIndex = levelIndex;
+      currentLevelData = JSON.parse(JSON.stringify(LEVELS[levelIndex]));
+
+      robotState.currentNodeId = currentLevelData.startNode;
+      robotState.prevNodeId = currentLevelData.startNode;
+      robotState.targetNodeId = null;
+      robotState.isMoving = false;
+      robotState.moveProgress = 0;
+      robotState.carryingFood = null;
+      robotState.bumpAnim = 0;
+
+      const startNode = currentLevelData.nodes.find(n => n.id === currentLevelData.startNode);
+      const startPos = proj(startNode.x, startNode.y, startNode.z);
+      robotState.x = startPos.x;
+      robotState.y = startPos.y;
+      robotState.z = startNode.z;
+
+      timerSeconds = currentLevelData.timeLimit;
+      deliveredCount = 0;
+      totalCustomers = currentLevelData.customers.length;
+
+      computeCamera();
+      updateHUD();
+      updateCarryingHUD();
+    }
+
+    function updateHUD() {
+      const m = Math.floor(timerSeconds / 60);
+      const s = timerSeconds % 60;
+      document.getElementById('timerVal').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      document.getElementById('levelVal').innerText = `Level ${currentLevelData.id}`;
+    }
+
+    function updateCarryingHUD() {
+      const iconEl = document.getElementById('carryingIcon');
+      const textEl = document.getElementById('carryingText');
+
+      if (robotState.carryingFood) {
+        iconEl.innerText = robotState.carryingFood.icon;
+        textEl.innerText = `Membawa ${robotState.carryingFood.name}`;
+      } else {
+        iconEl.innerText = '🤖';
+        textEl.innerText = 'Tangan Kosong';
+      }
+    }
+
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        if (!isGameRunning) return;
+        timerSeconds--;
+        updateHUD();
+
+        if (timerSeconds <= 0) {
+          clearInterval(timerInterval);
+          gameLose();
+        }
+      }, 1000);
+    }
+
+    function startGame() {
+      initAudio();
+      document.getElementById('screenTitle').classList.add('hidden');
+      document.getElementById('screenLevelSelect').classList.add('hidden');
+      document.getElementById('screenWin').classList.add('hidden');
+      document.getElementById('screenLose').classList.add('hidden');
+
+      loadLevel(currentLevelIndex);
+      isGameRunning = true;
+      startTimer();
+    }
+
+    function showTitleScreen() {
+      isGameRunning = false;
+      if (timerInterval) clearInterval(timerInterval);
+      document.getElementById('screenTitle').classList.remove('hidden');
+      document.getElementById('screenLevelSelect').classList.add('hidden');
+      document.getElementById('screenWin').classList.add('hidden');
+      document.getElementById('screenLose').classList.add('hidden');
+    }
+
+    function showLevelSelect() {
+      const container = document.getElementById('levelGridContainer');
+      container.innerHTML = '';
+
+      LEVELS.forEach((lvl, idx) => {
+        const isUnlocked = unlockedLevels.includes(lvl.id);
+        const isActive = idx === currentLevelIndex;
+
+        const btn = document.createElement('button');
+        btn.className = `level-btn ${isUnlocked ? '' : 'locked'} ${isActive ? 'active' : ''}`;
+        btn.innerText = `Level ${lvl.id}`;
+        
+        if (isUnlocked) {
+          btn.onclick = () => {
+            currentLevelIndex = idx;
+            hideLevelSelect();
+            startGame();
+          };
+        }
+        container.appendChild(btn);
+      });
+
+      document.getElementById('screenLevelSelect').classList.remove('hidden');
+    }
+
+    function hideLevelSelect() {
+      document.getElementById('screenLevelSelect').classList.add('hidden');
+    }
+
+    function showSettingsModal() {
+      alert("Pengaturan Audio & Tampilan Map Robo Delivery.");
+    }
+
+    function nextLevel() {
+      if (currentLevelIndex < LEVELS.length - 1) {
+        currentLevelIndex++;
+        if (!unlockedLevels.includes(LEVELS[currentLevelIndex].id)) {
+          unlockedLevels.push(LEVELS[currentLevelIndex].id);
+        }
+        startGame();
+      } else {
+        showTitleScreen();
+      }
+    }
+
+    function retryLevel() {
+      startGame();
+    }
+
+    function gameWin() {
+      isGameRunning = false;
+      if (timerInterval) clearInterval(timerInterval);
+      playSound('win');
+
+      if (currentLevelIndex < LEVELS.length - 1) {
+        const nextLvlId = LEVELS[currentLevelIndex + 1].id;
+        if (!unlockedLevels.includes(nextLvlId)) {
+          unlockedLevels.push(nextLvlId);
+        }
+      }
+
+      document.getElementById('rewardCoinsVal').innerText = `+${currentLevelData.rewardCoins}`;
+      document.getElementById('screenWin').classList.remove('hidden');
+
+      try {
+        if (window.ReactNativeWebView) {
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'LEVEL_COMPLETE',
+            coins: currentLevelData.rewardCoins,
+            level: currentLevelData.id
+          }));
+        } else if (window.parent && window.parent !== window) {
+          window.parent.postMessage(JSON.stringify({
+            type: 'LEVEL_COMPLETE',
+            coins: currentLevelData.rewardCoins,
+            level: currentLevelData.id
+          }), '*');
+        }
+      } catch (e) {
+        console.log('Post message error:', e);
+      }
+    }
+
+    function gameLose() {
+      isGameRunning = false;
+      if (timerInterval) clearInterval(timerInterval);
+      playSound('lose');
+      document.getElementById('screenLose').classList.remove('hidden');
+    }
+
+    /* ==========================================================================
+       MOVEMENT & PATHFINDING
+       ========================================================================== */
+    function isEdgeConnected(fromId, toId) {
+      if (!currentLevelData) return false;
+      return currentLevelData.edges.some(e => 
+        (e[0] === fromId && e[1] === toId) || (e[1] === fromId && e[0] === toId)
+      );
+    }
+
+    function moveToNode(targetId) {
+      if (!isGameRunning || robotState.isMoving) return;
+      if (!isEdgeConnected(robotState.currentNodeId, targetId)) return;
+
+      robotState.prevNodeId = robotState.currentNodeId;
+      robotState.targetNodeId = targetId;
+      robotState.isMoving = true;
+      robotState.moveProgress = 0;
+      playSound('step');
+    }
+
+    function checkObstacleCollisions() {
+      if (!isGameRunning || !currentLevelData) return;
+
+      const playerPosNode = robotState.isMoving ? robotState.targetNodeId : robotState.currentNodeId;
+
+      currentLevelData.obstacles.forEach(obs => {
+        const obsCurrNode = obs.path[obs.currentIndex];
+        const obsTargetNode = obs.path[obs.targetIndex];
+
+        if (playerPosNode === obsCurrNode || (robotState.isMoving && playerPosNode === obsTargetNode && obs.t > 0.4)) {
+          playSound('bump');
+          robotState.bumpAnim = 20;
+
+          if (robotState.isMoving) {
+            robotState.targetNodeId = robotState.prevNodeId;
+            robotState.moveProgress = 0;
+          } else {
+            robotState.currentNodeId = robotState.prevNodeId;
+            const prevN = currentLevelData.nodes.find(n => n.id === robotState.prevNodeId);
+            const pos = proj(prevN.x, prevN.y, prevN.z);
+            robotState.x = pos.x;
+            robotState.y = pos.y;
+            robotState.z = prevN.z;
+          }
+        }
+      });
+    }
+
+    function updateObstacles() {
+      if (!isGameRunning || !currentLevelData) return;
+
+      currentLevelData.obstacles.forEach(obs => {
+        obs.t += obs.speed;
+        if (obs.t >= 1) {
+          obs.t = 0;
+          obs.currentIndex = obs.targetIndex;
+          obs.targetIndex = (obs.targetIndex + 1) % obs.path.length;
+        }
+      });
+    }
+
+    function updateRobot() {
+      if (!robotState.isMoving || !currentLevelData) return;
+
+      robotState.moveProgress += 0.05;
+      const fromNode = currentLevelData.nodes.find(n => n.id === robotState.currentNodeId);
+      const toNode = currentLevelData.nodes.find(n => n.id === robotState.targetNodeId);
+
+      const p1 = proj(fromNode.x, fromNode.y, fromNode.z);
+      const p2 = proj(toNode.x, toNode.y, toNode.z);
+
+      robotState.x = p1.x + (p2.x - p1.x) * robotState.moveProgress;
+      robotState.y = p1.y + (p2.y - p1.y) * robotState.moveProgress;
+      robotState.z = fromNode.z + (toNode.z - fromNode.z) * robotState.moveProgress;
+
+      if (robotState.moveProgress >= 1) {
+        robotState.currentNodeId = robotState.targetNodeId;
+        robotState.targetNodeId = null;
+        robotState.isMoving = false;
+        robotState.moveProgress = 0;
+
+        const station = currentLevelData.foodStations.find(s => s.nodeId === robotState.currentNodeId);
+        if (station) {
+          robotState.carryingFood = station.food;
+          playSound('pickup');
+          updateCarryingHUD();
+        }
+
+        const customer = currentLevelData.customers.find(c => c.nodeId === robotState.currentNodeId && !c.delivered);
+        if (customer && robotState.carryingFood) {
+          if (customer.wantsFood.name === robotState.carryingFood.name) {
+            customer.delivered = true;
+            robotState.carryingFood = null;
+            deliveredCount++;
+            playSound('deliver');
+            updateHUD();
+            updateCarryingHUD();
+
+            if (deliveredCount >= totalCustomers) {
+              setTimeout(gameWin, 400);
+            }
+          }
+        }
+      }
+    }
+
+    /* ==========================================================================
+       RENDERING — PLATFORM POLYGON CONTINUOUS
+       ========================================================================== */
+
+    // Proyeksikan satu titik world ke screen
+    function P(x, y, z) {
+      return proj(x, y, z);
+    }
+
+    // Gambar polygon dengan outline tipis gelap
+    function fillPoly(pts, fill) {
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.closePath();
+      ctx.fillStyle = fill;
+      ctx.fill();
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1.3 * scaleFactor;
+      ctx.stroke();
+    }
+
+    // Test titik (x,y) world di dalam polygon pts
+    function pointInPoly(pts, x, y) {
+      let inside = false;
+      for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+        const xi = pts[i][0], yi = pts[i][1];
+        const xj = pts[j][0], yj = pts[j][1];
+        if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) {
+          inside = !inside;
+        }
+      }
+      return inside;
+    }
+
+    // Cari z tertinggi platform yang mengandung titik (x,y)
+    function maxZAt(x, y) {
+      let mz = 0;
+      for (const pl of MAZE_PLATFORMS) {
+        if (pl.z > mz && pointInPoly(pl.pts, x, y)) mz = pl.z;
+      }
+      return mz;
+    }
+
+    // Gambar satu platform poligon + dinding lavender TINGGI di semua tepi luar
+    // Urutan: dinding belakang → lantai putih → dinding depan
+    function drawPlatform(plat) {
+      const pts = plat.pts.map(([x, y]) => P(x, y, plat.z));
+      const n = pts.length;
+
+      // centroid layar
+      let cx = 0, cy = 0;
+      pts.forEach(p => { cx += p.x; cy += p.y; });
+      cx /= n; cy /= n;
+
+      const wallPx = plat.wall * HEIGHT_STEP * scaleFactor;
+
+      // Analisa setiap tepi: front/back & apakah tertutup platform lebih tinggi
+      const edges = [];
+      for (let i = 0; i < n; i++) {
+        const wAx = plat.pts[i][0], wAy = plat.pts[i][1];
+        const wBx = plat.pts[(i + 1) % n][0], wBy = plat.pts[(i + 1) % n][1];
+        // normal keluar dari centroid
+        const mx = (wAx + wBx) / 2, my = (wAy + wBy) / 2;
+        const gcx = plat.pts.reduce((s, p) => s + p[0], 0) / n;
+        const gcy = plat.pts.reduce((s, p) => s + p[1], 0) / n;
+        let nx = mx - gcx, ny = my - gcy;
+        const nl = Math.hypot(nx, ny) || 1;
+        nx /= nl; ny /= nl;
+        // probe sedikit di luar tepi
+        const px = mx + nx * 0.12, py = my + ny * 0.12;
+        const nz = maxZAt(px, py);
+        const isFront = (ny >= 0); // normal menghadap penonton (layar bawah)
+        edges.push({ i, isFront, skip: nz > plat.z, nz, a: pts[i], b: pts[(i + 1) % n] });
+      }
+
+      // Fungsi gambar satu dinding
+      const drawWall = (e) => {
+        if (e.skip) return;
+        const a = e.a, b = e.b;
+        const shade = e.isFront ? '#a5b4fc' : '#c4b5fd';
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.lineTo(b.x, b.y - wallPx);
+        ctx.lineTo(a.x, a.y - wallPx);
+        ctx.closePath();
+        ctx.fillStyle = shade;
+        ctx.fill();
+        ctx.strokeStyle = '#4338ca';
+        ctx.lineWidth = 1.1 * scaleFactor;
+        ctx.stroke();
+      };
+
+      // Dinding belakang dulu (di belakang lantai)
+      edges.filter(e => !e.isFront).forEach(drawWall);
+      // Lantai putih
+      fillPoly(pts, '#ffffff');
+      // Dinding depan (menghadap penonton)
+      edges.filter(e => e.isFront).forEach(drawWall);
+
+      // bayangan lembut di bawah platform
+      ctx.save();
+      ctx.globalAlpha = 0.07;
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + wallPx * 0.4, Math.max(Math.abs(pts[0].x - cx) * 1.3, 24), 9 * scaleFactor, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Tangga: setiap anak tangga = slab putih + riser lavender
+    function drawStairs() {
+      if (!currentLevelData) return;
+      const items = [];
+      MAZE_STAIRS.forEach(st => {
+        const n = st.n;
+        const dx = (st.x2 - st.x1) / n;
+        const dy = (st.y2 - st.y1) / n;
+        const dz = (st.z2 - st.z1) / n;
+        // arah tegak lurus (screen) untuk lebar anak tangga
+        for (let i = 0; i < n; i++) {
+          const x = st.x1 + dx * i;
+          const y = st.y1 + dy * i;
+          const z = st.z1 + dz * i;
+          const x2 = st.x1 + dx * (i + 1);
+          const y2 = st.y1 + dy * (i + 1);
+          const z2 = st.z1 + dz * (i + 1);
+          const a = P(x, y, z);
+          const b = P(x2, y2, z2);
+          const rise = (z2 - z) * HEIGHT_STEP * scaleFactor;
+          // lebar tangga tegak lurus arah
+          const vx = b.x - a.x;
+          const vy = b.y - a.y;
+          const len = Math.hypot(vx, vy) || 1;
+          const nx = -vy / len * 6 * scaleFactor;
+          const ny = vx / len * 6 * scaleFactor;
+          const depth = 7 * scaleFactor;
+          items.push({ d: (x + y) * 1000 + z, draw: () => {
+            // riser (sisi depan lavender)
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.lineTo(b.x, b.y - rise);
+            ctx.lineTo(a.x, a.y - rise);
+            ctx.closePath();
+            ctx.fillStyle = '#b3aef7';
+            ctx.fill();
+            ctx.strokeStyle = '#4338ca';
+            ctx.lineWidth = 1 * scaleFactor;
+            ctx.stroke();
+            // tread putih
+            ctx.beginPath();
+            ctx.moveTo(a.x + nx, a.y + ny - rise);
+            ctx.lineTo(b.x + nx, b.y + ny - rise);
+            ctx.lineTo(b.x + nx - depth, b.y + ny - depth - rise);
+            ctx.lineTo(a.x + nx - depth, a.y + ny - depth - rise);
+            ctx.closePath();
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 0.9 * scaleFactor;
+            ctx.stroke();
+          }});
+        }
+      });
+      items.sort((a, b) => a.d - b.d);
+      items.forEach(it => it.draw());
+    }
+
+    // Jembatan lengkung biru kecil
+    function drawBridges() {
+      MAZE_BRIDGES.forEach(b => {
+        const p1 = P(b.x1, b.y1, b.z);
+        const p2 = P(b.x2, b.y2, b.z);
+        const mx = (p1.x + p2.x) / 2;
+        const my = (p1.y + p2.y) / 2;
+        const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+        const arch = Math.max(12, dist * 0.5) * scaleFactor;
+
+        // bayangan
+        ctx.strokeStyle = 'rgba(2,6,23,0.10)';
+        ctx.lineWidth = 4 * scaleFactor;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y + 3 * scaleFactor);
+        ctx.quadraticCurveTo(mx, my + arch + 3 * scaleFactor, p2.x, p2.y + 3 * scaleFactor);
+        ctx.stroke();
+
+        // badan biru
+        ctx.strokeStyle = '#7dd3fc';
+        ctx.lineWidth = 3.5 * scaleFactor;
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.quadraticCurveTo(mx, my - arch, p2.x, p2.y);
+        ctx.stroke();
+
+        // outline biru tipis
+        ctx.strokeStyle = '#0284c7';
+        ctx.lineWidth = 1.3 * scaleFactor;
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.quadraticCurveTo(mx, my - arch, p2.x, p2.y);
+        ctx.stroke();
+
+        ctx.lineCap = 'butt';
+      });
+    }
+
+    // Taman: patch rumput hijau + pohon-pohon kecil
+    function drawGardens() {
+      MAZE_GARDENS.forEach(g => {
+        const p = P(g.x, g.y, g.z);
+        const w = g.w * UNIT_X * scaleFactor;
+        const h = g.h * UNIT_Y * scaleFactor;
+
+        // patch rumput (persegi panjang miring)
+        ctx.beginPath();
+        ctx.moveTo(p.x - w / 2, p.y - h / 2);
+        ctx.lineTo(p.x, p.y - h / 2 + h / 2);
+        ctx.lineTo(p.x + w / 2, p.y);
+        ctx.lineTo(p.x, p.y + h / 2);
+        ctx.closePath();
+        ctx.fillStyle = '#4ade80';
+        ctx.fill();
+        ctx.strokeStyle = '#166534';
+        ctx.lineWidth = 1.2 * scaleFactor;
+        ctx.stroke();
+
+        // pohon-pohon
+        const spots = [
+          { dx: -0.3, dy: -0.15 }, { dx: 0.25, dy: 0.15 },
+          { dx: 0.0, dy: 0.25 }, { dx: -0.1, dy: -0.35 }, { dx: 0.3, dy: -0.25 }
+        ];
+        for (let i = 0; i < g.n && i < spots.length; i++) {
+          const tx = p.x + spots[i].dx * w;
+          const ty = p.y + spots[i].dy * h;
+          drawTree(tx, ty);
+        }
+      });
+    }
+
+    function drawTree(tx, ty) {
+      const s = scaleFactor;
+      // batang
+      ctx.fillStyle = '#92400e';
+      ctx.fillRect(tx - 1.8 * s, ty - 7 * s, 3.6 * s, 7 * s);
+      // dedaunan
+      ctx.fillStyle = '#16a34a';
+      ctx.beginPath();
+      ctx.arc(tx - 3 * s, ty - 10 * s, 5 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(tx + 3 * s, ty - 10 * s, 5 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#22c55e';
+      ctx.beginPath();
+      ctx.arc(tx, ty - 14 * s, 5.5 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#14532d';
+      ctx.lineWidth = 1 * s;
+      ctx.stroke();
+    }
+
+    // Karakter kecil hitam-putih
+    function drawMiniCharacter(cx, cy, s) {
+      ctx.fillStyle = 'rgba(0,0,0,0.16)';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + 2 * s, 5 * s, 2 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1.4 * s;
+      ctx.beginPath();
+      ctx.arc(cx, cy - 11 * s, 3.8 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.roundRect(cx - 3.8 * s, cy - 7 * s, 7.6 * s, 6.5 * s, 2.2 * s);
+      ctx.fill();
+      ctx.stroke();
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1.5 * s;
+      ctx.beginPath();
+      ctx.moveTo(cx - 2 * s, cy - 0.5 * s);
+      ctx.lineTo(cx - 2.4 * s, cy + 2.5 * s);
+      ctx.moveTo(cx + 2 * s, cy - 0.5 * s);
+      ctx.lineTo(cx + 2.4 * s, cy + 2.5 * s);
+      ctx.stroke();
+    }
+
+    // Hadiah merah kecil (collectible) melayang
+    function drawCollectible(c) {
+      const p = P(c.x, c.y, c.z);
+      const floatY = Math.sin(Date.now() * 0.004 + c.x + c.y) * 2.5 * scaleFactor;
+      const s = scaleFactor;
+      const x = p.x;
+      const y = p.y - 16 * s + floatY;
+
+      ctx.fillStyle = 'rgba(0,0,0,0.14)';
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y + 2 * s, 5.5 * s, 2.4 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ef4444';
+      ctx.strokeStyle = '#7f1d1d';
+      ctx.lineWidth = 1.3 * s;
+      ctx.beginPath();
+      ctx.roundRect(x - 5 * s, y - 5 * s, 10 * s, 9.5 * s, 2.5 * s);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#fca5a5';
+      ctx.fillRect(x - 1.3 * s, y - 5 * s, 2.6 * s, 9.5 * s);
+      ctx.fillStyle = '#fecaca';
+      ctx.fillRect(x - 5 * s, y - 1.6 * s, 10 * s, 3.2 * s);
+
+      ctx.fillStyle = '#f87171';
+      ctx.beginPath();
+      ctx.arc(x, y - 5.5 * s, 2.4 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    /* ==========================================================================
+       RENDER GAME — PAINTER'S ALGORITHM
+       ========================================================================== */
+    function renderGame() {
+      // Background putih
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Ground biru-cyan melengkung di bawah
+      const gh = canvas.height;
+      const gw = canvas.width;
+      ctx.fillStyle = '#cfeefb';
+      ctx.beginPath();
+      ctx.ellipse(gw * 0.5, gh * 0.9, gw * 0.6, gh * 0.11, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#a7e0fb';
+      ctx.beginPath();
+      ctx.ellipse(gw * 0.5, gh * 0.94, gw * 0.52, gh * 0.08, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // bayangan lembut di bawah maze
+      ctx.fillStyle = 'rgba(30, 41, 59, 0.07)';
+      ctx.beginPath();
+      ctx.ellipse(canvas.width / 2, canvas.height * 0.7, canvas.width * 0.4, canvas.height * 0.09, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      if (!currentLevelData) return;
+
+      // 1. Platform poligon — urut painter: (x+y) primer, z sebagai tiebreak
+      const platforms = [...MAZE_PLATFORMS].sort((a, b) => {
+        const ka = a.pts.reduce((s, p) => s + p[0] + p[1], 0) / a.pts.length;
+        const kb = b.pts.reduce((s, p) => s + p[0] + p[1], 0) / b.pts.length;
+        return (ka * 1000 + a.z) - (kb * 1000 + b.z);
+      });
+      platforms.forEach(plat => drawPlatform(plat));
+
+      // 2. Tangga (sudah urut per langkah)
+      drawStairs();
+
+      // 3. Jembatan biru
+      drawBridges();
+
+      // 4. Taman & pohon
+      drawGardens();
+
+      // 5. Karakter kecil statis
+      MAZE_CHARACTERS.forEach(c => {
+        const p = P(c.x, c.y, c.z);
+        drawMiniCharacter(p.x, p.y, scaleFactor);
+      });
+
+      // 6. Collectibles hadiah merah
+      MAZE_COLLECTIBLES.forEach(c => drawCollectible(c));
+
+      // 7. Edge path lines
+      ctx.lineWidth = 3 * scaleFactor;
+      ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+      currentLevelData.edges.forEach(edge => {
+        const n1 = currentLevelData.nodes.find(n => n.id === edge[0]);
+        const n2 = currentLevelData.nodes.find(n => n.id === edge[1]);
+        const p1 = P(n1.x, n1.y, n1.z);
+        const p2 = P(n2.x, n2.y, n2.z);
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+      });
+
+      // 8. Waypoint nodes
+      currentLevelData.nodes.forEach(node => {
+        const p = P(node.x, node.y, node.z);
+        const isCurrent = (robotState.currentNodeId === node.id);
+        const isConnected = isEdgeConnected(robotState.currentNodeId, node.id);
+        const isHovered = (hoveredNodeId === node.id);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, (isHovered ? 11 : 8) * scaleFactor, 0, Math.PI * 2);
+
+        if (node.isPortal || isCurrent) {
+          ctx.fillStyle = '#8b5cf6';
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 2 * scaleFactor;
+        } else if (isConnected) {
+          ctx.fillStyle = isHovered ? '#facc15' : '#ffffff';
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 1.6 * scaleFactor;
+        } else {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+          ctx.strokeStyle = '#94a3b8';
+          ctx.lineWidth = 0.9 * scaleFactor;
+        }
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      });
+
+      // 9. Food stations
+      currentLevelData.foodStations.forEach(station => {
+        const node = currentLevelData.nodes.find(n => n.id === station.nodeId);
+        const p = P(node.x, node.y, node.z);
+        const floatY = Math.sin(Date.now() * 0.005 + node.id) * 3 * scaleFactor;
+        ctx.font = `${Math.round(20 * scaleFactor)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(station.food.icon, p.x, p.y - 12 * scaleFactor + floatY);
+      });
+
+      // 10. Customers
+      currentLevelData.customers.forEach(customer => {
+        const node = currentLevelData.nodes.find(n => n.id === customer.nodeId);
+        const p = P(node.x, node.y, node.z);
+
+        if (customer.delivered) {
+          ctx.font = `${Math.round(22 * scaleFactor)}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.fillText('😃❤️', p.x, p.y - 10 * scaleFactor);
+        } else {
+          const charIcon = customer.gender === 'female' ? '👩' : '👨';
+          ctx.font = `${Math.round(24 * scaleFactor)}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.fillText(charIcon, p.x, p.y - 9 * scaleFactor);
+          drawThoughtBubble(p.x + 14 * scaleFactor, p.y - 34 * scaleFactor, customer.wantsFood.icon);
+        }
+      });
+
+      // 11. Obstacles
+      currentLevelData.obstacles.forEach(obs => {
+        const fromN = currentLevelData.nodes.find(n => n.id === obs.path[obs.currentIndex]);
+        const toN = currentLevelData.nodes.find(n => n.id === obs.path[obs.targetIndex]);
+        const p1 = P(fromN.x, fromN.y, fromN.z);
+        const p2 = P(toN.x, toN.y, toN.z);
+        const ox = p1.x + (p2.x - p1.x) * obs.t;
+        const oy = p1.y + (p2.y - p1.y) * obs.t;
+        ctx.font = `${Math.round(22 * scaleFactor)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(obs.icon, ox, oy - 10 * scaleFactor);
+      });
+
+      // 12. Player robot
+      drawRobotPlayer(robotState.x, robotState.y, robotState.z);
+
+      // 13. Bump animation
+      if (robotState.bumpAnim > 0) {
+        robotState.bumpAnim--;
+        ctx.font = `bold 20px sans-serif`;
+        ctx.fillStyle = '#ef4444';
+        ctx.textAlign = 'center';
+        ctx.fillText('💥 BUMP!', robotState.x, robotState.y - 42 * scaleFactor);
+      }
+    }
+
+    function drawThoughtBubble(x, y, icon) {
+      ctx.save();
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1.6 * scaleFactor;
+
+      ctx.beginPath();
+      ctx.arc(x, y, 12 * scaleFactor, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(x - 8 * scaleFactor, y + 10 * scaleFactor, 3 * scaleFactor, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.font = `${Math.round(12 * scaleFactor)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(icon, x, y);
+      ctx.restore();
+    }
+
+    function drawRobotPlayer(x, y, z) {
+      ctx.save();
+      const floatHover = Math.sin(Date.now() * 0.008) * 2 * scaleFactor;
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+      ctx.beginPath();
+      ctx.ellipse(x, y, 12 * scaleFactor, 6 * scaleFactor, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2 * scaleFactor;
+      ctx.beginPath();
+      ctx.roundRect(x - 10 * scaleFactor, y - 31 * scaleFactor + floatHover, 20 * scaleFactor, 15 * scaleFactor, 5);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(x - 4 * scaleFactor, y - 24 * scaleFactor + floatHover, 2.6 * scaleFactor, 0, Math.PI * 2);
+      ctx.arc(x + 4 * scaleFactor, y - 24 * scaleFactor + floatHover, 2.6 * scaleFactor, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#000000';
+      ctx.beginPath();
+      ctx.arc(x - 3.6 * scaleFactor, y - 24 * scaleFactor + floatHover, 1.4 * scaleFactor, 0, Math.PI * 2);
+      ctx.arc(x + 4.4 * scaleFactor, y - 24 * scaleFactor + floatHover, 1.4 * scaleFactor, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.roundRect(x - 8.5 * scaleFactor, y - 14 * scaleFactor + floatHover, 17 * scaleFactor, 13 * scaleFactor, 4);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1.4 * scaleFactor;
+      ctx.beginPath();
+      ctx.moveTo(x, y - 31 * scaleFactor + floatHover);
+      ctx.lineTo(x, y - 38 * scaleFactor + floatHover);
+      ctx.stroke();
+      ctx.fillStyle = '#facc15';
+      ctx.beginPath();
+      ctx.arc(x, y - 40 * scaleFactor + floatHover, 2.2 * scaleFactor, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      if (robotState.carryingFood) {
+        ctx.font = `${Math.round(15 * scaleFactor)}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.fillText(robotState.carryingFood.icon, x, y - 44 * scaleFactor + floatHover);
+      }
+
+      ctx.restore();
+    }
+
+    /* ==========================================================================
+       POINTER & TOUCH INTERACTION
+       ========================================================================== */
+    function handlePointer(clientX, clientY) {
+      if (!isGameRunning || !currentLevelData) return;
+
+      const rect = canvas.getBoundingClientRect();
+      const clickX = clientX - rect.left;
+      const clickY = clientY - rect.top;
+
+      let foundHoverNode = null;
+      currentLevelData.nodes.forEach(node => {
+        const p = P(node.x, node.y, node.z);
+        const dist = Math.hypot(clickX - p.x, clickY - p.y);
+        if (dist <= 20 * scaleFactor) {
+          foundHoverNode = node.id;
+        }
+      });
+
+      hoveredNodeId = foundHoverNode;
+      return foundHoverNode;
+    }
+
+    canvas.addEventListener('mousemove', (e) => {
+      handlePointer(e.clientX, e.clientY);
+    });
+
+    canvas.addEventListener('click', (e) => {
+      const clickedId = handlePointer(e.clientX, e.clientY);
+      if (clickedId !== null && clickedId !== undefined) {
+        moveToNode(clickedId);
+      }
+    });
+
+    canvas.addEventListener('touchstart', (e) => {
+      if (e.touches.length > 0) {
+        const touch = e.touches[0];
+        const clickedId = handlePointer(touch.clientX, touch.clientY);
+        if (clickedId !== null && clickedId !== undefined) {
+          moveToNode(clickedId);
+        }
+      }
+    });
+
+    /* ==========================================================================
+       MAIN LOOP
+       ========================================================================== */
+    function gameLoop() {
+      updateRobot();
+      updateObstacles();
+      checkObstacleCollisions();
+      renderGame();
+      requestAnimationFrame(gameLoop);
+    }
+
+    resizeCanvas();
+    loadLevel(0);
+    requestAnimationFrame(gameLoop);
+
+  </script>
+</body>
+</html>
