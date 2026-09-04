@@ -124,6 +124,10 @@ export class RogueSoulGameEngine {
   public screenShake: number = 0;
   
   public gameDistance: number = 0;
+  public enemiesDefeated: number = 0;
+  public runTime: number = 0;
+  public maxCombo: number = 0;
+  public finishX: number | null = null;
   public isGameOver: boolean = false;
   public isVictory: boolean = false;
   public currentLevelData: LevelData | null = null;
@@ -178,6 +182,10 @@ export class RogueSoulGameEngine {
     this.isGameOver = false;
     this.isVictory = false;
     this.gameDistance = 0;
+    this.enemiesDefeated = 0;
+    this.runTime = 0;
+    this.maxCombo = 0;
+    this.finishX = endless ? null : (levelData?.bossLevel ? (levelData.targetDistance + 500) : (levelData?.targetDistance ?? null));
     this.cameraX = 0;
     this.cameraY = 0;
     this.projectiles = [];
@@ -319,6 +327,12 @@ export class RogueSoulGameEngine {
         attackCooldown: 60,
       });
     }
+
+    // Guaranteed flat ground approach so the finish line is always reachable
+    if (!this.isEndless && this.currentLevelData && this.finishX != null) {
+      const gtype = env === "dungeon" ? "dungeon" : env === "ramparts" ? "stone" : "grass";
+      this.platforms.push({ x: this.finishX - 320, y: 420, w: 760, h: 200, type: gtype });
+    }
   }
 
   // --- CONTROLS INPUT API ---
@@ -435,8 +449,8 @@ export class RogueSoulGameEngine {
       let targetEnemy: Enemy | null = null;
       let minDistance = 550;
 
-      this.enemies.forEach((enemy) => {
-        if (enemy.hp <= 0) return;
+      for (const enemy of this.enemies) {
+        if (enemy.hp <= 0) continue;
         const inFront = dir > 0 ? enemy.x > this.player.x - 20 : enemy.x < this.player.x + 20;
         if (inFront) {
           const dx = (enemy.x + enemy.w / 2) - startX;
@@ -447,7 +461,7 @@ export class RogueSoulGameEngine {
             targetEnemy = enemy;
           }
         }
-      });
+      }
 
       let vx = dir * 15;
       let vy = -1.5;
@@ -500,6 +514,7 @@ export class RogueSoulGameEngine {
 
     if (enemy.hp <= 0) {
       enemy.state = "dead";
+      this.enemiesDefeated++;
       this.player.coins += 15;
       this.player.score += 150;
       this.addFloatingText("+15 GOLD", enemy.x, enemy.y - 40, "#F59E0B");
@@ -523,6 +538,9 @@ export class RogueSoulGameEngine {
   // --- MAIN ENGINE TICK (60 FPS) ---
   public update(inputLeft: boolean, inputRight: boolean) {
     if (this.isGameOver || this.isVictory) return;
+
+    this.runTime += 1 / 60;
+    if (this.player.combo > this.maxCombo) this.maxCombo = this.player.combo;
 
     // Dynamic Speed Curve: Balanced, smooth & controlled pacing!
     const distanceAccel = Math.min(2.2, (this.gameDistance / 1000));
@@ -832,7 +850,9 @@ export class RogueSoulGameEngine {
 
     // 9. Level Target Victory Check
     if (!this.isEndless && this.currentLevelData) {
-      if (this.player.x >= this.currentLevelData.targetDistance) {
+      const reachedFinish = this.player.x >= (this.finishX ?? this.currentLevelData.targetDistance);
+      const bossCleared = !this.currentLevelData.bossLevel || this.enemies.every((e) => e.type !== "boss" || e.hp <= 0);
+      if (reachedFinish && bossCleared) {
         this.isVictory = true;
         RogueAudio.playVictory();
       }

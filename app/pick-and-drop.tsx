@@ -610,14 +610,17 @@ export default function PickAndDropScreen() {
                 outCtx.clearRect(0, 0, cw, ch);
                 outCtx.drawImage(res.image, dx, dy, dw, dh);
 
-                // Map normalized hand coords to the mirrored, cover-cropped background
-                const mx = (x) => cw - dx - x * dw;
+                // Map normalized hand coords:
+                // cursorX for game_canvas (no CSS flip): cw - dx - x * dw
+                // canvasX for outCtx drawing (has CSS scaleX(-1) flip): dx + x * dw
+                const cursorX = (x) => cw - dx - x * dw;
+                const canvasX = (x) => dx + x * dw;
                 const my = (y) => dy + y * dh;
 
                 if (res.multiHandLandmarks && res.multiHandLandmarks.length > 0) {
                     const lm = res.multiHandLandmarks[0];
                     const idx = lm[8], thm = lm[4];
-                    cursor.x = mx(idx.x);
+                    cursor.x = cursorX(idx.x);
                     cursor.y = my(idx.y);
                     const dist = Math.hypot(idx.x - thm.x, idx.y - thm.y);
 
@@ -660,20 +663,20 @@ export default function PickAndDropScreen() {
                         }
                     }
 
-                    // Draw hand skeleton aligned with the cover-cropped background
+                    // Draw hand skeleton aligned with CSS scaleX(-1) flipped canvas
                     HAND_CONNECTIONS.forEach(function (pair) {
                         const a = lm[pair[0]];
                         const b = lm[pair[1]];
                         outCtx.beginPath();
-                        outCtx.moveTo(mx(a.x), my(a.y));
-                        outCtx.lineTo(mx(b.x), my(b.y));
+                        outCtx.moveTo(canvasX(a.x), my(a.y));
+                        outCtx.lineTo(canvasX(b.x), my(b.y));
                         outCtx.strokeStyle = 'rgba(56, 189, 248, 0.9)';
                         outCtx.lineWidth = 2.5;
                         outCtx.stroke();
                     });
                     lm.forEach(function (pt) {
                         outCtx.beginPath();
-                        outCtx.arc(mx(pt.x), my(pt.y), 4, 0, Math.PI * 2);
+                        outCtx.arc(canvasX(pt.x), my(pt.y), 4, 0, Math.PI * 2);
                         outCtx.fillStyle = '#10B981';
                         outCtx.fill();
                     });

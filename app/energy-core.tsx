@@ -5,7 +5,6 @@ import {
   Text,
   Pressable,
   Dimensions,
-  Platform,
   Modal,
   StatusBar,
   ScrollView,
@@ -19,13 +18,13 @@ import * as Haptics from "expo-haptics";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
   withTiming,
-  withSequence,
-  runOnJS,
+  withRepeat,
+  cancelAnimation,
+  Easing,
 } from "react-native-reanimated";
-import Svg, { Path, Rect, Circle, Defs, LinearGradient, Stop, Polygon, Line, Text as SvgText } from "react-native-svg";
-import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../constants/Theme";
+import Svg, { Path, Rect, Circle, Polygon, Line, Text as SvgText } from "react-native-svg";
+import { SPACING } from "../constants/Theme";
 import Button from "../components/ui/Button";
 import { saveGameSession } from "../lib/gameProgressService";
 
@@ -174,7 +173,7 @@ const getPorts = (type: CellType, rotation: number): ("UP" | "RIGHT" | "DOWN" | 
   });
 };
 
-const GridCellItem = React.memo(({
+const GridCellItem = React.memo(function GridCellItem({
   cell,
   cellSize,
   isEnergized,
@@ -186,214 +185,199 @@ const GridCellItem = React.memo(({
   isEnergized: boolean;
   energyColor: string;
   onPress: () => void;
-}) => {
+}) {
+  // Monotonic display angle so rotation always turns the shortest, forward way (no 270°-backwards wobble)
   const animRot = useSharedValue(cell.rotation);
+  const prevRot = useRef(cell.rotation);
+  const pulse = useSharedValue(0);
+
   useEffect(() => {
-    animRot.value = withSpring(cell.rotation, { damping: 15 });
-  }, [cell.rotation]);
+    const prev = prevRot.current;
+    prevRot.current = cell.rotation;
+    let raw = cell.rotation - prev;
+    let d = ((raw % 360) + 360) % 360;
+    if (d > 180) d -= 360;
+    animRot.value = withTiming(animRot.value + d, { duration: 200, easing: Easing.out(Easing.cubic) });
+  }, [cell.rotation, animRot]);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ rotate: `${animRot.value}deg` }],
-    };
-  });
+  useEffect(() => {
+    if (isEnergized) {
+      pulse.value = withRepeat(withTiming(1, { duration: 650 }), -1, true);
+    } else {
+      cancelAnimation(pulse);
+      pulse.value = 0;
+    }
+  }, [isEnergized, pulse]);
 
-  const pathColor = isEnergized ? energyColor : "#475569";
-  const glowShadow = isEnergized ? {
-    shadowColor: energyColor,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 8,
-  } : {};
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${animRot.value}deg` }],
+    opacity: isEnergized ? 0.9 + pulse.value * 0.1 : 1,
+  }));
 
-  const renderSVGComponent = () => {
-    const S = cellSize;
-    const C = S / 2;
+  const S = cellSize;
+  const C = S / 2;
 
-    // Proportional dynamic metrics based on tile size S
-    const glowWidth = Math.max(8, S * 0.08);
-    const mainWidth = Math.max(5, S * 0.05);
-    const coreWidth = Math.max(2, S * 0.02);
-    const reactorRadius = S * 0.22;
-    const nodeSize = S * 0.38;
+  // Proportional cable metrics
+  const glowW = Math.max(10, S * 0.13);
+  const mainW = Math.max(6, S * 0.085);
+  const coreW = Math.max(2.5, S * 0.024);
+  const viaR = Math.max(3.5, mainW * 0.8);
 
-    const glowColor = isEnergized ? energyColor : "transparent";
-    const mainColor = isEnergized ? energyColor : "#334155";
-    const coreColor = isEnergized ? "#FFFFFF" : "#1E293B";
+  const glowColor = isEnergized ? energyColor : "rgba(148, 163, 184, 0.35)";
+  const mainColor = isEnergized ? energyColor : "#64748B";
+  const coreColor = isEnergized ? "#FFFFFF" : "#0F172A";
 
-    // Reusable multi-layered cable rendering
-    const renderCable = (dPath: string) => (
-      <>
-        {/* Outer Glow Layer */}
-        {isEnergized && (
+  const renderCable = (dPath: string) => (
+    <>
+      {isEnergized && (
+        <Path
+          d={dPath}
+          stroke={glowColor}
+          strokeWidth={glowW}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity={0.45}
+          fill="none"
+        />
+      )}
+      <Path
+        d={dPath}
+        stroke={mainColor}
+        strokeWidth={mainW}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+      <Path
+        d={dPath}
+        stroke={coreColor}
+        strokeWidth={coreW}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </>
+  );
+
+  // Solder-pad vias where the conduit exits the tile (base orientation)
+  const renderVias = (pts: [number, number][]) => (
+    <>
+      {pts.map(([vx, vy], i) => (
+        <Circle
+          key={i}
+          cx={vx}
+          cy={vy}
+          r={viaR}
+          fill={mainColor}
+          stroke={isEnergized ? "#FFFFFF" : "#1E293B"}
+          strokeWidth={1.5}
+        />
+      ))}
+    </>
+  );
+
+  const reactor = S * 0.23;
+
+  let content: React.ReactNode = null;
+  switch (cell.type) {
+    case "SOURCE":
+      content = (
+        <Svg width={S} height={S} viewBox={`0 0 ${S} ${S}`}>
+          {renderCable(`M ${C} ${C - reactor} L ${C} 0`)}
+          <Circle cx={C} cy={C} r={reactor + 7} fill="rgba(8, 12, 24, 0.9)" stroke={mainColor} strokeWidth={2.5} />
+          {isEnergized && <Circle cx={C} cy={C} r={reactor + 10} fill={glowColor} opacity={0.25} />}
+          <Circle cx={C} cy={C} r={reactor} fill={isEnergized ? energyColor : "#1E293B"} stroke={isEnergized ? "#FFFFFF" : "#475569"} strokeWidth={2} />
+          <Circle cx={C} cy={C} r={reactor * 0.62} fill="#0B132B" />
           <Path
-            d={dPath}
-            stroke={glowColor}
-            strokeWidth={glowWidth}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            opacity={0.45}
-            fill="none"
+            d={`M ${C} ${C - reactor * 0.42} L ${C - reactor * 0.24} ${C + 1} L ${C + 1} ${C + 1} L ${C - reactor * 0.1} ${C + reactor * 0.42} L ${C + reactor * 0.24} ${C - 1} L ${C} ${C - 1} Z`}
+            fill={isEnergized ? "#FFFFFF" : "#94A3B8"}
           />
-        )}
-        {/* Main Conduit Body */}
-        <Path
-          d={dPath}
-          stroke={mainColor}
-          strokeWidth={mainWidth}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-        {/* Inner White Core Filament */}
-        <Path
-          d={dPath}
-          stroke={coreColor}
-          strokeWidth={coreWidth}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-      </>
-    );
-
-    switch (cell.type) {
-      case "SOURCE":
-        return (
-          <Svg width={S} height={S}>
-            {/* Tile Chassis Bevel Background */}
-            <Rect x={2} y={2} width={S - 4} height={S - 4} rx={12} fill="#0B132B" stroke="#1E293B" strokeWidth={2} />
-            {/* Corner Rivets */}
-            <Circle cx={8} cy={8} r={2} fill="#475569" />
-            <Circle cx={S - 8} cy={8} r={2} fill="#475569" />
-            <Circle cx={8} cy={S - 8} r={2} fill="#475569" />
-            <Circle cx={S - 8} cy={S - 8} r={2} fill="#475569" />
-
-            {/* Cable Port to top */}
-            {renderCable(`M ${C} ${C - reactorRadius} L ${C} 0`)}
-
-            {/* 3D Nuclear Energy Reactor Sphere */}
-            <Circle cx={C} cy={C} r={reactorRadius + 6} fill="rgba(15, 23, 42, 0.9)" stroke={mainColor} strokeWidth={3} />
-            <Circle cx={C} cy={C} r={reactorRadius} fill={isEnergized ? energyColor : "#1E293B"} opacity={0.85} />
-            <Circle cx={C} cy={C} r={reactorRadius * 0.65} fill="#0F172A" />
-
-            {/* Lightning Core Symbol */}
-            <Path
-              d={`M ${C} ${C - reactorRadius * 0.45} L ${C - reactorRadius * 0.25} ${C + 1} L ${C + 1} ${C + 1} L ${C - reactorRadius * 0.1} ${C + reactorRadius * 0.45} L ${C + reactorRadius * 0.25} ${C - 1} L ${C} ${C - 1} Z`}
-              fill={isEnergized ? "#FFFFFF" : "#64748B"}
-            />
-          </Svg>
-        );
-      case "NODE":
-        return (
-          <Svg width={S} height={S}>
-            <Rect x={2} y={2} width={S - 4} height={S - 4} rx={12} fill="#0B132B" stroke="#1E293B" strokeWidth={2} />
-            <Circle cx={8} cy={8} r={2} fill="#475569" />
-            <Circle cx={S - 8} cy={8} r={2} fill="#475569" />
-            <Circle cx={8} cy={S - 8} r={2} fill="#475569" />
-            <Circle cx={S - 8} cy={S - 8} r={2} fill="#475569" />
-
-            {/* Cable Port to top */}
-            {renderCable(`M ${C} ${C - nodeSize / 2} L ${C} 0`)}
-
-            {/* 3D Energy Battery Cell Box */}
+          {renderVias([[C, 0]])}
+        </Svg>
+      );
+      break;
+    case "NODE":
+      content = (
+        <Svg width={S} height={S} viewBox={`0 0 ${S} ${S}`}>
+          {renderCable(`M ${C} ${C - S * 0.22} L ${C} 0`)}
+          <Rect
+            x={C - S * 0.2}
+            y={C - S * 0.2}
+            width={S * 0.4}
+            height={S * 0.4}
+            rx={S * 0.08}
+            fill="#0B132B"
+            stroke={mainColor}
+            strokeWidth={2.5}
+          />
+          {isEnergized && (
             <Rect
-              x={C - nodeSize / 2}
-              y={C - nodeSize / 2}
-              width={nodeSize}
-              height={nodeSize}
-              rx={8}
-              fill="#0F172A"
-              stroke={mainColor}
-              strokeWidth={3}
-            />
-            <Rect
-              x={C - nodeSize / 2 + 4}
-              y={C - nodeSize / 2 + 4}
-              width={nodeSize - 8}
-              height={nodeSize - 8}
-              rx={6}
-              fill={isEnergized ? energyColor : "#1E293B"}
+              x={C - S * 0.2}
+              y={C - S * 0.2}
+              width={S * 0.4}
+              height={S * 0.4}
+              rx={S * 0.08}
+              fill={glowColor}
               opacity={0.3}
             />
-            <Rect
-              x={C - nodeSize / 4}
-              y={C - nodeSize / 4}
-              width={nodeSize / 2}
-              height={nodeSize / 2}
-              rx={4}
-              fill={isEnergized ? energyColor : "#334155"}
-            />
-          </Svg>
-        );
-      case "STRAIGHT":
-        return (
-          <Svg width={S} height={S}>
-            <Rect x={2} y={2} width={S - 4} height={S - 4} rx={12} fill="#0B132B" stroke="#1E293B" strokeWidth={2} />
-            <Circle cx={8} cy={8} r={2} fill="#475569" />
-            <Circle cx={S - 8} cy={8} r={2} fill="#475569" />
-            <Circle cx={8} cy={S - 8} r={2} fill="#475569" />
-            <Circle cx={S - 8} cy={S - 8} r={2} fill="#475569" />
-            {renderCable(`M ${C} 0 L ${C} ${S}`)}
-          </Svg>
-        );
-      case "CORNER":
-        return (
-          <Svg width={S} height={S}>
-            <Rect x={2} y={2} width={S - 4} height={S - 4} rx={12} fill="#0B132B" stroke="#1E293B" strokeWidth={2} />
-            <Circle cx={8} cy={8} r={2} fill="#475569" />
-            <Circle cx={S - 8} cy={8} r={2} fill="#475569" />
-            <Circle cx={8} cy={S - 8} r={2} fill="#475569" />
-            <Circle cx={S - 8} cy={S - 8} r={2} fill="#475569" />
-            {renderCable(`M ${C} 0 L ${C} ${C} L ${S} ${C}`)}
-            <Circle cx={C} cy={C} r={mainWidth * 0.8} fill={mainColor} />
-          </Svg>
-        );
-      case "TJUNC":
-        return (
-          <Svg width={S} height={S}>
-            <Rect x={2} y={2} width={S - 4} height={S - 4} rx={12} fill="#0B132B" stroke="#1E293B" strokeWidth={2} />
-            <Circle cx={8} cy={8} r={2} fill="#475569" />
-            <Circle cx={S - 8} cy={8} r={2} fill="#475569" />
-            <Circle cx={8} cy={S - 8} r={2} fill="#475569" />
-            <Circle cx={S - 8} cy={S - 8} r={2} fill="#475569" />
-            {renderCable(`M 0 ${C} L ${S} ${C}`)}
-            {renderCable(`M ${C} ${C} L ${C} 0`)}
-            <Circle cx={C} cy={C} r={mainWidth * 0.9} fill={mainColor} />
-          </Svg>
-        );
-      case "CROSS":
-        return (
-          <Svg width={S} height={S}>
-            <Rect x={2} y={2} width={S - 4} height={S - 4} rx={12} fill="#0B132B" stroke="#1E293B" strokeWidth={2} />
-            <Circle cx={8} cy={8} r={2} fill="#475569" />
-            <Circle cx={S - 8} cy={8} r={2} fill="#475569" />
-            <Circle cx={8} cy={S - 8} r={2} fill="#475569" />
-            <Circle cx={S - 8} cy={S - 8} r={2} fill="#475569" />
-            {renderCable(`M 0 ${C} L ${S} ${C}`)}
-            {renderCable(`M ${C} 0 L ${C} ${S}`)}
-            <Circle cx={C} cy={C} r={mainWidth} fill={mainColor} />
-          </Svg>
-        );
-      default:
-        return null;
-    }
-  };
+          )}
+          <Rect
+            x={C - S * 0.1}
+            y={C - S * 0.1}
+            width={S * 0.2}
+            height={S * 0.2}
+            rx={S * 0.04}
+            fill={isEnergized ? energyColor : "#334155"}
+          />
+          {renderVias([[C, 0]])}
+        </Svg>
+      );
+      break;
+    case "STRAIGHT":
+      content = (
+        <Svg width={S} height={S} viewBox={`0 0 ${S} ${S}`}>
+          {renderCable(`M ${C} 0 L ${C} ${S}`)}
+          {renderVias([[C, 0], [C, S]])}
+        </Svg>
+      );
+      break;
+    case "CORNER":
+      content = (
+        <Svg width={S} height={S} viewBox={`0 0 ${S} ${S}`}>
+          {renderCable(`M ${C} 0 L ${C} ${C} L ${S} ${C}`)}
+          {renderVias([[C, 0], [S, C]])}
+        </Svg>
+      );
+      break;
+    case "TJUNC":
+      content = (
+        <Svg width={S} height={S} viewBox={`0 0 ${S} ${S}`}>
+          {renderCable(`M 0 ${C} L ${S} ${C}`)}
+          {renderCable(`M ${C} ${C} L ${C} 0`)}
+          {renderVias([[0, C], [S, C], [C, 0]])}
+        </Svg>
+      );
+      break;
+    case "CROSS":
+      content = (
+        <Svg width={S} height={S} viewBox={`0 0 ${S} ${S}`}>
+          {renderCable(`M 0 ${C} L ${S} ${C}`)}
+          {renderCable(`M ${C} 0 L ${C} ${S}`)}
+          {renderVias([[0, C], [S, C], [C, 0], [C, S]])}
+        </Svg>
+      );
+      break;
+    default:
+      content = null;
+  }
 
   return (
     <Pressable
       onPress={onPress}
-      style={[
-        styles.cellContainer,
-        {
-          width: cellSize - 4,
-          height: cellSize - 4,
-          margin: 2,
-        },
-      ]}
+      style={[styles.cellContainer, { width: cellSize, height: cellSize }]}
     >
-      <Animated.View style={[styles.cellWrapper, animatedStyle, glowShadow]}>
-        {renderSVGComponent()}
+      <Animated.View style={[styles.cellWrapper, animatedStyle]}>
+        {content}
       </Animated.View>
     </Pressable>
   );
@@ -932,27 +916,24 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   boardContainer: {
-    backgroundColor: "#060A14",
-    borderRadius: 24,
-    borderWidth: 3,
-    borderColor: "rgba(56, 189, 248, 0.4)",
-    shadowColor: "#38BDF8",
+    backgroundColor: "#0B1120",
+    borderRadius: 22,
+    borderWidth: 1.5,
+    borderColor: "rgba(148, 163, 184, 0.22)",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.4,
     shadowRadius: 20,
     elevation: 12,
     padding: 6,
     overflow: "hidden",
   },
   cellContainer: {
-    backgroundColor: "#0B132B",
-    borderRadius: 14,
+    backgroundColor: "transparent",
+    borderWidth: 1,
+    borderColor: "rgba(148, 163, 184, 0.06)",
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
   },
   cellWrapper: {
     flex: 1,

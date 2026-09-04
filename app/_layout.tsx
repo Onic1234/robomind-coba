@@ -56,6 +56,7 @@ export default function RootLayout() {
         <Stack.Screen name="pick-and-drop" options={{ headerShown: false }} />
         <Stack.Screen name="pose-master" options={{ headerShown: false }} />
         <Stack.Screen name="screw-spin" options={{ headerShown: false }} />
+        <Stack.Screen name="robo-delivery" options={{ headerShown: false }} />
       </Stack>
       <ChatbotButton />
     </GestureHandlerRootView>

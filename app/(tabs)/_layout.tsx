@@ -1,8 +1,8 @@
-import React from "react";
-import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { COLORS, FONTS } from "../../constants/Theme";
+import { Tabs } from "expo-router";
+import React from "react";
 import { Platform } from "react-native";
+import { COLORS, FONTS } from "../../constants/Theme";
 
 export default function TabsLayout() {
   return (
