@@ -15,6 +15,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { HowToPlayModal } from "../components/HowToPlayModal";
 import * as Haptics from "expo-haptics";
 import Svg, { Rect, Circle, Path, Line, Ellipse, Text as SvgText } from "react-native-svg";
+import { saveGameSession } from "../lib/gameProgressService";
 
 const COINS_STORAGE_KEY = "user_coins_balance";
 const LEVEL_STORAGE_KEY = "robo_charge_current_level";
@@ -768,6 +769,15 @@ export default function RoboChargeScreen() {
 
   // Handle Victory Progress Saving
   const handleLevelComplete = async (finalTime: number) => {
+    saveGameSession({
+      gameId: "robo-charge",
+      level: currentLevel,
+      score: Math.max(50, 1000 - Math.round(finalTime) * 10),
+      xpEarned: 140,
+      coinsEarned: 60,
+      durationSeconds: Math.round(finalTime),
+      completed: true,
+    });
     setView("victory");
 
     // Star score mapping

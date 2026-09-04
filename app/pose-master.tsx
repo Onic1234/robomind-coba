@@ -12,6 +12,7 @@ import { WebView } from "react-native-webview";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Ionicons } from "@expo/vector-icons";
+import { saveGameSession } from "../lib/gameProgressService";
 
 const STORAGE_KEY_COINS = "robomind_user_coins";
 const STORAGE_KEY_LEVEL = "pose_master_current_level";
@@ -53,6 +54,7 @@ export default function PoseMasterScreen() {
   };
 
   const handleLevelComplete = async (coinsGained: number, levelNum: number) => {
+    saveGameSession({ gameId: "pose-master", level: levelNum, score: coinsGained, xpEarned: 100, coinsEarned: coinsGained, completed: true });
     const newCoins = userCoins + (coinsGained || 100);
     setUserCoins(newCoins);
     await AsyncStorage.setItem(STORAGE_KEY_COINS, newCoins.toString());

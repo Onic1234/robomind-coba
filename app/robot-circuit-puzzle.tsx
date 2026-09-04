@@ -25,6 +25,7 @@ import Animated, {
 import Svg, { Path, Circle, Rect, Polygon, G } from "react-native-svg";
 import { SPACING } from "../constants/Theme";
 import Button from "../components/ui/Button";
+import { saveGameSession } from "../lib/gameProgressService";
 
 const STORAGE_KEY_COINS = "user_coins_balance";
 const STORAGE_KEY_LEVEL = "robot_circuit_current_level";
@@ -513,7 +514,7 @@ export default function RobotCircuitPuzzleScreen() {
   const [cells, setCells] = useState<CircuitCell[]>([]);
   const [history, setHistory] = useState<{ cells: CircuitCell[]; moves: number }[]>([]);
   const [moves, setMoves] = useState(0);
-  const [userCoins, setUserCoins] = useState(1250);
+  const [userCoins, setUserCoins] = useState(0);
   const [gameState, setGameState] = useState<"playing" | "victory" | "completed">("playing");
   const [showPauseModal, setShowPauseModal] = useState(false);
   const [showTeachModal, setShowTeachModal] = useState(true);
@@ -669,6 +670,7 @@ export default function RobotCircuitPuzzleScreen() {
     } else {
       setLevel(nextLevelNum);
       await AsyncStorage.setItem(STORAGE_KEY_LEVEL, String(nextLevelNum));
+    saveGameSession({ gameId: "robot-circuit-puzzle", level: level, score: 100, xpEarned: 130, coinsEarned: 50, completed: true });
     }
   };
 

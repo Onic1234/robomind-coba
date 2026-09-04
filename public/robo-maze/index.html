@@ -179,7 +179,7 @@
     <div class="w-full flex items-center justify-between gap-2 pb-2.5 border-b border-slate-300/80 z-20">
       <div class="flex items-center gap-2">
         <div class="bg-cyan-600 hover:bg-cyan-700 transition px-2.5 py-1 rounded-xl font-bold text-[10px] md:text-xs text-white shadow-md flex items-center gap-1">
-          <i class="fa-solid fa-microchip"></i> Level <span id="levelDisplay">2</span>
+          <i class="fa-solid fa-microchip"></i> Level <span id="levelDisplay">1</span>
         </div>
         <div class="text-[9px] md:text-[11px] font-bold text-slate-500 tracking-wide flex items-center gap-1">
           System: <span id="gameStatus" class="text-amber-600 font-bold">Mengingat...</span>
@@ -701,7 +701,7 @@
     };
 
     // Status Game Berjalan
-    let currentLevel = 2; // Default ke replica screenshot
+    let currentLevel = 1;
     let playerPos = { x: 0, y: 0 };
     let lives = 3;
     let steps = 0;
@@ -1357,7 +1357,7 @@
 
     // Jalankan Game Pertama kali
     window.addEventListener('DOMContentLoaded', () => {
-      initLevel(2);
+      initLevel(1);
     });
   </script>
 </body>

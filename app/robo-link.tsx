@@ -28,6 +28,7 @@ import Animated, {
   runOnJS,
 } from "react-native-reanimated";
 import Svg, { Line, Circle, Path, Rect, G, Polygon } from "react-native-svg";
+import { saveGameSession } from "../lib/gameProgressService";
 import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../constants/Theme";
 import Button from "../components/ui/Button";
 
@@ -3981,7 +3982,7 @@ export default function RoboLinkScreen() {
   const [level, setLevel] = useState(1);
   const [highestUnlocked, setHighestUnlocked] = useState(1);
   const [view, setView] = useState<"map" | "game">("map");
-  const [userCoins, setUserCoins] = useState(1250);
+  const [userCoins, setUserCoins] = useState(0);
   const [gameState, setGameState] = useState<"playing" | "victory" | "completed" | "failed" | "outOfLives">("playing");
   const [showHelp, setShowHelp] = useState(true);
 
@@ -4263,6 +4264,14 @@ export default function RoboLinkScreen() {
   };
 
   const handleNextLevel = async () => {
+    saveGameSession({
+      gameId: "robo-link",
+      level: level,
+      score: 100,
+      xpEarned: 120,
+      coinsEarned: 50,
+      completed: true,
+    });
     triggerHaptic("light");
     const nextLvl = level + 1;
     const finalBalance = userCoins + currentConfig.rewardCoins;
@@ -4993,10 +5002,28 @@ export default function RoboLinkScreen() {
 
             {/* ACTION BUTTONS */}
             <View style={styles.resultActions}>
-              <Pressable style={styles.btnGhost} onPress={() => router.back()}>
+              <Pressable
+                style={({ pressed }) => [styles.btnGhost, pressed && { opacity: 0.7 }]}
+                onPress={() => {
+                  setGameState("playing");
+                  setView("map");
+                  try {
+                    if (router.canGoBack && router.canGoBack()) {
+                      router.back();
+                    } else {
+                      router.replace("/(tabs)" as any);
+                    }
+                  } catch (e) {
+                    if (Platform.OS === "web") window.location.href = "/";
+                  }
+                }}
+              >
                 <Text style={styles.btnGhostText}>[ Kembali Ke Menu Utama ]</Text>
               </Pressable>
-              <Pressable style={styles.btnPrimaryNext} onPress={handleNextLevel}>
+              <Pressable
+                style={({ pressed }) => [styles.btnPrimaryNext, pressed && { opacity: 0.8 }]}
+                onPress={handleNextLevel}
+              >
                 <Text style={styles.btnPrimaryNextText}>[ CONTINUE (Lanjut Level) ➔ ]</Text>
               </Pressable>
             </View>
@@ -5098,10 +5125,28 @@ export default function RoboLinkScreen() {
 
             {/* ACTION BUTTONS */}
             <View style={styles.resultActions}>
-              <Pressable style={styles.btnGhost} onPress={() => router.back()}>
+              <Pressable
+                style={({ pressed }) => [styles.btnGhost, pressed && { opacity: 0.7 }]}
+                onPress={() => {
+                  setGameState("playing");
+                  setView("map");
+                  try {
+                    if (router.canGoBack && router.canGoBack()) {
+                      router.back();
+                    } else {
+                      router.replace("/(tabs)" as any);
+                    }
+                  } catch (e) {
+                    if (Platform.OS === "web") window.location.href = "/";
+                  }
+                }}
+              >
                 <Text style={styles.btnGhostText}>[ Kembali Ke Menu Utama ]</Text>
               </Pressable>
-              <Pressable style={[styles.btnPrimaryNext, { backgroundColor: "#DC2626" }]} onPress={handleRestartLevel}>
+              <Pressable
+                style={({ pressed }) => [[styles.btnPrimaryNext, { backgroundColor: "#DC2626" }], pressed && { opacity: 0.8 }]}
+                onPress={handleRestartLevel}
+              >
                 <Text style={styles.btnPrimaryNextText}>[ COBA LAGI 🔄 ]</Text>
               </Pressable>
             </View>

@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { HowToPlayModal } from "../components/HowToPlayModal";
 import { COLORS } from "../constants/Theme";
+import { saveGameSession } from "../lib/gameProgressService";
 
 const STORAGE_KEY_LEVEL = "pick_and_drop_current_level";
 const STORAGE_KEY_COINS = "user_coins_balance";
@@ -20,7 +21,7 @@ export default function PickAndDropScreen() {
   const router = useRouter();
 
   const [currentLevel, setCurrentLevel] = useState(1);
-  const [userCoins, setUserCoins] = useState(1250);
+  const [userCoins, setUserCoins] = useState(0);
   const [showHelp, setShowHelp] = useState(true);
 
   // Load Saved Progress
@@ -43,6 +44,7 @@ export default function PickAndDropScreen() {
     try {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.type === "LEVEL_COMPLETE") {
+        saveGameSession({ gameId: "pick-and-drop", level: currentLevel, score: data.coins || 100, xpEarned: 100, coinsEarned: data.coins || 50, completed: true });
         const rewardCoins = data.coins || 150;
         const newCoins = userCoins + rewardCoins;
         setUserCoins(newCoins);

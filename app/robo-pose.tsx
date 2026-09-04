@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { saveGameSession } from "../lib/gameProgressService";
 
 export default function RoboPoseScreen() {
   const router = useRouter();
@@ -33,6 +34,27 @@ export default function RoboPoseScreen() {
     const handler = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', handler);
     return () => document.removeEventListener('fullscreenchange', handler);
+  }, []);
+
+  
+  useEffect(() => {
+    const messageHandler = (e: MessageEvent) => {
+      if (e.data && (e.data.type === "GAME_OVER" || e.data.type === "GAME_COMPLETE" || e.data.type === "LEVEL_COMPLETE" || e.data.type === "GAME_RESULT")) {
+        saveGameSession({
+          gameId: "robo-pose",
+          level: e.data.level || 1,
+          score: e.data.score || 100,
+          xpEarned: e.data.xp || 80,
+          coinsEarned: e.data.coins || 25,
+          completed: e.data.completed !== false,
+          durationSeconds: e.data.duration || 60,
+        });
+      }
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("message", messageHandler);
+      return () => window.removeEventListener("message", messageHandler);
+    }
   }, []);
 
   if (Platform.OS !== "web") {

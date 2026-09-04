@@ -25,6 +25,7 @@ import Animated, {
 import Svg, { Rect, Circle, Line, Path, Polygon, G } from "react-native-svg";
 import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../constants/Theme";
 import Button from "../components/ui/Button";
+import { saveGameSession } from "../lib/gameProgressService";
 
 const COINS_STORAGE_KEY = "user_coins_balance";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -413,7 +414,7 @@ const ConfettiPiece = ({
 export default function RoboCircleScreen() {
   const router = useRouter();
   const [level, setLevel] = useState(1);
-  const [userCoins, setUserCoins] = useState(1250);
+  const [userCoins, setUserCoins] = useState(0);
   const [gameState, setGameState] = useState<"playing" | "victory" | "completed" | "failed">("playing");
   const [showHelp, setShowHelp] = useState(true);
 
@@ -649,6 +650,14 @@ export default function RoboCircleScreen() {
   };
 
   const handleNextLevel = async () => {
+    saveGameSession({
+      gameId: "robo-circle",
+      level: level,
+      score: 100,
+      xpEarned: 100,
+      coinsEarned: 40,
+      completed: true,
+    });
     triggerHaptic("light");
     const nextLvl = level + 1;
     const finalBalance = userCoins + LEVEL_CONFIGS.find((l) => l.level === level)!.rewardCoins;
