@@ -37,10 +37,9 @@ const LAST_LOSS_STORAGE_KEY = "robo_link_last_loss";
 const MAX_LIVES = 5;
 const LIFE_COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
 
-const RadarChart = ({ data }: { data: { axis: string; score: number }[] }) => {
-  const size = 200;
+const RadarChart = ({ data, size = 140 }: { data: { axis: string; score: number }[]; size?: number }) => {
   const center = size / 2;
-  const radius = 62;
+  const radius = Math.round(size * 0.27);
   const numAxes = data.length;
 
   const getPolygonPoints = (rFactor: number) => {
@@ -64,6 +63,7 @@ const RadarChart = ({ data }: { data: { axis: string; score: number }[] }) => {
     })
     .join(" ");
 
+  const labelWidth = 52;
   return (
     <View style={{ width: size, height: size, alignItems: "center", justifyContent: "center" }}>
       <Svg width={size} height={size}>
@@ -98,7 +98,7 @@ const RadarChart = ({ data }: { data: { axis: string; score: number }[] }) => {
           points={dataPoints}
           fill="rgba(168, 85, 247, 0.45)"
           stroke="#C084FC"
-          strokeWidth="2.5"
+          strokeWidth="2"
         />
 
         {data.map((d, i) => {
@@ -108,7 +108,7 @@ const RadarChart = ({ data }: { data: { axis: string; score: number }[] }) => {
           const y = center + r * Math.sin(angle);
           return (
             <G key={i}>
-              <Circle cx={x} cy={y} r="4.5" fill="#FFFFFF" stroke="#A855F7" strokeWidth="2" />
+              <Circle cx={x} cy={y} r="3.5" fill="#FFFFFF" stroke="#A855F7" strokeWidth="1.5" />
             </G>
           );
         })}
@@ -116,9 +116,9 @@ const RadarChart = ({ data }: { data: { axis: string; score: number }[] }) => {
 
       {data.map((d, i) => {
         const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
-        const labelR = radius + 22;
-        const x = center + labelR * Math.cos(angle) - 35;
-        const y = center + labelR * Math.sin(angle) - 8;
+        const labelR = radius + 17;
+        const x = center + labelR * Math.cos(angle) - labelWidth / 2;
+        const y = center + labelR * Math.sin(angle) - 7;
         return (
           <View
             key={i}
@@ -126,11 +126,11 @@ const RadarChart = ({ data }: { data: { axis: string; score: number }[] }) => {
               position: "absolute",
               left: x,
               top: y,
-              width: 70,
+              width: labelWidth,
               alignItems: "center",
             }}
           >
-            <Text style={{ fontSize: 9.5, fontWeight: "800", color: "#F8FAFC", textAlign: "center" }}>
+            <Text style={{ fontSize: 8.5, fontWeight: "800", color: "#F8FAFC", textAlign: "center" }}>
               {d.axis}
             </Text>
           </View>
@@ -2157,14 +2157,14 @@ export default function RoboLinkScreen() {
 
       {/* VICTORY MODAL OVERLAY - 2 COLUMN COGNITIVE RADAR CHART */}
       <Modal visible={gameState === "victory"} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
+        <ScrollView style={{ flex: 1, backgroundColor: "rgba(3, 7, 18, 0.88)" }} contentContainerStyle={{ flexGrow: 1, justifyContent: "center", alignItems: "center", paddingVertical: 12, paddingHorizontal: 10 }}>
           <View style={styles.resultModalCard}>
             {/* HEADER */}
             <View style={styles.resultHeader}>
               <Text style={styles.resultBadgeText}>MISSION COMPLETED</Text>
               <Text style={styles.resultTitleText}>LEVEL {String(level).padStart(2, "0")} CLEARED!</Text>
               <Text style={styles.resultSubtitleText}>
-                Rute Sirkuit Data: Generator ➔ PC Target Berhasil Disambungkan!
+                Sirkuit Data Berhasil Disambungkan!
               </Text>
             </View>
 
@@ -2181,23 +2181,19 @@ export default function RoboLinkScreen() {
 
                 {/* CHECKLIST */}
                 <View style={styles.checklistContainer}>
-                  <Text style={styles.checkItem}>⭐ Sambung seluruh rute kabel <Text style={styles.checkVal}>(100%)</Text></Text>
-                  <Text style={styles.checkItem}>⭐ Batas waktu sirkuit aman <Text style={styles.checkVal}>(Bonus Cepat)</Text></Text>
-                  <Text style={styles.checkItem}>⭐ Hentikan kebocoran daya <Text style={styles.checkVal}>(0 Kebocoran)</Text></Text>
+                  <Text style={styles.checkItem}>⭐ Kabel 100% <Text style={styles.checkVal}>(Sukses)</Text></Text>
+                  <Text style={styles.checkItem}>⭐ Waktu sirkuit <Text style={styles.checkVal}>(Bonus Cepat)</Text></Text>
+                  <Text style={styles.checkItem}>⭐ Kebocoran daya <Text style={styles.checkVal}>(0 Leak)</Text></Text>
                 </View>
 
                 {/* LOOT BREAKDOWN */}
                 <View style={styles.lootBreakdown}>
                   <View style={styles.lootRow}>
-                    <Text style={styles.lootLabel}>Loot Koin Terkumpul:</Text>
-                    <Text style={styles.lootVal}>+{currentConfig.rewardCoins} Koin</Text>
-                  </View>
-                  <View style={styles.lootRow}>
-                    <Text style={styles.lootLabel}>Bonus Kecepatan Waktu:</Text>
-                    <Text style={styles.lootValCyan}>+25 Koin</Text>
+                    <Text style={styles.lootLabel}>Loot Base / Bonus:</Text>
+                    <Text style={styles.lootVal}>+{currentConfig.rewardCoins} / +25</Text>
                   </View>
                   <View style={styles.totalRow}>
-                    <Text style={styles.totalLabel}>TOTAL SOULONS / KOIN:</Text>
+                    <Text style={styles.totalLabel}>TOTAL KOIN:</Text>
                     <Text style={styles.totalVal}>{currentConfig.rewardCoins + 25} KOIN</Text>
                   </View>
                 </View>
@@ -2205,12 +2201,13 @@ export default function RoboLinkScreen() {
 
               {/* RIGHT COLUMN: ANALISIS PERKEMBANGAN OTAK */}
               <View style={styles.resultColumnRight}>
-                <Text style={styles.brainTitle}>🧠 Analisis Perkembangan Otak</Text>
-                <Text style={styles.brainSubtitle}>(Prefrontal Cortex & Kontrol Emosi)</Text>
+                <Text style={styles.brainTitle}>🧠 Perkembangan Otak</Text>
+                <Text style={styles.brainSubtitle}>(Cognitive Radar)</Text>
 
                 {/* RADAR CHART */}
                 <View style={styles.radarWrapper}>
                   <RadarChart
+                    size={140}
                     data={[
                       { axis: "Spasial", score: 85 },
                       { axis: "Keputusan", score: 90 },
@@ -2226,14 +2223,14 @@ export default function RoboLinkScreen() {
             {/* ACTION BUTTONS */}
             <View style={styles.resultActions}>
               <Pressable style={styles.btnGhost} onPress={() => router.back()}>
-                <Text style={styles.btnGhostText}>Kembali Ke Menu Utama</Text>
+                <Text style={styles.btnGhostText}>Kembali Ke Menu</Text>
               </Pressable>
               <Pressable style={styles.btnPrimaryNext} onPress={handleNextLevel}>
                 <Text style={styles.btnPrimaryNextText}>Lanjut Level ➔</Text>
               </Pressable>
             </View>
           </View>
-        </View>
+        </ScrollView>
       </Modal>
 
       {/* COMPLETED ALL LEVELS MODAL OVERLAY */}
@@ -2266,14 +2263,14 @@ export default function RoboLinkScreen() {
 
       {/* FAILED MODAL OVERLAY - 2 COLUMN COGNITIVE RADAR CHART */}
       <Modal visible={gameState === "failed"} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
+        <ScrollView style={{ flex: 1, backgroundColor: "rgba(3, 7, 18, 0.88)" }} contentContainerStyle={{ flexGrow: 1, justifyContent: "center", alignItems: "center", paddingVertical: 12, paddingHorizontal: 10 }}>
           <View style={[styles.resultModalCard, { borderColor: "rgba(239, 68, 68, 0.4)" }]}>
             {/* HEADER */}
             <View style={styles.resultHeader}>
               <Text style={[styles.resultBadgeText, { color: "#EF4444" }]}>MISSION FAILED</Text>
               <Text style={[styles.resultTitleText, { color: "#F87171" }]}>WAKTU HABIS!</Text>
               <Text style={styles.resultSubtitleText}>
-                Sirkuit Data Gagal Tersambung Dalam Batas Waktu. Latih Kembali Kecepatan Berpikir Spasial!
+                Sirkuit Data Gagal Tersambung Dalam Batas Waktu.
               </Text>
             </View>
 
@@ -2290,9 +2287,9 @@ export default function RoboLinkScreen() {
 
                 {/* CHECKLIST */}
                 <View style={styles.checklistContainer}>
-                  <Text style={styles.checkItem}>❌ Kabel belum tersambung <Text style={[styles.checkVal, { color: "#F87171" }]}> (Terputus)</Text></Text>
-                  <Text style={styles.checkItem}>⚠️ Batas waktu sirkuit <Text style={styles.checkVal}>(Waktu Habis)</Text></Text>
-                  <Text style={styles.checkItem}>💡 Perhatikan alur kabel <Text style={styles.checkVal}>(Rencanakan Rute)</Text></Text>
+                  <Text style={styles.checkItem}>❌ Kabel sirkuit <Text style={[styles.checkVal, { color: "#F87171" }]}> (Terputus)</Text></Text>
+                  <Text style={styles.checkItem}>⚠️ Batas waktu <Text style={styles.checkVal}>(Waktu Habis)</Text></Text>
+                  <Text style={styles.checkItem}>💡 Alur kabel <Text style={styles.checkVal}>(Coba Lagi)</Text></Text>
                 </View>
 
                 {/* LOOT BREAKDOWN */}
@@ -2302,7 +2299,7 @@ export default function RoboLinkScreen() {
                     <Text style={styles.lootVal}>+10 Koin</Text>
                   </View>
                   <View style={styles.totalRow}>
-                    <Text style={[styles.totalLabel, { color: "#F87171" }]}>TOTAL SOULONS / KOIN:</Text>
+                    <Text style={[styles.totalLabel, { color: "#F87171" }]}>TOTAL KOIN:</Text>
                     <Text style={[styles.totalVal, { color: "#F87171" }]}>10 KOIN</Text>
                   </View>
                 </View>
@@ -2310,12 +2307,13 @@ export default function RoboLinkScreen() {
 
               {/* RIGHT COLUMN: ANALISIS PERKEMBANGAN OTAK */}
               <View style={styles.resultColumnRight}>
-                <Text style={styles.brainTitle}>🧠 Evaluasi Perkembangan Otak</Text>
-                <Text style={styles.brainSubtitle}>(Area Pengembangan: Memori Kerja & Spasial)</Text>
+                <Text style={styles.brainTitle}>🧠 Evaluasi Otak</Text>
+                <Text style={styles.brainSubtitle}>(Focus & Spasial)</Text>
 
                 {/* RADAR CHART */}
                 <View style={styles.radarWrapper}>
                   <RadarChart
+                    size={140}
                     data={[
                       { axis: "Spasial", score: 55 },
                       { axis: "Keputusan", score: 60 },
@@ -2331,14 +2329,14 @@ export default function RoboLinkScreen() {
             {/* ACTION BUTTONS */}
             <View style={styles.resultActions}>
               <Pressable style={styles.btnGhost} onPress={() => router.back()}>
-                <Text style={styles.btnGhostText}>Kembali Ke Menu Utama</Text>
+                <Text style={styles.btnGhostText}>Kembali Ke Menu</Text>
               </Pressable>
               <Pressable style={[styles.btnPrimaryNext, { backgroundColor: "#DC2626" }]} onPress={handleRestartLevel}>
                 <Text style={styles.btnPrimaryNextText}>Coba Lagi 🔄</Text>
               </Pressable>
             </View>
           </View>
-        </View>
+        </ScrollView>
       </Modal>
 
       {/* OUT OF LIVES MODAL OVERLAY */}
@@ -2803,13 +2801,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   resultModalCard: {
-    width: "95%",
-    maxWidth: 720,
-    backgroundColor: "rgba(11, 19, 41, 0.96)",
+    width: "96%",
+    maxWidth: 540,
+    backgroundColor: "rgba(11, 19, 41, 0.98)",
     borderWidth: 1.5,
     borderColor: "rgba(56, 189, 248, 0.4)",
-    borderRadius: 24,
-    padding: 24,
+    borderRadius: 16,
+    padding: 12,
     shadowColor: "#00E5FF",
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
@@ -2820,63 +2818,64 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255, 255, 255, 0.1)",
-    paddingBottom: 12,
-    marginBottom: 16,
+    paddingBottom: 6,
+    marginBottom: 8,
   },
   resultBadgeText: {
-    fontSize: 12,
+    fontSize: 10.5,
     fontWeight: "900",
     color: "#F59E0B",
     letterSpacing: 2,
-    marginBottom: 2,
+    marginBottom: 1,
   },
   resultTitleText: {
-    fontSize: 24,
+    fontSize: 17,
     fontWeight: "900",
     color: "#34D399",
-    marginBottom: 4,
+    marginBottom: 1,
   },
   resultSubtitleText: {
-    fontSize: 13,
+    fontSize: 11,
     color: "#94A3B8",
     textAlign: "center",
   },
   resultGrid: {
-    flexDirection: Platform.OS === "web" && SCREEN_WIDTH > 640 ? "row" : "column",
-    gap: 16,
-    marginBottom: 20,
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 10,
   },
   resultColumnLeft: {
     flex: 1,
     backgroundColor: "rgba(15, 23, 42, 0.75)",
-    padding: 16,
-    borderRadius: 16,
+    padding: 8,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "rgba(56, 189, 248, 0.25)",
   },
   columnTitle: {
-    fontSize: 12,
+    fontSize: 10.5,
     fontWeight: "800",
     color: "#94A3B8",
-    letterSpacing: 1,
-    marginBottom: 8,
+    letterSpacing: 0.5,
+    marginBottom: 4,
+    textAlign: "center",
   },
   starRow: {
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 6,
   },
   starText: {
-    fontSize: 26,
+    fontSize: 18,
     color: "#F59E0B",
   },
   checklistContainer: {
-    gap: 6,
-    marginBottom: 14,
+    gap: 3,
+    marginBottom: 8,
   },
   checkItem: {
-    fontSize: 12.5,
+    fontSize: 10.5,
     color: "#E2E8F0",
-    lineHeight: 18,
+    lineHeight: 14,
   },
   checkVal: {
     fontWeight: "800",
@@ -2885,24 +2884,24 @@ const styles = StyleSheet.create({
   lootBreakdown: {
     borderTopWidth: 1,
     borderTopColor: "rgba(255, 255, 255, 0.12)",
-    paddingTop: 10,
-    gap: 4,
+    paddingTop: 6,
+    gap: 2,
   },
   lootRow: {
     flexDirection: "row",
     justifyContent: "space-between",
   },
   lootLabel: {
-    fontSize: 12,
+    fontSize: 10.5,
     color: "#CBD5E1",
   },
   lootVal: {
-    fontSize: 12,
+    fontSize: 10.5,
     fontWeight: "800",
     color: "#F59E0B",
   },
   lootValCyan: {
-    fontSize: 12,
+    fontSize: 10.5,
     fontWeight: "800",
     color: "#38BDF8",
   },
@@ -2911,75 +2910,83 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     borderTopWidth: 1,
     borderTopColor: "rgba(255, 255, 255, 0.1)",
-    paddingTop: 6,
-    marginTop: 4,
+    paddingTop: 4,
+    marginTop: 2,
   },
   totalLabel: {
-    fontSize: 12.5,
+    fontSize: 11,
     fontWeight: "800",
     color: "#34D399",
   },
   totalVal: {
-    fontSize: 13.5,
+    fontSize: 11.5,
     fontWeight: "900",
     color: "#34D399",
   },
   resultColumnRight: {
     flex: 1,
     backgroundColor: "rgba(15, 23, 42, 0.75)",
-    padding: 16,
-    borderRadius: 16,
+    padding: 8,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: "rgba(168, 85, 247, 0.35)",
     alignItems: "center",
+    justifyContent: "center",
   },
   brainTitle: {
-    fontSize: 13.5,
+    fontSize: 11,
     fontWeight: "800",
     color: "#C084FC",
-    marginBottom: 2,
+    marginBottom: 1,
+    textAlign: "center",
   },
   brainSubtitle: {
-    fontSize: 10.5,
+    fontSize: 9,
     color: "#94A3B8",
-    marginBottom: 10,
+    marginBottom: 4,
+    textAlign: "center",
   },
   radarWrapper: {
-    width: 200,
-    height: 200,
+    width: 140,
+    height: 140,
     alignItems: "center",
     justifyContent: "center",
   },
   resultActions: {
     flexDirection: "row",
-    gap: 12,
+    gap: 8,
     justifyContent: "center",
     alignItems: "center",
   },
   btnGhost: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 30,
-    backgroundColor: "rgba(30, 41, 59, 0.8)",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
     borderWidth: 1,
-    borderColor: "rgba(148, 163, 184, 0.25)",
+    borderColor: "rgba(255, 255, 255, 0.15)",
   },
   btnGhostText: {
-    fontSize: 13,
+    fontSize: 11.5,
     fontWeight: "700",
-    color: "#E2E8F0",
+    color: "#94A3B8",
   },
   btnPrimaryNext: {
-    paddingVertical: 12,
-    paddingHorizontal: 28,
-    borderRadius: 30,
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 10,
     backgroundColor: "#0284C7",
     shadowColor: "#0284C7",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
+    elevation: 6,
   },
   btnPrimaryNextText: {
+    fontSize: 12,
+    fontWeight: "900",
+    color: "#FFFFFF",
+  },
     fontSize: 14,
     fontWeight: "900",
     color: "#FFFFFF",
