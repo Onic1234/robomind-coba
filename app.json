@@ -7,7 +7,7 @@
     "icon": "./assets/images/icons.jpg",
     "scheme": "robomind",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "ios": {
       "supportsTablet": true
     },
@@ -43,8 +43,13 @@
       "expo-asset"
     ],
     "experiments": {
-      "typedRoutes": true,
-      "reactCompiler": true
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "b9a9f0c6-ed02-4ceb-a130-b4da998f74d4"
+      }
     }
   }
 }
