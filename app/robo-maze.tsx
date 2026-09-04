@@ -17,25 +17,50 @@ export default function RoboMazeScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
   const [showHelp, setShowHelp] = useState(true);
   const iframeRef = useRef<any>(null);
   const containerRef = useRef<any>(null);
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;
-    if (!el) return;
-    if (!document.fullscreenElement) {
-      el.requestFullscreen?.().then(() => setIsFullscreen(true)).catch(() => {});
+    if (typeof document === "undefined") return;
+
+    const requestFs = el?.requestFullscreen || el?.webkitRequestFullscreen || el?.mozRequestFullScreen || el?.msRequestFullscreen;
+    const exitFs = document.exitFullscreen || (document as any).webkitExitFullscreen || (document as any).mozCancelFullScreen || (document as any).msExitFullscreen;
+    const currentFs = document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement;
+
+    if (requestFs && !isPseudoFullscreen) {
+      if (!currentFs) {
+        requestFs.call(el).then(() => setIsFullscreen(true)).catch(() => {
+          setIsPseudoFullscreen((prev) => !prev);
+          setIsFullscreen((prev) => !prev);
+        });
+      } else {
+        if (exitFs) {
+          exitFs.call(document).then(() => setIsFullscreen(false)).catch(() => {});
+        }
+        setIsFullscreen(false);
+      }
     } else {
-      document.exitFullscreen?.().then(() => setIsFullscreen(false)).catch(() => {});
+      setIsPseudoFullscreen((prev) => !prev);
+      setIsFullscreen((prev) => !prev);
     }
-  }, []);
+  }, [isPseudoFullscreen]);
 
   useEffect(() => {
-    const handler = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener('fullscreenchange', handler);
-    return () => document.removeEventListener('fullscreenchange', handler);
-  }, []);
+    if (typeof document === "undefined") return;
+    const handler = () => {
+      const currentFs = !!(document.fullscreenElement || (document as any).webkitFullscreenElement);
+      setIsFullscreen(currentFs || isPseudoFullscreen);
+    };
+    document.addEventListener("fullscreenchange", handler);
+    document.addEventListener("webkitfullscreenchange", handler);
+    return () => {
+      document.removeEventListener("fullscreenchange", handler);
+      document.removeEventListener("webkitfullscreenchange", handler);
+    };
+  }, [isPseudoFullscreen]);
 
   useEffect(() => {
     const timeout = setTimeout(() => setLoading(false), 3000);
@@ -46,13 +71,6 @@ export default function RoboMazeScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar hidden />
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={22} color="#fff" />
-          </Pressable>
-          <Text style={styles.headerTitle}>Robo Maze</Text>
-          <View style={{ width: 40 }} />
-        </View>
         <View style={styles.mobileNotice}>
           <Ionicons name="grid" size={64} color="#38bdf8" />
           <Text style={styles.mobileTitle}>Robo Maze</Text>
@@ -69,7 +87,11 @@ export default function RoboMazeScreen() {
   }
 
   return (
-    <View ref={containerRef} style={styles.webContainer} onClick={() => iframeRef.current?.focus()}>
+    <View ref={containerRef} style={[
+        styles.webContainer,
+        isPseudoFullscreen && styles.pseudoFullscreenContainer,
+      ]} {...({ onClick: () => iframeRef.current?.focus() } as any)}
+    >
       <StatusBar hidden />
 
       {loading && (
@@ -83,6 +105,7 @@ export default function RoboMazeScreen() {
         ref={iframeRef}
         src="/robo-maze/index.html"
         style={styles.iframe}
+        allow="camera; microphone; autoplay; fullscreen"
         onLoad={() => {
           setLoading(false);
           iframeRef.current?.focus();
@@ -127,155 +150,52 @@ export default function RoboMazeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#111827",
-  },
-  webContainer: {
-    flex: 1,
-    backgroundColor: "#111827",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: "rgba(15, 23, 42, 0.95)",
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(56, 189, 248, 0.2)",
-  },
-  headerTitle: {
-    fontWeight: "800",
-    fontSize: 18,
-    color: "#38bdf8",
-  },
-  backBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(30, 41, 59, 0.8)",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "rgba(56, 189, 248, 0.3)",
+  container: { flex: 1, backgroundColor: "#111827" },
+  webContainer: { flex: 1, backgroundColor: "#111827", width: "100%", height: "100%" },
+  pseudoFullscreenContainer: {
+    position: "fixed" as any,
+    top: 0, left: 0, right: 0, bottom: 0,
+    width: "100vw" as any, height: "100vh" as any,
+    zIndex: 999999,
   },
   floatingExit: {
-    position: "absolute",
-    top: 16,
-    left: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "#ef4444",
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 12,
-    zIndex: 9999,
-    elevation: 10,
-    shadowColor: "#ef4444",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
+    position: "absolute", top: 16, left: 16,
+    flexDirection: "row", alignItems: "center", gap: 6,
+    backgroundColor: "#ef4444", paddingVertical: 10, paddingHorizontal: 18,
+    borderRadius: 12, zIndex: 9999, elevation: 10,
   },
-  floatingExitText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "900",
-    letterSpacing: 1,
+  floatingExitText: { color: "#fff", fontSize: 14, fontWeight: "900", letterSpacing: 1 },
+  floatingFs: {
+    position: "absolute", top: 16, right: 16,
+    flexDirection: "row", alignItems: "center", gap: 6,
+    backgroundColor: "rgba(15, 23, 42, 0.85)", paddingVertical: 10, paddingHorizontal: 14,
+    borderRadius: 12, zIndex: 9999, elevation: 10, borderWidth: 1, borderColor: "rgba(56, 189, 248, 0.4)",
+  },
+  floatingFsText: { color: "#38bdf8", fontSize: 12, fontWeight: "800", letterSpacing: 1 },
+  floatingHelp: {
+    position: "absolute", top: 16, left: 108,
+    width: 42, height: 42, borderRadius: 21,
+    alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(15, 23, 42, 0.85)", zIndex: 9999, elevation: 10,
+    borderWidth: 1, borderColor: "rgba(56, 189, 248, 0.4)",
   },
   iframe: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-    borderWidth: 0,
-    backgroundColor: "#111827",
+    position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
+    borderWidth: 0, backgroundColor: "#111827",
   },
   loadingOverlay: {
-    position: "absolute",
-    inset: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(17, 24, 39, 0.9)",
-    zIndex: 5,
+    position: "absolute", inset: 0,
+    justifyContent: "center", alignItems: "center",
+    backgroundColor: "rgba(17, 24, 39, 0.9)", zIndex: 5,
   },
-  loadingText: {
-    marginTop: 12,
-    color: "#94a3b8",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  mobileNotice: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 40,
-    gap: 16,
-  },
-  mobileTitle: {
-    fontWeight: "900",
-    fontSize: 28,
-    color: "#38bdf8",
-  },
-  mobileDesc: {
-    color: "#94a3b8",
-    fontSize: 14,
-    textAlign: "center",
-    lineHeight: 22,
-    maxWidth: 320,
-  },
+  loadingText: { marginTop: 12, color: "#94a3b8", fontSize: 14, fontWeight: "600" },
+  mobileNotice: { flex: 1, justifyContent: "center", alignItems: "center", padding: 40, gap: 16 },
+  mobileTitle: { fontWeight: "900", fontSize: 28, color: "#38bdf8" },
+  mobileDesc: { color: "#94a3b8", fontSize: 14, textAlign: "center", lineHeight: 22, maxWidth: 320 },
   playBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    backgroundColor: "#0284c7",
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 50,
-    marginTop: 8,
+    flexDirection: "row", alignItems: "center", gap: 8,
+    backgroundColor: "#0284c7", paddingVertical: 14, paddingHorizontal: 32,
+    borderRadius: 50, marginTop: 8,
   },
-  playBtnText: {
-    color: "#fff",
-    fontWeight: "800",
-    fontSize: 14,
-  },
-  floatingFs: {
-    position: "absolute",
-    top: 16,
-    right: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "rgba(15, 23, 42, 0.85)",
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    zIndex: 9999,
-    elevation: 10,
-    borderWidth: 1,
-    borderColor: "rgba(56, 189, 248, 0.4)",
-  },
-  floatingFsText: {
-    color: "#38bdf8",
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 1,
-  },
-  floatingHelp: {
-    position: "absolute",
-    top: 16,
-    left: 108,
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(15, 23, 42, 0.85)",
-    zIndex: 9999,
-    elevation: 10,
-    borderWidth: 1,
-    borderColor: "rgba(56, 189, 248, 0.4)",
-  },
+  playBtnText: { color: "#fff", fontWeight: "800", fontSize: 14 },
 });

@@ -184,19 +184,20 @@ function ulangiPermainan(){
 
 function gameLoop(){
 	hapusLayar("#0b192c");
+	var moveSpeed = game.lompat ? 2.6 : 1.6;
 	if (game.kanan){
-		gerakLevel(game.hero, 1.8, 0);
+		gerakLevel(game.hero, moveSpeed, 0);
 	}else if (game.kiri){				
-		gerakLevel(game.hero, -1.8, 0);
+		gerakLevel(game.hero, -moveSpeed, 0);
 	}
 	if (game.atas){
-		gerakLevel(game.hero, 0, -9.2);
+		gerakLevel(game.hero, 0, -9.4);
 	}
 		
-	latar(dataGambar.bg, 0, 0.5);
+	latar(dataGambar.bg, 0.3, 0);
 	buatLevel();
 	cekItem();
-	teks(game.score, 40, 60, "Calibri-bold-20pt-left-biru");
+	teks(game.score, 40, 70, "Calibri-bold-20pt-left-biru");
 	efekTransisi();
 }
 
@@ -218,7 +219,7 @@ function cekItem(){
 
 function naikLevel(){
 	game.level++;
-	if (game.level>=3){
+	if (game.level > 10){
 		transisi("in");
 		jalankan(halamanCover);
 	}else{

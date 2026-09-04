@@ -42,6 +42,122 @@ const WEAPONS_UNLOCKED_KEY = "rogue_soul_weapons_unlocked";
 const EQUIPPED_SKIN_KEY = "rogue_soul_equipped_skin";
 const EQUIPPED_WEAPON_KEY = "rogue_soul_equipped_weapon";
 
+// ----------------------------------------------------------------------
+// 🧠 RADAR CHART COMPONENT (Analisis Perkembangan Otak: 5 Pentagon Axes)
+// ----------------------------------------------------------------------
+const RogueSoulRadarChart = ({
+  scores,
+}: {
+  scores: { spasial: number; keputusan: number; kontrolDiri: number; memori: number; fokus: number };
+}) => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+    const cssWidth = 220;
+    const cssHeight = 190;
+    canvas.width = cssWidth * dpr;
+    canvas.height = cssHeight * dpr;
+    canvas.style.width = cssWidth + "px";
+    canvas.style.height = cssHeight + "px";
+
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+    const centerX = cssWidth / 2;
+    const centerY = cssHeight / 2 + 4;
+    const radius = 52;
+
+    const axes = [
+      { name: "Spasial", val: scores.spasial || 88, align: "center", dy: -12 },
+      { name: "Keputusan", val: scores.keputusan || 92, align: "left", dy: 2 },
+      { name: "Kontrol Diri", val: scores.kontrolDiri || 85, align: "left", dy: 10 },
+      { name: "Memori Kerja", val: scores.memori || 90, align: "right", dy: 10 },
+      { name: "Fokus", val: scores.fokus || 95, align: "right", dy: 2 },
+    ];
+    const numAxes = axes.length;
+
+    // Grid Pentagon rings
+    [0.25, 0.5, 0.75, 1.0].forEach((rFactor) => {
+      ctx.beginPath();
+      for (let i = 0; i < numAxes; i++) {
+        const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+        const x = centerX + radius * rFactor * Math.cos(angle);
+        const y = centerY + radius * rFactor * Math.sin(angle);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.strokeStyle = "rgba(168, 85, 247, 0.35)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    });
+
+    // Spokes
+    for (let i = 0; i < numAxes; i++) {
+      const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+      const x = centerX + radius * Math.cos(angle);
+      const y = centerY + radius * Math.sin(angle);
+      ctx.beginPath();
+      ctx.moveTo(centerX, centerY);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = "rgba(168, 85, 247, 0.4)";
+      ctx.stroke();
+    }
+
+    // Data polygon
+    ctx.beginPath();
+    axes.forEach((axis, i) => {
+      const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+      const r = radius * (axis.val / 100);
+      const x = centerX + r * Math.cos(angle);
+      const y = centerY + r * Math.sin(angle);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.closePath();
+
+    ctx.fillStyle = "rgba(168, 85, 247, 0.35)";
+    ctx.fill();
+    ctx.strokeStyle = "#c084fc";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Vertices dots & text labels
+    axes.forEach((axis, i) => {
+      const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+      const r = radius * (axis.val / 100);
+      const vx = centerX + r * Math.cos(angle);
+      const vy = centerY + r * Math.sin(angle);
+
+      // Point dot
+      ctx.beginPath();
+      ctx.arc(vx, vy, 4, 0, Math.PI * 2);
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+      ctx.strokeStyle = "#a855f7";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Outer Label
+      const lx = centerX + (radius + 18) * Math.cos(angle);
+      const ly = centerY + (radius + 18) * Math.sin(angle) + (axis.dy || 0);
+
+      ctx.fillStyle = "#e2e8f0";
+      ctx.font = "bold 10px system-ui, sans-serif";
+      ctx.textAlign = axis.align as CanvasTextAlign;
+      ctx.fillText(axis.name, lx, ly);
+    });
+  }, [scores]);
+
+  return <canvas ref={canvasRef} style={{ width: 220, height: 190 }} />;
+};
+
 export default function RogueSoulGameScreen() {
   const router = useRouter();
 
@@ -718,25 +834,126 @@ export default function RogueSoulGameScreen() {
       ctx.restore();
     });
 
-    // 5. Traps / Hazards
+    // 5. Traps / Hazards (Vibrant Glowing Spikes & Spinning Sawblades)
+    const hazardTime = Date.now() * 0.006;
+    const hazardPulse = 0.5 + 0.5 * Math.sin(hazardTime * 2);
+
     engine.hazards.forEach((hazard) => {
-      ctx.fillStyle = "#64748B";
-      ctx.strokeStyle = "#1E293B";
-      ctx.lineWidth = 1.5;
-      for (let s = 0; s < hazard.w; s += 16) {
+      ctx.save();
+
+      // Platform Base Danger Plate & Warning Diagonal Stripes
+      const baseH = 5;
+      ctx.fillStyle = "#1E293B";
+      ctx.fillRect(hazard.x - 2, hazard.y + hazard.h - baseH, hazard.w + 4, baseH + 2);
+
+      // Yellow-Black Hazard Stripes
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(hazard.x - 2, hazard.y + hazard.h - baseH, hazard.w + 4, baseH);
+      ctx.clip();
+      for (let st = hazard.x - 10; st < hazard.x + hazard.w + 10; st += 12) {
+        ctx.fillStyle = "#F59E0B";
         ctx.beginPath();
-        ctx.moveTo(hazard.x + s, hazard.y + hazard.h);
-        ctx.lineTo(hazard.x + s + 8, hazard.y + 2);
-        ctx.lineTo(hazard.x + s + 16, hazard.y + hazard.h);
+        ctx.moveTo(st, hazard.y + hazard.h);
+        ctx.lineTo(st + 6, hazard.y + hazard.h - baseH);
+        ctx.lineTo(st + 12, hazard.y + hazard.h - baseH);
+        ctx.lineTo(st + 6, hazard.y + hazard.h);
         ctx.closePath();
         ctx.fill();
+      }
+      ctx.restore();
+
+      // Render Rotating Sawblade or Plasma Spikes
+      if ((hazard.type as any) === "saw" || hazard.h > 30) {
+        // Rotating Sawblade Hazard
+        const sawRadius = Math.min(hazard.w, hazard.h) / 2;
+        const sawCx = hazard.x + hazard.w / 2;
+        const sawCy = hazard.y + hazard.h / 2;
+
+        ctx.save();
+        ctx.translate(sawCx, sawCy);
+        ctx.rotate(hazardTime * 4);
+
+        // Glowing Outer Aura
+        ctx.shadowColor = "#EF4444";
+        ctx.shadowBlur = 14 * hazardPulse;
+
+        // Saw Teeth (8 Razor Blades)
+        ctx.fillStyle = "#DC2626";
+        for (let t = 0; t < 8; t++) {
+          const ang = (Math.PI * 2 * t) / 8;
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(ang) * (sawRadius - 4), Math.sin(ang) * (sawRadius - 4));
+          ctx.lineTo(Math.cos(ang + 0.3) * (sawRadius + 4), Math.sin(ang + 0.3) * (sawRadius + 4));
+          ctx.lineTo(Math.cos(ang + 0.5) * (sawRadius - 6), Math.sin(ang + 0.5) * (sawRadius - 6));
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Inner Steel Disc
+        const discGrad = ctx.createRadialGradient(0, 0, 2, 0, 0, sawRadius - 4);
+        discGrad.addColorStop(0, "#F8FAFC");
+        discGrad.addColorStop(0.5, "#94A3B8");
+        discGrad.addColorStop(1, "#334155");
+        ctx.fillStyle = discGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, sawRadius - 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#FEF08A";
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // Metallic Tip Highlight
-        ctx.fillStyle = "#CBD5E1";
-        ctx.fillRect(hazard.x + s + 7, hazard.y + 2, 2, 4);
-        ctx.fillStyle = "#64748B";
+        // Central Red Core
+        ctx.fillStyle = "#EF4444";
+        ctx.beginPath();
+        ctx.arc(0, 0, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      } else {
+        // Vibrant Glowing Energy Plasma Spikes
+        for (let s = 0; s < hazard.w; s += 18) {
+          const spikeX = hazard.x + s;
+          const spikeW = Math.min(18, hazard.w - s);
+          const spikeH = hazard.h - baseH;
+
+          ctx.save();
+          // Glowing Danger Aura
+          ctx.shadowColor = "#EF4444";
+          ctx.shadowBlur = 12 * hazardPulse;
+
+          // Multi-stage Metallic Gradient
+          const spikeGrad = ctx.createLinearGradient(spikeX, hazard.y + spikeH, spikeX + spikeW / 2, hazard.y);
+          spikeGrad.addColorStop(0, "#7F1D1D");
+          spikeGrad.addColorStop(0.4, "#DC2626");
+          spikeGrad.addColorStop(0.85, "#F59E0B");
+          spikeGrad.addColorStop(1, "#FEF08A");
+          ctx.fillStyle = spikeGrad;
+
+          ctx.beginPath();
+          ctx.moveTo(spikeX, hazard.y + hazard.h - baseH);
+          ctx.lineTo(spikeX + spikeW / 2, hazard.y);
+          ctx.lineTo(spikeX + spikeW, hazard.y + hazard.h - baseH);
+          ctx.closePath();
+          ctx.fill();
+
+          // Golden Blade Edge Outline
+          ctx.strokeStyle = "#FEF08A";
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          // Inner White Energy Highlight Line
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(spikeX + spikeW / 2, hazard.y + hazard.h - baseH - 2);
+          ctx.lineTo(spikeX + spikeW / 2, hazard.y + 3);
+          ctx.stroke();
+
+          ctx.restore();
+        }
       }
+
+      ctx.restore();
     });
 
     // 6. Enemies (Shield Guards, Archers, Bandits, Boss)
@@ -1258,9 +1475,9 @@ export default function RogueSoulGameScreen() {
             <View style={styles.titleSignBoard}>
             <View style={styles.titleRivetLeft} />
             <View style={styles.titleRivetRight} />
-            <Text style={styles.titleTextMain}>ROGUE SOUL</Text>
+            <Text style={styles.titleTextMain}>ROBO ADVENTURER</Text>
             <View style={styles.titleBadgeTwo}>
-              <Text style={styles.titleBadgeTwoText}>II</Text>
+              <Text style={styles.titleBadgeTwoText}>RUNNER</Text>
             </View>
             </View>
           </View>
@@ -1566,12 +1783,6 @@ export default function RogueSoulGameScreen() {
             </View>
           )}
 
-          {/* DESKTOP KEYBOARD CONTROLS GUIDE HINT */}
-          <View style={styles.keyboardGuideBar}>
-            <Text style={styles.keyboardGuideText}>
-              ⌨️ <Text style={{ color: "#FEF08A" }}>KEYBOARD:</Text> [A/D] Lari • [W/Space] Lompat/Wall Jump • [S] Meluncur • [J] Tebas • [K] Lempar Pisau
-            </Text>
-          </View>
 
           {/* ON-SCREEN VIRTUAL CONTROLS FOR MOBILE / TOUCH */}
           <View style={styles.virtualTouchOverlay}>
@@ -1598,130 +1809,143 @@ export default function RogueSoulGameScreen() {
             <View style={styles.actionGroup}>
               <Pressable style={[styles.touchBtn, { backgroundColor: "#0284C7" }]} onPress={() => engineRef.current?.handleJump()}>
                 <Ionicons name="arrow-up" size={18} color="#FFF" />
-                <Text style={styles.touchBtnLabel}>JUMP (W)</Text>
+                <Text style={styles.touchBtnLabel}>LOMPAT</Text>
               </Pressable>
 
               <Pressable style={[styles.touchBtn, { backgroundColor: "#B45309" }]} onPress={() => engineRef.current?.handleSlide()}>
                 <Ionicons name="arrow-down" size={18} color="#FFF" />
-                <Text style={styles.touchBtnLabel}>SLIDE (S)</Text>
+                <Text style={styles.touchBtnLabel}>MELUNCUR</Text>
               </Pressable>
 
               <Pressable style={[styles.touchBtn, { backgroundColor: "#DC2626" }]} onPress={() => engineRef.current?.handleSlash()}>
                 <MaterialCommunityIcons name="sword" size={18} color="#FFF" />
-                <Text style={styles.touchBtnLabel}>SLASH (J)</Text>
+                <Text style={styles.touchBtnLabel}>TEBAS</Text>
               </Pressable>
 
               <Pressable style={[styles.touchBtn, { backgroundColor: "#7C3AED" }]} onPress={() => engineRef.current?.handleThrowDagger()}>
                 <Ionicons name="send" size={16} color="#FFF" />
-                <Text style={styles.touchBtnLabel}>DAGGER (K)</Text>
+                <Text style={styles.touchBtnLabel}>PISAU</Text>
               </Pressable>
             </View>
           </View>
 
-          {/* VICTORY MODAL */}
-          {gameResult === "victory" && (
-            <View style={styles.resultsOverlay}>
-              <View style={styles.resultBox}>
-                <Ionicons name="trophy" size={56} color="#F59E0B" />
-                <Text style={styles.resultTitleText}>MISI SELESAI!</Text>
+          {/* TWO-COLUMN RESULTS MODAL (VICTORY & DEFEAT WITH RADAR CHART) */}
+          {(gameResult === "victory" || gameResult === "defeat") && (() => {
+            const isWin = gameResult === "victory";
+            const totalCoinsEarned = resultStats.coins + resultStats.maxCombo * 5;
+            const radarScores = {
+              spasial: Math.min(100, Math.max(65, 75 + Math.round(resultStats.distance / 10))),
+              keputusan: Math.min(100, Math.max(60, 78 + resultStats.enemies * 3)),
+              kontrolDiri: Math.min(100, Math.max(55, isWin ? 92 : 72)),
+              memori: Math.min(100, Math.max(65, 80 + Math.floor(resultStats.coins / 15))),
+              fokus: Math.min(100, Math.max(60, 74 + resultStats.maxCombo * 4)),
+            };
 
-                <View style={styles.starsRow}>
-                  {[1, 2, 3].map((s) => (
-                    <Ionicons
-                      key={s}
-                      name={s <= resultStats.stars ? "star" : "star-outline"}
-                      size={32}
-                      color="#F59E0B"
-                    />
-                  ))}
-                </View>
+            return (
+              <View style={styles.resultsOverlay}>
+                <ScrollView contentContainerStyle={styles.resultsScrollContent} showsVerticalScrollIndicator={false}>
+                  <View style={[styles.resultBoxContainer, { borderColor: isWin ? "#F59E0B" : "#EF4444" }]}>
+                    {/* HEADER TITLE */}
+                    <View style={styles.modalHeaderSec}>
+                      <Text style={[styles.modalSubBadge, { backgroundColor: isWin ? "#D97706" : "#EF4444" }]}>
+                        {isWin ? "MISSION ACCOMPLISHED" : "MISSION FAILED"}
+                      </Text>
+                      <Text style={[styles.modalMainTitle, { color: isWin ? "#FBBF24" : "#F87171" }]}>
+                        {isWin ? `ROBOT BERHASIL! LEVEL ${selectedLevel.id}` : `ROBOT TERHENTI! LEVEL ${selectedLevel.id}`}
+                      </Text>
+                      <Text style={styles.modalSubTitle}>
+                        {isWin ? "Robot Berhasil Menyelesaikan Misi Tepat Waktu" : "Robot Terkena Rintangan / Jatuh Ke Jurang"}
+                      </Text>
+                    </View>
 
-                <Text style={styles.resultStatLine}>Statistik Misi:</Text>
-                <View style={styles.statsGrid}>
-                  <View style={styles.statCell}>
-                    <Text style={[styles.statValue, { color: "#F59E0B" }]}>+{resultStats.coins}</Text>
-                    <Text style={styles.statLabel}>Koin</Text>
-                  </View>
-                  <View style={styles.statCell}>
-                    <Text style={[styles.statValue, { color: "#EC4899" }]}>+{resultStats.gems}</Text>
-                    <Text style={styles.statLabel}>Permata</Text>
-                  </View>
-                  <View style={styles.statCell}>
-                    <Text style={[styles.statValue, { color: "#38BDF8" }]}>{resultStats.score}</Text>
-                    <Text style={styles.statLabel}>Skor</Text>
-                  </View>
-                  <View style={styles.statCell}>
-                    <Text style={[styles.statValue, { color: "#10B981" }]}>{resultStats.distance}m</Text>
-                    <Text style={styles.statLabel}>Jarak</Text>
-                  </View>
-                  <View style={styles.statCell}>
-                    <Text style={[styles.statValue, { color: "#EF4444" }]}>{resultStats.enemies}</Text>
-                    <Text style={styles.statLabel}>Musuh</Text>
-                  </View>
-                  <View style={styles.statCell}>
-                    <Text style={[styles.statValue, { color: "#A855F7" }]}>{resultStats.maxCombo}x</Text>
-                    <Text style={styles.statLabel}>Kombo</Text>
-                  </View>
-                  <View style={styles.statCell}>
-                    <Text style={[styles.statValue, { color: "#CBD5E1" }]}>{resultStats.time}s</Text>
-                    <Text style={styles.statLabel}>Waktu</Text>
-                  </View>
-                </View>
+                    {/* TWO COLUMNS CONTENT BODY */}
+                    <View style={styles.modalBodyTwoCols}>
+                      {/* LEFT COLUMN: PENCAPAIAN MISI */}
+                      <View style={styles.leftPencapaianCard}>
+                        <Text style={styles.colSectionHeader}>PENCAPAIAN MISI</Text>
 
-                <View style={styles.resultButtonsRow}>
-                  <Pressable style={styles.resultBtn} onPress={() => startLevelSession(selectedLevel)}>
-                    <Text style={styles.resultBtnText}>ULANGI</Text>
-                  </Pressable>
-                  <Pressable style={[styles.resultBtn, { backgroundColor: "#10B981" }]} onPress={() => setViewState("menu")}>
-                    <Text style={styles.resultBtnText}>MENU</Text>
-                  </Pressable>
-                </View>
+                        <View style={styles.starsRowNew}>
+                          {[1, 2, 3].map((s) => (
+                            <Ionicons
+                              key={s}
+                              name={s <= (isWin ? resultStats.stars : 1) ? "star" : "star-outline"}
+                              size={26}
+                              color="#F59E0B"
+                            />
+                          ))}
+                        </View>
+
+                        <View style={styles.bulletListSec}>
+                          <Text style={styles.bulletItemText}>
+                            ⭐ Item Disortir Tepat: <Text style={{ color: "#34D399", fontWeight: "bold" }}>
+                              {resultStats.enemies > 0 ? `${resultStats.enemies} Musuh Diatasi` : `${Math.max(1, Math.floor(resultStats.coins / 10))} Buah Segar`}
+                            </Text>
+                          </Text>
+                          <Text style={styles.bulletItemText}>
+                            ⭐ Akurasi Rintangan: <Text style={{ color: isWin ? "#38BDF8" : "#F87171", fontWeight: "bold" }}>
+                              {isWin ? "Akurasi Sempurna!" : "Terkena Luka Rintangan"}
+                            </Text>
+                          </Text>
+                          <Text style={styles.bulletItemText}>
+                            ⭐ Bonus Waktu Sisa: <Text style={{ color: "#FACC15", fontWeight: "bold" }}>+{resultStats.time}s</Text>
+                          </Text>
+                        </View>
+
+                        <View style={styles.colDividerLine} />
+
+                        <View style={styles.lootRowLine}>
+                          <Text style={styles.lootLabelText}>Loot Koin Terkumpul:</Text>
+                          <Text style={styles.lootValText}>+{resultStats.coins} Koin</Text>
+                        </View>
+                        <View style={styles.lootRowLine}>
+                          <Text style={styles.lootLabelText}>Bonus Akurasi Combo:</Text>
+                          <Text style={styles.lootValText}>+{resultStats.maxCombo * 5} Koin</Text>
+                        </View>
+
+                        <View style={styles.totalCoinsHighlightBox}>
+                          <Text style={styles.totalCoinsBoxLabel}>TOTAL SOULONS / KOIN:</Text>
+                          <Text style={styles.totalCoinsBoxVal}>{totalCoinsEarned} KOIN</Text>
+                        </View>
+                      </View>
+
+                      {/* RIGHT COLUMN: ANALISIS PERKEMBANGAN OTAK & RADAR CHART */}
+                      <View style={styles.rightRadarCard}>
+                        <Text style={styles.colSectionHeader}>🧠 Analisis Perkembangan Otak</Text>
+                        <Text style={styles.radarSubHeader}>Prefrontal Cortex & Kontrol Emosi</Text>
+
+                        <View style={styles.radarChartCanvasWrap}>
+                          <RogueSoulRadarChart scores={radarScores} />
+                        </View>
+                      </View>
+                    </View>
+
+                    {/* BOTTOM ACTION BUTTONS */}
+                    <View style={styles.resultActionsRowNew}>
+                      <Pressable style={styles.btnMenuPill} onPress={() => setViewState("menu")}>
+                        <Text style={styles.btnMenuPillText}>Kembali Ke Peta Utama</Text>
+                      </Pressable>
+
+                      <Pressable
+                        style={[styles.btnRetryPill, { backgroundColor: isWin ? "#10B981" : "#DC2626" }]}
+                        onPress={() => startLevelSession(selectedLevel)}
+                      >
+                        <Ionicons name="refresh" size={18} color="#FFF" style={{ marginRight: 6 }} />
+                        <Text style={styles.btnRetryPillText}>
+                          {isWin ? "Lanjut Level Berikutnya" : "COBA LAGI (Ulangi Level)"}
+                        </Text>
+                      </Pressable>
+                    </View>
+                  </View>
+                </ScrollView>
               </View>
-            </View>
-          )}
+            );
+          })()}
+        </View>
+      )}
 
-          {/* DEFEAT MODAL */}
-          {gameResult === "defeat" && (
-            <View style={styles.resultsOverlay}>
-              <View style={[styles.resultBox, { borderColor: "#EF4444" }]}>
-                <Ionicons name="skull" size={56} color="#EF4444" />
-                <Text style={[styles.resultTitleText, { color: "#EF4444" }]}>KAMU GUGUR!</Text>
-
-                <Text style={styles.resultStatLine}>Statistik Misi:</Text>
-                <View style={styles.statsGrid}>
-                  <View style={styles.statCell}>
-                    <Text style={[styles.statValue, { color: "#F59E0B" }]}>+{resultStats.coins}</Text>
-                    <Text style={styles.statLabel}>Koin</Text>
-                  </View>
-                  <View style={styles.statCell}>
-                    <Text style={[styles.statValue, { color: "#10B981" }]}>{resultStats.distance}m</Text>
-                    <Text style={styles.statLabel}>Jarak</Text>
-                  </View>
-                  <View style={styles.statCell}>
-                    <Text style={[styles.statValue, { color: "#38BDF8" }]}>{resultStats.score}</Text>
-                    <Text style={styles.statLabel}>Skor</Text>
-                  </View>
-                  <View style={styles.statCell}>
-                    <Text style={[styles.statValue, { color: "#EF4444" }]}>{resultStats.enemies}</Text>
-                    <Text style={styles.statLabel}>Musuh</Text>
-                  </View>
-                  <View style={styles.statCell}>
-                    <Text style={[styles.statValue, { color: "#CBD5E1" }]}>{resultStats.time}s</Text>
-                    <Text style={styles.statLabel}>Waktu</Text>
-                  </View>
-                </View>
-
-                <View style={styles.resultButtonsRow}>
-                  <Pressable style={[styles.resultBtn, { backgroundColor: "#EF4444" }]} onPress={() => startLevelSession(selectedLevel)}>
-                    <Text style={styles.resultBtnText}>COBA LAGI</Text>
-                  </Pressable>
-                  <Pressable style={styles.resultBtn} onPress={() => setViewState("menu")}>
-                    <Text style={styles.resultBtnText}>MENU</Text>
-                  </Pressable>
-                </View>
-              </View>
-            </View>
-          )}
+      {rotatePrompt && (
+        <View style={styles.rotateOverlay}>
+          <MaterialCommunityIcons name="rotate-orbit" size={56} color="#F59E0B" />
         </View>
       )}
 
@@ -1730,7 +1954,7 @@ export default function RogueSoulGameScreen() {
           <MaterialCommunityIcons name="rotate-orbit" size={56} color="#F59E0B" />
           <Text style={styles.rotateTitle}>Putar HP ke LANDSCAPE</Text>
           <Text style={styles.rotateDesc}>
-            Rogue Soul adalah game aksi 2D. Miringkan HP-mu ke posisi mendatar untuk pengalaman terbaik.
+            Robo Adventurer adalah game petualangan aksi 2D. Miringkan HP-mu ke posisi mendatar untuk pengalaman terbaik.
           </Text>
           <Pressable
             style={styles.rotateBtn}
@@ -1759,7 +1983,7 @@ export default function RogueSoulGameScreen() {
       <HowToPlayModal
         visible={showHelp}
         onClose={() => setShowHelp(false)}
-        title="Cara Main Rogue Soul"
+        title="Cara Main Robo Adventurer"
         goal="Lari, lompat, dan bertarung sepanjang level sambil mengumpulkan koin dan permata!"
         accentColor="#7C3AED"
         subtitleColor="#6D28D9"
@@ -1779,6 +2003,11 @@ export default function RogueSoulGameScreen() {
 }
 
 const styles = StyleSheet.create({
+  resultsScrollContent: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+  },
   container: {
     flex: 1,
     backgroundColor: "#0F172A",
@@ -2343,14 +2572,15 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 14,
     left: "50%",
-    transform: [{ translateX: -200 }],
-    width: 400,
-    backgroundColor: "rgba(15, 23, 42, 0.75)",
+    transform: [{ translateX: -270 }],
+    width: 540,
+    maxWidth: "92%",
+    backgroundColor: "rgba(15, 23, 42, 0.85)",
     borderWidth: 1,
     borderColor: "rgba(245, 158, 11, 0.4)",
     borderRadius: 20,
-    paddingVertical: 5,
-    paddingHorizontal: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 14,
     alignItems: "center",
     justifyContent: "center",
     zIndex: 10,
@@ -2360,6 +2590,179 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "800",
     textAlign: "center",
+  },
+  resultBoxContainer: {
+    width: "92%",
+    maxWidth: 680,
+    backgroundColor: "#0B1528",
+    borderWidth: 2,
+    borderColor: "#00E5FF",
+    borderRadius: 20,
+    padding: 16,
+    alignItems: "center",
+    shadowColor: "#00E5FF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+  },
+  modalHeaderSec: {
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  modalSubBadge: {
+    color: "#FFFFFF",
+    fontSize: 9,
+    fontWeight: "900",
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    borderRadius: 10,
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  modalMainTitle: {
+    fontSize: 20,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+  },
+  modalSubTitle: {
+    color: "#94A3B8",
+    fontSize: 11,
+    fontWeight: "600",
+    marginTop: 2,
+  },
+  modalBodyTwoCols: {
+    flexDirection: "row",
+    gap: 12,
+    width: "100%",
+    marginBottom: 14,
+  },
+  leftPencapaianCard: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.75)",
+    borderWidth: 1,
+    borderColor: "rgba(0, 229, 255, 0.25)",
+    borderRadius: 14,
+    padding: 12,
+  },
+  rightRadarCard: {
+    flex: 1,
+    backgroundColor: "rgba(15, 23, 42, 0.75)",
+    borderWidth: 1,
+    borderColor: "rgba(168, 85, 247, 0.3)",
+    borderRadius: 14,
+    padding: 12,
+    alignItems: "center",
+  },
+  colSectionHeader: {
+    color: "#38BDF8",
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: 0.5,
+    marginBottom: 6,
+    textAlign: "center",
+  },
+  starsRowNew: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 6,
+    marginVertical: 4,
+  },
+  bulletListSec: {
+    gap: 4,
+    marginVertical: 6,
+  },
+  bulletItemText: {
+    color: "#CBD5E1",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  colDividerLine: {
+    height: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
+    marginVertical: 8,
+  },
+  lootRowLine: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 3,
+  },
+  lootLabelText: {
+    color: "#94A3B8",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  lootValText: {
+    color: "#FACC15",
+    fontSize: 10,
+    fontWeight: "800",
+  },
+  totalCoinsHighlightBox: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "rgba(245, 158, 11, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(245, 158, 11, 0.4)",
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    marginTop: 8,
+  },
+  totalCoinsBoxLabel: {
+    color: "#38BDF8",
+    fontSize: 10,
+    fontWeight: "900",
+  },
+  totalCoinsBoxVal: {
+    color: "#FACC15",
+    fontSize: 12,
+    fontWeight: "900",
+  },
+  radarSubHeader: {
+    color: "#94A3B8",
+    fontSize: 9,
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  radarChartCanvasWrap: {
+    width: "100%",
+    height: 180,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  resultActionsRowNew: {
+    flexDirection: "row",
+    gap: 12,
+    width: "100%",
+  },
+  btnMenuPill: {
+    flex: 1,
+    backgroundColor: "#1E293B",
+    borderWidth: 1,
+    borderColor: "#334155",
+    paddingVertical: 10,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  btnMenuPillText: {
+    color: "#CBD5E1",
+    fontSize: 12,
+    fontWeight: "800",
+  },
+  btnRetryPill: {
+    flex: 1,
+    flexDirection: "row",
+    paddingVertical: 10,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 4,
+  },
+  btnRetryPillText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "900",
   },
   rotateOverlay: {
     position: "absolute",

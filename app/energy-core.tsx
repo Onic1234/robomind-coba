@@ -795,14 +795,14 @@ export default function EnergyCoreScreen() {
                 style={({ pressed }) => [styles.backToMapBtn, pressed && styles.btnPressed]}
                 onPress={() => router.back()}
               >
-                <Text style={styles.backToMapText}>[ Kembali Ke Menu Utama ]</Text>
+                <Text style={styles.backToMapText}>Kembali Ke Menu Utama</Text>
               </Pressable>
 
               <Pressable
                 style={({ pressed }) => [styles.continueBtn, pressed && styles.btnPressed]}
                 onPress={handleNextLevel}
               >
-                <Text style={styles.continueText}>[ CONTINUE (Lanjut Level) → ]</Text>
+                <Text style={styles.continueText}>Lanjut Level ➔</Text>
               </Pressable>
             </View>
           </View>

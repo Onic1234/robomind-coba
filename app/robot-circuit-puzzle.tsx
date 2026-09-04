@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import {
-  StyleSheet,
+import { ScrollView, StyleSheet,
   View,
   Text,
   Pressable,
@@ -971,14 +970,14 @@ export default function RobotCircuitPuzzleScreen() {
                 style={({ pressed }) => [styles.backToMapBtn, pressed && styles.btnPressed]}
                 onPress={() => router.back()}
               >
-                <Text style={styles.backToMapText}>[ Kembali Ke Menu Utama ]</Text>
+                <Text style={styles.backToMapText}>Kembali Ke Menu Utama</Text>
               </Pressable>
 
               <Pressable
                 style={({ pressed }) => [styles.continueBtn, pressed && styles.btnPressed]}
                 onPress={handleVictoryNext}
               >
-                <Text style={styles.continueText}>[ CONTINUE (Lanjut Level) → ]</Text>
+                <Text style={styles.continueText}>Lanjut Level ➔</Text>
               </Pressable>
             </View>
           </View>

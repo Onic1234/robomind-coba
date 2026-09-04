@@ -1277,74 +1277,96 @@
       return mz;
     }
 
-    // Gambar satu platform poligon + dinding lavender TINGGI di semua tepi luar
-    // Urutan: dinding belakang → lantai putih → dinding depan
+    // Cari z tertinggi platform di bawah titik (x,y)
+    function maxZAt(x, y, ignorePlat) {
+      let mz = 0;
+      for (const pl of MAZE_PLATFORMS) {
+        if (pl === ignorePlat) continue;
+        if (pl.z < ignorePlat.z && pl.z > mz && pointInPoly(pl.pts, x, y)) {
+          mz = pl.z;
+        }
+      }
+      return mz;
+    }
+
+    // Gambar platform Arsitektural Sleek 3D (Lantai Putih + Step Riser Lavender Soft)
     function drawPlatform(plat) {
       const pts = plat.pts.map(([x, y]) => P(x, y, plat.z));
       const n = pts.length;
 
-      // centroid layar
       let cx = 0, cy = 0;
       pts.forEach(p => { cx += p.x; cy += p.y; });
       cx /= n; cy /= n;
 
-      const wallPx = plat.wall * HEIGHT_STEP * scaleFactor;
+      // Bayangan lembut di bawah platform
+      ctx.save();
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.12)';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + (plat.z * 4 + 8) * scaleFactor, Math.max(Math.abs(pts[0].x - cx) * 1.3, 24), 9 * scaleFactor, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
 
-      // Analisa setiap tepi: front/back & apakah tertutup platform lebih tinggi
+      // Sisi kedalaman 3D step riser (ekstensi ke bawah presisi)
       const edges = [];
+      const riserHeight = Math.min(plat.z, 1.25) * 16 * scaleFactor;
+
       for (let i = 0; i < n; i++) {
+        const nextIdx = (i + 1) % n;
         const wAx = plat.pts[i][0], wAy = plat.pts[i][1];
-        const wBx = plat.pts[(i + 1) % n][0], wBy = plat.pts[(i + 1) % n][1];
-        // normal keluar dari centroid
+        const wBx = plat.pts[nextIdx][0], wBy = plat.pts[nextIdx][1];
+
+        const a = pts[i];
+        const b = pts[nextIdx];
+
         const mx = (wAx + wBx) / 2, my = (wAy + wBy) / 2;
         const gcx = plat.pts.reduce((s, p) => s + p[0], 0) / n;
         const gcy = plat.pts.reduce((s, p) => s + p[1], 0) / n;
         let nx = mx - gcx, ny = my - gcy;
         const nl = Math.hypot(nx, ny) || 1;
         nx /= nl; ny /= nl;
-        // probe sedikit di luar tepi
-        const px = mx + nx * 0.12, py = my + ny * 0.12;
-        const nz = maxZAt(px, py);
-        const isFront = (ny >= 0); // normal menghadap penonton (layar bawah)
-        edges.push({ i, isFront, skip: nz > plat.z, nz, a: pts[i], b: pts[(i + 1) % n] });
+
+        const px = mx + nx * 0.15, py = my + ny * 0.15;
+        const zBelow = maxZAt(px, py, plat);
+
+        if (plat.z > zBelow && plat.z > 0) {
+          const isFront = (ny >= 0);
+          const shade = isFront ? '#b4c6fd' : '#9db0f5';
+
+          edges.push({
+            isFront,
+            draw: () => {
+              ctx.beginPath();
+              ctx.moveTo(a.x, a.y);
+              ctx.lineTo(b.x, b.y);
+              ctx.lineTo(b.x, b.y + riserHeight);
+              ctx.lineTo(a.x, a.y + riserHeight);
+              ctx.closePath();
+              ctx.fillStyle = shade;
+              ctx.fill();
+              ctx.strokeStyle = '#000000';
+              ctx.lineWidth = 1.4 * scaleFactor;
+              ctx.stroke();
+            }
+          });
+        }
       }
 
-      // Fungsi gambar satu dinding
-      const drawWall = (e) => {
-        if (e.skip) return;
-        const a = e.a, b = e.b;
-        const shade = e.isFront ? '#a5b4fc' : '#c4b5fd';
-        ctx.beginPath();
-        ctx.moveTo(a.x, a.y);
-        ctx.lineTo(b.x, b.y);
-        ctx.lineTo(b.x, b.y - wallPx);
-        ctx.lineTo(a.x, a.y - wallPx);
-        ctx.closePath();
-        ctx.fillStyle = shade;
-        ctx.fill();
-        ctx.strokeStyle = '#4338ca';
-        ctx.lineWidth = 1.1 * scaleFactor;
-        ctx.stroke();
-      };
+      edges.filter(e => !e.isFront).forEach(e => e.draw());
+      edges.filter(e => e.isFront).forEach(e => e.draw());
 
-      // Dinding belakang dulu (di belakang lantai)
-      edges.filter(e => !e.isFront).forEach(drawWall);
-      // Lantai putih
-      fillPoly(pts, '#ffffff');
-      // Dinding depan (menghadap penonton)
-      edges.filter(e => e.isFront).forEach(drawWall);
-
-      // bayangan lembut di bawah platform
-      ctx.save();
-      ctx.globalAlpha = 0.07;
-      ctx.fillStyle = '#0f172a';
+      // Permukaan Walkway Putih Bersih di Atas
       ctx.beginPath();
-      ctx.ellipse(cx, cy + wallPx * 0.4, Math.max(Math.abs(pts[0].x - cx) * 1.3, 24), 9 * scaleFactor, 0, 0, Math.PI * 2);
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.closePath();
+      ctx.fillStyle = '#ffffff';
       ctx.fill();
-      ctx.restore();
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2 * scaleFactor;
+      ctx.stroke();
     }
 
-    // Tangga: setiap anak tangga = slab putih + riser lavender
+    // Tangga Arsitektural Putih + Garis Hitam
     function drawStairs() {
       if (!currentLevelData) return;
       const items = [];
@@ -1353,7 +1375,6 @@
         const dx = (st.x2 - st.x1) / n;
         const dy = (st.y2 - st.y1) / n;
         const dz = (st.z2 - st.z1) / n;
-        // arah tegak lurus (screen) untuk lebar anak tangga
         for (let i = 0; i < n; i++) {
           const x = st.x1 + dx * i;
           const y = st.y1 + dy * i;
@@ -1364,7 +1385,6 @@
           const a = P(x, y, z);
           const b = P(x2, y2, z2);
           const rise = (z2 - z) * HEIGHT_STEP * scaleFactor;
-          // lebar tangga tegak lurus arah
           const vx = b.x - a.x;
           const vy = b.y - a.y;
           const len = Math.hypot(vx, vy) || 1;
@@ -1372,19 +1392,20 @@
           const ny = vx / len * 6 * scaleFactor;
           const depth = 7 * scaleFactor;
           items.push({ d: (x + y) * 1000 + z, draw: () => {
-            // riser (sisi depan lavender)
+            // Riser depan lavender
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(b.x, b.y);
             ctx.lineTo(b.x, b.y - rise);
             ctx.lineTo(a.x, a.y - rise);
             ctx.closePath();
-            ctx.fillStyle = '#b3aef7';
+            ctx.fillStyle = '#9db0f5';
             ctx.fill();
-            ctx.strokeStyle = '#4338ca';
-            ctx.lineWidth = 1 * scaleFactor;
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 1.2 * scaleFactor;
             ctx.stroke();
-            // tread putih
+
+            // Anak tangga putih
             ctx.beginPath();
             ctx.moveTo(a.x + nx, a.y + ny - rise);
             ctx.lineTo(b.x + nx, b.y + ny - rise);
@@ -1393,8 +1414,8 @@
             ctx.closePath();
             ctx.fillStyle = '#ffffff';
             ctx.fill();
-            ctx.strokeStyle = '#334155';
-            ctx.lineWidth = 0.9 * scaleFactor;
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 1.2 * scaleFactor;
             ctx.stroke();
           }});
         }
@@ -1403,7 +1424,7 @@
       items.forEach(it => it.draw());
     }
 
-    // Jembatan lengkung biru kecil
+    // Jembatan Lengkung Arsitektural Biru/Indigo
     function drawBridges() {
       MAZE_BRIDGES.forEach(b => {
         const p1 = P(b.x1, b.y1, b.z);
@@ -1413,25 +1434,25 @@
         const dist = Math.hypot(p2.x - p1.x, p2.y - p1.y);
         const arch = Math.max(12, dist * 0.5) * scaleFactor;
 
-        // bayangan
-        ctx.strokeStyle = 'rgba(2,6,23,0.10)';
-        ctx.lineWidth = 4 * scaleFactor;
+        // Lengkungan bagian dalam (biru/indigo gelap)
+        ctx.strokeStyle = '#4338ca';
+        ctx.lineWidth = 5 * scaleFactor;
         ctx.lineCap = 'round';
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y + 3 * scaleFactor);
-        ctx.quadraticCurveTo(mx, my + arch + 3 * scaleFactor, p2.x, p2.y + 3 * scaleFactor);
+        ctx.quadraticCurveTo(mx, my + arch * 0.6, p2.x, p2.y + 3 * scaleFactor);
         ctx.stroke();
 
-        // badan biru
-        ctx.strokeStyle = '#7dd3fc';
-        ctx.lineWidth = 3.5 * scaleFactor;
+        // Jembatan atas putih
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 4 * scaleFactor;
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
         ctx.quadraticCurveTo(mx, my - arch, p2.x, p2.y);
         ctx.stroke();
 
-        // outline biru tipis
-        ctx.strokeStyle = '#0284c7';
+        // Outline subtle black line-art
+        ctx.strokeStyle = '#000000';
         ctx.lineWidth = 1.3 * scaleFactor;
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
@@ -1442,27 +1463,25 @@
       });
     }
 
-    // Taman: patch rumput hijau + pohon-pohon kecil
+    // Taman: patch rumput hijau + pohon-pohon arsitektural
     function drawGardens() {
       MAZE_GARDENS.forEach(g => {
         const p = P(g.x, g.y, g.z);
         const w = g.w * UNIT_X * scaleFactor;
         const h = g.h * UNIT_Y * scaleFactor;
 
-        // patch rumput (persegi panjang miring)
         ctx.beginPath();
         ctx.moveTo(p.x - w / 2, p.y - h / 2);
         ctx.lineTo(p.x, p.y - h / 2 + h / 2);
         ctx.lineTo(p.x + w / 2, p.y);
         ctx.lineTo(p.x, p.y + h / 2);
         ctx.closePath();
-        ctx.fillStyle = '#4ade80';
+        ctx.fillStyle = '#48bb78';
         ctx.fill();
-        ctx.strokeStyle = '#166534';
-        ctx.lineWidth = 1.2 * scaleFactor;
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1.5 * scaleFactor;
         ctx.stroke();
 
-        // pohon-pohon
         const spots = [
           { dx: -0.3, dy: -0.15 }, { dx: 0.25, dy: 0.15 },
           { dx: 0.0, dy: 0.25 }, { dx: -0.1, dy: -0.35 }, { dx: 0.3, dy: -0.25 }
@@ -1477,35 +1496,34 @@
 
     function drawTree(tx, ty) {
       const s = scaleFactor;
-      // batang
-      ctx.fillStyle = '#92400e';
-      ctx.fillRect(tx - 1.8 * s, ty - 7 * s, 3.6 * s, 7 * s);
-      // dedaunan
-      ctx.fillStyle = '#16a34a';
-      ctx.beginPath();
-      ctx.arc(tx - 3 * s, ty - 10 * s, 5 * s, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(tx + 3 * s, ty - 10 * s, 5 * s, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.fillStyle = '#78350f';
+      ctx.fillRect(tx - 1.5 * s, ty - 7 * s, 3 * s, 7 * s);
+
       ctx.fillStyle = '#22c55e';
       ctx.beginPath();
-      ctx.arc(tx, ty - 14 * s, 5.5 * s, 0, Math.PI * 2);
+      ctx.arc(tx - 2.5 * s, ty - 10 * s, 4.5 * s, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = '#14532d';
-      ctx.lineWidth = 1 * s;
+      ctx.beginPath();
+      ctx.arc(tx + 2.5 * s, ty - 10 * s, 4.5 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#4ade80';
+      ctx.beginPath();
+      ctx.arc(tx, ty - 14 * s, 5 * s, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1.2 * s;
       ctx.stroke();
     }
 
-    // Karakter kecil hitam-putih
     function drawMiniCharacter(cx, cy, s) {
-      ctx.fillStyle = 'rgba(0,0,0,0.16)';
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
       ctx.beginPath();
-      ctx.ellipse(cx, cy + 2 * s, 5 * s, 2 * s, 0, 0, Math.PI * 2);
+      ctx.ellipse(cx, cy + 2 * s, 4.5 * s, 2 * s, 0, 0, Math.PI * 2);
       ctx.fill();
+
       ctx.fillStyle = '#ffffff';
       ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 1.4 * s;
+      ctx.lineWidth = 1.5 * s;
       ctx.beginPath();
       ctx.arc(cx, cy - 11 * s, 3.8 * s, 0, Math.PI * 2);
       ctx.fill();
@@ -1514,78 +1532,121 @@
       ctx.roundRect(cx - 3.8 * s, cy - 7 * s, 7.6 * s, 6.5 * s, 2.2 * s);
       ctx.fill();
       ctx.stroke();
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 1.5 * s;
-      ctx.beginPath();
-      ctx.moveTo(cx - 2 * s, cy - 0.5 * s);
-      ctx.lineTo(cx - 2.4 * s, cy + 2.5 * s);
-      ctx.moveTo(cx + 2 * s, cy - 0.5 * s);
-      ctx.lineTo(cx + 2.4 * s, cy + 2.5 * s);
-      ctx.stroke();
     }
 
-    // Hadiah merah kecil (collectible) melayang
     function drawCollectible(c) {
       const p = P(c.x, c.y, c.z);
-      const floatY = Math.sin(Date.now() * 0.004 + c.x + c.y) * 2.5 * scaleFactor;
+      const floatY = Math.sin(Date.now() * 0.004 + c.x + c.y) * 3 * scaleFactor;
       const s = scaleFactor;
       const x = p.x;
       const y = p.y - 16 * s + floatY;
 
-      ctx.fillStyle = 'rgba(0,0,0,0.14)';
+      ctx.fillStyle = 'rgba(0,0,0,0.2)';
       ctx.beginPath();
       ctx.ellipse(p.x, p.y + 2 * s, 5.5 * s, 2.4 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.fillStyle = '#ef4444';
-      ctx.strokeStyle = '#7f1d1d';
-      ctx.lineWidth = 1.3 * s;
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1.4 * s;
       ctx.beginPath();
       ctx.roundRect(x - 5 * s, y - 5 * s, 10 * s, 9.5 * s, 2.5 * s);
       ctx.fill();
       ctx.stroke();
 
-      ctx.fillStyle = '#fca5a5';
+      ctx.fillStyle = '#fef08a';
       ctx.fillRect(x - 1.3 * s, y - 5 * s, 2.6 * s, 9.5 * s);
-      ctx.fillStyle = '#fecaca';
       ctx.fillRect(x - 5 * s, y - 1.6 * s, 10 * s, 3.2 * s);
+    }
 
-      ctx.fillStyle = '#f87171';
+    // Model Obstacle 3D Kualitas Tinggi (Pedestrian Sweeper / Traffic Cone)
+    function draw3DObstacleModel(x, y, obs) {
+      ctx.save();
+      const s = scaleFactor;
+      const walkBob = Math.abs(Math.sin(Date.now() * 0.012 + obs.t * 10)) * 4 * s;
+
+      // Bayangan Karakter / Obstacle
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
       ctx.beginPath();
-      ctx.arc(x, y - 5.5 * s, 2.4 * s, 0, Math.PI * 2);
+      ctx.ellipse(x, y + 2 * s, 8 * s, 3.5 * s, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.stroke();
+
+      if (obs.icon && (obs.icon.includes('🚧') || obs.icon.includes('🛑'))) {
+        ctx.fillStyle = '#f97316';
+        ctx.beginPath();
+        ctx.moveTo(x - 8 * s, y);
+        ctx.lineTo(x + 8 * s, y);
+        ctx.lineTo(x + 4 * s, y - 20 * s);
+        ctx.lineTo(x - 4 * s, y - 20 * s);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1.5 * s;
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x - 5 * s, y - 14 * s, 10 * s, 4 * s);
+
+        const flash = Math.sin(Date.now() * 0.015) > 0;
+        ctx.fillStyle = flash ? '#ef4444' : '#fee2e2';
+        ctx.beginPath();
+        ctx.arc(x, y - 22 * s, 3.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(x - 5 * s, y - 2 * s - walkBob, 3.2 * s, 4.5 * s);
+        ctx.fillRect(x + 2 * s, y - 2 * s + walkBob, 3.2 * s, 4.5 * s);
+
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.roundRect(x - 7 * s, y - 18 * s - walkBob, 14 * s, 14 * s, 4);
+        ctx.fill();
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1.5 * s;
+        ctx.stroke();
+
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(x - 7 * s, y - 12 * s - walkBob, 14 * s, 3 * s);
+
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath();
+        ctx.arc(x, y - 23 * s - walkBob, 5.5 * s, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 1.3 * s;
+        ctx.stroke();
+
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(x - 3 * s, y - 24 * s - walkBob, 6 * s, 2.5 * s);
+      }
+      ctx.restore();
     }
 
     /* ==========================================================================
        RENDER GAME — PAINTER'S ALGORITHM
        ========================================================================== */
     function renderGame() {
-      // Background putih
-      ctx.fillStyle = '#ffffff';
+      // Sky Horizon Background (Matching reference image diagonal split)
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      skyGrad.addColorStop(0, '#ffffff');
+      skyGrad.addColorStop(0.65, '#f0f9ff');
+      skyGrad.addColorStop(1, '#e0f2fe');
+      ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Ground biru-cyan melengkung di bawah
-      const gh = canvas.height;
-      const gw = canvas.width;
-      ctx.fillStyle = '#cfeefb';
+      // Diagonal Sky Blue Horizon Cut at Bottom
+      ctx.fillStyle = '#7dd3fc';
       ctx.beginPath();
-      ctx.ellipse(gw * 0.5, gh * 0.9, gw * 0.6, gh * 0.11, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#a7e0fb';
-      ctx.beginPath();
-      ctx.ellipse(gw * 0.5, gh * 0.94, gw * 0.52, gh * 0.08, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // bayangan lembut di bawah maze
-      ctx.fillStyle = 'rgba(30, 41, 59, 0.07)';
-      ctx.beginPath();
-      ctx.ellipse(canvas.width / 2, canvas.height * 0.7, canvas.width * 0.4, canvas.height * 0.09, 0, 0, Math.PI * 2);
+      ctx.moveTo(0, canvas.height * 0.78);
+      ctx.lineTo(canvas.width, canvas.height * 0.68);
+      ctx.lineTo(canvas.width, canvas.height);
+      ctx.lineTo(0, canvas.height);
+      ctx.closePath();
       ctx.fill();
 
       if (!currentLevelData) return;
 
-      // 1. Platform poligon — urut painter: (x+y) primer, z sebagai tiebreak
+      // 1. Platform poligon arsitektural (urut painter: x+y, z tiebreak)
       const platforms = [...MAZE_PLATFORMS].sort((a, b) => {
         const ka = a.pts.reduce((s, p) => s + p[0] + p[1], 0) / a.pts.length;
         const kb = b.pts.reduce((s, p) => s + p[0] + p[1], 0) / b.pts.length;
@@ -1593,7 +1654,7 @@
       });
       platforms.forEach(plat => drawPlatform(plat));
 
-      // 2. Tangga (sudah urut per langkah)
+      // 2. Tangga
       drawStairs();
 
       // 3. Jembatan biru
@@ -1602,30 +1663,39 @@
       // 4. Taman & pohon
       drawGardens();
 
-      // 5. Karakter kecil statis
+      // 5. Karakter kecil
       MAZE_CHARACTERS.forEach(c => {
         const p = P(c.x, c.y, c.z);
         drawMiniCharacter(p.x, p.y, scaleFactor);
       });
 
-      // 6. Collectibles hadiah merah
+      // 6. Collectibles
       MAZE_COLLECTIBLES.forEach(c => drawCollectible(c));
 
-      // 7. Edge path lines
-      ctx.lineWidth = 3 * scaleFactor;
-      ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+      // 7. Track Jalur Node
       currentLevelData.edges.forEach(edge => {
         const n1 = currentLevelData.nodes.find(n => n.id === edge[0]);
         const n2 = currentLevelData.nodes.find(n => n.id === edge[1]);
         const p1 = P(n1.x, n1.y, n1.z);
         const p2 = P(n2.x, n2.y, n2.z);
+
+        ctx.strokeStyle = 'rgba(15, 23, 42, 0.20)';
+        ctx.lineWidth = 2 * scaleFactor;
         ctx.beginPath();
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
         ctx.stroke();
+
+        const pulseT = ((Date.now() * 0.0018) % 1);
+        const px = p1.x + (p2.x - p1.x) * pulseT;
+        const py = p1.y + (p2.y - p1.y) * pulseT;
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.arc(px, py, 2.2 * scaleFactor, 0, Math.PI * 2);
+        ctx.fill();
       });
 
-      // 8. Waypoint nodes
+      // 8. Waypoint Nodes Presisi
       currentLevelData.nodes.forEach(node => {
         const p = P(node.x, node.y, node.z);
         const isCurrent = (robotState.currentNodeId === node.id);
@@ -1633,24 +1703,50 @@
         const isHovered = (hoveredNodeId === node.id);
 
         ctx.save();
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, (isHovered ? 11 : 8) * scaleFactor, 0, Math.PI * 2);
+        if (isHovered || isConnected) {
+          const pulse = Math.sin(Date.now() * 0.008 + node.id) * 2 * scaleFactor;
+          ctx.fillStyle = isHovered ? 'rgba(250, 204, 21, 0.4)' : 'rgba(56, 189, 248, 0.3)';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, (12 * scaleFactor) + pulse, 0, Math.PI * 2);
+          ctx.fill();
+        }
 
-        if (node.isPortal || isCurrent) {
-          ctx.fillStyle = '#8b5cf6';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, (isHovered ? 10 : isConnected ? 8 : 6) * scaleFactor, 0, Math.PI * 2);
+
+        if (isCurrent) {
+          ctx.fillStyle = '#38bdf8';
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 2 * scaleFactor;
+        } else if (isHovered) {
+          ctx.fillStyle = '#facc15';
           ctx.strokeStyle = '#000000';
           ctx.lineWidth = 2 * scaleFactor;
         } else if (isConnected) {
-          ctx.fillStyle = isHovered ? '#facc15' : '#ffffff';
+          ctx.fillStyle = '#ffffff';
           ctx.strokeStyle = '#000000';
-          ctx.lineWidth = 1.6 * scaleFactor;
+          ctx.lineWidth = 1.8 * scaleFactor;
         } else {
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-          ctx.strokeStyle = '#94a3b8';
-          ctx.lineWidth = 0.9 * scaleFactor;
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+          ctx.strokeStyle = '#64748b';
+          ctx.lineWidth = 1.2 * scaleFactor;
         }
         ctx.fill();
         ctx.stroke();
+
+        if (isHovered) {
+          ctx.fillStyle = '#facc15';
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y - 18 * scaleFactor);
+          ctx.lineTo(p.x - 5 * scaleFactor, p.y - 25 * scaleFactor);
+          ctx.lineTo(p.x + 5 * scaleFactor, p.y - 25 * scaleFactor);
+          ctx.closePath();
+          ctx.fill();
+          ctx.strokeStyle = '#000000';
+          ctx.lineWidth = 1 * scaleFactor;
+          ctx.stroke();
+        }
+
         ctx.restore();
       });
 
@@ -1659,7 +1755,8 @@
         const node = currentLevelData.nodes.find(n => n.id === station.nodeId);
         const p = P(node.x, node.y, node.z);
         const floatY = Math.sin(Date.now() * 0.005 + node.id) * 3 * scaleFactor;
-        ctx.font = `${Math.round(20 * scaleFactor)}px sans-serif`;
+
+        ctx.font = `${Math.round(22 * scaleFactor)}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.fillText(station.food.icon, p.x, p.y - 12 * scaleFactor + floatY);
       });
@@ -1682,7 +1779,7 @@
         }
       });
 
-      // 11. Obstacles
+      // 11. Obstacles (Dashed Danger Trail + Pulsing Red Ring)
       currentLevelData.obstacles.forEach(obs => {
         const fromN = currentLevelData.nodes.find(n => n.id === obs.path[obs.currentIndex]);
         const toN = currentLevelData.nodes.find(n => n.id === obs.path[obs.targetIndex]);
@@ -1690,41 +1787,66 @@
         const p2 = P(toN.x, toN.y, toN.z);
         const ox = p1.x + (p2.x - p1.x) * obs.t;
         const oy = p1.y + (p2.y - p1.y) * obs.t;
-        ctx.font = `${Math.round(22 * scaleFactor)}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.fillText(obs.icon, ox, oy - 10 * scaleFactor);
+
+        ctx.save();
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+        ctx.lineWidth = 2.5 * scaleFactor;
+        ctx.setLineDash([4 * scaleFactor, 4 * scaleFactor]);
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.save();
+        const hazardPulse = Math.sin(Date.now() * 0.01) * 2 * scaleFactor;
+        const ringRadius = (14 * scaleFactor) + hazardPulse;
+        
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.22)';
+        ctx.beginPath();
+        ctx.ellipse(ox, oy + 3 * scaleFactor, ringRadius, ringRadius * 0.55, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 1.5 * scaleFactor;
+        ctx.beginPath();
+        ctx.ellipse(ox, oy + 3 * scaleFactor, ringRadius, ringRadius * 0.55, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+
+        draw3DObstacleModel(ox, oy, obs);
       });
 
       // 12. Player robot
       drawRobotPlayer(robotState.x, robotState.y, robotState.z);
 
-      // 13. Bump animation
+      // 13. Animasi Tabrakan (Bump)
       if (robotState.bumpAnim > 0) {
         robotState.bumpAnim--;
-        ctx.font = `bold 20px sans-serif`;
+        ctx.font = `bold 22px sans-serif`;
         ctx.fillStyle = '#ef4444';
         ctx.textAlign = 'center';
-        ctx.fillText('💥 BUMP!', robotState.x, robotState.y - 42 * scaleFactor);
+        ctx.fillText('💥 BUMP!', robotState.x, robotState.y - 44 * scaleFactor);
       }
     }
 
     function drawThoughtBubble(x, y, icon) {
       ctx.save();
       ctx.fillStyle = '#ffffff';
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 1.6 * scaleFactor;
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 1.8 * scaleFactor;
 
       ctx.beginPath();
-      ctx.arc(x, y, 12 * scaleFactor, 0, Math.PI * 2);
+      ctx.arc(x, y, 13 * scaleFactor, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
       ctx.beginPath();
-      ctx.arc(x - 8 * scaleFactor, y + 10 * scaleFactor, 3 * scaleFactor, 0, Math.PI * 2);
+      ctx.arc(x - 8 * scaleFactor, y + 11 * scaleFactor, 3.2 * scaleFactor, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
-      ctx.font = `${Math.round(12 * scaleFactor)}px sans-serif`;
+      ctx.font = `${Math.round(13 * scaleFactor)}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(icon, x, y);
@@ -1733,55 +1855,94 @@
 
     function drawRobotPlayer(x, y, z) {
       ctx.save();
-      const floatHover = Math.sin(Date.now() * 0.008) * 2 * scaleFactor;
+      const floatHover = Math.sin(Date.now() * 0.008) * 3 * scaleFactor;
+      const s = scaleFactor;
 
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+      // Bayangan Robot
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
       ctx.beginPath();
-      ctx.ellipse(x, y, 12 * scaleFactor, 6 * scaleFactor, 0, 0, Math.PI * 2);
+      ctx.ellipse(x, y + 2 * s, 14 * s, 6 * s, 0, 0, Math.PI * 2);
       ctx.fill();
 
+      // Thruster Glow di bawah robot
+      const glowGrad = ctx.createRadialGradient(x, y - 4 * s + floatHover, 1 * s, x, y - 4 * s + floatHover, 10 * s);
+      glowGrad.addColorStop(0, 'rgba(56, 189, 248, 0.8)');
+      glowGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+      ctx.fillStyle = glowGrad;
+      ctx.beginPath();
+      ctx.ellipse(x, y - 4 * s + floatHover, 10 * s, 5 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Badan Gradient Metalik 3D
+      const bodyGrad = ctx.createLinearGradient(x - 12 * s, y - 35 * s, x + 12 * s, y - 10 * s);
+      bodyGrad.addColorStop(0, '#38bdf8');
+      bodyGrad.addColorStop(0.5, '#0284c7');
+      bodyGrad.addColorStop(1, '#0369a1');
+
+      // Kepala Robot
+      ctx.fillStyle = bodyGrad;
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2 * s;
+      ctx.beginPath();
+      ctx.roundRect(x - 11 * s, y - 35 * s + floatHover, 22 * s, 16 * s, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      // Visor Layar Cyan
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.roundRect(x - 8 * s, y - 32 * s + floatHover, 16 * s, 9 * s, 3);
+      ctx.fill();
+
+      // Mata LED Visor
       ctx.fillStyle = '#38bdf8';
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 2 * scaleFactor;
       ctx.beginPath();
-      ctx.roundRect(x - 10 * scaleFactor, y - 31 * scaleFactor + floatHover, 20 * scaleFactor, 15 * scaleFactor, 5);
+      ctx.arc(x - 4 * s, y - 27.5 * s + floatHover, 2.5 * s, 0, Math.PI * 2);
+      ctx.arc(x + 4 * s, y - 27.5 * s + floatHover, 2.5 * s, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Badan Robot
+      ctx.fillStyle = '#f8fafc';
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 2 * s;
+      ctx.beginPath();
+      ctx.roundRect(x - 9.5 * s, y - 17 * s + floatHover, 19 * s, 14 * s, 5);
       ctx.fill();
       ctx.stroke();
 
-      ctx.fillStyle = '#ffffff';
+      // Core Badge Dada
+      ctx.fillStyle = '#38bdf8';
       ctx.beginPath();
-      ctx.arc(x - 4 * scaleFactor, y - 24 * scaleFactor + floatHover, 2.6 * scaleFactor, 0, Math.PI * 2);
-      ctx.arc(x + 4 * scaleFactor, y - 24 * scaleFactor + floatHover, 2.6 * scaleFactor, 0, Math.PI * 2);
+      ctx.arc(x, y - 10 * s + floatHover, 3 * s, 0, Math.PI * 2);
       ctx.fill();
 
-      ctx.fillStyle = '#000000';
+      // Antena Lampu Beacon
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 1.5 * s;
       ctx.beginPath();
-      ctx.arc(x - 3.6 * scaleFactor, y - 24 * scaleFactor + floatHover, 1.4 * scaleFactor, 0, Math.PI * 2);
-      ctx.arc(x + 4.4 * scaleFactor, y - 24 * scaleFactor + floatHover, 1.4 * scaleFactor, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.roundRect(x - 8.5 * scaleFactor, y - 14 * scaleFactor + floatHover, 17 * scaleFactor, 13 * scaleFactor, 4);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 1.4 * scaleFactor;
-      ctx.beginPath();
-      ctx.moveTo(x, y - 31 * scaleFactor + floatHover);
-      ctx.lineTo(x, y - 38 * scaleFactor + floatHover);
+      ctx.moveTo(x, y - 35 * s + floatHover);
+      ctx.lineTo(x, y - 42 * s + floatHover);
       ctx.stroke();
       ctx.fillStyle = '#facc15';
       ctx.beginPath();
-      ctx.arc(x, y - 40 * scaleFactor + floatHover, 2.2 * scaleFactor, 0, Math.PI * 2);
+      ctx.arc(x, y - 44 * s + floatHover, 2.8 * s, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
 
+      // Tas/Box Pengantar saat membawa makanan
       if (robotState.carryingFood) {
-        ctx.font = `${Math.round(15 * scaleFactor)}px sans-serif`;
+        ctx.fillStyle = '#f97316';
+        ctx.strokeStyle = '#7c2d12';
+        ctx.lineWidth = 1.5 * s;
+        ctx.beginPath();
+        ctx.roundRect(x + 9 * s, y - 24 * s + floatHover, 12 * s, 12 * s, 3);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.font = `${Math.round(10 * s)}px sans-serif`;
         ctx.textAlign = 'center';
-        ctx.fillText(robotState.carryingFood.icon, x, y - 44 * scaleFactor + floatHover);
+        ctx.textBaseline = 'middle';
+        ctx.fillText(robotState.carryingFood.icon, x + 15 * s, y - 18 * s + floatHover);
       }
 
       ctx.restore();

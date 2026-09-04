@@ -83,7 +83,7 @@ export default function ParentModeScreen() {
                 return (
                   <View key={idx} style={styles.barColumn}>
                     <View style={styles.barTrack}>
-                      <View style={[styles.barFill, { height: heightPercentage }]} />
+                      <View style={[styles.barFill, { height: heightPercentage as any }]} />
                     </View>
                     <Text style={styles.barDayText}>{data.day}</Text>
                   </View>

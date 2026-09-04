@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import {
-  StyleSheet,
+import { ScrollView, StyleSheet,
   View,
   Text,
   Pressable,
@@ -820,7 +819,7 @@ export default function RoboChargeScreen() {
         <Text style={styles.headerTitle}>Robo Charge: Bull Escape</Text>
 
         <View style={styles.coinsHeaderBadge}>
-          <MaterialCommunityIcons name="coin" size={16} color="#FBBF24" />
+          <MaterialCommunityIcons name="currency-usd" size={16} color="#FBBF24" />
           <Text style={styles.coinsHeaderVal}>{userCoins}</Text>
         </View>
       </View>
@@ -1147,7 +1146,7 @@ export default function RoboChargeScreen() {
           <View style={styles.victoryRewardCard}>
             <Text style={{ color: "#94A3B8", fontSize: 12, fontWeight: "600" }}>HADIAH KOIN</Text>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 }}>
-              <MaterialCommunityIcons name="coin" size={20} color="#FBBF24" />
+              <MaterialCommunityIcons name="currency-usd" size={20} color="#FBBF24" />
               <Text style={{ color: "#FFF", fontSize: 24, fontWeight: "800" }}>+{activeCity.rewardCoins}</Text>
             </View>
           </View>

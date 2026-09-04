@@ -1039,17 +1039,28 @@ function loopSprite(data){
 		if (!game.pause) bgx += sx;
 		if (bgx > img.width) bgx -= img.width;
 		if (bgx < 0) bgx += img.width;
-		if (!game.pause) bgy += sy;
-		if (bgy > img.height) bgy -= img.height;
-		if (bgy < 0) bgy += img.height;
-		//tile 
-		var tx = Math.ceil(screenW/img.width);
-		var ty = Math.ceil(screenH/img.height);
-		for (var i = -1; i < tx;i++){
-			for (var j = -1; j < ty; j++){
-				konten.drawImage(img, 0, 0, img.width, img.height, i*img.width+bgx, j*img.height+bgy, img.width, img.height);
+
+		// Jika tinggi background sudah mencukupi layar (full height 600px),
+		// cukup tile secara HORISONTAL dan JANGAN tile/slide secara vertikal!
+		if (img.height >= 500) {
+			var canvasW = (canvas && canvas.width) ? canvas.width : (game.lebar || 1200);
+			var canvasH = (canvas && canvas.height) ? canvas.height : (game.tinggi || 600);
+			var tx = Math.ceil(canvasW / img.width) + 1;
+			for (var i = -1; i < tx; i++){
+				konten.drawImage(img, 0, 0, img.width, img.height, i * img.width + bgx, 0, img.width, canvasH);
 			}
-		}		
+		} else {
+			if (!game.pause) bgy += sy;
+			if (bgy > img.height) bgy -= img.height;
+			if (bgy < 0) bgy += img.height;
+			var tx = Math.ceil(screenW/img.width);
+			var ty = Math.ceil(screenH/img.height);
+			for (var i = -1; i < tx;i++){
+				for (var j = -1; j < ty; j++){
+					konten.drawImage(img, 0, 0, img.width, img.height, i*img.width+bgx, j*img.height+bgy, img.width, img.height);
+				}
+			}
+		}
 	}
 	
 	function tambahScore(nl){
@@ -1526,6 +1537,88 @@ function cloneArray(arr){
 Kode di bawah ini digunakan khusus untuk membuat tiling game platformer
 untuk membuat peta gunakan map editor yang bisa diunduh pada situs https://www.wandah.org/tiling-editor
 //------------------------------------------------------------*/
+	function tambahFloatingText(text, x, y, color){
+		if (!game.floatingTexts) game.floatingTexts = [];
+		game.floatingTexts.push({
+			text: text,
+			x: x,
+			y: y,
+			color: color || "#34d399",
+			alpha: 1.0
+		});
+	}
+
+	function renderFloatingTexts(){
+		if (!game.floatingTexts || !konten) return;
+		for (var ft = game.floatingTexts.length - 1; ft >= 0; ft--) {
+			var item = game.floatingTexts[ft];
+			item.y -= 1.2;
+			item.alpha -= 0.025;
+			konten.save();
+			konten.globalAlpha = Math.max(0, item.alpha);
+			konten.font = "900 22px system-ui, sans-serif";
+			konten.shadowColor = item.color || "#34d399";
+			konten.shadowBlur = 10;
+			konten.fillStyle = item.color || "#34d399";
+			konten.textAlign = "center";
+			konten.fillText(item.text, item.x, item.y);
+			konten.restore();
+			if (item.alpha <= 0) {
+				game.floatingTexts.splice(ft, 1);
+			}
+		}
+	}
+
+	function drawHeartsHUD(){
+		if (!konten || !game || !game.aktif) return;
+		konten.save();
+		var max = game.maxNyawa || 3;
+		var curr = game.nyawa !== undefined ? game.nyawa : 3;
+		for (var h = 0; h < max; h++) {
+			var hx = 35 + h * 38;
+			var hy = 35;
+			konten.textAlign = "center";
+			konten.textBaseline = "middle";
+			if (h < curr) {
+				konten.font = "26px system-ui, sans-serif";
+				konten.shadowColor = "#f43f5e";
+				konten.shadowBlur = 10;
+				konten.fillStyle = "#ef4444";
+				konten.fillText("❤️", hx, hy);
+			} else {
+				konten.font = "22px system-ui, sans-serif";
+				konten.shadowColor = "transparent";
+				konten.shadowBlur = 0;
+				konten.fillStyle = "#64748b";
+				konten.fillText("🖤", hx, hy);
+			}
+		}
+		konten.restore();
+	}
+
+	function kenaLuka(isPit){
+		if (!game || !game.aktif) return;
+		if (game.invincibleTimer > 0) return;
+
+		game.nyawa = (game.nyawa !== undefined ? game.nyawa : 3) - 1;
+		if (game.nyawa > 0){
+			game.invincibleTimer = 90; // ~1.5 detik kebal
+			if (isPit){
+				// Teleportasi aman kembali ke pijakan platform terakhir
+				game.charX = game.lastSafeCharX || 1;
+				game.charY = game.lastSafeCharY || 5;
+				game.posX = 0;
+				game.posY = 0;
+				game.lompatY = -4;
+			} else {
+				// Terkena musuh: pantul mundur sedikit
+				game.lompatY = -6;
+			}
+		} else {
+			heroDead();
+		}
+	}
+
 	function setPlatform(map, img, tileW, hero){
 		game.map = cloneArray(map);
 		game.tilesetSize = img.width;
@@ -1548,12 +1641,18 @@ untuk membuat peta gunakan map editor yang bisa diunduh pada situs https://www.w
 		game.itemID = 0;
 		game.musuhID = 0;
 		game.triggerID = 0;
-		game.gravitasi = 0.5;
+		game.gravitasi = 0.35;
 		game.type = "platformer";
 		game.deadAnim = false;
 		game.platformItems = {};
 		game.platformTrigger = {};
 		game.platformEnemies = [];
+		game.maxNyawa = 3;
+		game.nyawa = 3;
+		game.invincibleTimer = 0;
+		game.lastSafeCharX = 1;
+		game.lastSafeCharY = 5;
+		game.floatingTexts = [];
 	}
 	function setPlatformItem(id, img){
 		game.platformItems["item_"+id] = img;
@@ -1574,6 +1673,18 @@ untuk membuat peta gunakan map editor yang bisa diunduh pada situs https://www.w
 		var ox, oy, cx, cy;
 		var minX = Math.floor(game.charX - (game.screenW/2));
 		var minY = Math.floor(game.charY - (game.screenH/2));
+
+		// Simpan posisi platform aman terakhir
+		if (game.charY + 1 < game.map[0].length) {
+			var uTile = game.map[game.charX][game.charY + 1][0];
+			if (uTile == 1 || uTile == 8) {
+				game.lastSafeCharX = game.charX;
+				game.lastSafeCharY = game.charY;
+			}
+		}
+
+		if (game.invincibleTimer > 0) game.invincibleTimer--;
+
 		for (var i = 0; i < game.screenW+2; i++){
 			for (var j = 0; j < game.screenH+2; j++){
 				var tx = i+minX;
@@ -1584,10 +1695,79 @@ untuk membuat peta gunakan map editor yang bisa diunduh pada situs https://www.w
 					var px = -(game.posX*game.skalaSprite)+game.cameraX+(i-1)*game.tileW*game.skalaSprite;
 					var py = -(game.posY*game.skalaSprite)+game.cameraY+(j-1)*game.tileW*game.skalaSprite;
 					//background
-					if (t_type > -1){
+					if (t_type > -1 && t_mode != 10){
 						var sy = Math.floor(t_type / game.tile_num);
 						var sx = t_type-(sy*game.tile_num);
 						konten.drawImage(game.tileset, sx*game.tileW, sy*game.tileW, game.tileW, game.tileW, px, py, game.tileW*game.skalaSprite, game.tileW*game.skalaSprite);					
+					}
+
+					// RENDER VISUAL JURANG BAHAYA (Mode 10 - Hazard Liquid & Glowing Plasma Spikes)
+					if (t_mode == 10){
+						konten.save();
+						var tsW = game.tileW * game.skalaSprite;
+						var pulse = Math.sin(game.timer * 0.15) * 4;
+						
+						// Outer Lava Glow
+						konten.shadowColor = "#ef4444";
+						konten.shadowBlur = 10;
+
+						// Latar Jurang Bahaya (Glowing Crimson Lava Gradient)
+						var lavaGrad = konten.createLinearGradient(px, py, px, py + tsW);
+						lavaGrad.addColorStop(0, "#f59e0b");
+						lavaGrad.addColorStop(0.2, "#dc2626");
+						lavaGrad.addColorStop(1, "#7f1d1d");
+						konten.fillStyle = lavaGrad;
+						konten.fillRect(px, py, tsW, tsW);
+						
+						// Permukaan cairan membara
+						konten.fillStyle = "#fef08a";
+						konten.fillRect(px, py + 1, tsW, 4);
+						
+						// Duri Bahaya Berkilau & Tip Highlight
+						for (var sp = 0; sp < tsW; sp += 16) {
+							var spGrad = konten.createLinearGradient(px + sp, py + tsW, px + sp + 8, py + 8 + pulse);
+							spGrad.addColorStop(0, "#b45309");
+							spGrad.addColorStop(0.5, "#f59e0b");
+							spGrad.addColorStop(1, "#fef08a");
+							konten.fillStyle = spGrad;
+
+							konten.beginPath();
+							konten.moveTo(px + sp, py + tsW);
+							konten.lineTo(px + sp + 8, py + 8 + pulse);
+							konten.lineTo(px + sp + 16, py + tsW);
+							konten.closePath();
+							konten.fill();
+
+							konten.strokeStyle = "#ffffff";
+							konten.lineWidth = 1;
+							konten.stroke();
+						}
+						konten.restore();
+					}
+
+					// Indikator Tepi Jurang (Warning Diagonal Stripes ⚠️ di pinggir platform)
+					if (t_mode == 1 && tx + 1 < game.map.length && game.map[tx + 1][ty][0] == 0) {
+						if (ty + 1 < game.map[0].length && (game.map[tx + 1][ty + 1][0] == 10 || game.map[tx + 1][ty + 1][0] == 0)) {
+							konten.save();
+							var edgeX = px + game.tileW * game.skalaSprite - 8;
+							var edgeW = 8;
+							var edgeH = game.tileW * game.skalaSprite;
+							
+							konten.fillStyle = "#1e293b";
+							konten.fillRect(edgeX, py, edgeW, edgeH);
+
+							for (var strip = py - 4; strip < py + edgeH; strip += 8) {
+								konten.fillStyle = "#f59e0b";
+								konten.beginPath();
+								konten.moveTo(edgeX, strip);
+								konten.lineTo(edgeX + edgeW, strip + 4);
+								konten.lineTo(edgeX + edgeW, strip + 7);
+								konten.lineTo(edgeX, strip + 3);
+								konten.closePath();
+								konten.fill();
+							}
+							konten.restore();
+						}
 					}
 					var i_type = game.map[tx][ty][2];
 					//foreground
@@ -1600,6 +1780,11 @@ untuk membuat peta gunakan map editor yang bisa diunduh pada situs https://www.w
 					if (tx == game.charX && ty == game.charY && !game.deadAnim){
 						game.karakter.x = game.cameraX+(i-1)*game.tileW*game.skalaSprite;
 						game.karakter.y = game.cameraY+(j-1)*game.tileW*game.skalaSprite+(game.karakter.tinggi*game.skalaSprite/2);									
+						if (game.invincibleTimer > 0 && Math.floor(game.timer / 4) % 2 === 0) {
+							game.karakter.alpha = 0.3;
+						} else {
+							game.karakter.alpha = 1.0;
+						}
 					}					
 					//items
 					if (t_mode == 3){
@@ -1648,8 +1833,6 @@ untuk membuat peta gunakan map editor yang bisa diunduh pada situs https://www.w
 							}
 						}
 					}
-					//grid
-					//kotak(px, py, 64, 64);
 				}
 			}
 		}
@@ -1680,7 +1863,7 @@ untuk membuat peta gunakan map editor yang bisa diunduh pada situs https://www.w
 					//wall
 					if (game.map[game.charX][cy][0] == 1) game.lompatY = 0;
 					//dead
-					if (game.map[game.charX][cy][0] == 10) heroDead();
+					if (game.map[game.charX][cy][0] == 10) kenaLuka(true);
 				}
 			}
 			if (game.lompatY>0){				
@@ -1707,8 +1890,11 @@ untuk membuat peta gunakan map editor yang bisa diunduh pada situs https://www.w
 						if (game.karakter.animDiam != 0) game.karakter.img = game.karakter.animDiam;
 				
 					}
-					//dead
-					if (game.map[game.charX][cy][0] == 10) heroDead();
+					//dead / jurang
+					if (game.map[game.charX][cy][0] == 10) kenaLuka(true);
+				} else {
+					// Terjatuh melewati batas bawah map (jurang)
+					kenaLuka(true);
 				}
 			}
 		}
@@ -1721,6 +1907,9 @@ untuk membuat peta gunakan map editor yang bisa diunduh pada situs https://www.w
 				jalankanFungsi(game.gameOver);
 			}
 		}
+		// Gambar indikator nyawa & floating text (+10 KOIN!)
+		drawHeartsHUD();
+		renderFloatingTexts();
 	}
 	
 	function jalankanFungsi(func){
@@ -1761,7 +1950,7 @@ untuk membuat peta gunakan map editor yang bisa diunduh pada situs https://www.w
 						}	
 					}
 					//dead
-					if (game.map[cx][game.charY][0] == 10) heroDead();
+					if (game.map[cx][game.charY][0] == 10) kenaLuka(true);
 				}
 			}
 			if (sx<0) {
@@ -1785,7 +1974,7 @@ untuk membuat peta gunakan map editor yang bisa diunduh pada situs https://www.w
 					}
 				}
 				//dead
-				if (game.map[cx][game.charY][0] == 10) heroDead();
+				if (game.map[cx][game.charY][0] == 10) kenaLuka(true);
 			}
 			//lompat
 			if (sy<0 && !game.lompat){
@@ -1836,9 +2025,9 @@ untuk membuat peta gunakan map editor yang bisa diunduh pada situs https://www.w
 					musuh.stat = 1;
 					musuh.img = musuh.dataGambar.animJalan;
 					if (acak(12)>5){
-						musuh.sx = 0.5;					
+						musuh.sx = 0.32;					
 					}else{
-						musuh.sx = -0.5;					
+						musuh.sx = -0.32;					
 					}
 				}
 			}
@@ -1893,14 +2082,15 @@ untuk membuat peta gunakan map editor yang bisa diunduh pada situs https://www.w
 			}	
 			//kena pemain
 			if (musuh.stat<2 && game.aktif){
-				if (jarak(game.karakter.x, game.karakter.y, musuh.x, musuh.y)<game.tileW){
-					if (game.lompatY>0){
+				if (jarak(game.karakter.x, game.karakter.y, musuh.x, musuh.y) < game.tileW * 1.25){
+					if (game.lompatY >= -1.5 || game.karakter.y < musuh.y - 8){
 						//injak musuh
 						musuh.stat = 2;
-						game.lompatY = -5;
+						game.lompatY = -7;
 						game.musuhID = musuh.eTipe;
+						tambahFloatingText("+25 KOIN!", game.karakter.x, game.karakter.y - 30, "#38bdf8");
 					}else{
-						heroDead();
+						kenaLuka(false);
 					}
 				}
 			}

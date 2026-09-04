@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import {
-  StyleSheet,
+import { ScrollView, StyleSheet,
   View,
   Text,
   Pressable,
@@ -753,7 +752,7 @@ export default function RoboCircleScreen() {
         </View>
 
         <View style={styles.coinsHeaderBadge}>
-          <MaterialCommunityIcons name="coin" size={18} color="#F59E0B" />
+          <MaterialCommunityIcons name="currency-usd" size={18} color="#F59E0B" />
           <Text style={styles.coinsHeaderVal}>{userCoins}</Text>
         </View>
       </View>
@@ -1109,10 +1108,10 @@ export default function RoboCircleScreen() {
             {/* ACTION BUTTONS */}
             <View style={styles.resultActions}>
               <Pressable style={styles.btnGhost} onPress={() => router.back()}>
-                <Text style={styles.btnGhostText}>[ Kembali Ke Menu Utama ]</Text>
+                <Text style={styles.btnGhostText}>Kembali Ke Menu Utama</Text>
               </Pressable>
               <Pressable style={styles.btnPrimaryNext} onPress={handleNextLevel}>
-                <Text style={styles.btnPrimaryNextText}>[ CONTINUE (Lanjut Level) ➔ ]</Text>
+                <Text style={styles.btnPrimaryNextText}>Lanjut Level ➔</Text>
               </Pressable>
             </View>
           </View>
@@ -1132,7 +1131,7 @@ export default function RoboCircleScreen() {
             <View style={styles.rewardSummary}>
               <Text style={styles.rewardLabel}>HADIAH TOTAL</Text>
               <View style={styles.rewardBadge}>
-                <MaterialCommunityIcons name="coin" size={20} color="#F59E0B" />
+                <MaterialCommunityIcons name="currency-usd" size={20} color="#F59E0B" />
                 <Text style={styles.rewardBadgeText}>+{currentLevelConfig.rewardCoins} Koin</Text>
               </View>
             </View>
@@ -1214,7 +1213,7 @@ export default function RoboCircleScreen() {
             {/* ACTION BUTTONS */}
             <View style={styles.resultActions}>
               <Pressable style={styles.btnGhost} onPress={() => router.back()}>
-                <Text style={styles.btnGhostText}>[ Kembali Ke Menu Utama ]</Text>
+                <Text style={styles.btnGhostText}>Kembali Ke Menu Utama</Text>
               </Pressable>
               <Pressable style={[styles.btnPrimaryNext, { backgroundColor: "#DC2626" }]} onPress={handleRestartLevel}>
                 <Text style={styles.btnPrimaryNextText}>[ COBA LAGI 🔄 ]</Text>

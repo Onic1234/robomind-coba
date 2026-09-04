@@ -176,6 +176,8 @@ export class RogueSoulGameEngine {
     };
   }
 
+  public lastGeneratedX: number = 800;
+
   public initLevel(levelData: LevelData | null, endless: boolean = false) {
     this.currentLevelData = levelData;
     this.isEndless = endless;
@@ -188,6 +190,7 @@ export class RogueSoulGameEngine {
     this.finishX = endless ? null : (levelData?.bossLevel ? (levelData.targetDistance + 500) : (levelData?.targetDistance ?? null));
     this.cameraX = 0;
     this.cameraY = 0;
+    this.lastGeneratedX = 800;
     this.projectiles = [];
     this.particles = [];
     this.platforms = [];
@@ -211,127 +214,146 @@ export class RogueSoulGameEngine {
     this.generateLevelContent();
   }
 
+  private generateChunk(overrideEnv?: "forest" | "ramparts" | "dungeon" | "keep") {
+    const env = overrideEnv || this.currentLevelData?.environment || "forest";
+    const pWidth = 300 + Math.random() * 400;
+    const gap = 120 + Math.random() * 160;
+    const heightVar = Math.floor(Math.random() * 3); // 0 = ground, 1 = mid, 2 = high
+    const pY = 420 - heightVar * 80;
+
+    this.platforms.push({
+      x: this.lastGeneratedX,
+      y: pY,
+      w: pWidth,
+      h: 200,
+      type: env === "dungeon" ? "dungeon" : env === "ramparts" ? "stone" : "grass",
+    });
+
+    // Wall obstacles for wall jumps
+    if (Math.random() < 0.45) {
+      const wallH = 160 + Math.random() * 120;
+      this.platforms.push({
+        x: this.lastGeneratedX + pWidth / 2,
+        y: pY - wallH,
+        w: 40,
+        h: wallH,
+        type: "wall",
+      });
+    }
+
+    // Springboards
+    if (Math.random() < 0.3) {
+      this.platforms.push({
+        x: this.lastGeneratedX + 60,
+        y: pY - 20,
+        w: 50,
+        h: 20,
+        type: "springboard",
+      });
+    }
+
+    // Collectibles (Coins, Gems, Potions & Speed Boost Pads)
+    for (let c = 0; c < 5; c++) {
+      const rand = Math.random();
+      const itemType = rand < 0.12 ? "gem" : rand < 0.22 ? "speed_boost" : rand < 0.28 ? "potion" : "coin";
+      this.collectibles.push({
+        id: this.nextId++,
+        type: itemType,
+        x: this.lastGeneratedX + 80 + c * 40,
+        y: pY - 50 - (c % 2) * 30,
+        w: 24,
+        h: 24,
+        collected: false,
+        floatOffset: Math.random() * Math.PI * 2,
+      });
+    }
+
+    // Enemies
+    if (this.lastGeneratedX > 500) {
+      const enemyType = Math.random() < 0.4 ? "guard" : Math.random() < 0.5 ? "archer" : "bandit";
+      this.enemies.push({
+        id: this.nextId++,
+        type: enemyType,
+        x: this.lastGeneratedX + 180,
+        y: pY - 60,
+        vx: enemyType === "bandit" ? -2 : -1,
+        vy: 0,
+        w: 46,
+        h: 60,
+        hp: enemyType === "guard" ? 3 : 1,
+        maxHp: enemyType === "guard" ? 3 : 1,
+        facingRight: false,
+        state: "patrol",
+        attackCooldown: 0,
+        shielded: enemyType === "guard",
+      });
+    }
+
+    // Traps / Spikes
+    if (Math.random() < 0.35) {
+      this.hazards.push({
+        id: this.nextId++,
+        type: "spikes",
+        x: this.lastGeneratedX + pWidth - 80,
+        y: pY - 20,
+        w: 60,
+        h: 20,
+      });
+    }
+
+    this.lastGeneratedX += pWidth + gap;
+  }
+
+  public extendEndlessWorld(targetX: number) {
+    if (!this.isEndless) return;
+    const envs: ("forest" | "ramparts" | "dungeon" | "keep")[] = ["forest", "ramparts", "dungeon", "keep"];
+    while (this.lastGeneratedX < targetX) {
+      const envIndex = Math.floor(this.lastGeneratedX / 4000) % envs.length;
+      this.generateChunk(envs[envIndex]);
+    }
+  }
+
   private generateLevelContent() {
     const env = this.currentLevelData?.environment || "forest";
 
     // Base ground floor layout
     this.platforms.push({ x: -200, y: 420, w: 1000, h: 200, type: env === "dungeon" ? "dungeon" : "grass" });
 
-    let currentX = 800;
-    const targetDist = this.isEndless ? 10000 : (this.currentLevelData?.targetDistance || 2000);
+    this.lastGeneratedX = 800;
 
-    while (currentX < targetDist + 800) {
-      const pWidth = 300 + Math.random() * 400;
-      const gap = 120 + Math.random() * 160;
-      const heightVar = Math.floor(Math.random() * 3); // 0 = ground, 1 = mid, 2 = high
-      const pY = 420 - heightVar * 80;
-
-      this.platforms.push({
-        x: currentX,
-        y: pY,
-        w: pWidth,
-        h: 200,
-        type: env === "dungeon" ? "dungeon" : env === "ramparts" ? "stone" : "grass",
-      });
-
-      // Wall obstacles for wall jumps
-      if (Math.random() < 0.45) {
-        const wallH = 160 + Math.random() * 120;
-        this.platforms.push({
-          x: currentX + pWidth / 2,
-          y: pY - wallH,
-          w: 40,
-          h: wallH,
-          type: "wall",
-        });
+    if (this.isEndless) {
+      // Generate initial 3500px chunk for endless runner
+      this.extendEndlessWorld(3500);
+    } else {
+      const targetDist = this.currentLevelData?.targetDistance || 2000;
+      while (this.lastGeneratedX < targetDist + 800) {
+        this.generateChunk();
       }
 
-      // Springboards
-      if (Math.random() < 0.3) {
-        this.platforms.push({
-          x: currentX + 60,
-          y: pY - 20,
-          w: 50,
-          h: 20,
-          type: "springboard",
-        });
-      }
-
-      // Collectibles (Coins, Gems, Potions & Speed Boost Pads)
-      for (let c = 0; c < 5; c++) {
-        const rand = Math.random();
-        const itemType = rand < 0.12 ? "gem" : rand < 0.22 ? "speed_boost" : rand < 0.28 ? "potion" : "coin";
-        this.collectibles.push({
-          id: this.nextId++,
-          type: itemType,
-          x: currentX + 80 + c * 40,
-          y: pY - 50 - (c % 2) * 30,
-          w: 24,
-          h: 24,
-          collected: false,
-          floatOffset: Math.random() * Math.PI * 2,
-        });
-      }
-
-      // Enemies
-      if (currentX > 500) {
-        const enemyType = Math.random() < 0.4 ? "guard" : Math.random() < 0.5 ? "archer" : "bandit";
+      // Boss at end of level 4
+      if (this.currentLevelData?.bossLevel) {
         this.enemies.push({
           id: this.nextId++,
-          type: enemyType,
-          x: currentX + 180,
-          y: pY - 60,
-          vx: enemyType === "bandit" ? -2 : -1,
+          type: "boss",
+          x: targetDist + 200,
+          y: 300,
+          vx: 0,
           vy: 0,
-          w: 46,
-          h: 60,
-          hp: enemyType === "guard" ? 3 : 1,
-          maxHp: enemyType === "guard" ? 3 : 1,
+          w: 90,
+          h: 110,
+          hp: 20,
+          maxHp: 20,
           facingRight: false,
-          state: "patrol",
-          attackCooldown: 0,
-          shielded: enemyType === "guard",
+          state: "idle",
+          attackCooldown: 60,
         });
       }
 
-      // Traps / Spikes
-      if (Math.random() < 0.35) {
-        this.hazards.push({
-          id: this.nextId++,
-          type: "spikes",
-          x: currentX + pWidth - 80,
-          y: pY - 20,
-          w: 60,
-          h: 20,
-        });
+      // Guaranteed flat ground approach so the finish line is always reachable
+      if (this.currentLevelData && this.finishX != null) {
+        const gtype = env === "dungeon" ? "dungeon" : env === "ramparts" ? "stone" : "grass";
+        this.platforms.push({ x: this.finishX - 320, y: 420, w: 760, h: 200, type: gtype });
       }
-
-      currentX += pWidth + gap;
-    }
-
-    // Boss at end of level 4
-    if (this.currentLevelData?.bossLevel) {
-      this.enemies.push({
-        id: this.nextId++,
-        type: "boss",
-        x: targetDist + 200,
-        y: 300,
-        vx: 0,
-        vy: 0,
-        w: 90,
-        h: 110,
-        hp: 20,
-        maxHp: 20,
-        facingRight: false,
-        state: "idle",
-        attackCooldown: 60,
-      });
-    }
-
-    // Guaranteed flat ground approach so the finish line is always reachable
-    if (!this.isEndless && this.currentLevelData && this.finishX != null) {
-      const gtype = env === "dungeon" ? "dungeon" : env === "ramparts" ? "stone" : "grass";
-      this.platforms.push({ x: this.finishX - 320, y: 420, w: 760, h: 200, type: gtype });
     }
   }
 
@@ -388,7 +410,7 @@ export class RogueSoulGameEngine {
     this.player.action = "slide";
     this.player.actionFrame = 0;
     this.player.slideCooldown = 28;
-    this.player.vx = (this.player.facingRight ? 1 : -1) * 13.5;
+    this.player.vx = (this.player.facingRight ? 1 : -1) * 7.5;
     RogueAudio.playSlide();
     this.addDustParticle(this.player.x + 10, this.player.y + 55);
   }
@@ -542,10 +564,11 @@ export class RogueSoulGameEngine {
     this.runTime += 1 / 60;
     if (this.player.combo > this.maxCombo) this.maxCombo = this.player.combo;
 
-    // Dynamic Speed Curve: Balanced, smooth & controlled pacing!
-    const distanceAccel = Math.min(2.2, (this.gameDistance / 1000));
-    const comboBonus = Math.min(1.8, this.player.combo * 0.25);
-    const dynamicSpeed = (3.8 + distanceAccel + comboBonus) * this.player.skin.speedMultiplier;
+    // Ultra-Gentle Speed Curve: Starts very slow (2.0) for a long time, accelerating super gradually over minutes (capped at 3.5)
+    const distanceAccel = Math.min(1.5, (this.gameDistance / 6000)); // Ultra-gradual ramp (takes ~45s per +1.0 speed)
+    const comboBonus = Math.min(0.3, this.player.combo * 0.05); // Subtle combo reward
+    const rawSpeed = 2.0 + distanceAccel + comboBonus;
+    const dynamicSpeed = Math.min(3.5, rawSpeed) * this.player.skin.speedMultiplier;
 
     // Movement horizontal logic
     if (this.player.action !== "slide") {
@@ -846,6 +869,28 @@ export class RogueSoulGameEngine {
     if (this.screenShake > 0) {
       this.screenShake *= 0.85;
       if (this.screenShake < 0.5) this.screenShake = 0;
+    }
+
+    // 8.5 Infinite Endless Terrain Extension & Memory Cleanup
+    if (this.isEndless) {
+      if (this.player.x + 2500 > this.lastGeneratedX) {
+        this.extendEndlessWorld(this.player.x + 4500);
+      }
+
+      // Garbage collection pruning for objects far behind the camera
+      const cleanupX = this.cameraX - 1000;
+      if (this.platforms.length > 40) {
+        this.platforms = this.platforms.filter((p) => p.x + p.w > cleanupX);
+      }
+      if (this.collectibles.length > 50) {
+        this.collectibles = this.collectibles.filter((c) => !c.collected && c.x > cleanupX);
+      }
+      if (this.hazards.length > 30) {
+        this.hazards = this.hazards.filter((h) => h.x + h.w > cleanupX);
+      }
+      if (this.enemies.length > 25) {
+        this.enemies = this.enemies.filter((e) => e.hp > 0 && e.x > cleanupX);
+      }
     }
 
     // 9. Level Target Victory Check

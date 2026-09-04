@@ -261,7 +261,7 @@
 
   <!-- Modal Hasil Game (2-COLUMN COGNITIVE RADAR CHART) -->
   <div id="gameModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center z-50 p-4">
-    <div class="bg-slate-950 border-2 border-cyan-500/40 max-w-2xl w-full rounded-3xl p-6 shadow-[0_0_40px_rgba(6,182,212,0.3)] text-left transform scale-95 transition-all duration-300">
+    <div class="max-h-[92vh] overflow-y-auto bg-slate-950 border-2 border-cyan-500/40 max-w-2xl w-full rounded-3xl p-6 shadow-[0_0_40px_rgba(6,182,212,0.3)] text-left transform scale-95 transition-all duration-300">
       
       <!-- HEADER -->
       <div class="text-center border-b border-white/10 pb-4 mb-4">
@@ -330,10 +330,10 @@
       <!-- BOTTOM ACTION BUTTONS -->
       <div class="flex gap-3 justify-center items-center">
         <button id="modalSelectLevelBtn" class="px-5 py-3 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold text-xs transition">
-          [ Kembali Ke Peta Utama ]
+          Kembali Ke Peta Utama
         </button>
         <button id="modalActionBtn" class="px-7 py-3 rounded-full bg-sky-600 hover:bg-sky-500 text-white font-black text-sm shadow-[0_4px_14px_rgba(2,132,199,0.4)] transition">
-          [ CONTINUE (Lanjut Level) ➔ ]
+          Lanjut Level ➔
         </button>
       </div>
 
@@ -1222,7 +1222,7 @@
       document.getElementById('lootTotalCoins').innerText = `${totalCoins} KOIN`;
 
       const actionBtn = document.getElementById('modalActionBtn');
-      actionBtn.innerText = hasNext ? "[ CONTINUE (Lanjut Level) ➔ ]" : "[ MAIN LAGI 🎮 ]";
+      actionBtn.innerText = hasNext ? "Lanjut Level ➔" : "Main Lagi 🎮";
       actionBtn.onclick = () => {
         toggleModal(false);
         if (hasNext) {

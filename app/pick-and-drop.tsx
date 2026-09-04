@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  StyleSheet,
+import { ScrollView, StyleSheet,
   View,
   Text,
   Pressable,
@@ -456,8 +455,8 @@ export default function PickAndDropScreen() {
 
                         <!-- ACTION BUTTONS -->
                         <div style="display: flex; gap: 10px; justify-content: center; margin-top: 12px; flex-wrap: wrap;">
-                            <button class="btn-ghost" onclick="exitGame()">[ Kembali Ke Peta Utama ]</button>
-                            <button class="btn-action" onclick="startGame()">[ CONTINUE (Lanjut Level) ➔ ]</button>
+                            <button class="btn-ghost" onclick="exitGame()">Kembali Ke Peta Utama</button>
+                            <button class="btn-action" onclick="startGame()">Lanjut Level ➔</button>
                         </div>
                     </div>
                 </div>
