@@ -2987,10 +2987,6 @@ const styles = StyleSheet.create({
     fontWeight: "900",
     color: "#FFFFFF",
   },
-    fontSize: 14,
-    fontWeight: "900",
-    color: "#FFFFFF",
-  },
   victoryIconCircle: {
     width: 80,
     height: 80,
