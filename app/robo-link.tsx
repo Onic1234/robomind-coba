@@ -11,8 +11,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScrollView, Dimensions } from "react-native";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const ARENA_SIZE = Math.min(360, SCREEN_WIDTH - 40);
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const ARENA_SIZE = Math.min(310, Math.max(230, SCREEN_WIDTH - 104), Math.max(230, SCREEN_HEIGHT - 380));
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { GameBackButton } from "../components/GameBackButton";
@@ -1578,32 +1578,32 @@ export default function RoboLinkScreen() {
 
   // Dynamic Node Robot positions (Generator)
   const robotPosition = useMemo(() => {
-    let x = -62;
+    let x = -46;
     let y = currentConfig.startRow * tileSize + (tileSize - 50) / 2;
     if (currentConfig.startDir === "right") {
-      x = ARENA_SIZE + 12;
+      x = ARENA_SIZE - 4;
     } else if (currentConfig.startDir === "top") {
       x = currentConfig.startCol * tileSize + (tileSize - 50) / 2;
-      y = -62;
+      y = -46;
     } else if (currentConfig.startDir === "bottom") {
       x = currentConfig.startCol * tileSize + (tileSize - 50) / 2;
-      y = ARENA_SIZE + 12;
+      y = ARENA_SIZE - 4;
     }
     return { x, y };
   }, [currentConfig, tileSize]);
 
   // Dynamic Node Target PC positions
   const pcPosition = useMemo(() => {
-    let x = ARENA_SIZE + 12;
+    let x = ARENA_SIZE - 4;
     let y = currentConfig.endRow * tileSize + (tileSize - 50) / 2;
     if (currentConfig.endDir === "left") {
-      x = -62;
+      x = -46;
     } else if (currentConfig.endDir === "top") {
       x = currentConfig.endCol * tileSize + (tileSize - 50) / 2;
-      y = -62;
+      y = -46;
     } else if (currentConfig.endDir === "bottom") {
       x = currentConfig.endCol * tileSize + (tileSize - 50) / 2;
-      y = ARENA_SIZE + 12;
+      y = ARENA_SIZE - 4;
     }
     return { x, y };
   }, [currentConfig, tileSize]);
@@ -1800,7 +1800,7 @@ export default function RoboLinkScreen() {
             <Text style={[styles.coinsHeaderVal, { color: "#B91C1C" }]}>{lives}</Text>
           </View>
           <View style={styles.coinsHeaderBadge}>
-            <MaterialCommunityIcons name={"coin" as any} size={18} color="#D97706" />
+            <MaterialCommunityIcons name={"currency-usd" as any} size={18} color="#D97706" />
             <Text style={styles.coinsHeaderVal}>{userCoins}</Text>
           </View>
         </View>
@@ -2249,7 +2249,7 @@ export default function RoboLinkScreen() {
             <View style={styles.rewardSummary}>
               <Text style={styles.rewardLabel}>HADIAH TOTAL</Text>
               <View style={styles.rewardBadge}>
-                <MaterialCommunityIcons name={"coin" as any} size={20} color="#F59E0B" />
+                <MaterialCommunityIcons name={"currency-usd" as any} size={20} color="#F59E0B" />
                 <Text style={styles.rewardBadgeText}>+{currentConfig.rewardCoins} Koin</Text>
               </View>
             </View>
@@ -2551,10 +2551,11 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   topCardBanner: {
-    position: "absolute",
-    top: 14,
-    left: 20,
-    right: 20,
+    width: "90%",
+    maxWidth: 380,
+    marginTop: 8,
+    marginBottom: 8,
+    alignSelf: "center",
     backgroundColor: "#FFFFFF",
     borderRadius: 12,
     borderWidth: 1.5,
@@ -2580,7 +2581,8 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: 50,
+    paddingVertical: 12,
+    marginVertical: 4,
   },
   arenaWrapper: {
     position: "relative",
