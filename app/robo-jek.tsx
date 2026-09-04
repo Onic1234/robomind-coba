@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { COLORS, FONTS } from "../constants/Theme";
 import { HowToPlayModal } from "../components/HowToPlayModal";
+import { saveGameSession } from "../lib/gameProgressService";
 
 export default function RoboJekScreen() {
   const router = useRouter();
@@ -42,6 +43,27 @@ export default function RoboJekScreen() {
   useEffect(() => {
     const timeout = setTimeout(() => setLoading(false), 3000);
     return () => clearTimeout(timeout);
+  }, []);
+
+  
+  useEffect(() => {
+    const messageHandler = (e: MessageEvent) => {
+      if (e.data && (e.data.type === "GAME_OVER" || e.data.type === "GAME_COMPLETE" || e.data.type === "LEVEL_COMPLETE" || e.data.type === "GAME_RESULT")) {
+        saveGameSession({
+          gameId: "robo-jek",
+          level: e.data.level || 1,
+          score: e.data.score || 100,
+          xpEarned: e.data.xp || 100,
+          coinsEarned: e.data.coins || 40,
+          completed: e.data.completed !== false,
+          durationSeconds: e.data.duration || 60,
+        });
+      }
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("message", messageHandler);
+      return () => window.removeEventListener("message", messageHandler);
+    }
   }, []);
 
   if (Platform.OS !== "web") {

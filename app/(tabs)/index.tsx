@@ -48,7 +48,7 @@ export default function Index() {
       <StatusBar barStyle="light-content" backgroundColor="#050a16" />
       <iframe
         ref={iframeRef}
-        src={`/app-home.html?v=${Date.now()}`}
+        src="/app-home.html"
         style={styles.iframe as any}
         title="RoboMind Dashboard"
       />

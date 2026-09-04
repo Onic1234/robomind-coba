@@ -26,7 +26,23 @@ export function GameBackButton({
     if (onPress) {
       onPress();
     } else {
-      router.back();
+      try {
+        if (router.canGoBack && router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace("/(tabs)" as any);
+        }
+      } catch (e) {
+        if (Platform.OS === "web") {
+          if (window.history.length > 1) {
+            window.history.back();
+          } else {
+            window.location.href = "/";
+          }
+        } else {
+          router.replace("/(tabs)" as any);
+        }
+      }
     }
   };
 

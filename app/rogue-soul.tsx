@@ -19,6 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { HowToPlayModal } from "../components/HowToPlayModal";
 import { COLORS, FONTS, SHAPES, SHADOWS } from "../constants/Theme";
 
+import { saveGameSession } from "../lib/gameProgressService";
 import {
   COSTUME_SKINS,
   WEAPONS,
@@ -47,7 +48,7 @@ export default function RogueSoulGameScreen() {
 
   // Screen & View State
   const [viewState, setViewState] = useState<"menu" | "levels" | "shop" | "achievements" | "playing">("menu");
-  const [userCoins, setUserCoins] = useState(1250);
+  const [userCoins, setUserCoins] = useState(0);
   const [userGems, setUserGems] = useState(15);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [musicEnabled, setMusicEnabled] = useState(true);
@@ -351,6 +352,7 @@ export default function RogueSoulGameScreen() {
   }, [viewState, isPaused, gameResult]);
 
   const handleLevelComplete = (engine: RogueSoulGameEngine) => {
+    saveGameSession({ gameId: "rogue-soul", level: selectedLevel.id, score: engine.player.score, xpEarned: 150, coinsEarned: 50, completed: true });
     const coinsEarned = engine.player.coins + (selectedLevel.rewardCoins || 100);
     const gemsEarned = engine.player.gems + (selectedLevel.rewardGems || 2);
     const stars = engine.player.hp >= engine.player.maxHp ? 3 : engine.player.coins >= selectedLevel.targetCoins ? 2 : 1;

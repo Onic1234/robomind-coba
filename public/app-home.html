@@ -11,6 +11,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
   
+  <!-- Supabase Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Confetti library -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
   
@@ -644,27 +646,47 @@
     </section>
 
     <!-- ======================================================================= -->
-    <!-- TAB 3: PROFILE & SETTINGS                                               -->
+    <!-- TAB 3: PROFILE & MULTI-USER (CHILDREN) SETTINGS                          -->
     <!-- ======================================================================= -->
     <section id="tab-profile" class="tab-content hidden flex-1 flex flex-col h-full w-full overflow-y-auto pr-1 pb-4">
-      <div class="flex items-center justify-between mb-4 pt-1">
+      <div class="flex items-center justify-between mb-3 pt-1">
         <h2 class="text-base sm:text-lg font-black text-white">Profil Penjelajah 👤</h2>
         <button onclick="switchTab('home')" class="px-3 py-1 rounded-xl bg-[#0d1b33] border border-[#1a2e56] text-xs font-bold text-cyan-400 hover:text-white transition-colors">
           ← Home
         </button>
       </div>
 
-      <div class="p-4 rounded-2xl bg-[#0d1b33] border border-[#1a2e56] flex items-center gap-3.5 mb-3 shadow-md">
-        <div class="w-14 h-14 rounded-full border-2 border-cyan-400 overflow-hidden bg-slate-800 flex-shrink-0">
-          <img src="robomind_robot_avatar.png?v=3" class="w-full h-full object-cover" />
+      <!-- Active Child Card -->
+      <div class="p-4 rounded-2xl bg-[#0d1b33] border border-[#1a2e56] flex items-center justify-between mb-3 shadow-md">
+        <div class="flex items-center gap-3">
+          <div class="w-13 h-13 rounded-full border-2 border-cyan-400 overflow-hidden bg-slate-800 flex-shrink-0">
+            <img id="activeChildAvatarImg" src="robomind_robot_avatar.png?v=3" class="w-full h-full object-cover" />
+          </div>
+          <div>
+            <span id="activeChildLevelBadge" class="text-[9px] font-black text-cyan-400 uppercase tracking-wider">Level 12 • Junior Explorer</span>
+            <h3 id="activeChildNameText" class="text-sm sm:text-base font-black text-white">Aira Salsabila</h3>
+            <p id="activeChildStatsText" class="text-[10px] text-slate-400">⚡ 1,420 XP • 🪙 1,790 Koin</p>
+          </div>
         </div>
-        <div>
-          <span class="text-[10px] font-black text-cyan-400 uppercase tracking-wider">Junior Explorer</span>
-          <h3 class="text-sm sm:text-base font-black text-white">Aira Salsabila</h3>
-          <p class="text-[10px] text-slate-400">Streak: 🔥 5 Hari Berturut-turut</p>
+        <button onclick="openModal('addChildModal')" class="px-2.5 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[10px] font-black hover:bg-cyan-500/30 transition-all flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">person_add</span> + Anak
+        </button>
+      </div>
+
+      <!-- Multi-Child Profile Switcher -->
+      <div class="p-3.5 rounded-2xl bg-[#0d1b33] border border-[#1a2e56] mb-3 shadow-sm">
+        <div class="flex items-center justify-between mb-2.5">
+          <span class="text-xs font-black text-white flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-sm text-cyan-400">switch_account</span> Ganti Profil Anak
+          </span>
+          <span class="text-[10px] text-slate-400 font-bold" id="childCountLabel">1 Profil</span>
+        </div>
+        <div id="childrenProfilesList" class="space-y-2">
+          <!-- Dynamic Child Profiles injected here -->
         </div>
       </div>
 
+      <!-- Settings & Parent Controls -->
       <div class="space-y-2.5">
         <div class="p-3.5 rounded-2xl bg-[#0d1b33] border border-[#1a2e56] flex items-center justify-between">
           <div class="flex items-center gap-2.5">
@@ -680,6 +702,14 @@
             <span class="text-xs font-bold text-white">Pengaturan Batas Waktu</span>
           </div>
           <button onclick="openGame('/parent-mode')" class="px-3 py-1 bg-[#f59e0b] text-black rounded-lg text-xs font-black">Buka</button>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-[#0d1b33] border border-[#1a2e56] flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <span class="material-symbols-outlined text-red-400">logout</span>
+            <span class="text-xs font-bold text-white">Keluar Akun</span>
+          </div>
+          <button onclick="logoutUser()" class="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500 hover:text-white rounded-lg text-xs font-bold transition-colors">Logout</button>
         </div>
       </div>
     </section>
@@ -821,6 +851,102 @@
     </div>
   </div>
 
+    <!-- ========================================================================= -->
+  <!-- SUPABASE LOGIN & AUTH GUARD MODAL                                         -->
+  <!-- ========================================================================= -->
+  <div id="authGuardModal" class="fixed inset-0 z-[100] bg-[#050a16]/90 backdrop-blur-xl hidden flex items-center justify-center p-4">
+    <div class="bg-[#0b1c3c] rounded-3xl max-w-sm w-full p-6 border border-[#00f0ff]/50 shadow-[0_0_30px_rgba(0,240,255,0.3)] flex flex-col items-center text-center relative">
+      
+      <!-- Mascot Logo -->
+      <div class="relative w-16 h-16 rounded-full border-2 border-cyan-400 p-0.5 mb-3 shadow-[0_0_15px_rgba(0,240,255,0.5)]">
+        <img alt="Robo Avatar" class="w-full h-full object-cover rounded-full bg-slate-900" src="robomind_robot_avatar.png" />
+      </div>
+
+      <h3 class="text-lg font-black text-white leading-tight">Masuk ke RoboMind</h3>
+      <p class="text-xs text-slate-300 mb-5">Hubungkan progres game dengan akun orang tua</p>
+
+      <!-- Google OAuth Button -->
+      <button onclick="loginWithGoogle()" class="w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-xs flex items-center justify-center gap-2.5 shadow-md active:scale-95 transition-all mb-3">
+        <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        <span>Masuk dengan Google</span>
+      </button>
+
+      <div class="relative flex items-center py-2 w-full mb-3">
+        <div class="flex-grow border-t border-slate-700"></div>
+        <span class="flex-shrink-0 mx-3 text-slate-400 text-[10px] uppercase font-bold">atau email</span>
+        <div class="flex-grow border-t border-slate-700"></div>
+      </div>
+
+      <!-- Quick Email Form -->
+      <form onsubmit="handleEmailAuth(event)" class="w-full space-y-2.5 mb-3">
+        <input id="authEmailInput" type="email" placeholder="Email akun..." required class="w-full px-3.5 py-2.5 rounded-xl bg-[#050a16] border border-[#1e3b6e] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-400" />
+        <input id="authPasswordInput" type="password" placeholder="Kata sandi..." required class="w-full px-3.5 py-2.5 rounded-xl bg-[#050a16] border border-[#1e3b6e] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-400" />
+        <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#0099ff] to-[#00f0ff] text-[#050a16] font-black text-xs shadow-md active:scale-95 transition-transform">
+          Masuk Akun
+        </button>
+      </form>
+
+      <!-- Guest Demo Option -->
+      <button onclick="continueAsGuest()" class="text-[11px] text-cyan-400 hover:text-white font-bold underline transition-colors">
+        Lanjut sebagai Tamu (Mode Demo)
+      </button>
+
+    </div>
+  </div>
+
+    <!-- ADD CHILD / MULTI-USER MODAL -->
+  <div id="addChildModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-[#0b1c3c] rounded-3xl max-w-sm w-full p-5 border border-[#00f0ff]/40 shadow-2xl flex flex-col relative">
+      <button onclick="closeModal('addChildModal')" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-[#122b54] text-slate-300 flex items-center justify-center">
+        <span class="material-symbols-outlined text-sm">close</span>
+      </button>
+      <div class="w-11 h-11 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mb-2 mx-auto">
+        <span class="material-symbols-outlined text-2xl">face</span>
+      </div>
+      <h3 class="text-sm font-black text-white text-center mb-1">Tambah Profil Anak Baru 👶</h3>
+      <p class="text-[10px] text-slate-300 text-center mb-4">Buat akun belajar mandiri untuk anak lain dalam keluarga</p>
+
+      <form onsubmit="handleAddNewChild(event)" class="space-y-3">
+        <div>
+          <label class="text-[10px] font-bold text-slate-300 block mb-1">Nama Panggilan Anak</label>
+          <input id="newChildNameInput" type="text" placeholder="Contoh: Kenzo, Nadine, Rafa..." required class="w-full px-3 py-2 rounded-xl bg-[#050a16] border border-[#1e3b6e] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-400" />
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-slate-300 block mb-1">Usia Anak (Tahun)</label>
+          <input id="newChildAgeInput" type="number" min="3" max="15" value="7" required class="w-full px-3 py-2 rounded-xl bg-[#050a16] border border-[#1e3b6e] text-white text-xs focus:outline-none focus:border-cyan-400" />
+        </div>
+        <div>
+          <label class="text-[10px] font-bold text-slate-300 block mb-1">Pilih Karakter Robot</label>
+          <div class="grid grid-cols-4 gap-2">
+            <label class="cursor-pointer border-2 border-cyan-400 rounded-xl p-1 bg-slate-900 flex flex-col items-center">
+              <input type="radio" name="childAvatar" value="robomind_robot_avatar.png" checked class="hidden" />
+              <img src="robomind_robot_avatar.png" class="w-8 h-8 rounded-full object-cover" />
+              <span class="text-[8px] text-cyan-300 font-bold mt-0.5">Aira</span>
+            </label>
+            <label class="cursor-pointer border border-[#1e3b6e] hover:border-cyan-400 rounded-xl p-1 bg-slate-900 flex flex-col items-center">
+              <input type="radio" name="childAvatar" value="robomind_character_2d.png" class="hidden" />
+              <img src="robomind_character_2d.png" class="w-8 h-8 rounded-full object-cover" />
+              <span class="text-[8px] text-slate-300 font-bold mt-0.5">Budi</span>
+            </label>
+            <label class="cursor-pointer border border-[#1e3b6e] hover:border-cyan-400 rounded-xl p-1 bg-slate-900 flex flex-col items-center">
+              <input type="radio" name="childAvatar" value="bule_character.png" class="hidden" />
+              <img src="bule_character.png" class="w-8 h-8 rounded-full object-cover" />
+              <span class="text-[8px] text-slate-300 font-bold mt-0.5">Alex</span>
+            </label>
+            <label class="cursor-pointer border border-[#1e3b6e] hover:border-cyan-400 rounded-xl p-1 bg-slate-900 flex flex-col items-center">
+              <input type="radio" name="childAvatar" value="bule_perempuan.png" class="hidden" />
+              <img src="bule_perempuan.png" class="w-8 h-8 rounded-full object-cover" />
+              <span class="text-[8px] text-slate-300 font-bold mt-0.5">Clara</span>
+            </label>
+          </div>
+        </div>
+        <button type="submit" class="w-full mt-2 py-2.5 bg-gradient-to-r from-[#0099ff] to-[#00f0ff] text-[#050a16] font-black text-xs rounded-xl shadow-md active:scale-95 transition-transform">
+          Simpan Profil Anak
+        </button>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast Notification -->
   <div id="toastNotification" class="fixed top-12 left-1/2 -translate-x-1/2 z-[9999] bg-[#00f0ff] text-[#050a16] px-4 py-2 rounded-full shadow-[0_0_20px_rgba(0,240,255,0.6)] font-black text-xs transition-all duration-300 opacity-0 pointer-events-none flex items-center gap-1.5 whitespace-nowrap">
     <span>💡</span>
@@ -898,11 +1024,24 @@
       }
     };
 
+    
+    // Clear legacy mock demo keys from local storage on launch
+    (function cleanMockStorage() {
+      if (localStorage.getItem('robomind_demo_cleaned_v2') !== 'true') {
+        localStorage.removeItem('robomind_total_xp');
+        localStorage.removeItem('user_coins_balance');
+        localStorage.removeItem('user_gems_balance');
+        localStorage.removeItem('robomind_screentime_minutes');
+        localStorage.removeItem('robomind_children_profiles');
+        localStorage.setItem('robomind_demo_cleaned_v2', 'true');
+      }
+    })();
+
     const AppState = {
-      coins: 1790,
-      energy: 85,
+      coins: parseInt(localStorage.getItem('user_coins_balance') || '0'),
+      energy: 100,
       maxEnergy: 100,
-      gems: 12,
+      gems: parseInt(localStorage.getItem('user_gems_balance') || '0'),
       soundMuted: false,
       activeTab: 'home'
     };
@@ -960,12 +1099,18 @@
       SoundFX.playSuccess();
       try {
         localStorage.setItem("robomind_intro_completed", "true");
+        // If inside React Native / Expo iframe wrapper
         if (window.parent && window.parent !== window) {
           window.parent.postMessage({ type: 'NAVIGATE', route: route }, '*');
           return;
         }
       } catch (e) {}
-      window.location.href = route;
+
+      // Fast, smooth redirect
+      showToast('🚀 Membuka game...');
+      setTimeout(() => {
+        window.location.href = route;
+      }, 150);
     }
 
     const ROBOT_POSES = [
@@ -1104,6 +1249,8 @@
         AppState.coins += 250;
         AppState.gems += 3;
         updateCounters();
+      checkUserAuth();
+      loadChildrenProfiles();
       updateScreenTimeHUD();
         if (btn) {
           btn.textContent = 'Sudah Diputar ✓';
@@ -1119,6 +1266,8 @@
         AppState.coins -= 200;
         AppState.energy = Math.min(AppState.maxEnergy, AppState.energy + 50);
         updateCounters();
+      checkUserAuth();
+      loadChildrenProfiles();
       updateScreenTimeHUD();
         SoundFX.playCoin();
         showToast('⚡ Energi bertambah +50!');
@@ -1133,6 +1282,8 @@
       AppState.coins += 150;
       AppState.gems += 2;
       updateCounters();
+      checkUserAuth();
+      loadChildrenProfiles();
       updateScreenTimeHUD();
       SoundFX.playCoin();
       confetti({ particleCount: 60, spread: 60 });
@@ -1144,6 +1295,8 @@
     function claimQuestBonus() {
       AppState.coins += 100;
       updateCounters();
+      checkUserAuth();
+      loadChildrenProfiles();
       updateScreenTimeHUD();
       SoundFX.playCoin();
       confetti({ particleCount: 60, spread: 60 });
@@ -1179,7 +1332,7 @@
     // =========================================================================
     // SCREEN TIME TRACKER CONTROLLER
     // =========================================================================
-    let screenTimeUsed = parseInt(localStorage.getItem('robomind_screentime_minutes') || '18');
+    let screenTimeUsed = parseInt(localStorage.getItem('robomind_screentime_minutes') || '0');
     let screenTimeLimit = parseInt(localStorage.getItem('robomind_screentime_limit') || '60');
 
     function updateScreenTimeHUD() {
@@ -1211,8 +1364,375 @@
       updateScreenTimeHUD();
     }, 60000);
 
+    
+    // =========================================================================
+    // SUPABASE AUTH & TELEMETRY CONTROLLER
+    // =========================================================================
+    const SUPABASE_URL = "https://rmbqodiutuyckuylhlgb.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnFvZGl1dHV5Y2t1eWxobGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTEzOTYsImV4cCI6MjA5Nzk2NzM5Nn0.V3o83hhZd5XBYcNoD-cKGTJGJ71mXVzady0XV35K0dU";
+    
+    let supabaseClient = null;
+    let currentUser = null;
+    let currentChild = null;
+
+    if (window.supabase) {
+      try {
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      } catch (e) {
+        console.warn("Supabase initialization error:", e);
+      }
+    }
+
+    async function checkUserAuth() {
+      if (!supabaseClient) return;
+      try {
+        // Fast race condition with 1.5s timeout so app never freezes on slow network
+        const sessionPromise = supabaseClient.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Auth Timeout')), 1500));
+        
+        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
+        if (session && session.user) {
+          currentUser = session.user;
+          onUserAuthenticated(session.user);
+        } else {
+          const isGuest = localStorage.getItem('robomind_guest_mode') === 'true';
+          if (!isGuest) {
+            openModal('authGuardModal');
+          }
+        }
+      } catch (e) {
+        console.warn("Auth check fast fallback:", e);
+        // Fallback to guest mode seamlessly if network is slow/offline
+        if (!localStorage.getItem('robomind_active_child_id')) {
+          localStorage.setItem('robomind_guest_mode', 'true');
+        }
+      }
+    }
+
+    async function onUserAuthenticated(user) {
+      closeModal('authGuardModal');
+      localStorage.removeItem('robomind_guest_mode');
+      
+      const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Aira Salsabila';
+      const userEl = document.querySelector('h1.font-extrabold');
+      if (userEl) {
+        userEl.innerHTML = `Halo, ${userName.split(' ')[0]}! <span class="text-xs">👋</span>`;
+      }
+
+      showToast(`👋 Selamat datang kembali, ${userName.split(' ')[0]}!`);
+    }
+
+    async function loginWithGoogle() {
+      if (!supabaseClient) return;
+      try {
+        await supabaseClient.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin
+          }
+        });
+      } catch (e) {
+        showToast('❌ Gagal membuka Google Login');
+      }
+    }
+
+    async function handleEmailAuth(e) {
+      e.preventDefault();
+      if (!supabaseClient) return;
+      
+      const email = document.getElementById('authEmailInput').value;
+      const password = document.getElementById('authPasswordInput').value;
+
+      try {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) {
+          // If login fails, try signing up
+          const { data: signUpData, error: signUpErr } = await supabaseClient.auth.signUp({ email, password });
+          if (signUpErr) {
+            showToast(`❌ ${error.message}`);
+          } else {
+            showToast('✅ Akun berhasil dibuat! Silakan cek email.');
+            if (signUpData.user) onUserAuthenticated(signUpData.user);
+          }
+        } else if (data.user) {
+          onUserAuthenticated(data.user);
+        }
+      } catch (err) {
+        showToast('❌ Kesalahan autentikasi');
+      }
+    }
+
+    function continueAsGuest() {
+      localStorage.setItem('robomind_guest_mode', 'true');
+      closeModal('authGuardModal');
+      showToast('🎮 Masuk sebagai Tamu');
+    }
+
+    // Enhanced Telemetry: Record Game Session, Level, XP, Coins & Skill Pillars
+    async function recordGameSessionToSupabase(gameId, gameTitle, category, score, xp, level = 1, coins = 50, duration = 120) {
+      // 1. Always update local storage
+      try {
+        const curXp = parseInt(localStorage.getItem('robomind_total_xp') || '1420');
+        const curCoins = parseInt(localStorage.getItem('user_coins_balance') || '1790');
+        localStorage.setItem('robomind_total_xp', String(curXp + (xp || 100)));
+        localStorage.setItem('user_coins_balance', String(curCoins + (coins || 50)));
+        localStorage.setItem(`game_level_${gameId}`, String(level));
+      } catch (e) {}
+
+      // 2. Push to Supabase if authenticated
+      if (!supabaseClient || !currentUser) return;
+      try {
+        // Insert session record
+        await supabaseClient.from('game_sessions').insert({
+          user_id: currentUser.id,
+          game_id: gameId,
+          game_title: gameTitle || gameId,
+          category: category || 'kognitif',
+          level_reached: level || 1,
+          score: score || 100,
+          xp_earned: xp || 150,
+          coins_earned: coins || 50,
+          duration_seconds: duration || 120,
+          completed_at: new Date().toISOString()
+        });
+
+        // Increment skill pillars in child_skills table
+        const pillarCol = category === 'fokus' ? 'focus_score' : 
+                          category === 'moral' ? 'moral_score' : 
+                          category === 'literasi' ? 'literacy_score' : 'logic_score';
+        
+        const { data: currentSkills } = await supabaseClient
+          .from('child_skills')
+          .select('*')
+          .eq('user_id', currentUser.id)
+          .single();
+
+        if (currentSkills) {
+          const updatedScore = Math.min(100, (currentSkills[pillarCol] || 50) + 2);
+          await supabaseClient
+            .from('child_skills')
+            .update({ [pillarCol]: updatedScore, updated_at: new Date().toISOString() })
+            .eq('user_id', currentUser.id);
+        }
+      } catch (e) {
+        console.warn("Could not push game session telemetry to Supabase:", e);
+      }
+    }
+
+    // Global PostMessage Listener for all iframe/embedded mini-games
+    window.addEventListener('message', (e) => {
+      if (e.data && (e.data.type === 'GAME_COMPLETE' || e.data.type === 'LEVEL_COMPLETE' || e.data.type === 'GAME_OVER' || e.data.type === 'GAME_RESULT')) {
+        const { gameId, title, category, score, xp, level, coins, duration } = e.data;
+        recordGameSessionToSupabase(gameId || 'mini-game', title || 'Robo Game', category || 'kognitif', score || 100, xp || 120, level || 1, coins || 50, duration || 60);
+      }
+    });
+
+    
+    // =========================================================================
+    // MULTI-USER / MULTI-CHILD PROFILE MANAGEMENT
+    // =========================================================================
+    let userChildrenList = [
+      {
+        id: 'child-1',
+        name: 'Pemain Baru',
+        age: 7,
+        avatar: 'robomind_robot_avatar.png',
+        level: 1,
+        total_xp: 0,
+        coins: 0,
+        screentime_used: 0,
+        screentime_limit: 60
+      }
+    ];
+    let activeChildIndex = 0;
+
+    function getActiveChild() {
+      return userChildrenList[activeChildIndex] || userChildrenList[0];
+    }
+
+    async function loadChildrenProfiles() {
+      // 1. Try fetching from Supabase if logged in
+      if (supabaseClient && currentUser) {
+        try {
+          const { data, error } = await supabaseClient
+            .from('children')
+            .select('*')
+            .eq('parent_id', currentUser.id)
+            .order('created_at', { ascending: true });
+
+          if (data && data.length > 0) {
+            userChildrenList = data.map(c => ({
+              id: c.id,
+              name: c.name || 'Anak',
+              age: c.age || 7,
+              avatar: c.avatar_url || 'robomind_robot_avatar.png',
+              level: c.level || 1,
+              total_xp: c.total_xp || 0,
+              coins: c.coins || 100,
+              screentime_used: c.daily_screentime_minutes || 0,
+              screentime_limit: c.screentime_limit_minutes || 60
+            }));
+          }
+        } catch (e) {
+          console.warn("Could not load children from Supabase:", e);
+        }
+      } else {
+        // Load from local storage
+        const saved = localStorage.getItem('robomind_children_profiles');
+        if (saved) {
+          try { userChildrenList = JSON.parse(saved); } catch (e) {}
+        }
+      }
+
+      // Check saved active child ID
+      const activeId = localStorage.getItem('robomind_active_child_id');
+      if (activeId) {
+        const foundIdx = userChildrenList.findIndex(c => c.id === activeId);
+        if (foundIdx >= 0) activeChildIndex = foundIdx;
+      }
+
+      renderChildrenListUI();
+      applyActiveChildUI();
+    }
+
+    function renderChildrenListUI() {
+      const container = document.getElementById('childrenProfilesList');
+      const countLabel = document.getElementById('childCountLabel');
+      if (countLabel) countLabel.innerText = `${userChildrenList.length} Profil Anak`;
+      if (!container) return;
+
+      container.innerHTML = userChildrenList.map((child, idx) => {
+        const isActive = idx === activeChildIndex;
+        return `
+          <div onclick="switchActiveChild(${idx})" class="p-2.5 rounded-xl ${isActive ? 'bg-[#00f0ff]/15 border-cyan-400 shadow-[0_0_10px_rgba(0,240,255,0.2)]' : 'bg-[#050a16] border-[#1e3b6e] hover:border-cyan-400/50'} border flex items-center justify-between cursor-pointer transition-all">
+            <div class="flex items-center gap-2.5">
+              <img src="${child.avatar}" class="w-8 h-8 rounded-full object-cover border ${isActive ? 'border-cyan-400' : 'border-slate-600'}" />
+              <div>
+                <div class="text-xs font-black text-white flex items-center gap-1.5">
+                  ${child.name}
+                  ${isActive ? '<span class="text-[9px] px-1.5 py-0.2 bg-cyan-400 text-black font-extrabold rounded">Aktif</span>' : ''}
+                </div>
+                <div class="text-[9px] text-slate-400">Level ${child.level} • ⚡ ${child.total_xp} XP</div>
+              </div>
+            </div>
+            <span class="material-symbols-outlined text-sm ${isActive ? 'text-cyan-400' : 'text-slate-500'}">
+              ${isActive ? 'radio_button_checked' : 'radio_button_unchecked'}
+            </span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function switchActiveChild(index) {
+      if (index < 0 || index >= userChildrenList.length) return;
+      activeChildIndex = index;
+      const child = userChildrenList[index];
+      localStorage.setItem('robomind_active_child_id', child.id);
+      
+      renderChildrenListUI();
+      applyActiveChildUI();
+      showToast(`✨ Beralih ke profil: ${child.name}`);
+    }
+
+    function applyActiveChildUI() {
+      const child = getActiveChild();
+      if (!child) return;
+
+      // Update Home Greeting
+      const userEl = document.querySelector('h1.font-extrabold');
+      if (userEl) {
+        userEl.innerHTML = `Halo, ${child.name.split(' ')[0]}! <span class="text-xs">👋</span>`;
+      }
+
+      // Update Profile Tab Active Card
+      const nameText = document.getElementById('activeChildNameText');
+      const badgeText = document.getElementById('activeChildLevelBadge');
+      const statsText = document.getElementById('activeChildStatsText');
+      const avatarImg = document.getElementById('activeChildAvatarImg');
+
+      if (nameText) nameText.innerText = child.name;
+      if (badgeText) badgeText.innerText = `Level ${child.level} • Junior Explorer`;
+      if (statsText) statsText.innerText = `⚡ ${child.total_xp} XP • 🪙 ${child.coins} Koin`;
+      if (avatarImg) avatarImg.src = child.avatar;
+
+      // Update Screen Time HUD
+      updateScreenTimeHUD();
+    }
+
+    async function handleAddNewChild(e) {
+      e.preventDefault();
+      const name = document.getElementById('newChildNameInput').value.trim();
+      const age = parseInt(document.getElementById('newChildAgeInput').value) || 7;
+      const avatarRadios = document.getElementsByName('childAvatar');
+      let selectedAvatar = 'robomind_robot_avatar.png';
+      for (const r of avatarRadios) {
+        if (r.checked) { selectedAvatar = r.value; break; }
+      }
+
+      if (!name) return;
+
+      const newChildObj = {
+        id: 'child-' + Date.now(),
+        name: name,
+        age: age,
+        avatar: selectedAvatar,
+        level: 1,
+        total_xp: 0,
+        coins: 100,
+        screentime_used: 0,
+        screentime_limit: 60
+      };
+
+      // Push to Supabase if logged in
+      if (supabaseClient && currentUser) {
+        try {
+          const { data, error } = await supabaseClient
+            .from('children')
+            .insert({
+              parent_id: currentUser.id,
+              name: name,
+              level: 1,
+              total_xp: 0,
+              coins: 100,
+              daily_screentime_minutes: 0,
+              screentime_limit_minutes: 60
+            })
+            .select()
+            .single();
+
+          if (data) {
+            newChildObj.id = data.id;
+          }
+        } catch (err) {
+          console.warn("Supabase child insertion:", err);
+        }
+      }
+
+      userChildrenList.push(newChildObj);
+      localStorage.setItem('robomind_children_profiles', JSON.stringify(userChildrenList));
+      activeChildIndex = userChildrenList.length - 1;
+      localStorage.setItem('robomind_active_child_id', newChildObj.id);
+
+      closeModal('addChildModal');
+      document.getElementById('newChildNameInput').value = '';
+      renderChildrenListUI();
+      applyActiveChildUI();
+      showToast(`🎉 Profil baru "${name}" berhasil dibuat!`);
+    }
+
+    async function logoutUser() {
+      if (supabaseClient) {
+        try { await supabaseClient.auth.signOut(); } catch (e) {}
+      }
+      localStorage.removeItem('robomind_guest_mode');
+      showToast('👋 Anda telah keluar dari akun');
+      setTimeout(() => window.location.reload(), 800);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       updateCounters();
+      checkUserAuth();
+      loadChildrenProfiles();
       updateScreenTimeHUD();
       renderFeaturedGame();
       try {

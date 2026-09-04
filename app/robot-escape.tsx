@@ -27,6 +27,7 @@ import Animated, {
 import Svg, { Path, Rect, Circle, G } from "react-native-svg";
 import { SPACING } from "../constants/Theme";
 import Button from "../components/ui/Button";
+import { saveGameSession } from "../lib/gameProgressService";
 
 const COINS_STORAGE_KEY = "user_coins_balance";
 const STORAGE_KEY_LEVEL = "robot_escape_current_level";
@@ -315,7 +316,7 @@ export default function RobotEscapeScreen() {
   const [robots, setRobots] = useState<EscapeRobot[]>([]);
   const [taps, setTaps] = useState(0);
   const [showHelp, setShowHelp] = useState(false);
-  const [userCoins, setUserCoins] = useState(1250);
+  const [userCoins, setUserCoins] = useState(0);
   const [coinsReward, setCoinsReward] = useState(0);
   const [gameState, setGameState] = useState<"playing" | "victory" | "completed">("playing");
   const [showIntro, setShowIntro] = useState(true);
@@ -549,6 +550,14 @@ export default function RobotEscapeScreen() {
   };
 
   const handleNextLevel = async () => {
+    saveGameSession({
+      gameId: "robot-escape",
+      level: level,
+      score: 100,
+      xpEarned: 120,
+      coinsEarned: 50,
+      completed: true,
+    });
     const nextLvl = level + 1;
     const balance = userCoins + coinsReward;
     setUserCoins(balance);
