@@ -19,6 +19,7 @@ import { HowToPlayModal } from "../components/HowToPlayModal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
 import { usePlaytimeGuard, formatDurationHMS } from "../hooks/usePlaytimeGuard";
+import { saveGameSession } from "../lib/gameProgressService";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -651,7 +652,7 @@ export default function ScrewSpinScreen() {
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [currentLevel, setCurrentLevel] = useState(1);
-  const [userCoins, setUserCoins] = useState(1250);
+  const [userCoins, setUserCoins] = useState(0);
 
   // Active Game State
   const [levelData, setLevelData] = useState<LevelData | null>(null);
@@ -989,6 +990,22 @@ export default function ScrewSpinScreen() {
 
   // Victory Handler
   const handleLevelComplete = async () => {
+    saveGameSession({
+      gameId: "screw-spin",
+      level: currentLevel,
+      score: 100,
+      xpEarned: 150,
+      coinsEarned: levelData ? levelData.coinsReward : 150,
+      completed: true,
+    });
+    saveGameSession({
+      gameId: "screw-spin",
+      level: currentLevel,
+      score: 100,
+      xpEarned: 150,
+      coinsEarned: levelData ? levelData.coinsReward : 150,
+      completed: true,
+    });
     if (soundEnabled) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     const reward = levelData ? levelData.coinsReward : 150;
     const newCoins = userCoins + reward;

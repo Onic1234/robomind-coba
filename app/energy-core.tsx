@@ -26,6 +26,7 @@ import Animated, {
 import Svg, { Path, Rect, Circle, Polygon, Line, Text as SvgText } from "react-native-svg";
 import { SPACING } from "../constants/Theme";
 import Button from "../components/ui/Button";
+import { saveGameSession } from "../lib/gameProgressService";
 
 const STORAGE_KEY_COINS = "user_coins_balance";
 const STORAGE_KEY_LEVEL = "energy_core_current_level";
@@ -388,7 +389,7 @@ export default function EnergyCoreScreen() {
   const [level, setLevel] = useState(1);
   const [cells, setCells] = useState<GridCell[]>([]);
   const [history, setHistory] = useState<GridCell[][]>([]);
-  const [userCoins, setUserCoins] = useState(1250);
+  const [userCoins, setUserCoins] = useState(0);
   const [gameState, setGameState] = useState<"playing" | "victory" | "completed">("playing");
   const [showHelp, setShowHelp] = useState(true);
   const [companionText, setCompanionText] = useState(
@@ -534,6 +535,14 @@ export default function EnergyCoreScreen() {
   };
 
   const handleNextLevel = async () => {
+    saveGameSession({
+      gameId: "energy-core",
+      level: level,
+      score: 100,
+      xpEarned: 120,
+      coinsEarned: currentLevelConfig.rewardCoins || 50,
+      completed: true,
+    });
     const nextLvl = level + 1;
     const coinsReward = currentLevelConfig.rewardCoins;
     const finalCoins = userCoins + coinsReward;

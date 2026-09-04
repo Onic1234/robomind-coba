@@ -4,13 +4,17 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ChatbotButton from "../components/ChatbotButton";
 import AppIntroFlow from "../components/AppIntroFlow";
+import { autoResetIfNeeded } from "../lib/resetProgress";
 
 export default function RootLayout() {
   const [showIntro, setShowIntro] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem("robomind_intro_completed").then((val) => {
+    // Auto-reset old cached progress on first launch after update
+    autoResetIfNeeded().then(() => {
+      return AsyncStorage.getItem("robomind_intro_completed");
+    }).then((val) => {
       if (!val) {
         setShowIntro(true);
       }
