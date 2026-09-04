@@ -1479,11 +1479,20 @@
         const urlEmail = urlParams.get('email');
 
         if (urlAccessToken && urlRefreshToken) {
-          await supabaseClient.auth.setSession({
-            access_token: urlAccessToken,
-            refresh_token: urlRefreshToken
-          });
-        } else if (urlUserId && urlEmail) {
+          try {
+            const { data } = await supabaseClient.auth.setSession({
+              access_token: urlAccessToken,
+              refresh_token: urlRefreshToken
+            });
+            if (data && data.user) {
+              currentUser = data.user;
+              onUserAuthenticated(data.user);
+              return;
+            }
+          } catch(e) {}
+        }
+        
+        if (urlUserId && urlEmail) {
           currentUser = { id: urlUserId, email: urlEmail };
           onUserAuthenticated(currentUser);
           return;
@@ -1499,8 +1508,10 @@
           onUserAuthenticated(session.user);
         } else {
           const isGuest = localStorage.getItem('robomind_guest_mode') === 'true';
-          if (!isGuest) {
+          if (!isGuest && !urlUserId) {
             openModal('authGuardModal');
+          } else {
+            localStorage.setItem('robomind_guest_mode', 'true');
           }
         }
       } catch (e) {

@@ -1394,6 +1394,33 @@
     async function checkUserAuth() {
       if (!supabaseClient) return;
       try {
+        // Read URL query params passed from web portal
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlAccessToken = urlParams.get('access_token');
+        const urlRefreshToken = urlParams.get('refresh_token');
+        const urlUserId = urlParams.get('user_id');
+        const urlEmail = urlParams.get('email');
+
+        if (urlAccessToken && urlRefreshToken) {
+          try {
+            const { data } = await supabaseClient.auth.setSession({
+              access_token: urlAccessToken,
+              refresh_token: urlRefreshToken
+            });
+            if (data && data.user) {
+              currentUser = data.user;
+              onUserAuthenticated(data.user);
+              return;
+            }
+          } catch(e) {}
+        }
+        
+        if (urlUserId && urlEmail) {
+          currentUser = { id: urlUserId, email: urlEmail };
+          onUserAuthenticated(currentUser);
+          return;
+        }
+
         // Fast race condition with 1.5s timeout so app never freezes on slow network
         const sessionPromise = supabaseClient.auth.getSession();
         const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Auth Timeout')), 1500));
@@ -1403,14 +1430,16 @@
           currentUser = session.user;
           onUserAuthenticated(session.user);
         } else {
+          // If launched inside iframe with parent session or guest mode, don't show login modal
           const isGuest = localStorage.getItem('robomind_guest_mode') === 'true';
-          if (!isGuest) {
+          if (!isGuest && !urlUserId) {
             openModal('authGuardModal');
+          } else {
+            localStorage.setItem('robomind_guest_mode', 'true');
           }
         }
       } catch (e) {
         console.warn("Auth check fast fallback:", e);
-        // Fallback to guest mode seamlessly if network is slow/offline
         if (!localStorage.getItem('robomind_active_child_id')) {
           localStorage.setItem('robomind_guest_mode', 'true');
         }
