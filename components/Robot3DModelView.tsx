@@ -21,7 +21,7 @@ ANIMATIONS.forEach((anim) => {
 // 3D Robot Model Component
 function RobotModel({ modelUrl, onRobotClick }: { modelUrl: string; onRobotClick: () => void }) {
   const { scene, animations } = useGLTF(modelUrl);
-  const groupRef = React.useRef<any>();
+  const groupRef = React.useRef<any>(null);
   const { actions, names } = useAnimations(animations, groupRef);
   
   React.useMemo(() => {
@@ -30,7 +30,7 @@ function RobotModel({ modelUrl, onRobotClick }: { modelUrl: string; onRobotClick
         if (child.material) {
           // If child has multiple materials or single material
           if (Array.isArray(child.material)) {
-            child.material.forEach((mat) => {
+            child.material.forEach((mat: any) => {
               mat.color.set('#ffffff');
               mat.roughness = 0.15;
               mat.metalness = 0.1;

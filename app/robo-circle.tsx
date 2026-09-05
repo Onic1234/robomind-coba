@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import {
-  StyleSheet,
+import { ScrollView, StyleSheet,
   View,
   Text,
   Pressable,
@@ -25,7 +24,6 @@ import Animated, {
 import Svg, { Rect, Circle, Line, Path, Polygon, G } from "react-native-svg";
 import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../constants/Theme";
 import Button from "../components/ui/Button";
-import { saveGameSession } from "../lib/gameProgressService";
 
 const COINS_STORAGE_KEY = "user_coins_balance";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -414,7 +412,7 @@ const ConfettiPiece = ({
 export default function RoboCircleScreen() {
   const router = useRouter();
   const [level, setLevel] = useState(1);
-  const [userCoins, setUserCoins] = useState(0);
+  const [userCoins, setUserCoins] = useState(1250);
   const [gameState, setGameState] = useState<"playing" | "victory" | "completed" | "failed">("playing");
   const [showHelp, setShowHelp] = useState(true);
 
@@ -650,14 +648,6 @@ export default function RoboCircleScreen() {
   };
 
   const handleNextLevel = async () => {
-    saveGameSession({
-      gameId: "robo-circle",
-      level: level,
-      score: 100,
-      xpEarned: 100,
-      coinsEarned: 40,
-      completed: true,
-    });
     triggerHaptic("light");
     const nextLvl = level + 1;
     const finalBalance = userCoins + LEVEL_CONFIGS.find((l) => l.level === level)!.rewardCoins;
@@ -762,7 +752,7 @@ export default function RoboCircleScreen() {
         </View>
 
         <View style={styles.coinsHeaderBadge}>
-          <MaterialCommunityIcons name="coin" size={18} color="#F59E0B" />
+          <MaterialCommunityIcons name="currency-usd" size={18} color="#F59E0B" />
           <Text style={styles.coinsHeaderVal}>{userCoins}</Text>
         </View>
       </View>
@@ -1118,10 +1108,10 @@ export default function RoboCircleScreen() {
             {/* ACTION BUTTONS */}
             <View style={styles.resultActions}>
               <Pressable style={styles.btnGhost} onPress={() => router.back()}>
-                <Text style={styles.btnGhostText}>[ Kembali Ke Menu Utama ]</Text>
+                <Text style={styles.btnGhostText}>Kembali Ke Menu Utama</Text>
               </Pressable>
               <Pressable style={styles.btnPrimaryNext} onPress={handleNextLevel}>
-                <Text style={styles.btnPrimaryNextText}>[ CONTINUE (Lanjut Level) ➔ ]</Text>
+                <Text style={styles.btnPrimaryNextText}>Lanjut Level ➔</Text>
               </Pressable>
             </View>
           </View>
@@ -1141,7 +1131,7 @@ export default function RoboCircleScreen() {
             <View style={styles.rewardSummary}>
               <Text style={styles.rewardLabel}>HADIAH TOTAL</Text>
               <View style={styles.rewardBadge}>
-                <MaterialCommunityIcons name="coin" size={20} color="#F59E0B" />
+                <MaterialCommunityIcons name="currency-usd" size={20} color="#F59E0B" />
                 <Text style={styles.rewardBadgeText}>+{currentLevelConfig.rewardCoins} Koin</Text>
               </View>
             </View>
@@ -1223,7 +1213,7 @@ export default function RoboCircleScreen() {
             {/* ACTION BUTTONS */}
             <View style={styles.resultActions}>
               <Pressable style={styles.btnGhost} onPress={() => router.back()}>
-                <Text style={styles.btnGhostText}>[ Kembali Ke Menu Utama ]</Text>
+                <Text style={styles.btnGhostText}>Kembali Ke Menu Utama</Text>
               </Pressable>
               <Pressable style={[styles.btnPrimaryNext, { backgroundColor: "#DC2626" }]} onPress={handleRestartLevel}>
                 <Text style={styles.btnPrimaryNextText}>[ COBA LAGI 🔄 ]</Text>

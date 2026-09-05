@@ -1,27 +1,158 @@
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-	<title>Judul Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Robo Bros - 2D Platformer</title>
     <style>
-html,body { margin: 0;overflow: hidden;}
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+        html, body {
+            width: 100vw; height: 100vh; overflow: hidden;
+            background: #0f172a; color: #FFF;
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        #game {
+            width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            position: relative;
+        }
+        #gameArea {
+            width: 100%; height: 100%;
+            position: relative;
+            display: flex; justify-content: center; align-items: center;
+        }
         canvas {
             display: block; margin: auto;
             width: 100%; height: 100%;
             object-fit: contain;
             background: #0f172a;
         }
-#gameArea {width:80%; position:absolute;}
-#game {margin:50px;}
-	</style>
- 	<script type="text/javascript" src="https://www.wandah.org/js/gameLib.js"></script>       
+        /* Touch Controls */
+        .touch-controls {
+            position: absolute; bottom: 20px; left: 0; right: 0;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0 24px; z-index: 99; pointer-events: none;
+        }
+        .dpad-group { display: flex; gap: 12px; pointer-events: auto; }
+        .action-group { pointer-events: auto; }
+        .ctrl-btn {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: rgba(15, 23, 42, 0.8); border: 2.5px solid rgba(245, 158, 11, 0.8);
+            color: #F8FAFC; font-size: 24px; font-weight: bold;
+            display: flex; justify-content: center; align-items: center;
+            touch-action: manipulation; box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+            cursor: pointer;
+        }
+        .ctrl-btn:active { background: rgba(245, 158, 11, 0.95); color: #0F172A; transform: scale(0.92); }
+        .btn-jump { width: 72px; height: 72px; background: rgba(16, 185, 129, 0.9); border-color: #34D399; font-size: 28px; }
+        .btn-jump:active { background: #059669; }
+    </style>
 </head>
 <body>
-<div id="game">
-	<div id="gameArea"><canvas id="canvas"></canvas></div>
-</div>
+    <div id="game">
+        <div id="gameArea">
+            <canvas id="canvas"></canvas>
+        </div>
+    </div>
+
+    <!-- On-screen Virtual Controls -->
+    <div class="touch-controls">
+        <div class="dpad-group">
+            <div class="ctrl-btn" onmousedown="pressBtn('kiri')" onmouseup="releaseBtn('kiri')" ontouchstart="pressBtn('kiri')" ontouchend="releaseBtn('kiri')">◀</div>
+            <div class="ctrl-btn" onmousedown="pressBtn('kanan')" onmouseup="releaseBtn('kanan')" ontouchstart="pressBtn('kanan')" ontouchend="releaseBtn('kanan')">▶</div>
+        </div>
+        <div class="action-group">
+            <div class="ctrl-btn btn-jump" onmousedown="pressBtn('jump')" onmouseup="releaseBtn('jump')" ontouchstart="pressBtn('jump')" ontouchend="releaseBtn('jump')">▲</div>
+        </div>
+    </div>
+
+    <!-- VICTORY / RESULT MODAL OVERLAY (2-COLUMN COGNITIVE RADAR CHART) -->
+    <div id="resultModal" style="position: fixed; inset: 0; background: rgba(3, 7, 18, 0.88); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 999; padding: 16px;">
+        <div style="max-height: 92vh; overflow-y: auto; background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(11, 19, 41, 0.98)); border: 1.5px solid rgba(56, 189, 248, 0.4); border-radius: 24px; padding: 24px; max-width: 680px; width: 95%; box-shadow: 0 0 40px rgba(0, 229, 255, 0.35); text-align: left;">
+            <!-- HEADER -->
+            <div style="text-align: center; border-bottom: 1px dashed rgba(255,255,255,0.12); padding-bottom: 12px; margin-bottom: 16px;">
+                <div id="modalMissionTag" style="font-size: 12px; font-weight: 900; color: #F59E0B; letter-spacing: 2px; margin-bottom: 4px;">🎉 MISI SELESAI!</div>
+                <h2 id="modalLevelTitle" style="font-size: 22px; font-weight: 900; color: #34D399; margin-bottom: 4px; letter-spacing: 0.5px;">HEBAT! LEVEL 1 SELESAI!</h2>
+                <p id="modalSubText" style="font-size: 12.5px; color: #CBD5E1;">Kamu berhasil mengumpulkan buah dan menyeberang dengan aman!</p>
+            </div>
+
+            <!-- DUAL COLUMN GRID -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                <!-- LEFT COLUMN: PENCAPAIAN MISI -->
+                <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="font-size: 12px; font-weight: 900; color: #38BDF8; letter-spacing: 1px; margin-bottom: 8px; text-align: center;">🏆 PENCAPAIAN GAME</div>
+                        <div id="modalStars" style="text-align: center; font-size: 24px; color: #F59E0B; margin-bottom: 12px;">⭐ ⭐ ⭐</div>
+                        <div style="font-size: 12px; color: #E2E8F0; display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;">
+                            <div>🍓 Buah Segar Terkumpul: <strong style="color: #34D399;" id="resFruitCount">8 / 8 Buah</strong></div>
+                            <div>🛡️ Status Kelincahan: <strong style="color: #38BDF8;" id="resAccuracy">100% Bebas Luka</strong></div>
+                            <div>⏱️ Bonus Kecepatan: <strong style="color: #F59E0B;" id="resTimeBonus">+27 Detik</strong></div>
+                        </div>
+                    </div>
+                    <div style="border-top: 1px dashed rgba(255,255,255,0.15); padding-top: 10px; font-size: 12px; color: #CBD5E1;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span>Koin Level:</span>
+                            <strong style="color: #F59E0B;" id="modalScoreText">+170 Koin</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span>Bonus Kelincahan:</span>
+                            <strong style="color: #38BDF8;" id="modalBonusText">+44 Koin</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.95rem; font-weight: 900; color: #00FF88; border-top: 1px solid rgba(255,255,255,0.15); padding-top: 6px;">
+                            <span>🪙 TOTAL KOIN HADIAH:</span>
+                            <span style="color: #F59E0B;" id="modalCoinText">214 KOIN</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: ANALISIS PERKEMBANGAN OTAK RADAR CHART -->
+                <div style="background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(168, 85, 247, 0.35); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                    <div style="font-size: 13px; font-weight: 900; color: #C084FC; margin-bottom: 2px;">🧠 Analisis Perkembangan Otak</div>
+                    <div style="font-size: 10.5px; color: #94A3B8; margin-bottom: 8px;">Prefrontal Cortex & Kontrol Emosi</div>
+                    <div style="width: 210px; height: 190px; display: flex; align-items: center; justify-content: center;">
+                        <canvas id="brosRadarCanvas" width="210" height="190"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ACTION BUTTONS -->
+            <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                <button onclick="exitToCover()" style="padding: 11px 24px; border-radius: 30px; background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(148, 163, 184, 0.3); color: #E2E8F0; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+                    Kembali Ke Peta Utama
+                </button>
+                <button id="btnNextLevel" onclick="continueNextLevel()" style="padding: 11px 30px; border-radius: 30px; background: linear-gradient(135deg, #0284C7, #0B84FF); border: none; color: #FFF; font-size: 13.5px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4); transition: all 0.2s;">
+                    Lanjut Level ➔
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="js/gameLib.js"></script>
+    <script type="text/javascript" src="js/map_1.js"></script>
+    <script type="text/javascript" src="js/map_2.js"></script>
+    <script type="text/javascript" src="js/map_3.js"></script>
+    <script type="text/javascript" src="js/map_4.js"></script>
+    <script type="text/javascript" src="js/map_5.js"></script>
+    <script type="text/javascript" src="js/map_6.js"></script>
+    <script type="text/javascript" src="js/map_7.js"></script>
+    <script type="text/javascript" src="js/map_8.js"></script>
+    <script type="text/javascript" src="js/map_9.js"></script>
+    <script type="text/javascript" src="js/map_10.js"></script>
+    <script type="text/javascript" src="js/game.js"></script>
+    <script>
+        function pressBtn(action) {
+            if (!window.game) return;
+            if (action === 'kiri') { window.game.kiri = true; if (typeof window.kiri !== 'undefined') window.kiri = true; }
+            if (action === 'kanan') { window.game.kanan = true; if (typeof window.kanan !== 'undefined') window.kanan = true; }
+            if (action === 'jump') { window.game.atas = true; window.game.spasi = true; if (typeof window.atas !== 'undefined') window.atas = true; }
+        }
+        function releaseBtn(action) {
+            if (!window.game) return;
+            if (action === 'kiri') { window.game.kiri = false; if (typeof window.kiri !== 'undefined') window.kiri = false; }
+            if (action === 'kanan') { window.game.kanan = false; if (typeof window.kanan !== 'undefined') window.kanan = false; }
+            if (action === 'jump') { window.game.atas = false; window.game.spasi = false; if (typeof window.atas !== 'undefined') window.atas = false; }
+        }
+    </script>
 </body>
-<script type="text/javascript" src="js/map_1.js"></script>
-<script type="text/javascript" src="js/map_2.js"></script>
-<script type="text/javascript" src="js/game.js"></script>
 </html>

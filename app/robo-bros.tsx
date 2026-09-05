@@ -100,7 +100,7 @@ export default function RoboBrosScreen() {
   }, []);
 
   return (
-    <View style={styles.webContainer} onClick={() => iframeRef.current?.focus()}>
+    <View style={styles.webContainer} {...({ onClick: () => iframeRef.current?.focus() } as any)}>
       <StatusBar hidden />
 
       {loading && (
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
     left: 0,
     width: "100%",
     height: "100%",
-    border: "none",
+    borderWidth: 0,
     backgroundColor: "#0f172a",
   },
   loadingOverlay: {
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   mobileTitle: {
-    ...FONTS.h2,
+    ...FONTS.heading,
     fontSize: 28,
     color: "#38bdf8",
     fontWeight: "900",

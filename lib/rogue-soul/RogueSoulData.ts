@@ -68,7 +68,7 @@ export interface AchievementItem {
 export const COSTUME_SKINS: CostumeSkin[] = [
   {
     id: "rogue_default",
-    name: "Rogue Bandit",
+    name: "Robo Runner",
     description: "Kostum petualang klasik. Lincah, cepat, dan selalu siap beraksi.",
     priceCoins: 0,
     priceGems: 0,
@@ -238,7 +238,7 @@ export const CAMPAIGN_LEVELS: LevelData[] = [
   {
     id: 1,
     name: "Hutan Pinggiran",
-    subtitle: "Level 1: Outskirts of Rogue Town",
+    subtitle: "Level 1: Outskirts of Robo Town",
     environment: "forest",
     themeColor: "#10B981",
     targetDistance: 1200,

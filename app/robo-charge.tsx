@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import {
-  StyleSheet,
+import { ScrollView, StyleSheet,
   View,
   Text,
   Pressable,
@@ -15,7 +14,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { HowToPlayModal } from "../components/HowToPlayModal";
 import * as Haptics from "expo-haptics";
 import Svg, { Rect, Circle, Path, Line, Ellipse, Text as SvgText } from "react-native-svg";
-import { saveGameSession } from "../lib/gameProgressService";
 
 const COINS_STORAGE_KEY = "user_coins_balance";
 const LEVEL_STORAGE_KEY = "robo_charge_current_level";
@@ -769,15 +767,6 @@ export default function RoboChargeScreen() {
 
   // Handle Victory Progress Saving
   const handleLevelComplete = async (finalTime: number) => {
-    saveGameSession({
-      gameId: "robo-charge",
-      level: currentLevel,
-      score: Math.max(50, 1000 - Math.round(finalTime) * 10),
-      xpEarned: 140,
-      coinsEarned: 60,
-      durationSeconds: Math.round(finalTime),
-      completed: true,
-    });
     setView("victory");
 
     // Star score mapping
@@ -830,7 +819,7 @@ export default function RoboChargeScreen() {
         <Text style={styles.headerTitle}>Robo Charge: Bull Escape</Text>
 
         <View style={styles.coinsHeaderBadge}>
-          <MaterialCommunityIcons name="coin" size={16} color="#FBBF24" />
+          <MaterialCommunityIcons name="currency-usd" size={16} color="#FBBF24" />
           <Text style={styles.coinsHeaderVal}>{userCoins}</Text>
         </View>
       </View>
@@ -1157,7 +1146,7 @@ export default function RoboChargeScreen() {
           <View style={styles.victoryRewardCard}>
             <Text style={{ color: "#94A3B8", fontSize: 12, fontWeight: "600" }}>HADIAH KOIN</Text>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 }}>
-              <MaterialCommunityIcons name="coin" size={20} color="#FBBF24" />
+              <MaterialCommunityIcons name="currency-usd" size={20} color="#FBBF24" />
               <Text style={{ color: "#FFF", fontSize: 24, fontWeight: "800" }}>+{activeCity.rewardCoins}</Text>
             </View>
           </View>

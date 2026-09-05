@@ -189,19 +189,20 @@ function ulangiPermainan(){
 
 function gameLoop(){
 	hapusLayar("#0b192c");
+	var moveSpeed = game.lompat ? 2.6 : 1.6;
 	if (game.kanan){
-		gerakLevel(game.hero, 1.8, 0);
+		gerakLevel(game.hero, moveSpeed, 0);
 	}else if (game.kiri){				
-		gerakLevel(game.hero, -1.8, 0);
+		gerakLevel(game.hero, -moveSpeed, 0);
 	}
 	if (game.atas){
-		gerakLevel(game.hero, 0, -9.2);
+		gerakLevel(game.hero, 0, -9.4);
 	}
 		
-	latar(dataGambar.bg, 0, 0.5);
+	latar(dataGambar.bg, 0.3, 0);
 	buatLevel();
 	cekItem();
-	teks(game.score, 40, 60, "Calibri-bold-20pt-left-biru");
+	teks(game.score, 40, 70, "Calibri-bold-20pt-left-biru");
 	efekTransisi();
 }
 
@@ -342,19 +343,19 @@ function showBrosResultModal(isWin) {
 
 	const missionTagEl = document.getElementById('modalMissionTag');
 	if (missionTagEl) {
-		missionTagEl.innerText = isWin ? "MISSION COMPLETED" : "MISSION FAILED";
-		missionTagEl.style.color = isWin ? "#F59E0B" : "#EF4444";
+		missionTagEl.innerText = isWin ? "🎉 MISI SELESAI!" : "💪 TETAP SEMANGAT!";
+		missionTagEl.style.color = isWin ? "#F59E0B" : "#38BDF8";
 	}
 
 	const titleEl = document.getElementById('modalLevelTitle');
 	if (titleEl) {
-		titleEl.innerText = isWin ? `EXCELLENT! LEVEL ${currentLvl} CLEARED!` : `ROBOT TERHENTI! LEVEL ${currentLvl}`;
+		titleEl.innerText = isWin ? `HEBAT! LEVEL ${currentLvl} SELESAI!` : `YAH, ROBOT TERHENTI DI LEVEL ${currentLvl}`;
 		titleEl.style.color = isWin ? "#34D399" : "#EF4444";
 	}
 
 	const subTextEl = document.getElementById('modalSubText');
 	if (subTextEl) {
-		subTextEl.innerText = isWin ? "Petualangan Robo-Bros → Selesai!" : "Robot Terkena Rintangan / Jatuh Ke Jurang";
+		subTextEl.innerText = isWin ? "Kamu berhasil mengumpulkan buah dan menyeberang dengan aman!" : "Jangan menyerah! Robotmu sudah berjuang hebat, yuk coba lagi!";
 	}
 
 	const starEl = document.getElementById('modalStars');
@@ -363,13 +364,13 @@ function showBrosResultModal(isWin) {
 	}
 
 	const fruitEl = document.getElementById('resFruitCount');
-	if (fruitEl) fruitEl.innerText = isWin ? "8/8 Buah Segar" : `${Math.floor(baseScore / 10)} Buah Segar`;
+	if (fruitEl) fruitEl.innerText = isWin ? "8 / 8 Buah Segar" : `${Math.floor(baseScore / 10)} Buah Segar`;
 
 	const accuracyEl = document.getElementById('resAccuracy');
-	if (accuracyEl) accuracyEl.innerText = isWin ? "100% Bebas Luka" : "Terkena Luka Rintangan";
+	if (accuracyEl) accuracyEl.innerText = isWin ? "100% Bebas Luka" : "Tersenggol Rintangan";
 
 	const timeEl = document.getElementById('resTimeBonus');
-	if (timeEl) timeEl.innerText = isWin ? "+27s" : "+0s";
+	if (timeEl) timeEl.innerText = isWin ? "+27 Detik" : "+0 Detik";
 
 	const scoreTextEl = document.getElementById('modalScoreText');
 	if (scoreTextEl) scoreTextEl.innerText = `+${baseScore} Koin`;
@@ -383,13 +384,13 @@ function showBrosResultModal(isWin) {
 	const btnNext = document.getElementById('btnNextLevel');
 	if (btnNext) {
 		if (!isWin) {
-			btnNext.innerText = "[ 🔄 COBA LAGI (Ulangi Level) ]";
+			btnNext.innerText = "🔄 Coba Lagi";
 			btnNext.style.background = "linear-gradient(135deg, #EF4444, #DC2626)";
-		} else if (currentLvl >= 2) {
-			btnNext.innerText = "[ SELESAI & KLAIM HADIAH 🏆 ]";
+		} else if (currentLvl >= 10) {
+			btnNext.innerText = "Klaim Hadiah Ultimate 🏆";
 			btnNext.style.background = "linear-gradient(135deg, #10B981, #059669)";
 		} else {
-			btnNext.innerText = "[ CONTINUE (Lanjut Level) ➔ ]";
+			btnNext.innerText = `Lanjut ke Level ${currentLvl + 1} ➔`;
 			btnNext.style.background = "linear-gradient(135deg, #0284C7, #0B84FF)";
 		}
 	}
@@ -417,7 +418,7 @@ function continueNextLevel() {
 
 	if (lastModalResultWin) {
 		game.level++;
-		if (game.level >= 3) {
+		if (game.level > 10) {
 			game.level = 1;
 			jalankan(halamanCover);
 		} else {

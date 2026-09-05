@@ -394,6 +394,10 @@ const SciFiPlateView = ({
       dropY.value = withTiming(350, { duration: 550, easing: Easing.in(Easing.quad) });
       rotateDeg.value = withTiming(25, { duration: 550 });
       opacity.value = withTiming(0, { duration: 500 });
+    } else {
+      dropY.value = 0;
+      rotateDeg.value = 0;
+      opacity.value = 1;
     }
   }, [plate.isDetached]);
 
@@ -452,91 +456,156 @@ const SciFiPlateView = ({
 };
 
 // ----------------------------------------------------
-// GENERATE BALANCED & HAND-CRAFTED LEVELS (1 TO 55)
+// GENERATE BALANCED & PROCEDURAL LEVELS (1 TO 55)
 // ----------------------------------------------------
+const PLATE_STYLES = [
+  { color: "rgba(16, 185, 129, 0.25)", border: "#10B981" }, // green
+  { color: "rgba(139, 92, 246, 0.25)", border: "#8B5CF6" }, // purple
+  { color: "rgba(236, 72, 153, 0.25)", border: "#EC4899" }, // pink
+  { color: "rgba(6, 182, 212, 0.25)", border: "#06B6D4" },  // cyan
+  { color: "rgba(245, 158, 11, 0.25)", border: "#F59E0B" }, // yellow
+  { color: "rgba(59, 130, 246, 0.25)", border: "#3B82F6" }, // blue
+  { color: "rgba(249, 115, 22, 0.25)", border: "#F97316" }, // orange
+];
+
+function pseudoRandom(seed: number) {
+  let s = seed % 2147483647;
+  if (s <= 0) s += 2147483646;
+  return () => {
+    s = (s * 16807) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+function choice<T>(arr: T[], rand: () => number): T {
+  return arr[Math.floor(rand() * arr.length)];
+}
+
 const generateLevel = (levelNum: number): LevelData => {
   let plates: PlateItem[] = [];
   let screws: ScrewItem[] = [];
 
+  const rand = pseudoRandom(levelNum * 1000 + 42);
+  const colorKeys = Object.keys(SCREW_COLORS);
+
   if (levelNum === 1) {
     // Level 1: 1 Plate, 3 Screws
     plates = [
-      { id: "p1", color: "rgba(6, 182, 212, 0.25)", borderColor: "#00E5FF", x: 35, y: 50, width: 220, height: 160, borderRadius: 24, layer: 0, screwIds: ["s1", "s2", "s3"] },
+      { id: `l${levelNum}_p1`, color: "rgba(6, 182, 212, 0.25)", borderColor: "#00E5FF", x: 35, y: 50, width: 220, height: 160, borderRadius: 24, layer: 0, screwIds: [`l${levelNum}_s1`, `l${levelNum}_s2`, `l${levelNum}_s3`] },
     ];
     screws = [
-      { id: "s1", colorId: "green", x: 65, y: 90, layer: 0, plateIds: ["p1"] },
-      { id: "s2", colorId: "green", x: 225, y: 90, layer: 0, plateIds: ["p1"] },
-      { id: "s3", colorId: "green", x: 145, y: 170, layer: 0, plateIds: ["p1"] },
+      { id: `l${levelNum}_s1`, colorId: "green", x: 65, y: 90, layer: 0, plateIds: [`l${levelNum}_p1`] },
+      { id: `l${levelNum}_s2`, colorId: "green", x: 225, y: 90, layer: 0, plateIds: [`l${levelNum}_p1`] },
+      { id: `l${levelNum}_s3`, colorId: "green", x: 145, y: 170, layer: 0, plateIds: [`l${levelNum}_p1`] },
     ];
   } else if (levelNum === 2) {
     // Level 2: 2 Plates (3 Green, 3 Purple)
     plates = [
-      { id: "p1", color: "rgba(16, 185, 129, 0.25)", borderColor: "#10B981", x: 25, y: 30, width: 240, height: 100, borderRadius: 20, layer: 0, screwIds: ["s1", "s2", "s3"] },
-      { id: "p2", color: "rgba(139, 92, 246, 0.25)", borderColor: "#8B5CF6", x: 25, y: 140, width: 240, height: 100, borderRadius: 20, layer: 0, screwIds: ["s4", "s5", "s6"] },
+      { id: `l${levelNum}_p1`, color: "rgba(16, 185, 129, 0.25)", borderColor: "#10B981", x: 25, y: 30, width: 240, height: 100, borderRadius: 20, layer: 0, screwIds: [`l${levelNum}_s1`, `l${levelNum}_s2`, `l${levelNum}_s3`] },
+      { id: `l${levelNum}_p2`, color: "rgba(139, 92, 246, 0.25)", borderColor: "#8B5CF6", x: 25, y: 140, width: 240, height: 100, borderRadius: 20, layer: 0, screwIds: [`l${levelNum}_s4`, `l${levelNum}_s5`, `l${levelNum}_s6`] },
     ];
     screws = [
-      { id: "s1", colorId: "green", x: 55, y: 80, layer: 0, plateIds: ["p1"] },
-      { id: "s2", colorId: "green", x: 145, y: 80, layer: 0, plateIds: ["p1"] },
-      { id: "s3", colorId: "green", x: 235, y: 80, layer: 0, plateIds: ["p1"] },
-      { id: "s4", colorId: "purple", x: 55, y: 190, layer: 0, plateIds: ["p2"] },
-      { id: "s5", colorId: "purple", x: 145, y: 190, layer: 0, plateIds: ["p2"] },
-      { id: "s6", colorId: "purple", x: 235, y: 190, layer: 0, plateIds: ["p2"] },
-    ];
-  } else if (levelNum === 3) {
-    // Level 3: 2 Overlapping Plates (Layer 0 bottom bar + Layer 1 top bar)
-    plates = [
-      { id: "p1", color: "rgba(6, 182, 212, 0.25)", borderColor: "#06B6D4", x: 25, y: 30, width: 240, height: 120, borderRadius: 20, layer: 0, screwIds: ["s1", "s2", "s3"] },
-      { id: "p2", color: "rgba(245, 158, 11, 0.25)", borderColor: "#F59E0B", x: 45, y: 100, width: 200, height: 140, borderRadius: 20, layer: 1, screwIds: ["s4", "s5", "s6", "s7"] },
-    ];
-    screws = [
-      { id: "s1", colorId: "cyan", x: 55, y: 60, layer: 0, plateIds: ["p1"] },
-      { id: "s2", colorId: "cyan", x: 145, y: 60, layer: 0, plateIds: ["p1"] },
-      { id: "s3", colorId: "cyan", x: 235, y: 60, layer: 0, plateIds: ["p1"] },
-      { id: "s4", colorId: "yellow", x: 65, y: 130, layer: 1, plateIds: ["p2"] },
-      { id: "s5", colorId: "yellow", x: 225, y: 130, layer: 1, plateIds: ["p2"] },
-      { id: "s6", colorId: "yellow", x: 65, y: 210, layer: 1, plateIds: ["p2"] },
-      { id: "s7", colorId: "yellow", x: 225, y: 210, layer: 1, plateIds: ["p2"] },
+      { id: `l${levelNum}_s1`, colorId: "green", x: 55, y: 80, layer: 0, plateIds: [`l${levelNum}_p1`] },
+      { id: `l${levelNum}_s2`, colorId: "green", x: 145, y: 80, layer: 0, plateIds: [`l${levelNum}_p1`] },
+      { id: `l${levelNum}_s3`, colorId: "green", x: 235, y: 80, layer: 0, plateIds: [`l${levelNum}_p1`] },
+      { id: `l${levelNum}_s4`, colorId: "purple", x: 55, y: 190, layer: 0, plateIds: [`l${levelNum}_p2`] },
+      { id: `l${levelNum}_s5`, colorId: "purple", x: 145, y: 190, layer: 0, plateIds: [`l${levelNum}_p2`] },
+      { id: `l${levelNum}_s6`, colorId: "purple", x: 235, y: 190, layer: 0, plateIds: [`l${levelNum}_p2`] },
     ];
   } else {
-    // Level 4 & Up: Multi-Layered Translucent Glass Grid Puzzle
-    plates = [
-      { id: "p0", color: "rgba(15, 23, 42, 0.95)", borderColor: "rgba(0, 229, 255, 0.4)", x: 45, y: 10, width: 200, height: 260, borderRadius: 36, layer: 0, screwIds: ["sb1", "sb2", "sb3", "sb4", "sb5", "sb6"] },
-      { id: "p1", color: "rgba(59, 130, 246, 0.25)", borderColor: "#3B82F6", x: 25, y: 20, width: 115, height: 115, borderRadius: 22, layer: 1, screwIds: ["s1", "s2", "s3", "s4"] },
-      { id: "p2", color: "rgba(6, 182, 212, 0.25)", borderColor: "#06B6D4", x: 155, y: 20, width: 115, height: 115, borderRadius: 22, layer: 1, screwIds: ["s5", "s6", "s7", "s8"] },
-      { id: "p3", color: "rgba(139, 92, 246, 0.25)", borderColor: "#8B5CF6", x: 25, y: 150, width: 115, height: 115, borderRadius: 22, layer: 1, screwIds: ["s9", "s10", "s11", "s12"] },
-      { id: "p4", color: "rgba(16, 185, 129, 0.25)", borderColor: "#10B981", x: 155, y: 150, width: 115, height: 115, borderRadius: 22, layer: 1, screwIds: ["s13", "s14", "s15", "s16"] },
-    ];
+    // Level 3 & up: Procedural & 100% solvable
+    const numPlates = Math.min(6, 2 + Math.floor(levelNum / 8));
+    const numColors = Math.min(6, 2 + Math.floor(levelNum / 10));
+    const colorsUsed = colorKeys.slice(0, numColors);
 
-    screws = [
-      // Layer 0 Screws (Underneath)
-      { id: "sb1", colorId: "yellow", x: 100, y: 35, layer: 0, plateIds: ["p0"] },
-      { id: "sb2", colorId: "purple", x: 145, y: 35, layer: 0, plateIds: ["p0"] },
-      { id: "sb3", colorId: "pink", x: 100, y: 90, layer: 0, plateIds: ["p0"] },
-      { id: "sb4", colorId: "yellow", x: 195, y: 90, layer: 0, plateIds: ["p0"] },
-      { id: "sb5", colorId: "pink", x: 100, y: 190, layer: 0, plateIds: ["p0"] },
-      { id: "sb6", colorId: "yellow", x: 195, y: 190, layer: 0, plateIds: ["p0"] },
+    // Layer 0 Base Plate
+    const basePlate: PlateItem = {
+      id: `l${levelNum}_p0`,
+      color: "rgba(15, 23, 42, 0.92)",
+      borderColor: "rgba(0, 229, 255, 0.4)",
+      x: 35, y: 15, width: 220, height: 250, borderRadius: 32,
+      layer: 0,
+      screwIds: [],
+    };
+    plates.push(basePlate);
 
-      // Layer 1 Screws (Top Corner Plates)
-      { id: "s1", colorId: "blue", x: 45, y: 40, layer: 1, plateIds: ["p1"] },
-      { id: "s2", colorId: "purple", x: 120, y: 40, layer: 1, plateIds: ["p1"] },
-      { id: "s3", colorId: "purple", x: 45, y: 115, layer: 1, plateIds: ["p1"] },
-      { id: "s4", colorId: "yellow", x: 120, y: 115, layer: 1, plateIds: ["p1"] },
+    const gridCols = 2;
+    const gridRows = Math.min(3, Math.max(2, Math.floor((numPlates + 1) / 2)));
+    const boxW = 105;
+    const boxH = 105;
+    const marginX = 25;
+    const marginY = 20;
+    const gapX = 20;
+    const gapY = 15;
 
-      { id: "s5", colorId: "cyan", x: 175, y: 40, layer: 1, plateIds: ["p2"] },
-      { id: "s6", colorId: "green", x: 250, y: 40, layer: 1, plateIds: ["p2"] },
-      { id: "s7", colorId: "purple", x: 175, y: 115, layer: 1, plateIds: ["p2"] },
-      { id: "s8", colorId: "yellow", x: 250, y: 115, layer: 1, plateIds: ["p2"] },
+    let plateIdx = 1;
+    let screwCounter = 1;
 
-      { id: "s9", colorId: "green", x: 45, y: 170, layer: 1, plateIds: ["p3"] },
-      { id: "s10", colorId: "purple", x: 120, y: 170, layer: 1, plateIds: ["p3"] },
-      { id: "s11", colorId: "purple", x: 45, y: 245, layer: 1, plateIds: ["p3"] },
-      { id: "s12", colorId: "cyan", x: 120, y: 245, layer: 1, plateIds: ["p3"] },
+    for (let r = 0; r < gridRows; r++) {
+      for (let c = 0; c < gridCols; c++) {
+        if (plateIdx > numPlates) break;
 
-      { id: "s13", colorId: "blue", x: 175, y: 170, layer: 1, plateIds: ["p4"] },
-      { id: "s14", colorId: "purple", x: 250, y: 170, layer: 1, plateIds: ["p4"] },
-      { id: "s15", colorId: "purple", x: 175, y: 245, layer: 1, plateIds: ["p4"] },
-      { id: "s16", colorId: "green", x: 250, y: 245, layer: 1, plateIds: ["p4"] },
-    ];
+        const px = marginX + c * (boxW + gapX);
+        const py = marginY + r * (boxH + gapY);
+        const style = PLATE_STYLES[(plateIdx - 1) % PLATE_STYLES.length];
+        const pId = `l${levelNum}_p${plateIdx}`;
+        const pScrews: string[] = [];
+
+        const corners = [
+          { x: px + 20, y: py + 20 },
+          { x: px + boxW - 20, y: py + 20 },
+          { x: px + 20, y: py + boxH - 20 },
+          { x: px + boxW - 20, y: py + boxH - 20 },
+        ];
+
+        for (const pt of corners) {
+          const sId = `l${levelNum}_s${screwCounter++}`;
+          const cId = choice(colorsUsed, rand);
+          screws.push({
+            id: sId,
+            colorId: cId,
+            x: pt.x,
+            y: pt.y,
+            layer: 1,
+            plateIds: [pId],
+          });
+          pScrews.push(sId);
+        }
+
+        plates.push({
+          id: pId,
+          color: style.color,
+          borderColor: style.border,
+          x: px,
+          y: py,
+          width: boxW,
+          height: boxH,
+          borderRadius: 20,
+          layer: 1,
+          screwIds: pScrews,
+        });
+        plateIdx++;
+      }
+    }
+
+    // Add Layer 0 Screws under base plate
+    const bottomScrewCount = Math.min(6, 2 + Math.floor(levelNum / 5));
+    for (let b = 0; b < bottomScrewCount; b++) {
+      const bx = marginX + 35 + (b % 2) * 110;
+      const by = marginY + 30 + Math.floor(b / 2) * 75;
+      const sId = `l${levelNum}_sb${b + 1}`;
+      const cId = choice(colorsUsed, rand);
+
+      screws.push({
+        id: sId,
+        colorId: cId,
+        x: bx,
+        y: by,
+        layer: 0,
+        plateIds: [`l${levelNum}_p0`],
+      });
+      plates[0].screwIds.push(sId);
+    }
   }
 
   // AUTOMATICALLY derive boxesQueue from exact screws placed on board
@@ -1183,7 +1252,7 @@ export default function ScrewSpinScreen() {
               .slice()
               .sort((a, b) => a.layer - b.layer)
               .map((plate) => (
-                <SciFiPlateView key={plate.id} plate={plate} screws={screws} />
+                <SciFiPlateView key={`lvl_${currentLevel}_${plate.id}`} plate={plate} screws={screws} />
               ))}
 
             {/* Render 3D Realistic Metallic Screws */}
@@ -1193,7 +1262,7 @@ export default function ScrewSpinScreen() {
 
               return (
                 <Pressable
-                  key={screw.id}
+                  key={`lvl_${currentLevel}_${screw.id}`}
                   style={({ pressed }) => [
                     styles.screwWrapper,
                     {
@@ -1378,14 +1447,14 @@ export default function ScrewSpinScreen() {
                   setIsGameStarted(false);
                 }}
               >
-                <Text style={styles.backToMapText}>[ Kembali Ke Menu Utama ]</Text>
+                <Text style={styles.backToMapText}>Kembali Ke Menu Utama</Text>
               </Pressable>
 
               <Pressable
                 style={({ pressed }) => [styles.continueBtn, pressed && styles.btnPressed]}
                 onPress={handleNextLevel}
               >
-                <Text style={styles.continueText}>[ CONTINUE (Lanjut Level) → ]</Text>
+                <Text style={styles.continueText}>Lanjut Level →</Text>
               </Pressable>
             </View>
           </View>

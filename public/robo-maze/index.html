@@ -179,7 +179,7 @@
     <div class="w-full flex items-center justify-between gap-2 pb-2.5 border-b border-slate-300/80 z-20">
       <div class="flex items-center gap-2">
         <div class="bg-cyan-600 hover:bg-cyan-700 transition px-2.5 py-1 rounded-xl font-bold text-[10px] md:text-xs text-white shadow-md flex items-center gap-1">
-          <i class="fa-solid fa-microchip"></i> Level <span id="levelDisplay">1</span>
+          <i class="fa-solid fa-microchip"></i> Level <span id="levelDisplay">2</span>
         </div>
         <div class="text-[9px] md:text-[11px] font-bold text-slate-500 tracking-wide flex items-center gap-1">
           System: <span id="gameStatus" class="text-amber-600 font-bold">Mengingat...</span>
@@ -261,7 +261,7 @@
 
   <!-- Modal Hasil Game (2-COLUMN COGNITIVE RADAR CHART) -->
   <div id="gameModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center z-50 p-4">
-    <div class="bg-slate-950 border-2 border-cyan-500/40 max-w-2xl w-full rounded-3xl p-6 shadow-[0_0_40px_rgba(6,182,212,0.3)] text-left transform scale-95 transition-all duration-300">
+    <div class="max-h-[92vh] overflow-y-auto bg-slate-950 border-2 border-cyan-500/40 max-w-2xl w-full rounded-3xl p-6 shadow-[0_0_40px_rgba(6,182,212,0.3)] text-left transform scale-95 transition-all duration-300">
       
       <!-- HEADER -->
       <div class="text-center border-b border-white/10 pb-4 mb-4">
@@ -330,10 +330,10 @@
       <!-- BOTTOM ACTION BUTTONS -->
       <div class="flex gap-3 justify-center items-center">
         <button id="modalSelectLevelBtn" class="px-5 py-3 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold text-xs transition">
-          [ Kembali Ke Peta Utama ]
+          Kembali Ke Peta Utama
         </button>
         <button id="modalActionBtn" class="px-7 py-3 rounded-full bg-sky-600 hover:bg-sky-500 text-white font-black text-sm shadow-[0_4px_14px_rgba(2,132,199,0.4)] transition">
-          [ CONTINUE (Lanjut Level) ➔ ]
+          Lanjut Level ➔
         </button>
       </div>
 
@@ -701,7 +701,7 @@
     };
 
     // Status Game Berjalan
-    let currentLevel = 1;
+    let currentLevel = 2; // Default ke replica screenshot
     let playerPos = { x: 0, y: 0 };
     let lives = 3;
     let steps = 0;
@@ -1222,7 +1222,7 @@
       document.getElementById('lootTotalCoins').innerText = `${totalCoins} KOIN`;
 
       const actionBtn = document.getElementById('modalActionBtn');
-      actionBtn.innerText = hasNext ? "[ CONTINUE (Lanjut Level) ➔ ]" : "[ MAIN LAGI 🎮 ]";
+      actionBtn.innerText = hasNext ? "Lanjut Level ➔" : "Main Lagi 🎮";
       actionBtn.onclick = () => {
         toggleModal(false);
         if (hasNext) {
@@ -1357,7 +1357,7 @@
 
     // Jalankan Game Pertama kali
     window.addEventListener('DOMContentLoaded', () => {
-      initLevel(1);
+      initLevel(2);
     });
   </script>
 </body>
