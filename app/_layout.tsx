@@ -8,30 +8,22 @@ import { autoResetIfNeeded } from "../lib/resetProgress";
 
 export default function RootLayout() {
   const [showIntro, setShowIntro] = useState(false);
-  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Auto-reset old cached progress on first launch after update
-    autoResetIfNeeded().then(() => {
-      return AsyncStorage.getItem("robomind_intro_completed");
-    }).then((val) => {
-      if (!val) {
-        setShowIntro(true);
-      }
-      setIsReady(true);
-    }).catch(() => {
-      setIsReady(true);
-    });
+    AsyncStorage.getItem("robomind_intro_completed")
+      .then((val) => {
+        if (!val) {
+          setShowIntro(true);
+        }
+      })
+      .catch(() => {});
+    autoResetIfNeeded().catch(() => {});
   }, []);
 
   const handleFinishIntro = async () => {
     await AsyncStorage.setItem("robomind_intro_completed", "true");
     setShowIntro(false);
   };
-
-  if (!isReady) {
-    return null;
-  }
 
   if (showIntro) {
     return <AppIntroFlow onFinish={handleFinishIntro} />;
