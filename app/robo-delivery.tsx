@@ -23,7 +23,7 @@ export default function RoboDeliveryScreen() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showHelp, setShowHelp] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<any>(null);
 
   const STORAGE_KEY_COINS = "robomind_user_coins";
   const STORAGE_KEY_LEVEL = "robomind_delivery_unlocked_level";
@@ -119,7 +119,7 @@ export default function RoboDeliveryScreen() {
   }
 
   return (
-    <View ref={containerRef} style={styles.webContainer} onClick={() => iframeRef.current?.focus()}>
+    <View style={styles.webContainer}>
       <StatusBar hidden />
 
       {loading && (
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
     left: 0,
     width: "100%",
     height: "100%",
-    border: "none",
+    borderWidth: 0,
     backgroundColor: "#7dd3fc",
   },
   loadingOverlay: {

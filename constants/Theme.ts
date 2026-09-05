@@ -76,6 +76,18 @@ export const FONTS = {
     fontWeight: "700" as const,
     color: COLORS.textDark,
   },
+  h1: {
+    fontWeight: "800" as const,
+    color: COLORS.textDark,
+  },
+  h2: {
+    fontWeight: "800" as const,
+    color: COLORS.textDark,
+  },
+  h3: {
+    fontWeight: "700" as const,
+    color: COLORS.textDark,
+  },
   bodyBold: {
     fontWeight: "600" as const,
     color: COLORS.textDark,
