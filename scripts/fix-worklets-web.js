@@ -51,3 +51,39 @@ targetFiles.forEach((filePath) => {
     console.log('[fix-worklets-web] Successfully patched:', filePath);
   }
 });
+
+// Patch Babel get helpers
+const babelGetFiles = [
+  path.join(__dirname, '../node_modules/@babel/runtime/helpers/get.js'),
+  path.join(__dirname, '../node_modules/@babel/runtime/helpers/esm/get.js'),
+  path.join(__dirname, '../node_modules/@babel/helpers/lib/helpers/get.js'),
+  path.join(__dirname, '../node_modules/@babel/helpers/lib/helpers-generated.js'),
+];
+
+babelGetFiles.forEach((filePath) => {
+  if (fs.existsSync(filePath)) {
+    let content = fs.readFileSync(filePath, 'utf-8');
+    if (content.includes('Reflect.get.bind()')) {
+      content = content.replace(/Reflect\.get\.bind\(\)/g, 'Reflect.get.bind(Reflect)');
+      fs.writeFileSync(filePath, content, 'utf-8');
+      console.log('[fix-worklets-web] Patched Babel get helper:', filePath);
+    }
+  }
+});
+
+// Ensure missing public asset aliases exist
+const copyAsset = (src, dest) => {
+  if (fs.existsSync(src) && !fs.existsSync(dest)) {
+    fs.copyFileSync(src, dest);
+    console.log('[fix-worklets-web] Copied asset alias:', dest);
+  }
+};
+
+copyAsset(
+  path.join(__dirname, '../assets/images/modul_robot.png'),
+  path.join(__dirname, '../public/modul_robot.png')
+);
+copyAsset(
+  path.join(__dirname, '../public/bule_character.png'),
+  path.join(__dirname, '../public/bule_perempuan.png')
+);
