@@ -1959,9 +1959,120 @@
     }
 
     
-    // === GLOBAL 8-DIGIT ACCESS TOKEN LOGIC (ATTACHED TO WINDOW) ===
+    
+    // === 100% ROBUST GLOBAL ACCESS CODE SYSTEM ===
+    window.submitAccessCode = async function() {
+      const input = document.getElementById('accessCodeSingleInput');
+      const rawCode = input ? input.value.replace(/[^0-9A-Za-z]/g, '').toUpperCase() : '';
+
+      const errEl = document.getElementById('accessCodeErrorMsg');
+      if (errEl) errEl.classList.add('hidden');
+
+      if (rawCode.length !== 8) {
+        if (errEl) {
+          errEl.innerText = '⚠️ Masukkan 8-digit kode akses secara lengkap!';
+          errEl.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (typeof showToast === 'function') showToast('🔍 Memverifikasi kode akses...');
+
+      let matchedChild = null;
+
+      if (window.supabaseClient) {
+        try {
+          const { data } = await window.supabaseClient
+            .from('children')
+            .select('*')
+            .or(`access_token.eq.${rawCode},access_code.eq.${rawCode}`)
+            .single();
+
+          if (data) {
+            matchedChild = {
+              id: data.id,
+              name: data.name || 'Anak',
+              age: data.age || 7,
+              avatar: data.avatar_url || 'robomind_robot_avatar.png',
+              level: data.level || 1,
+              total_xp: data.total_xp || 0,
+              coins: data.coins || 100,
+              access_code: rawCode,
+              screentime_used: data.daily_screentime_minutes || 0,
+              screentime_limit: data.screentime_limit_minutes || 60
+            };
+          }
+        } catch (e) {}
+      }
+
+      if (!matchedChild) {
+        if (typeof userChildrenList !== 'undefined') {
+          const found = userChildrenList.find(c => (c.access_code || '').replace(/[^0-9A-Za-z]/g, '').toUpperCase() === rawCode);
+          if (found) matchedChild = found;
+        }
+        if (!matchedChild && rawCode === '12345678') {
+          matchedChild = {
+            id: 'demo-child-1',
+            name: 'Aira (Demo)',
+            age: 8,
+            avatar: 'robomind_robot_avatar.png',
+            level: 12,
+            total_xp: 2450,
+            coins: 1250,
+            access_code: '12345678',
+            screentime_used: 15,
+            screentime_limit: 60
+          };
+        }
+      }
+
+      if (matchedChild) {
+        localStorage.setItem('robomind_active_access_code', rawCode);
+        if (typeof userChildrenList !== 'undefined') {
+          const idx = userChildrenList.findIndex(c => c.id === matchedChild.id || c.access_code === rawCode);
+          if (idx >= 0) {
+            userChildrenList[idx] = matchedChild;
+            if (typeof activeChildIndex !== 'undefined') activeChildIndex = idx;
+          } else {
+            userChildrenList.push(matchedChild);
+            if (typeof activeChildIndex !== 'undefined') activeChildIndex = userChildrenList.length - 1;
+          }
+          localStorage.setItem('robomind_children_profiles', JSON.stringify(userChildrenList));
+          localStorage.setItem('robomind_active_child_id', matchedChild.id);
+        }
+
+        const modal = document.getElementById('accessCodeModal');
+        if (modal) modal.classList.add('hidden');
+
+        if (typeof applyActiveChildUI === 'function') applyActiveChildUI();
+        if (typeof renderChildrenListUI === 'function') renderChildrenListUI();
+        if (typeof SoundFX !== 'undefined' && SoundFX.playSuccess) SoundFX.playSuccess();
+        if (typeof showToast === 'function') showToast(`🎉 Kode Akses Valid! Selamat datang, ${matchedChild.name}!`);
+      } else {
+        if (errEl) {
+          errEl.innerText = '❌ Kode Akses tidak ditemukan! Minta kode 8-digit dari Web Pemantauan Orang Tua.';
+          errEl.classList.remove('hidden');
+        }
+        if (typeof SoundFX !== 'undefined' && SoundFX.playPop) SoundFX.playPop();
+      }
+    };
+
+    window.fillDemoCode = function(code) {
+      const input = document.getElementById('accessCodeSingleInput');
+      if (input) {
+        input.value = `${code.slice(0, 4)} - ${code.slice(4)}`;
+      }
+      window.submitAccessCode();
+    };
+
     window.setupSingleAccessInput = function() {
       const input = document.getElementById('accessCodeSingleInput');
+      const btnSubmit = document.getElementById('btnSubmitAccessCode');
+      const btnDemo = document.getElementById('btnFillDemoCode');
+
+      if (btnSubmit) btnSubmit.onclick = function() { window.submitAccessCode(); };
+      if (btnDemo) btnDemo.onclick = function() { window.fillDemoCode('12345678'); };
+
       if (!input) return;
 
       input.addEventListener('input', (e) => {
@@ -1997,122 +2108,17 @@
       });
     };
 
-    window.submitAccessCode = async function() {
-      const input = document.getElementById('accessCodeSingleInput');
-      const rawCode = input ? input.value.replace(/[^0-9A-Za-z]/g, '').toUpperCase() : '';
-
-      const errEl = document.getElementById('accessCodeErrorMsg');
-      if (errEl) errEl.classList.add('hidden');
-
-      if (rawCode.length !== 8) {
-        if (errEl) {
-          errEl.innerText = '⚠️ Masukkan 8-digit kode akses secara lengkap!';
-          errEl.classList.remove('hidden');
-        }
-        return;
-      }
-
-      showToast('🔍 Memverifikasi kode akses...');
-
-      let matchedChild = null;
-
-      if (window.supabaseClient) {
-        try {
-          const { data } = await window.supabaseClient
-            .from('children')
-            .select('*')
-            .or(`access_token.eq.${rawCode},access_code.eq.${rawCode}`)
-            .single();
-
-          if (data) {
-            matchedChild = {
-              id: data.id,
-              name: data.name || 'Anak',
-              age: data.age || 7,
-              avatar: data.avatar_url || 'robomind_robot_avatar.png',
-              level: data.level || 1,
-              total_xp: data.total_xp || 0,
-              coins: data.coins || 100,
-              access_code: rawCode,
-              screentime_used: data.daily_screentime_minutes || 0,
-              screentime_limit: data.screentime_limit_minutes || 60
-            };
-          }
-        } catch (e) {}
-      }
-
-      if (!matchedChild) {
-        const found = userChildrenList.find(c => (c.access_code || '').replace(/[^0-9A-Za-z]/g, '').toUpperCase() === rawCode);
-        if (found) {
-          matchedChild = found;
-        } else if (rawCode === '12345678') {
-          matchedChild = {
-            id: 'demo-child-1',
-            name: 'Aira (Demo)',
-            age: 8,
-            avatar: 'robomind_robot_avatar.png',
-            level: 12,
-            total_xp: 2450,
-            coins: 1250,
-            access_code: '12345678',
-            screentime_used: 15,
-            screentime_limit: 60
-          };
-        }
-      }
-
-      if (matchedChild) {
-        localStorage.setItem('robomind_active_access_code', rawCode);
-        const idx = userChildrenList.findIndex(c => c.id === matchedChild.id || c.access_code === rawCode);
-        if (idx >= 0) {
-          userChildrenList[idx] = matchedChild;
-          activeChildIndex = idx;
-        } else {
-          userChildrenList.push(matchedChild);
-          activeChildIndex = userChildrenList.length - 1;
-        }
-        localStorage.setItem('robomind_children_profiles', JSON.stringify(userChildrenList));
-        localStorage.setItem('robomind_active_child_id', matchedChild.id);
-
-        closeModal('accessCodeModal');
-        applyActiveChildUI();
-        renderChildrenListUI();
-        SoundFX.playSuccess();
-        showToast(`🎉 Kode Akses Valid! Selamat datang, ${matchedChild.name}!`);
-      } else {
-        if (errEl) {
-          errEl.innerText = '❌ Kode Akses tidak ditemukan! Minta kode 8-digit dari Web Pemantauan Orang Tua.';
-          errEl.classList.remove('hidden');
-        }
-        SoundFX.playPop();
-      }
-    };
-
-    window.fillDemoCode = function(code) {
-      const input = document.getElementById('accessCodeSingleInput');
-      if (input) {
-        input.value = `${code.slice(0, 4)} - ${code.slice(4)}`;
-      }
-      window.submitAccessCode();
-    };
-
-    window.logoutActiveChildToken = function() {
-      localStorage.removeItem('robomind_active_access_code');
-      showToast('🔒 Keluar dari profil anak. Masukkan kode akses baru.');
-      setTimeout(() => {
-        const modal = document.getElementById('accessCodeModal');
-        if (modal) modal.classList.remove('hidden');
-      }, 400);
-    };
-
     window.checkChildAccessCodeOnLaunch = function() {
       window.setupSingleAccessInput();
       const activeCode = localStorage.getItem('robomind_active_access_code');
+      const modal = document.getElementById('accessCodeModal');
       if (!activeCode) {
-        const modal = document.getElementById('accessCodeModal');
         if (modal) modal.classList.remove('hidden');
+      } else {
+        if (modal) modal.classList.add('hidden');
       }
     };
+
 
     function checkUserAuth() {
       window.checkChildAccessCodeOnLaunch();
@@ -2180,7 +2186,7 @@
       <!-- Action Buttons -->
       <div class="w-full space-y-2 pt-1">
         <button 
-          onclick="submitAccessCode()" 
+          id="btnSubmitAccessCode" 
           class="w-full py-3.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-2xl text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-cyan-500/20"
         >
           <span>Masuk ke Aplikasi</span>
@@ -2188,7 +2194,7 @@
         </button>
 
         <button 
-          onclick="fillDemoCode('12345678')" 
+          id="btnFillDemoCode" 
           class="w-full py-2.5 text-xs text-slate-400 hover:text-cyan-300 font-medium transition-colors cursor-pointer"
         >
           Gunakan Kode Demo (1234 - 5678)
