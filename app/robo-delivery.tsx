@@ -131,7 +131,7 @@ export default function RoboDeliveryScreen() {
 
       <iframe
         ref={iframeRef}
-        src="/robo-delivery/index.html"
+        src="/web-games/robo-delivery/index.html"
         style={styles.iframe}
         onLoad={() => {
           setLoading(false);

@@ -23,7 +23,7 @@ export default function RoboJekScreen() {
   const [showHelp, setShowHelp] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const containerRef = useRef<any>(null);
-  const iframeSrc = useRef(`/robo-jek/index.html?v=${Date.now()}`).current;
+  const iframeSrc = useRef(`/web-games/robo-jek/index.html?v=${Date.now()}`).current;
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;

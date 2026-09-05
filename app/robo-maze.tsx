@@ -120,7 +120,7 @@ export default function RoboMazeScreen() {
 
       <iframe
         ref={iframeRef}
-        src="/robo-maze/index.html"
+        src="/web-games/robo-maze/index.html"
         style={styles.iframe}
         onLoad={() => {
           setLoading(false);

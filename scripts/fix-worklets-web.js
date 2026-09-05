@@ -262,4 +262,36 @@ asyncStoragePaths.forEach((filePath) => {
     }
   }
 });
+// Ensure web-games static directory exists and is synced
+const webGamesDir = path.join(__dirname, '../public/web-games');
+if (!fs.existsSync(webGamesDir)) {
+  fs.mkdirSync(webGamesDir, { recursive: true });
+}
+
+const gameFolders = ['robo-pose', 'robo-jek', 'robo-delivery', 'robo-maze', 'robo-bros'];
+const copyFolderRecursiveSync = (src, dest) => {
+  if (!fs.existsSync(dest)) {
+    fs.mkdirSync(dest, { recursive: true });
+  }
+  const entries = fs.readdirSync(src, { withFileTypes: true });
+  for (const entry of entries) {
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      copyFolderRecursiveSync(srcPath, destPath);
+    } else {
+      fs.copyFileSync(srcPath, destPath);
+    }
+  }
+};
+
+gameFolders.forEach((folder) => {
+  const src = path.join(__dirname, '../public', folder);
+  const dest = path.join(__dirname, '../public/web-games', folder);
+  if (fs.existsSync(src)) {
+    copyFolderRecursiveSync(src, dest);
+    console.log('[fix-worklets-web] Synced web-games folder:', dest);
+  }
+});
+
 

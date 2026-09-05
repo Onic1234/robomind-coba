@@ -119,7 +119,7 @@ export default function RoboPoseScreen() {
 
       <iframe
         ref={iframeRef}
-        src="/robo-pose/index.html"
+        src="/web-games/robo-pose/index.html"
         style={styles.iframe}
         onLoad={() => {
           setLoading(false);

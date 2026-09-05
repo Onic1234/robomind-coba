@@ -113,7 +113,7 @@ export default function RoboBrosScreen() {
       {Platform.OS === "web" ? (
         <iframe
           ref={iframeRef}
-          src="/robo-bros/index.html"
+          src="/web-games/robo-bros/index.html"
           style={styles.iframe}
           onLoad={() => {
             setLoading(false);
