@@ -161,29 +161,29 @@
           <!-- Coins -->
           <div class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl bg-[#0a152d]/80 border border-[#1b315b] shadow-sm">
             <span class="text-amber-400 text-xs sm:text-sm">🪙</span>
-            <span class="text-xs font-extrabold text-white val-coins">0</span>
+            <span class="text-xs font-extrabold text-white val-coins">1.790</span>
           </div>
           <!-- Energy -->
           <div class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl bg-[#0a152d]/80 border border-[#1b315b] shadow-sm">
             <span class="text-cyan-400 text-xs sm:text-sm">⚡</span>
-            <span class="text-xs font-extrabold text-white val-energy">100/100</span>
+            <span class="text-xs font-extrabold text-white val-energy">85/100</span>
           </div>
           <!-- Gems -->
           <div class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl bg-[#0a152d]/80 border border-[#1b315b] shadow-sm">
             <span class="text-pink-400 text-xs sm:text-sm">💎</span>
-            <span class="text-xs font-extrabold text-white val-gems">0</span>
+            <span class="text-xs font-extrabold text-white val-gems">12</span>
           </div>
         </div>
 
-        <!-- Progress Hari Ini (Dynamic per Active Child) -->
+        <!-- Progress Hari Ini -->
         <div class="flex items-center justify-between px-3 py-1.5 rounded-xl bg-[#0a152d]/80 border border-[#1b315b]">
           <div class="flex items-center gap-2 flex-1 mr-3">
             <span class="text-[10px] font-bold text-slate-300 whitespace-nowrap">Progress Hari Ini</span>
             <div class="flex-1 h-2 bg-[#050a16] rounded-full overflow-hidden border border-slate-700/50">
-              <div id="homeDailyProgressBar" class="h-full bg-gradient-to-r from-emerald-500 to-[#00f0ff] rounded-full transition-all duration-500" style="width: 0%;"></div>
+              <div class="h-full bg-gradient-to-r from-emerald-500 to-[#00f0ff] rounded-full w-[70%]"></div>
             </div>
           </div>
-          <span id="homeDailyXpText" class="text-[10px] font-extrabold text-emerald-400 whitespace-nowrap">+0 XP ⭐</span>
+          <span class="text-[10px] font-extrabold text-emerald-400 whitespace-nowrap">+120 XP ⭐</span>
         </div>
       </div>
 
@@ -669,58 +669,43 @@
     <!-- TAB 3: PROFILE & MULTI-USER (CHILDREN) SETTINGS                          -->
     <!-- ======================================================================= -->
     <section id="tab-profile" class="tab-content hidden flex-1 flex flex-col h-full w-full overflow-y-auto pr-1 pb-4">
-      <div class="flex items-center justify-between mb-2.5 pt-1 flex-shrink-0">
-        <h2 class="text-base sm:text-lg font-black text-white">Profil & Akun 👤</h2>
+      <div class="flex items-center justify-between mb-3 pt-1">
+        <h2 class="text-base sm:text-lg font-black text-white">Profil Penjelajah 👤</h2>
         <button onclick="switchTab('home')" class="px-3 py-1 rounded-xl bg-[#0d1b33] border border-[#1a2e56] text-xs font-bold text-cyan-400 hover:text-white transition-colors">
           ← Home
         </button>
       </div>
 
-      <!-- Parent Google Account Card (Active Login Status) -->
-      <div class="p-3 rounded-2xl bg-gradient-to-r from-[#0d2249] to-[#0b1c3c] border border-cyan-500/30 flex items-center justify-between mb-2.5 shadow-md">
-        <div class="flex items-center gap-2.5 min-w-0">
-          <div class="w-8 h-8 rounded-full border border-cyan-400 overflow-hidden bg-slate-800 flex-shrink-0 flex items-center justify-center text-sm shadow-inner">
-            <span id="parentUserAvatar">👤</span>
-          </div>
-          <div class="min-w-0 truncate">
-            <div class="flex items-center gap-1.5">
-              <span class="text-[8px] font-extrabold text-cyan-400 uppercase tracking-wider">Akun Orang Tua</span>
-              <span id="parentSyncBadge" class="text-[8px] px-1.5 py-0.2 bg-emerald-500/20 text-emerald-400 font-bold rounded border border-emerald-500/30">Google Terhubung</span>
-            </div>
-            <h4 id="parentUserEmail" class="text-xs font-bold text-white truncate">Tamu (Belum Login)</h4>
-          </div>
-        </div>
-        <button id="parentAuthActionBtn" onclick="openModal('authGuardModal')" class="px-2 py-1 bg-[#0099ff] hover:bg-cyan-400 text-[#050a16] text-[9px] font-black rounded-lg shadow-sm transition-all flex-shrink-0">
-          Ganti Akun
-        </button>
-      </div>
-
-      <!-- Active Child Card (Compact & Proportional) -->
-      <div class="p-3 rounded-2xl bg-[#0d1b33] border border-[#1a2e56] flex items-center justify-between mb-2.5 shadow-md">
-        <div class="flex items-center gap-2.5 min-w-0">
-          <div class="w-10 h-10 rounded-full border-2 border-cyan-400 overflow-hidden bg-slate-800 flex-shrink-0">
+      <!-- Active Child Card -->
+      <div class="p-4 rounded-2xl bg-[#0d1b33] border border-[#1a2e56] flex items-center justify-between mb-3 shadow-md">
+        <div class="flex items-center gap-3">
+          <div class="w-13 h-13 rounded-full border-2 border-cyan-400 overflow-hidden bg-slate-800 flex-shrink-0">
             <img id="activeChildAvatarImg" src="robomind_robot_avatar.png?v=3" class="w-full h-full object-cover" />
           </div>
-          <div class="min-w-0 truncate">
-            <span id="activeChildLevelBadge" class="text-[8px] font-black text-cyan-400 uppercase tracking-wider block truncate">Level 1 • Explorer</span>
-            <h3 id="activeChildNameText" class="text-xs sm:text-sm font-black text-white truncate">Pemain Baru</h3>
-            <p id="activeChildStatsText" class="text-[9px] text-slate-400 truncate">⚡ 0 XP • 🪙 0 Koin</p>
+          <div>
+            <span id="activeChildLevelBadge" class="text-[9px] font-black text-cyan-400 uppercase tracking-wider">Level 12 • Junior Explorer</span>
+            <h3 id="activeChildNameText" class="text-sm sm:text-base font-black text-white">Aira Salsabila</h3>
+            <p id="activeChildStatsText" class="text-[10px] text-slate-400">⚡ 1,420 XP • 🪙 1,790 Koin</p>
+            <div class="mt-1 flex items-center gap-1 text-[10px] text-cyan-300 font-mono font-bold bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-400/40 w-max">
+              <span class="material-symbols-outlined text-xs">key</span>
+              <span id="activeChildTokenText">Kode Akses: 1234 - 5678</span>
+            </div>
           </div>
         </div>
-        <button onclick="openModal('addChildModal')" class="px-2 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[9px] font-black hover:bg-cyan-500/30 transition-all flex items-center gap-1 flex-shrink-0">
-          <span class="material-symbols-outlined text-xs">person_add</span> + Anak
+        <button onclick="openModal('addChildModal')" class="px-2.5 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[10px] font-black hover:bg-cyan-500/30 transition-all flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">person_add</span> + Anak
         </button>
       </div>
 
-      <!-- Multi-Child Profile Switcher (Clean & Compact) -->
-      <div class="p-3 rounded-2xl bg-[#0d1b33] border border-[#1a2e56] mb-2.5 shadow-sm">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-[11px] font-black text-white flex items-center gap-1">
-            <span class="material-symbols-outlined text-xs text-cyan-400">switch_account</span> Profil Anak
+      <!-- Multi-Child Profile Switcher -->
+      <div class="p-3.5 rounded-2xl bg-[#0d1b33] border border-[#1a2e56] mb-3 shadow-sm">
+        <div class="flex items-center justify-between mb-2.5">
+          <span class="text-xs font-black text-white flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-sm text-cyan-400">switch_account</span> Ganti Profil Anak
           </span>
-          <span class="text-[9px] text-slate-400 font-bold" id="childCountLabel">1 Profil</span>
+          <span class="text-[10px] text-slate-400 font-bold" id="childCountLabel">1 Profil</span>
         </div>
-        <div id="childrenProfilesList" class="space-y-1.5 max-h-[160px] overflow-y-auto pr-0.5">
+        <div id="childrenProfilesList" class="space-y-2">
           <!-- Dynamic Child Profiles injected here -->
         </div>
       </div>
@@ -893,16 +878,12 @@
     
 
       <!-- Quick Email Form -->
-      <form onsubmit="handleEmailAuth(event)" class="w-full space-y-2.5 mb-3">
-        <input id="authEmailInput" type="email" placeholder="Email akun..." required class="w-full px-3.5 py-2.5 rounded-xl bg-[#050a16] border border-[#1e3b6e] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-400" />
-        <input id="authPasswordInput" type="password" placeholder="Kata sandi..." required class="w-full px-3.5 py-2.5 rounded-xl bg-[#050a16] border border-[#1e3b6e] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-400" />
         <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#0099ff] to-[#00f0ff] text-[#050a16] font-black text-xs shadow-md active:scale-95 transition-transform">
           Masuk Akun
         </button>
       </form>
 
       <!-- Guest Demo Option -->
-      <button onclick="continueAsGuest()" class="text-[11px] text-cyan-400 hover:text-white font-bold underline transition-colors">
         Lanjut sebagai Tamu (Mode Demo)
       </button>
 
@@ -1040,42 +1021,15 @@
     };
 
     
-    // Clear legacy mock demo keys AND all game level progress from local storage on launch
+    // Clear legacy mock demo keys from local storage on launch
     (function cleanMockStorage() {
-      if (localStorage.getItem('robomind_demo_cleaned_v4') !== 'true') {
-        // Global balances & screentime
+      if (localStorage.getItem('robomind_demo_cleaned_v2') !== 'true') {
         localStorage.removeItem('robomind_total_xp');
         localStorage.removeItem('user_coins_balance');
         localStorage.removeItem('user_gems_balance');
         localStorage.removeItem('robomind_screentime_minutes');
         localStorage.removeItem('robomind_children_profiles');
-        // All game level progress keys
-        localStorage.removeItem('screw_spin_current_level');
-        localStorage.removeItem('screw_spin_coins');
-        localStorage.removeItem('energy_core_current_level');
-        localStorage.removeItem('energy_core_coins');
-        localStorage.removeItem('energy_core_evolution');
-        localStorage.removeItem('robot_circuit_current_level');
-        localStorage.removeItem('robot_circuit_coins');
-        localStorage.removeItem('robot_escape_current_level');
-        localStorage.removeItem('robot_escape_coins');
-        localStorage.removeItem('robo_charge_current_level');
-        localStorage.removeItem('robo_charge_coins');
-        localStorage.removeItem('pick_and_drop_current_level');
-        localStorage.removeItem('pick_and_drop_coins');
-        localStorage.removeItem('pose_master_current_level');
-        localStorage.removeItem('pose_master_coins');
-        localStorage.removeItem('robo_circle_current_level');
-        localStorage.removeItem('robo_circle_coins');
-        localStorage.removeItem('rogue_soul_level_progress');
-        localStorage.removeItem('rogue_soul_coins');
-        localStorage.removeItem('rogue_soul_gems');
-        localStorage.removeItem('rogue_soul_powerups');
-        localStorage.removeItem('robo_link_current_level');
-        localStorage.removeItem('robo_link_lives');
-        localStorage.removeItem('robo_link_last_loss');
-        localStorage.removeItem('robo_link_coins');
-        localStorage.setItem('robomind_demo_cleaned_v4', 'true');
+        localStorage.setItem('robomind_demo_cleaned_v2', 'true');
       }
     })();
 
@@ -1431,23 +1385,22 @@
 
     
     // =========================================================================
-    // SCREEN TIME TRACKER CONTROLLER (PER ACTIVE CHILD)
+    // SCREEN TIME TRACKER CONTROLLER
     // =========================================================================
-    function updateScreenTimeHUD() {
-      const child = getActiveChild();
-      const used = child ? (child.screentime_used || 0) : 0;
-      const limit = child ? (child.screentime_limit || 60) : 60;
+    let screenTimeUsed = parseInt(localStorage.getItem('robomind_screentime_minutes') || '0');
+    let screenTimeLimit = parseInt(localStorage.getItem('robomind_screentime_limit') || '60');
 
+    function updateScreenTimeHUD() {
       const usedEl = document.getElementById('screenTimeUsedText');
       const barEl = document.getElementById('screenTimeBar');
       const remainEl = document.getElementById('screenTimeRemainingText');
 
-      if (usedEl) usedEl.textContent = `${used} / ${limit} Menit`;
+      if (usedEl) usedEl.textContent = `${screenTimeUsed} / ${screenTimeLimit} Menit`;
       
-      const pct = Math.min(100, Math.round((used / limit) * 100));
+      const pct = Math.min(100, Math.round((screenTimeUsed / screenTimeLimit) * 100));
       if (barEl) barEl.style.width = `${pct}%`;
 
-      const remaining = Math.max(0, limit - used);
+      const remaining = Math.max(0, screenTimeLimit - screenTimeUsed);
       if (remainEl) {
         if (remaining > 0) {
           remainEl.textContent = `Sisa Waktu Aman: ${remaining} Menit`;
@@ -1457,43 +1410,13 @@
           remainEl.className = 'text-red-400 font-black animate-pulse';
         }
       }
-
-      // Update Home Stage Daily Progress bar & XP
-      const homeBar = document.getElementById('homeDailyProgressBar');
-      const homeXp = document.getElementById('homeDailyXpText');
-      if (homeBar && child) {
-        const xpProgress = Math.min(100, Math.round(((child.total_xp || 0) % 500) / 5));
-        homeBar.style.width = `${xpProgress}%`;
-      }
-      if (homeXp && child) {
-        homeXp.textContent = `+${child.total_xp || 0} XP ⭐`;
-      }
     }
 
-    // Auto-increment screentime counter every 60 seconds for the active child (capped at limit)
+    // Auto-increment screentime counter every 60 seconds of active usage
     setInterval(() => {
-      const child = getActiveChild();
-      if (child) {
-        const limit = child.screentime_limit || 60;
-        const current = child.screentime_used || 0;
-        
-        if (current < limit) {
-          child.screentime_used = current + 1;
-          const cacheKey = currentUser ? `robomind_children_${currentUser.id}` : 'robomind_children_profiles';
-          localStorage.setItem(cacheKey, JSON.stringify(userChildrenList));
-          updateScreenTimeHUD();
-
-          // Sync to Supabase if connected
-          if (supabaseClient && currentUser && child.id && !child.id.startsWith('child-default')) {
-            supabaseClient
-              .from('children')
-              .update({ daily_screentime_minutes: child.screentime_used, updated_at: new Date().toISOString() })
-              .eq('id', child.id)
-              .then(() => {})
-              .catch(() => {});
-          }
-        }
-      }
+      screenTimeUsed++;
+      localStorage.setItem('robomind_screentime_minutes', screenTimeUsed.toString());
+      updateScreenTimeHUD();
     }, 60000);
 
     
@@ -1659,7 +1582,7 @@
       }
     }
 
-    function checkUserAuth() { return;
+    
       if (!supabaseClient) return;
       try {
         // Read URL query params passed from web portal
@@ -1698,6 +1621,7 @@
           currentUser = session.user;
           onUserAuthenticated(session.user);
         } else {
+          // If launched inside iframe with parent session or guest mode, don't show login modal
           const isGuest = localStorage.getItem('robomind_guest_mode') === 'true';
           if (!isGuest && !urlUserId) {
             openModal('authGuardModal');
@@ -1707,7 +1631,6 @@
         }
       } catch (e) {
         console.warn("Auth check fast fallback:", e);
-        // Fallback to guest mode seamlessly if network is slow/offline
         if (!localStorage.getItem('robomind_active_child_id')) {
           localStorage.setItem('robomind_guest_mode', 'true');
         }
@@ -1716,22 +1639,17 @@
 
     async function onUserAuthenticated(user) {
       closeModal('authGuardModal');
-      currentUser = user;
       localStorage.removeItem('robomind_guest_mode');
       
-      const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Orang Tua';
+      const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Aira Salsabila';
       const userEl = document.querySelector('h1.font-extrabold');
       if (userEl) {
         userEl.innerHTML = `Halo, ${userName.split(' ')[0]}! <span class="text-xs">👋</span>`;
       }
 
-      showToast(`👋 Masuk sebagai: ${userName.split(' ')[0]}`);
-      
-      // Reload children profiles specific to this authenticated parent account
-      await loadChildrenProfiles();
+      showToast(`👋 Selamat datang kembali, ${userName.split(' ')[0]}!`);
     }
 
-    async function loginWithGoogle() {
       if (!supabaseClient) return;
       try {
         await supabaseClient.auth.signInWithOAuth({
@@ -1745,12 +1663,9 @@
       }
     }
 
-    async function handleEmailAuth(e) {
       e.preventDefault();
       if (!supabaseClient) return;
       
-      const email = document.getElementById('authEmailInput').value;
-      const password = document.getElementById('authPasswordInput').value;
 
       try {
         const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
@@ -1771,7 +1686,6 @@
       }
     }
 
-    function continueAsGuest() {
       localStorage.setItem('robomind_guest_mode', 'true');
       closeModal('authGuardModal');
       showToast('🎮 Masuk sebagai Tamu');
@@ -1870,74 +1784,26 @@
             .order('created_at', { ascending: true });
 
           if (data && data.length > 0) {
-            const cacheKey = `robomind_children_${currentUser.id}`;
-            const localSaved = JSON.parse(localStorage.getItem(cacheKey) || '[]');
-            const todayStr = new Date().toISOString().split("T")[0];
-
-            userChildrenList = data.map(c => {
-              const localMatch = localSaved.find(l => l.id === c.id);
-              const lastUpdateDate = c.updated_at ? new Date(c.updated_at).toISOString().split("T")[0] : todayStr;
-              
-              let screentimeVal = c.daily_screentime_minutes || 0;
-              // Reset if last update was a previous date
-              if (lastUpdateDate !== todayStr) {
-                screentimeVal = 0;
-              } else if (localMatch) {
-                screentimeVal = Math.max(screentimeVal, localMatch.screentime_used || 0);
-              }
-
-              return {
-                id: c.id,
-                name: c.name || 'Pemain Baru',
-                age: c.age || 7,
-                avatar: c.avatar_url || 'robomind_robot_avatar.png',
-                level: c.level || 1,
-                total_xp: c.total_xp || 0,
-                coins: c.coins || 0,
-                screentime_used: Math.min(c.screentime_limit_minutes || 60, screentimeVal),
-                screentime_limit: c.screentime_limit_minutes || 60
-              };
-            });
-            localStorage.setItem(cacheKey, JSON.stringify(userChildrenList));
-          } else {
-            // New parent account with no children yet in DB
-            userChildrenList = [
-              {
-                id: 'child-' + currentUser.id.substring(0, 8),
-                name: 'Pemain Baru',
-                age: 7,
-                avatar: 'robomind_robot_avatar.png',
-                level: 1,
-                total_xp: 0,
-                coins: 0,
-                screentime_used: 0,
-                screentime_limit: 60
-              }
-            ];
+            userChildrenList = data.map(c => ({
+              id: c.id,
+              name: c.name || 'Anak',
+              age: c.age || 7,
+              avatar: c.avatar_url || 'robomind_robot_avatar.png',
+              level: c.level || 1,
+              total_xp: c.total_xp || 0,
+              coins: c.coins || 100,
+              screentime_used: c.daily_screentime_minutes || 0,
+              screentime_limit: c.screentime_limit_minutes || 60
+            }));
           }
         } catch (e) {
           console.warn("Could not load children from Supabase:", e);
         }
       } else {
-        // Guest mode or offline cache
-        const cacheKey = currentUser ? `robomind_children_${currentUser.id}` : 'robomind_children_profiles';
-        const saved = localStorage.getItem(cacheKey);
+        // Load from local storage
+        const saved = localStorage.getItem('robomind_children_profiles');
         if (saved) {
           try { userChildrenList = JSON.parse(saved); } catch (e) {}
-        } else {
-          userChildrenList = [
-            {
-              id: 'child-default',
-              name: 'Pemain Baru',
-              age: 7,
-              avatar: 'robomind_robot_avatar.png',
-              level: 1,
-              total_xp: 0,
-              coins: 0,
-              screentime_used: 0,
-              screentime_limit: 60
-            }
-          ];
         }
       }
 
@@ -1945,9 +1811,7 @@
       const activeId = localStorage.getItem('robomind_active_child_id');
       if (activeId) {
         const foundIdx = userChildrenList.findIndex(c => c.id === activeId);
-        activeChildIndex = foundIdx >= 0 ? foundIdx : 0;
-      } else {
-        activeChildIndex = 0;
+        if (foundIdx >= 0) activeChildIndex = foundIdx;
       }
 
       renderChildrenListUI();
@@ -2010,39 +1874,14 @@
       const avatarImg = document.getElementById('activeChildAvatarImg');
 
       if (nameText) nameText.innerText = child.name;
-      if (badgeText) badgeText.innerText = `Level ${child.level} • Explorer`;
+      if (badgeText) badgeText.innerText = `Level ${child.level} • Junior Explorer`;
       if (statsText) statsText.innerText = `⚡ ${child.total_xp} XP • 🪙 ${child.coins} Koin`;
       if (avatarImg) avatarImg.src = child.avatar;
-
-      // Update Parent Account Badge in Profile Tab
-      const parentEmailEl = document.getElementById('parentUserEmail');
-      const parentAvatarEl = document.getElementById('parentUserAvatar');
-      const parentSyncEl = document.getElementById('parentSyncBadge');
-      const parentAuthBtn = document.getElementById('parentAuthActionBtn');
-
-      if (currentUser) {
-        if (parentEmailEl) parentEmailEl.innerText = currentUser.email || 'Akun Google Terhubung';
-        if (parentSyncEl) {
-          parentSyncEl.innerText = 'Google Terhubung ✓';
-          parentSyncEl.className = 'text-[8px] px-1.5 py-0.2 bg-emerald-500/20 text-emerald-400 font-bold rounded border border-emerald-500/30';
-        }
-        if (parentAvatarEl) {
-          const avatarUrl = currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
-          if (avatarUrl) {
-            parentAvatarEl.innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover rounded-full" />`;
-          } else {
-            parentAvatarEl.innerText = '👤';
-          }
-        }
-        if (parentAuthBtn) parentAuthBtn.innerText = 'Ganti Akun';
-      } else {
-        if (parentEmailEl) parentEmailEl.innerText = 'Mode Tamu (Belum Login)';
-        if (parentSyncEl) {
-          parentSyncEl.innerText = 'Belum Terhubung';
-          parentSyncEl.className = 'text-[8px] px-1.5 py-0.2 bg-amber-500/20 text-amber-400 font-bold rounded border border-amber-500/30';
-        }
-        if (parentAvatarEl) parentAvatarEl.innerText = '👤';
-        if (parentAuthBtn) parentAuthBtn.innerText = 'Login Google';
+      const tokenText = document.getElementById('activeChildTokenText');
+      if (tokenText) {
+        const rawCode = child.access_code || localStorage.getItem('robomind_active_access_code') || '12345678';
+        const formatted = rawCode.length === 8 ? `${rawCode.slice(0, 4)} - ${rawCode.slice(4)}` : rawCode;
+        tokenText.innerText = `Kode Akses: ${formatted}`;
       }
 
       // Update Screen Time HUD
@@ -2068,7 +1907,7 @@
         avatar: selectedAvatar,
         level: 1,
         total_xp: 0,
-        coins: 0,
+        coins: 100,
         screentime_used: 0,
         screentime_limit: 60
       };
@@ -2083,7 +1922,7 @@
               name: name,
               level: 1,
               total_xp: 0,
-              coins: 0,
+              coins: 100,
               daily_screentime_minutes: 0,
               screentime_limit_minutes: 60
             })
@@ -2099,8 +1938,7 @@
       }
 
       userChildrenList.push(newChildObj);
-      const cacheKey = currentUser ? `robomind_children_${currentUser.id}` : 'robomind_children_profiles';
-      localStorage.setItem(cacheKey, JSON.stringify(userChildrenList));
+      localStorage.setItem('robomind_children_profiles', JSON.stringify(userChildrenList));
       activeChildIndex = userChildrenList.length - 1;
       localStorage.setItem('robomind_active_child_id', newChildObj.id);
 
@@ -2115,12 +1953,9 @@
       if (supabaseClient) {
         try { await supabaseClient.auth.signOut(); } catch (e) {}
       }
-      // Clean local storage cache for old user
       localStorage.removeItem('robomind_guest_mode');
-      localStorage.removeItem('robomind_active_child_id');
-      localStorage.removeItem('robomind_children_profiles');
       showToast('👋 Anda telah keluar dari akun');
-      setTimeout(() => window.location.reload(), 600);
+      setTimeout(() => window.location.reload(), 800);
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -2145,41 +1980,54 @@
   <!-- ========================================================================= -->
   <!-- MODAL: KODE AKSES ANAK (8-DIGIT ACCESS TOKEN AUTH)                       -->
   <!-- ========================================================================= -->
-  <div id="accessCodeModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md hidden">
-    <div class="relative w-full max-w-md bg-[#0a1329] border-2 border-[#00f0ff] rounded-3xl p-6 shadow-[0_0_40px_rgba(0,240,255,0.3)] text-center flex flex-col items-center gap-4">
+  
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: KODE AKSES ANAK (8-DIGIT ACCESS TOKEN AUTH - PURE & BEAUTIFUL UI) -->
+  <!-- ========================================================================= -->
+  <div id="accessCodeModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-xl hidden">
+    <div class="relative w-full max-w-md bg-[#0a1329] border-2 border-[#00f0ff] rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(0,240,255,0.4)] text-center flex flex-col items-center gap-4">
       
-      <!-- Hologram Icon -->
-      <div class="w-16 h-16 rounded-2xl bg-[#00f0ff]/10 border border-[#00f0ff] flex items-center justify-center shadow-[0_0_20px_rgba(0,240,255,0.4)]">
-        <span class="material-symbols-outlined text-[#00f0ff] text-3xl animate-pulse">key</span>
+      <!-- Hologram Mascot Icon -->
+      <div class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#0099ff]/20 to-[#00f0ff]/10 border-2 border-[#00f0ff] flex items-center justify-center shadow-[0_0_25px_rgba(0,240,255,0.5)]">
+        <span class="material-symbols-outlined text-[#00f0ff] text-3xl sm:text-4xl animate-pulse">key</span>
       </div>
 
       <div>
-        <h3 class="text-xl font-black text-white tracking-wide">MASUKKAN KODE AKSES</h3>
-        <p class="text-xs text-slate-300 mt-1">Minta 8-digit kode akses dari Pemantauan Orang Tua di Web Portal</p>
+        <h3 class="text-xl sm:text-2xl font-black text-white tracking-wide font-sans">MASUKKAN KODE AKSES</h3>
+        <p class="text-xs sm:text-sm text-slate-300 mt-1 font-medium leading-relaxed">
+          Minta 8-digit kode akses dari <span class="text-[#00f0ff] font-bold">Web Pemantauan Orang Tua</span>
+        </p>
       </div>
 
       <!-- 8-Digit PIN Input Container -->
-      <div class="w-full flex justify-center items-center gap-1.5 sm:gap-2 my-2">
-        <input type="text" maxlength="1" id="pin-1" class="pin-box w-9 h-11 sm:w-10 sm:h-12 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_10px_rgba(0,240,255,0.5)] rounded-xl text-center text-lg font-black text-[#00f0ff] outline-none uppercase" />
-        <input type="text" maxlength="1" id="pin-2" class="pin-box w-9 h-11 sm:w-10 sm:h-12 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_10px_rgba(0,240,255,0.5)] rounded-xl text-center text-lg font-black text-[#00f0ff] outline-none uppercase" />
-        <input type="text" maxlength="1" id="pin-3" class="pin-box w-9 h-11 sm:w-10 sm:h-12 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_10px_rgba(0,240,255,0.5)] rounded-xl text-center text-lg font-black text-[#00f0ff] outline-none uppercase" />
-        <input type="text" maxlength="1" id="pin-4" class="pin-box w-9 h-11 sm:w-10 sm:h-12 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_10px_rgba(0,240,255,0.5)] rounded-xl text-center text-lg font-black text-[#00f0ff] outline-none uppercase" />
-        <span class="text-slate-500 font-bold">-</span>
-        <input type="text" maxlength="1" id="pin-5" class="pin-box w-9 h-11 sm:w-10 sm:h-12 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_10px_rgba(0,240,255,0.5)] rounded-xl text-center text-lg font-black text-[#00f0ff] outline-none uppercase" />
-        <input type="text" maxlength="1" id="pin-6" class="pin-box w-9 h-11 sm:w-10 sm:h-12 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_10px_rgba(0,240,255,0.5)] rounded-xl text-center text-lg font-black text-[#00f0ff] outline-none uppercase" />
-        <input type="text" maxlength="1" id="pin-7" class="pin-box w-9 h-11 sm:w-10 sm:h-12 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_10px_rgba(0,240,255,0.5)] rounded-xl text-center text-lg font-black text-[#00f0ff] outline-none uppercase" />
-        <input type="text" maxlength="1" id="pin-8" class="pin-box w-9 h-11 sm:w-10 sm:h-12 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_10px_rgba(0,240,255,0.5)] rounded-xl text-center text-lg font-black text-[#00f0ff] outline-none uppercase" />
+      <div class="w-full flex justify-center items-center gap-1 sm:gap-2 my-2">
+        <div class="flex items-center gap-1 sm:gap-1.5">
+          <input type="text" maxlength="1" id="pin-1" class="pin-box w-8 h-11 sm:w-10 sm:h-13 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_12px_rgba(0,240,255,0.6)] rounded-xl text-center text-lg sm:text-xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
+          <input type="text" maxlength="1" id="pin-2" class="pin-box w-8 h-11 sm:w-10 sm:h-13 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_12px_rgba(0,240,255,0.6)] rounded-xl text-center text-lg sm:text-xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
+          <input type="text" maxlength="1" id="pin-3" class="pin-box w-8 h-11 sm:w-10 sm:h-13 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_12px_rgba(0,240,255,0.6)] rounded-xl text-center text-lg sm:text-xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
+          <input type="text" maxlength="1" id="pin-4" class="pin-box w-8 h-11 sm:w-10 sm:h-13 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_12px_rgba(0,240,255,0.6)] rounded-xl text-center text-lg sm:text-xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
+        </div>
+        <span class="text-[#00f0ff] font-black text-lg sm:text-xl px-0.5">-</span>
+        <div class="flex items-center gap-1 sm:gap-1.5">
+          <input type="text" maxlength="1" id="pin-5" class="pin-box w-8 h-11 sm:w-10 sm:h-13 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_12px_rgba(0,240,255,0.6)] rounded-xl text-center text-lg sm:text-xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
+          <input type="text" maxlength="1" id="pin-6" class="pin-box w-8 h-11 sm:w-10 sm:h-13 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_12px_rgba(0,240,255,0.6)] rounded-xl text-center text-lg sm:text-xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
+          <input type="text" maxlength="1" id="pin-7" class="pin-box w-8 h-11 sm:w-10 sm:h-13 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_12px_rgba(0,240,255,0.6)] rounded-xl text-center text-lg sm:text-xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
+          <input type="text" maxlength="1" id="pin-8" class="pin-box w-8 h-11 sm:w-10 sm:h-13 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_12px_rgba(0,240,255,0.6)] rounded-xl text-center text-lg sm:text-xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
+        </div>
       </div>
 
-      <div id="accessCodeErrorMsg" class="hidden text-xs font-bold text-rose-400 bg-rose-500/10 border border-rose-500/30 px-3 py-1.5 rounded-lg w-full"></div>
+      <div id="accessCodeErrorMsg" class="hidden text-xs font-bold text-rose-400 bg-rose-500/15 border border-rose-500/40 px-3.5 py-2 rounded-xl w-full text-center"></div>
 
       <!-- Action Button -->
-      <button onclick="submitAccessCode()" class="w-full py-3 bg-gradient-to-r from-[#0099ff] to-[#00f0ff] text-[#050a16] font-black rounded-2xl text-sm shadow-[0_0_20px_rgba(0,240,255,0.4)] active:scale-95 transition-transform flex items-center justify-center gap-2">
-        <span class="material-symbols-outlined text-lg">login</span> MASUK GAME
+      <button onclick="submitAccessCode()" class="w-full py-3.5 bg-gradient-to-r from-[#0099ff] to-[#00f0ff] text-[#050a16] font-black rounded-2xl text-sm sm:text-base shadow-[0_0_25px_rgba(0,240,255,0.4)] active:scale-95 transition-transform flex items-center justify-center gap-2 mt-1">
+        <span class="material-symbols-outlined text-xl">sports_esports</span> MASUK GAME NOW
       </button>
 
-      <div class="text-[11px] text-slate-400 mt-1">
-        Atau gunakan kode demo: <span class="font-mono text-[#00f0ff] font-bold cursor-pointer underline" onclick="fillDemoCode('12345678')">1234 - 5678</span>
+      <div class="text-xs text-slate-400 mt-1">
+        Coba Kode Akses Demo: <span class="font-mono text-[#00f0ff] font-extrabold cursor-pointer underline hover:text-white transition-colors" onclick="fillDemoCode('12345678')">1234 - 5678</span>
       </div>
     </div>
   </div>
