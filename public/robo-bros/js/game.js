@@ -410,6 +410,27 @@ function showBrosResultModal(isWin) {
 			fokus: 60
 		});
 	}, 50);
+
+	try {
+		const msg = {
+			type: isWin ? 'GAME_COMPLETE' : 'GAME_OVER',
+			gameId: 'robo-bros',
+			title: 'Robo Bros',
+			category: 'kognitif',
+			level: currentLvl,
+			score: totalScore,
+			xp: isWin ? 120 : 30,
+			coins: totalScore,
+			duration: 60,
+			completed: isWin
+		};
+		if (window.parent && window.parent !== window) window.parent.postMessage(msg, '*');
+		if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+			window.ReactNativeWebView.postMessage(JSON.stringify(msg));
+		}
+	} catch (e) {
+		console.warn('PostMessage error:', e);
+	}
 }
 
 function continueNextLevel() {
