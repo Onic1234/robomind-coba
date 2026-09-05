@@ -1141,7 +1141,7 @@ export default function PickAndDropScreen() {
       <View style={styles.webViewContainer}>
         <iframe
           srcDoc={mediaPipeHtmlContent}
-          style={{ width: "100%", height: "100%", border: "none" }}
+          style={{ width: "100%", height: "100%", borderWidth: 0 }}
         />
       </View>
 
