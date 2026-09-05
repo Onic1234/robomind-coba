@@ -108,7 +108,7 @@ export default function RoboMazeScreen() {
   }
 
   return (
-    <View ref={containerRef} style={styles.webContainer} onClick={() => iframeRef.current?.focus()}>
+    <View style={styles.webContainer}>
       <StatusBar hidden />
 
       {loading && (

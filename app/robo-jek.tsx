@@ -22,7 +22,7 @@ export default function RoboJekScreen() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showHelp, setShowHelp] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<any>(null);
   const iframeSrc = useRef(`/robo-jek/index.html?v=${Date.now()}`).current;
 
   const toggleFullscreen = useCallback(() => {
@@ -110,7 +110,7 @@ export default function RoboJekScreen() {
   }
 
   return (
-    <View ref={containerRef} style={styles.webContainer} onClick={() => iframeRef.current?.focus()}>
+    <View style={styles.webContainer}>
       <StatusBar hidden />
 
       {loading && (
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
     left: 0,
     width: "100%",
     height: "100%",
-    border: "none",
+    borderWidth: 0,
     backgroundColor: "#030712",
   },
   loadingOverlay: {

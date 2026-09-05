@@ -21,7 +21,7 @@ export default function RoboPoseScreen() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showHelp, setShowHelp] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<any>(null);
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;
@@ -107,7 +107,7 @@ export default function RoboPoseScreen() {
   }
 
   return (
-    <View ref={containerRef} style={styles.webContainer} onClick={() => iframeRef.current?.focus()}>
+    <View style={styles.webContainer}>
       <StatusBar hidden />
 
       {loading && (
