@@ -6,8 +6,8 @@
     <title>Robo Pose - Game Melatih Fokus & Motorik Anak</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Fredoka & FontAwesome -->
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Google Fonts: Plus Jakarta Sans & Fredoka -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Plus+Jakarta+Sans:wght@500;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- MediaPipe Hands & Camera Utils CDN -->
@@ -16,16 +16,20 @@
 
     <style>
         body {
-            font-family: 'Fredoka', cursive, sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Fredoka', sans-serif;
             user-select: none;
             -webkit-user-select: none;
-            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%);
+            background: radial-gradient(circle at 50% 10%, #1e1b4b 0%, #0f172a 70%, #020617 100%);
             touch-action: manipulation;
         }
 
+        .heading-font {
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+
         @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 15px rgba(234, 179, 8, 0.6); }
-            50% { box-shadow: 0 0 30px rgba(234, 179, 8, 0.9); }
+            0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.7); }
+            50% { box-shadow: 0 0 35px rgba(245, 158, 11, 0.95); }
         }
 
         .glow-target {
@@ -51,20 +55,20 @@
             100% { background-color: transparent; }
         }
 
-        /* Custom Scrollbar for scoreboard */
+        /* Custom Scrollbar */
         ::-webkit-scrollbar {
-            width: 8px;
+            width: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: rgba(0,0,0,0.2);
+            background: rgba(15, 23, 42, 0.6);
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.3);
+            background: rgba(168, 85, 247, 0.4);
             border-radius: 4px;
         }
 
-        /* Custom progress bar animation for system loading modal */
+        /* Custom progress bar animation */
         @keyframes loading-bar-flow {
             0% { transform: translateX(-100%); }
             50% { transform: translateX(50%); }
@@ -77,149 +81,163 @@
         /* Mode Selection Card Active Styling */
         .input-mode-card.active {
             border-color: #f59e0b;
-            background-color: rgba(245, 158, 11, 0.2);
-            box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.22) 0%, rgba(234, 88, 12, 0.15) 100%);
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.25), inset 0 1px 0 rgba(254, 240, 138, 0.3);
+        }
+
+        .level-btn.active {
+            border-color: #34d399;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.25) 0%, rgba(5, 150, 105, 0.15) 100%);
+            box-shadow: 0 0 20px rgba(52, 211, 153, 0.3);
         }
     </style>
 </head>
-<body class="text-white min-h-screen flex flex-col justify-between overflow-x-hidden">
+<body class="text-white min-h-screen flex flex-col justify-between overflow-x-hidden relative">
 
-    <!-- Fullscreen Loading Overlay (AI & Camera System Initialization) -->
-    <div id="systemLoadingModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center text-center p-6 transition-all duration-300">
+    <!-- Ambient Glowing Orbs Background -->
+    <div class="fixed top-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-purple-600/15 blur-[120px] pointer-events-none"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full bg-amber-500/10 blur-[140px] pointer-events-none"></div>
+
+    <!-- Fullscreen Loading Overlay -->
+    <div id="systemLoadingModal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-xl z-50 hidden flex flex-col items-center justify-center text-center p-6 transition-all duration-300">
         <div class="relative flex items-center justify-center mb-6">
-            <div class="absolute w-24 h-24 bg-amber-500/20 rounded-full animate-ping"></div>
-            <div class="absolute w-16 h-16 bg-indigo-500/30 rounded-full animate-pulse"></div>
-            <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-300 flex items-center justify-center text-slate-950 text-3xl shadow-2xl z-10">
+            <div class="absolute w-28 h-28 bg-amber-500/20 rounded-full animate-ping"></div>
+            <div class="absolute w-20 h-20 bg-purple-500/30 rounded-full animate-pulse"></div>
+            <div class="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-400 via-yellow-300 to-orange-400 flex items-center justify-center text-slate-950 text-4xl shadow-[0_10px_30px_rgba(245,158,11,0.5)] border-2 border-yellow-200 z-10">
                 🤖
             </div>
         </div>
-        <h3 class="text-2xl font-black text-yellow-300 mb-1">Menginisialisasi Kamera AI</h3>
-        <p id="loadingModalSub" class="text-xs text-indigo-200 max-w-xs mb-5">Sedang mengaktifkan webcam dan deteksi gerakan pose tangan ringan...</p>
+        <h3 class="heading-font text-2xl sm:text-3xl font-extrabold text-yellow-300 mb-1">Menginisialisasi Kamera AI</h3>
+        <p id="loadingModalSub" class="text-xs sm:text-sm text-indigo-200/90 max-w-xs mb-6 leading-relaxed">Sedang mengaktifkan webcam dan deteksi gerakan pose tangan...</p>
         
-        <div class="w-48 h-1.5 bg-slate-800 rounded-full overflow-hidden border border-indigo-500/20 relative">
-            <div class="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-amber-400 to-yellow-300 rounded-full loading-bar-anim"></div>
+        <div class="w-56 h-2 bg-slate-800/80 rounded-full overflow-hidden border border-indigo-500/30 relative">
+            <div class="absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-amber-400 via-yellow-300 to-orange-400 rounded-full loading-bar-anim"></div>
         </div>
         
-        <p class="text-[10px] text-indigo-400 mt-4">Silakan tekan "Izinkan Kamera" jika muncul pop-up peramban</p>
+        <p class="text-[11px] text-indigo-300/80 mt-5 bg-indigo-950/50 px-3 py-1.5 rounded-full border border-indigo-500/20">Silakan tekan "Izinkan Kamera" jika muncul pop-up peramban</p>
     </div>
 
-    <header class="w-full bg-slate-900/80 backdrop-blur-md border-b border-indigo-500/30 px-4 py-3 flex items-center justify-between z-30">
-        <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-400 to-yellow-300 flex items-center justify-center text-slate-900 font-bold text-xl shadow-lg">
-                🖐️
-            </div>
-            <div>
-                <h1 class="font-bold text-lg md:text-xl tracking-wide bg-gradient-to-r from-yellow-300 via-amber-200 to-orange-400 bg-clip-text text-transparent">
-                    Robo Pose
-                </h1>
-                <p class="text-xs text-indigo-200">Game Melatih Fokus & Motorik Anak</p>
-            </div>
-        </div>
-
-        <div class="flex items-center gap-3">
-            <button id="btnSoundToggle" onclick="toggleSound()" class="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl border border-indigo-400/30 text-yellow-300 transition-all flex items-center gap-2 text-sm font-semibold">
-                <i id="soundIcon" class="fas fa-volume-up"></i>
-                <span class="hidden sm:inline">Suara: ON</span>
-            </button>
-            <button onclick="showHelpModal()" class="p-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-white font-semibold text-sm transition-all shadow-md flex items-center gap-2">
-                <i class="fas fa-circle-question"></i>
-                <span class="hidden sm:inline">Cara Main</span>
-            </button>
-        </div>
-    </header>
-
-    <main class="flex-1 max-w-7xl w-full mx-auto p-2 sm:p-4 flex flex-col justify-center items-center relative">
+    <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 flex flex-col justify-center items-center relative z-10">
         
-        <!-- View 1: Main Menu Screen -->
-        <div id="startScreen" class="w-full max-w-2xl bg-slate-900/90 border-2 border-indigo-500/40 rounded-3xl p-5 md:p-8 shadow-2xl backdrop-blur-lg flex flex-col items-center text-center my-auto transition-all">
-            <div class="text-5xl md:text-6xl mb-3 animate-bounce">🖐️✨</div>
-            <h2 class="text-2xl md:text-4xl font-extrabold text-yellow-300 mb-2">Asah Fokus & Gerakan Tangan!</h2>
-            <p class="text-indigo-200 text-xs md:text-sm max-w-lg mb-5">
+        <!-- View 1: Main Menu Screen (Human Designed Layout - No Header Collision) -->
+        <div id="startScreen" class="w-full max-w-xl bg-slate-900/85 border border-indigo-500/30 rounded-[32px] p-4 sm:p-7 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] backdrop-blur-xl flex flex-col items-center text-center my-auto transition-all relative overflow-hidden mt-10 sm:mt-12">
+            <!-- Glowing top highlight bar -->
+            <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-300"></div>
+
+            <!-- Top Utility Bar (Audio & Help) -->
+            <div class="w-full flex items-center justify-between mb-4 px-1">
+                <div class="flex items-center gap-2">
+                    <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-amber-400 via-orange-400 to-yellow-300 flex items-center justify-center text-slate-950 font-black text-xl shadow-md border border-amber-200/60">
+                        🖐️
+                    </div>
+                    <div class="text-left">
+                        <h1 class="heading-font font-black text-base sm:text-lg tracking-tight bg-gradient-to-r from-yellow-300 via-amber-200 to-orange-400 bg-clip-text text-transparent leading-tight">
+                            Robo Pose
+                        </h1>
+                        <p class="text-[10px] text-indigo-200/80 font-medium leading-none">Motorik & Fokus Anak</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                    <button id="btnSoundToggle" onclick="toggleSound()" class="px-2.5 py-1.5 bg-slate-800/90 hover:bg-slate-700/90 rounded-xl border border-indigo-400/30 text-yellow-300 transition-all flex items-center gap-1.5 text-[11px] font-bold shadow-sm active:translate-y-0.5">
+                        <i id="soundIcon" class="fas fa-volume-up text-amber-400 text-xs"></i>
+                        <span class="hidden sm:inline">Suara: ON</span>
+                    </button>
+                    <button onclick="showHelpModal()" class="px-2.5 py-1.5 bg-indigo-600/90 hover:bg-indigo-500/90 rounded-xl text-white font-extrabold text-[11px] transition-all shadow-sm flex items-center gap-1.5 active:translate-y-0.5 border border-indigo-400/30">
+                        <i class="fas fa-circle-question text-xs"></i>
+                        <span>Cara Main</span>
+                    </button>
+                </div>
+            </div>
+
+            <h2 class="heading-font text-xl sm:text-2xl font-black text-yellow-300 tracking-tight leading-snug mb-1">
+                Asah Fokus & Gerakan Tangan!
+            </h2>
+            <p class="text-indigo-200/90 text-xs max-w-md mb-5 leading-relaxed">
                 Ikuti simbol ekspresi tangan yang jatuh meluncur tepat pada garis batas dengan gerakan tangan di depan kamera atau ketukan layar!
             </p>
 
             <!-- Mode Selector (Camera AI vs Mobile Touch) -->
-            <div class="w-full mb-6">
-                <h3 class="text-xs font-extrabold text-amber-300 uppercase tracking-wider mb-2.5 flex items-center justify-center gap-1.5">
-                    <i class="fas fa-sliders text-yellow-400"></i> Pilih Mode Kontrol Game:
-                </h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <button onclick="setInputMode('camera')" id="modeCamBtn" class="input-mode-card active p-3.5 rounded-2xl border-2 border-amber-500 bg-amber-950/40 hover:bg-amber-900/50 transition-all text-left flex items-center gap-3">
-                        <div class="w-11 h-11 rounded-xl bg-indigo-500/30 flex items-center justify-center text-indigo-300 text-2xl shrink-0">
+            <div class="w-full mb-5 text-left">
+                <div class="flex items-center gap-1.5 mb-2.5">
+                    <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                    <h3 class="text-[11px] font-black text-amber-300 uppercase tracking-wider heading-font">
+                        Pilih Mode Kontrol Game:
+                    </h3>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <button onclick="setInputMode('camera')" id="modeCamBtn" class="input-mode-card active p-3 rounded-2xl border-2 border-amber-400 bg-amber-950/30 hover:bg-amber-900/40 transition-all text-left flex items-center gap-3 relative overflow-hidden group">
+                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-slate-950 text-lg font-bold shrink-0 shadow-md">
                             📸
                         </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="font-extrabold text-yellow-300 text-sm">Mode Kamera AI</span>
-                                <span class="bg-indigo-500/30 text-indigo-200 text-[10px] font-bold px-2 py-0.5 rounded-full">Kamera + Sentuh</span>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between gap-1 mb-0.5">
+                                <span class="font-extrabold text-yellow-300 text-xs sm:text-sm truncate">Mode Kamera AI</span>
+                                <span class="bg-indigo-500/30 text-indigo-200 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-indigo-400/30 shrink-0">Kamera</span>
                             </div>
-                            <p class="text-[11px] text-indigo-200/90 mt-0.5">Deteksi gerakan tangan via kamera + tombol layar aktif!</p>
+                            <p class="text-[10px] text-indigo-200/80 leading-tight">Deteksi pose tangan via webcam HP/laptop.</p>
                         </div>
                     </button>
 
-                    <button onclick="setInputMode('touch')" id="modeTouchBtn" class="input-mode-card p-3.5 rounded-2xl border-2 border-slate-700 bg-slate-800/40 hover:bg-amber-900/40 hover:border-amber-500 transition-all text-left flex items-center gap-3">
-                        <div class="w-11 h-11 rounded-xl bg-amber-500/30 flex items-center justify-center text-amber-300 text-2xl shrink-0">
+                    <button onclick="setInputMode('touch')" id="modeTouchBtn" class="input-mode-card p-3 rounded-2xl border-2 border-slate-700/80 bg-slate-800/40 hover:border-amber-400/60 hover:bg-slate-800/70 transition-all text-left flex items-center gap-3 relative overflow-hidden group">
+                        <div class="w-9 h-9 rounded-xl bg-slate-700/80 group-hover:bg-amber-500/30 flex items-center justify-center text-amber-300 text-lg font-bold shrink-0 shadow-md">
                             📱
                         </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <span class="font-extrabold text-amber-300 text-sm">Mode Sentuh Layar</span>
-                                <span class="bg-emerald-500/30 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full">100% Bebas Lag</span>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center justify-between gap-1 mb-0.5">
+                                <span class="font-extrabold text-slate-200 group-hover:text-amber-300 text-xs sm:text-sm truncate">Mode Sentuh</span>
+                                <span class="bg-emerald-500/20 text-emerald-300 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-emerald-500/30 shrink-0">Bebas Lag</span>
                             </div>
-                            <p class="text-[11px] text-amber-100/90 mt-0.5">Tanpa kamera, super ringan & bebas lag di semua HP!</p>
+                            <p class="text-[10px] text-slate-300/70 group-hover:text-slate-200 leading-tight">Tanpa kamera, super cepat di semua HP.</p>
                         </div>
                     </button>
                 </div>
             </div>
 
-            <!-- Level Selector -->
-            <div class="w-full mb-6">
-                <h3 class="text-xs font-extrabold text-indigo-300 uppercase tracking-wider mb-2.5">Pilih Tingkat Level:</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                    <button onclick="selectLevel(1)" id="lvlBtn1" class="level-btn active p-3 rounded-2xl border-2 border-emerald-500 bg-emerald-900/40 hover:bg-emerald-800/60 transition-all text-left flex flex-col justify-between">
-                        <div>
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="font-bold text-emerald-300 text-base">Level 1</span>
-                                <span class="bg-emerald-500/30 text-emerald-200 text-[10px] px-2 py-0.5 rounded-full">Mudah</span>
-                            </div>
-                            <p class="text-[11px] text-emerald-100">10 Simbol • Santai</p>
-                        </div>
-                        <div class="mt-2 text-[11px] text-emerald-300 font-semibold flex items-center gap-1">
-                            <i class="fas fa-heart text-red-400"></i> Max Salah: 3x
+            <!-- Level Selector (Vertical Centered Clean Cards - No Awkward Text Wrapping) -->
+            <div class="w-full mb-5 text-left">
+                <div class="flex items-center gap-1.5 mb-2.5">
+                    <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                    <h3 class="text-[11px] font-black text-purple-300 uppercase tracking-wider heading-font">Pilih Tingkat Level:</h3>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 sm:gap-3">
+                    <button onclick="selectLevel(1)" id="lvlBtn1" class="level-btn active p-2.5 sm:p-3 rounded-2xl border-2 border-emerald-500 bg-emerald-950/30 transition-all text-center flex flex-col items-center justify-between relative group shadow-md active:translate-y-0.5">
+                        <span class="bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full mb-1">Mudah</span>
+                        <div class="font-black text-emerald-300 text-sm sm:text-base heading-font leading-tight">Level 1</div>
+                        <div class="text-[10px] sm:text-[11px] text-slate-300 font-semibold mt-0.5">10 Simbol</div>
+                        <div class="mt-1.5 text-[9px] sm:text-[10px] text-rose-400 font-bold flex items-center justify-center gap-1 bg-slate-950/60 px-2 py-0.5 rounded-full border border-rose-500/20 w-full">
+                            <i class="fas fa-heart text-[10px]"></i> 3x
                         </div>
                     </button>
 
-                    <button onclick="selectLevel(2)" id="lvlBtn2" class="level-btn p-3 rounded-2xl border-2 border-slate-700 bg-slate-800/40 hover:bg-amber-900/40 hover:border-amber-500 transition-all text-left flex flex-col justify-between">
-                        <div>
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="font-bold text-amber-300 text-base">Level 2</span>
-                                <span class="bg-amber-500/30 text-amber-200 text-[10px] px-2 py-0.5 rounded-full">Sedang</span>
-                            </div>
-                            <p class="text-[11px] text-amber-100">15 Simbol • Sedang</p>
-                        </div>
-                        <div class="mt-2 text-[11px] text-amber-300 font-semibold flex items-center gap-1">
-                            <i class="fas fa-heart text-red-400"></i> Max Salah: 5x
+                    <button onclick="selectLevel(2)" id="lvlBtn2" class="level-btn p-2.5 sm:p-3 rounded-2xl border-2 border-slate-700/80 bg-slate-800/40 hover:border-amber-400/60 transition-all text-center flex flex-col items-center justify-between relative group shadow-md active:translate-y-0.5">
+                        <span class="bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full mb-1">Sedang</span>
+                        <div class="font-black text-amber-300 text-sm sm:text-base heading-font leading-tight">Level 2</div>
+                        <div class="text-[10px] sm:text-[11px] text-slate-300 font-semibold mt-0.5">15 Simbol</div>
+                        <div class="mt-1.5 text-[9px] sm:text-[10px] text-rose-400 font-bold flex items-center justify-center gap-1 bg-slate-950/60 px-2 py-0.5 rounded-full border border-rose-500/20 w-full">
+                            <i class="fas fa-heart text-[10px]"></i> 5x
                         </div>
                     </button>
 
-                    <button onclick="selectLevel(3)" id="lvlBtn3" class="level-btn p-3 rounded-2xl border-2 border-slate-700 bg-slate-800/40 hover:bg-rose-900/40 hover:border-rose-500 transition-all text-left flex flex-col justify-between">
-                        <div>
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="font-bold text-rose-300 text-base">Level 3</span>
-                                <span class="bg-rose-500/30 text-rose-200 text-[10px] px-2 py-0.5 rounded-full">Tantangan</span>
-                            </div>
-                            <p class="text-[11px] text-rose-100">20 Simbol • Cepat</p>
-                        </div>
-                        <div class="mt-2 text-[11px] text-rose-300 font-semibold flex items-center gap-1">
-                            <i class="fas fa-heart text-red-400"></i> Max Salah: 6x
+                    <button onclick="selectLevel(3)" id="lvlBtn3" class="level-btn p-2.5 sm:p-3 rounded-2xl border-2 border-slate-700/80 bg-slate-800/40 hover:border-rose-400/60 transition-all text-center flex flex-col items-center justify-between relative group shadow-md active:translate-y-0.5">
+                        <span class="bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full mb-1">Cepat</span>
+                        <div class="font-black text-rose-300 text-sm sm:text-base heading-font leading-tight">Level 3</div>
+                        <div class="text-[10px] sm:text-[11px] text-slate-300 font-semibold mt-0.5">20 Simbol</div>
+                        <div class="mt-1.5 text-[9px] sm:text-[10px] text-rose-400 font-bold flex items-center justify-center gap-1 bg-slate-950/60 px-2 py-0.5 rounded-full border border-rose-500/20 w-full">
+                            <i class="fas fa-heart text-[10px]"></i> 6x
                         </div>
                     </button>
                 </div>
             </div>
 
-            <!-- Start Button -->
-            <button onclick="startSelectedMode()" class="w-full py-3.5 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-extrabold text-lg rounded-2xl shadow-xl transition-all transform hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3">
-                <i class="fas fa-play"></i> MULAI PERMAINAN
+            <!-- Arcade Play CTA Button -->
+            <button onclick="startSelectedMode()" class="w-full py-3.5 bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 hover:from-amber-300 hover:to-orange-400 text-slate-950 font-black text-base sm:text-lg rounded-2xl shadow-[0_8px_20px_rgba(245,158,11,0.4)] border-b-4 border-amber-600 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-2.5 tracking-wide uppercase heading-font">
+                <div class="w-6 h-6 rounded-full bg-slate-950/20 flex items-center justify-center text-slate-950 text-xs">
+                    <i class="fas fa-play ml-0.5"></i>
+                </div>
+                MULAI PERMAINAN
             </button>
         </div>
 
@@ -246,7 +264,7 @@
             <!-- LAYER 2: Floating HUD Bar Top -->
             <div class="relative z-30 w-full max-w-4xl px-3 pt-3 flex items-center justify-between gap-2">
                 <!-- Level & Target Badge -->
-                <div class="flex items-center gap-2 bg-slate-900/80 backdrop-blur-md px-3 py-2 rounded-2xl border border-indigo-500/40 shadow-lg">
+                <div class="flex items-center gap-2 bg-slate-900/85 backdrop-blur-md px-3 py-2 rounded-2xl border border-indigo-500/40 shadow-lg">
                     <span id="gameLevelBadge" class="px-2.5 py-1 bg-indigo-600 text-white font-black rounded-xl text-xs sm:text-sm">
                         Level 1
                     </span>
@@ -256,14 +274,14 @@
                 </div>
 
                 <!-- Floating Score Center -->
-                <div class="bg-slate-900/85 backdrop-blur-md px-5 py-1.5 rounded-2xl border-2 border-amber-400/60 shadow-xl text-center">
+                <div class="bg-slate-900/90 backdrop-blur-md px-5 py-1.5 rounded-2xl border-2 border-amber-400/60 shadow-xl text-center">
                     <div class="text-[9px] text-indigo-300 uppercase tracking-widest font-black">SKOR</div>
                     <div id="scoreText" class="text-2xl sm:text-3xl font-black text-yellow-300 leading-tight">0</div>
                 </div>
 
                 <!-- Lives & Controls -->
                 <div class="flex items-center gap-1.5">
-                    <div class="bg-slate-900/80 backdrop-blur-md px-3 py-2 rounded-2xl border border-indigo-500/40 shadow-lg flex items-center gap-1.5">
+                    <div class="bg-slate-900/85 backdrop-blur-md px-3 py-2 rounded-2xl border border-indigo-500/40 shadow-lg flex items-center gap-1.5">
                         <span class="text-xs text-indigo-200 font-bold hidden sm:inline">Nyawa:</span>
                         <div id="livesContainer" class="flex gap-1 text-red-500 text-sm sm:text-base">
                             <i class="fas fa-heart"></i>
@@ -315,7 +333,7 @@
                     </div>
                 </div>
 
-                <!-- Target / Boundary Line Zone (Piano Tiles Hit Zone) -->
+                <!-- Target / Boundary Line Zone -->
                 <div id="targetLine" class="absolute left-0 right-0 bottom-10 h-16 border-y-4 border-dashed border-amber-400 bg-amber-400/20 backdrop-blur-sm pointer-events-none flex items-center justify-between px-2 z-10 glow-target">
                     <span class="text-[9px] font-black text-slate-950 bg-amber-400 px-1.5 py-0.5 rounded shadow">ZONA POSE</span>
                     <span class="text-[9px] font-black text-slate-950 bg-amber-400 px-1.5 py-0.5 rounded shadow">ZONA POSE</span>
@@ -340,10 +358,10 @@
                 <!-- Touch Control Buttons -->
                 <div class="w-full bg-slate-950/80 backdrop-blur-md p-1.5 rounded-xl border border-indigo-900/50 flex items-center justify-between gap-1.5 shadow-2xl">
                     <div class="grid grid-cols-4 gap-2 w-full">
-                        <button onclick="triggerManualHit(0)" class="py-2.5 bg-indigo-900/80 active:bg-amber-500 hover:bg-indigo-700 text-sm text-white font-extrabold rounded-xl border border-indigo-400/50 shadow flex items-center justify-center gap-1 active:scale-95 transition-transform">👍 Jempol</button>
-                        <button onclick="triggerManualHit(1)" class="py-2.5 bg-indigo-900/80 active:bg-amber-500 hover:bg-indigo-700 text-sm text-white font-extrabold rounded-xl border border-indigo-400/50 shadow flex items-center justify-center gap-1 active:scale-95 transition-transform">✌️ Peace</button>
-                        <button onclick="triggerManualHit(2)" class="py-2.5 bg-indigo-900/80 active:bg-amber-500 hover:bg-indigo-700 text-sm text-white font-extrabold rounded-xl border border-indigo-400/50 shadow flex items-center justify-center gap-1 active:scale-95 transition-transform">👋 Dadah</button>
-                        <button onclick="triggerManualHit(3)" class="py-2.5 bg-indigo-900/80 active:bg-amber-500 hover:bg-indigo-700 text-sm text-white font-extrabold rounded-xl border border-indigo-400/50 shadow flex items-center justify-center gap-1 active:scale-95 transition-transform">🤘 Metal</button>
+                        <button onclick="triggerManualHit(0)" class="py-2.5 bg-indigo-900/80 active:bg-amber-500 hover:bg-indigo-700 text-xs sm:text-sm text-white font-extrabold rounded-xl border border-indigo-400/50 shadow flex items-center justify-center gap-1 active:scale-95 transition-transform">👍 Jempol</button>
+                        <button onclick="triggerManualHit(1)" class="py-2.5 bg-indigo-900/80 active:bg-amber-500 hover:bg-indigo-700 text-xs sm:text-sm text-white font-extrabold rounded-xl border border-indigo-400/50 shadow flex items-center justify-center gap-1 active:scale-95 transition-transform">✌️ Peace</button>
+                        <button onclick="triggerManualHit(2)" class="py-2.5 bg-indigo-900/80 active:bg-amber-500 hover:bg-indigo-700 text-xs sm:text-sm text-white font-extrabold rounded-xl border border-indigo-400/50 shadow flex items-center justify-center gap-1 active:scale-95 transition-transform">👋 Dadah</button>
+                        <button onclick="triggerManualHit(3)" class="py-2.5 bg-indigo-900/80 active:bg-amber-500 hover:bg-indigo-700 text-xs sm:text-sm text-white font-extrabold rounded-xl border border-indigo-400/50 shadow flex items-center justify-center gap-1 active:scale-95 transition-transform">🤘 Metal</button>
                     </div>
                 </div>
             </div>
@@ -353,12 +371,12 @@
     </main>
 
     <!-- Help Modal -->
-    <div id="helpModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div id="helpModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border-2 border-indigo-500/50 rounded-3xl p-6 max-w-md w-full shadow-2xl relative">
             <button onclick="closeHelpModal()" class="absolute top-4 right-4 text-indigo-400 hover:text-white text-xl">
                 <i class="fas fa-times"></i>
             </button>
-            <h3 class="text-2xl font-bold text-yellow-300 mb-3 flex items-center gap-2">
+            <h3 class="heading-font text-2xl font-bold text-yellow-300 mb-3 flex items-center gap-2">
                 <i class="fas fa-gamepad"></i> Cara Bermain
             </h3>
             <div class="space-y-3 text-xs md:text-sm text-indigo-100">
@@ -385,12 +403,12 @@
         </div>
     </div>
 
-    <!-- Game Over / Victory Modal with 5-Axis Brain Development Radar Chart -->
+    <!-- Game Over / Victory Modal -->
     <div id="resultModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
         <div class="bg-slate-900 border-2 border-indigo-500/60 rounded-3xl p-4 sm:p-6 max-w-lg w-full max-h-[94vh] overflow-y-auto text-center shadow-2xl relative my-auto">
             
             <div id="resultIcon" class="text-6xl mb-1 animate-bounce">🏆</div>
-            <h3 id="resultTitle" class="text-2xl sm:text-3xl font-black text-yellow-300 mb-1">Hebat Sekali!</h3>
+            <h3 id="resultTitle" class="heading-font text-2xl sm:text-3xl font-black text-yellow-300 mb-1">Hebat Sekali!</h3>
             <p id="resultSubtitle" class="text-indigo-200 text-xs mb-4">Kamu berhasil menyelesaikan level ini dengan fokus tinggi!</p>
 
             <!-- Stats Box -->
@@ -411,7 +429,7 @@
 
             <!-- Brain Development 5 Pentagon Axes Radar Chart -->
             <div class="bg-slate-950/80 p-3 rounded-2xl border border-purple-500/30 mb-5 flex flex-col items-center">
-                <div class="text-xs font-black text-purple-300 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <div class="text-xs font-black text-purple-300 uppercase tracking-wider mb-2 flex items-center gap-1.5 heading-font">
                     🧠 Analisis Perkembangan Otak Anak
                 </div>
                 <canvas id="radarChartCanvas" width="220" height="170" class="max-w-full"></canvas>
@@ -433,7 +451,7 @@
     </div>
 
     <!-- Footer -->
-    <footer class="w-full py-2 text-center text-[11px] text-indigo-300/60 border-t border-indigo-900/20 bg-slate-950/40">
+    <footer class="w-full py-2 text-center text-[11px] text-indigo-300/60 border-t border-indigo-900/20 bg-slate-950/40 relative z-10">
         Robo Pose • Game Edukasi Motorik & Fokus Anak
     </footer>
 
@@ -504,11 +522,11 @@
             const touchBtn = document.getElementById('modeTouchBtn');
             const camBtn = document.getElementById('modeCamBtn');
             if (mode === 'touch') {
-                touchBtn.className = "input-mode-card active p-3.5 rounded-2xl border-2 border-amber-500 bg-amber-950/40 hover:bg-amber-900/50 transition-all text-left flex items-center gap-3";
-                camBtn.className = "input-mode-card p-3.5 rounded-2xl border-2 border-slate-700 bg-slate-800/40 hover:bg-indigo-900/40 hover:border-indigo-500 transition-all text-left flex items-center gap-3";
+                touchBtn.className = "input-mode-card active p-3 rounded-2xl border-2 border-amber-400 bg-amber-950/30 hover:bg-amber-900/40 transition-all text-left flex items-center gap-3 relative overflow-hidden group";
+                camBtn.className = "input-mode-card p-3 rounded-2xl border-2 border-slate-700/80 bg-slate-800/40 hover:border-amber-400/60 hover:bg-slate-800/70 transition-all text-left flex items-center gap-3 relative overflow-hidden group";
             } else {
-                camBtn.className = "input-mode-card active p-3.5 rounded-2xl border-2 border-amber-500 bg-amber-950/40 hover:bg-amber-900/50 transition-all text-left flex items-center gap-3";
-                touchBtn.className = "input-mode-card p-3.5 rounded-2xl border-2 border-slate-700 bg-slate-800/40 hover:bg-amber-900/40 hover:border-amber-500 transition-all text-left flex items-center gap-3";
+                camBtn.className = "input-mode-card active p-3 rounded-2xl border-2 border-amber-400 bg-amber-950/30 hover:bg-amber-900/40 transition-all text-left flex items-center gap-3 relative overflow-hidden group";
+                touchBtn.className = "input-mode-card p-3 rounded-2xl border-2 border-slate-700/80 bg-slate-800/40 hover:border-amber-400/60 hover:bg-slate-800/70 transition-all text-left flex items-center gap-3 relative overflow-hidden group";
             }
         }
 
@@ -614,11 +632,11 @@
             const icon = document.getElementById('soundIcon');
             if (soundEnabled) {
                 btn.classList.remove('opacity-50');
-                icon.className = 'fas fa-volume-up';
+                icon.className = 'fas fa-volume-up text-amber-400 text-xs';
                 btn.querySelector('span').innerText = 'Suara: ON';
             } else {
                 btn.classList.add('opacity-50');
-                icon.className = 'fas fa-volume-mute';
+                icon.className = 'fas fa-volume-mute text-slate-400 text-xs';
                 btn.querySelector('span').innerText = 'Suara: OFF';
             }
         }
@@ -747,9 +765,9 @@
             selectedLevel = lvl;
             document.querySelectorAll('.level-btn').forEach((btn, idx) => {
                 if (idx + 1 === lvl) {
-                    btn.className = "level-btn active p-3 rounded-2xl border-2 border-emerald-500 bg-emerald-900/40 transition-all text-left flex flex-col justify-between";
+                    btn.className = "level-btn active p-2.5 sm:p-3 rounded-2xl border-2 border-emerald-500 bg-emerald-950/30 transition-all text-center flex flex-col items-center justify-between relative group shadow-md active:translate-y-0.5";
                 } else {
-                    btn.className = "level-btn p-3 rounded-2xl border-2 border-slate-700 bg-slate-800/40 hover:border-slate-500 transition-all text-left flex flex-col justify-between";
+                    btn.className = "level-btn p-2.5 sm:p-3 rounded-2xl border-2 border-slate-700/80 bg-slate-800/40 hover:border-slate-600 transition-all text-center flex flex-col items-center justify-between relative group shadow-md active:translate-y-0.5";
                 }
             });
         }
@@ -758,7 +776,6 @@
             if (inputMode === 'camera') {
                 initMediaPipeAndStart();
             } else {
-                // Mode Sentuh: Instant Start
                 document.getElementById('startScreen').classList.add('hidden');
                 document.getElementById('gameScreen').classList.remove('hidden');
                 applyInputModeUI();
@@ -791,10 +808,9 @@
                 locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
             });
 
-            // Ultra-optimized settings for Mobile Devices
             handsDetector.setOptions({
                 maxNumHands: isMobile ? 1 : 2,
-                modelComplexity: 0, // 0 = Lite (ultra-fast & low CPU)
+                modelComplexity: 0,
                 minDetectionConfidence: 0.55,
                 minTrackingConfidence: 0.55
             });
@@ -803,7 +819,7 @@
 
             let isProcessingHand = false;
             let lastProcessingTime = 0;
-            const targetFpsDelay = isMobile ? 66 : 40; // 15 FPS on mobile, 25 FPS on desktop
+            const targetFpsDelay = isMobile ? 66 : 40;
 
             const targetCamWidth = isMobile ? 320 : 640;
             const targetCamHeight = isMobile ? 240 : 480;
@@ -847,7 +863,6 @@
                 const systemLoader = document.getElementById('systemLoadingModal');
                 if (systemLoader) systemLoader.classList.add('hidden');
 
-                // Fallback to Touch Mode automatically if Camera fails or permission denied
                 setInputMode('touch');
                 document.getElementById('startScreen').classList.add('hidden');
                 document.getElementById('gameScreen').classList.remove('hidden');
@@ -1083,7 +1098,6 @@
             ];
             const numAxes = axes.length;
 
-            // Grid Pentagon rings
             [0.25, 0.5, 0.75, 1.0].forEach((rFactor) => {
                 ctx.beginPath();
                 for (let i = 0; i < numAxes; i++) {
@@ -1099,7 +1113,6 @@
                 ctx.stroke();
             });
 
-            // Spokes
             for (let i = 0; i < numAxes; i++) {
                 const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
                 const x = centerX + radius * Math.cos(angle);
@@ -1111,7 +1124,6 @@
                 ctx.stroke();
             }
 
-            // Data polygon
             ctx.beginPath();
             axes.forEach((axis, i) => {
                 const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
@@ -1129,7 +1141,6 @@
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // Vertices dots & text labels
             axes.forEach((axis, i) => {
                 const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
                 const r = radius * (axis.val / 100);
@@ -1171,7 +1182,6 @@
             const accuracy = Math.round((tilesHitCount / config.totalTiles) * 100) || 0;
             document.getElementById('resAccuracy').innerText = `${accuracy}%`;
 
-            // Draw 5 Pentagon Axes Brain Radar Chart
             drawRadarChart('radarChartCanvas', {
                 spasial: Math.min(100, 80 + accuracy * 0.18),
                 keputusan: Math.min(100, 85 + selectedLevel * 4),
@@ -1184,7 +1194,7 @@
                 playSound('victory');
                 icon.innerText = "🏆";
                 title.innerText = "Luar Biasa, Kamu Hebat!";
-                title.className = "text-2xl sm:text-3xl font-black text-yellow-300 mb-1";
+                title.className = "heading-font text-2xl sm:text-3xl font-black text-yellow-300 mb-1";
                 subtitle.innerText = `Kamu berhasil menyelesaikan ${config.title} dengan fokus tinggi!`;
 
                 if (selectedLevel < 3) {
@@ -1197,7 +1207,7 @@
             } else {
                 icon.innerText = "💔";
                 title.innerText = "Jangan Menyerah!";
-                title.className = "text-2xl sm:text-3xl font-black text-rose-400 mb-1";
+                title.className = "heading-font text-2xl sm:text-3xl font-black text-rose-400 mb-1";
                 subtitle.innerText = "Nyawa habis. Yuk coba latih fokusmu lagi!";
                 nextBtn.classList.add('hidden');
             }
