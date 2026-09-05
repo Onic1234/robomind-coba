@@ -123,7 +123,13 @@ export default function RoboBrosScreen() {
         />
       ) : (
         <WebView
-          source={{ uri: "file:///android_asset/robo-bros/index.html" }}
+                    androidHardwareAccelerationDisabled={false}
+          renderToHardwareTextureAndroid={true}
+          overScrollMode="never"
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={false}
+source={{ uri: "file:///android_asset/robo-bros/index.html" }}
           style={styles.webview}
           javaScriptEnabled={true}
           domStorageEnabled={true}
