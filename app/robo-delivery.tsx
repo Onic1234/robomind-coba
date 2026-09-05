@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Storage } from "../lib/storage";
 import { WebView } from "react-native-webview";
 import { HowToPlayModal } from "../components/HowToPlayModal";
 import { COLORS, FONTS } from "../constants/Theme";
@@ -58,15 +58,17 @@ export default function RoboDeliveryScreen() {
         const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
         if (data && data.type === "LEVEL_COMPLETE") {
           const coinsReward = data.coins || 350;
-          const currentCoinsStr = await AsyncStorage.getItem(STORAGE_KEY_COINS);
+          const currentCoinsStr = await Storage.getItem(STORAGE_KEY_COINS);
           const currentCoins = currentCoinsStr ? parseInt(currentCoinsStr, 10) : 1250;
           const newCoins = currentCoins + coinsReward;
 
-          await AsyncStorage.setItem(STORAGE_KEY_COINS, newCoins.toString());
+          await Storage.setItem(STORAGE_KEY_COINS, newCoins.toString());
 
           if (data.level) {
-            await AsyncStorage.setItem(STORAGE_KEY_LEVEL, (data.level + 1).toString());
+            await Storage.setItem(STORAGE_KEY_LEVEL, (data.level + 1).toString());
           }
+
+          saveGameSession({ gameId: "robo-delivery", level: data.level ?? 1, score: 100, xpEarned: 50, coinsEarned: 50, completed: true });
         }
       } catch (e) {
         // Ignore non-json messages
@@ -109,13 +111,15 @@ source={{ uri: "file:///android_asset/robo-delivery/index.html" }}
               const data = typeof e.nativeEvent.data === "string" ? JSON.parse(e.nativeEvent.data) : e.nativeEvent.data;
               if (data && data.type === "LEVEL_COMPLETE") {
                 const coinsReward = data.coins || 350;
-                const currentCoinsStr = await AsyncStorage.getItem(STORAGE_KEY_COINS);
+                const currentCoinsStr = await Storage.getItem(STORAGE_KEY_COINS);
                 const currentCoins = currentCoinsStr ? parseInt(currentCoinsStr, 10) : 1250;
                 const newCoins = currentCoins + coinsReward;
-                await AsyncStorage.setItem(STORAGE_KEY_COINS, newCoins.toString());
+                await Storage.setItem(STORAGE_KEY_COINS, newCoins.toString());
                 if (data.level) {
-                  await AsyncStorage.setItem(STORAGE_KEY_LEVEL, (data.level + 1).toString());
+                  await Storage.setItem(STORAGE_KEY_LEVEL, (data.level + 1).toString());
                 }
+
+                saveGameSession({ gameId: "robo-delivery", level: data.level ?? 1, score: 100, xpEarned: 50, coinsEarned: 50, completed: true });
               }
             } catch (err) {}
           }}

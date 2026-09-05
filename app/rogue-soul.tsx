@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Storage } from "../lib/storage";
 import { HowToPlayModal } from "../components/HowToPlayModal";
 import { COLORS, FONTS, SHAPES, SHADOWS } from "../constants/Theme";
 
@@ -33,6 +33,7 @@ import {
 } from "../lib/rogue-soul/RogueSoulData";
 import { RogueSoulGameEngine } from "../lib/rogue-soul/RogueSoulEngine";
 import { RogueAudio } from "../lib/rogue-soul/RogueSoulAudio";
+import { saveGameSession } from "../lib/gameProgressService";
 
 const COINS_KEY = "user_coins_balance";
 const GEMS_KEY = "user_gems_balance";
@@ -214,25 +215,25 @@ export default function RogueSoulGameScreen() {
   useEffect(() => {
     const loadSaveData = async () => {
       try {
-        const storedCoins = await AsyncStorage.getItem(COINS_KEY);
+        const storedCoins = await Storage.getItem(COINS_KEY);
         if (storedCoins !== null) setUserCoins(parseInt(storedCoins));
 
-        const storedGems = await AsyncStorage.getItem(GEMS_KEY);
+        const storedGems = await Storage.getItem(GEMS_KEY);
         if (storedGems !== null) setUserGems(parseInt(storedGems));
 
-        const storedProgress = await AsyncStorage.getItem(LEVEL_PROGRESS_KEY);
+        const storedProgress = await Storage.getItem(LEVEL_PROGRESS_KEY);
         if (storedProgress !== null) setUnlockedLevelMax(parseInt(storedProgress));
 
-        const storedSkins = await AsyncStorage.getItem(SKINS_UNLOCKED_KEY);
+        const storedSkins = await Storage.getItem(SKINS_UNLOCKED_KEY);
         if (storedSkins !== null) setUnlockedSkinIds(JSON.parse(storedSkins));
 
-        const storedWeapons = await AsyncStorage.getItem(WEAPONS_UNLOCKED_KEY);
+        const storedWeapons = await Storage.getItem(WEAPONS_UNLOCKED_KEY);
         if (storedWeapons !== null) setUnlockedWeaponIds(JSON.parse(storedWeapons));
 
-        const storedEqSkin = await AsyncStorage.getItem(EQUIPPED_SKIN_KEY);
+        const storedEqSkin = await Storage.getItem(EQUIPPED_SKIN_KEY);
         if (storedEqSkin !== null) setEquippedSkinId(storedEqSkin);
 
-        const storedEqWeapon = await AsyncStorage.getItem(EQUIPPED_WEAPON_KEY);
+        const storedEqWeapon = await Storage.getItem(EQUIPPED_WEAPON_KEY);
         if (storedEqWeapon !== null) setEquippedWeaponId(storedEqWeapon);
       } catch (err) {
         console.error("Error loading save data:", err);
@@ -245,8 +246,8 @@ export default function RogueSoulGameScreen() {
   const saveCoinsGems = async (newCoins: number, newGems: number) => {
     setUserCoins(newCoins);
     setUserGems(newGems);
-    await AsyncStorage.setItem(COINS_KEY, newCoins.toString());
-    await AsyncStorage.setItem(GEMS_KEY, newGems.toString());
+    await Storage.setItem(COINS_KEY, newCoins.toString());
+    await Storage.setItem(GEMS_KEY, newGems.toString());
   };
 
   // Auto-switch to landscape whenever the game mode is entered on a phone
@@ -487,10 +488,12 @@ export default function RogueSoulGameScreen() {
     const newGems = userGems + gemsEarned;
     saveCoinsGems(newCoins, newGems);
 
+    saveGameSession({ gameId: "rogue-soul", level: selectedLevel.id, score: 100, xpEarned: 50, coinsEarned: 50, completed: true });
+
     if (selectedLevel.id >= unlockedLevelMax) {
       const nextMax = Math.min(CAMPAIGN_LEVELS.length, selectedLevel.id + 1);
       setUnlockedLevelMax(nextMax);
-      AsyncStorage.setItem(LEVEL_PROGRESS_KEY, nextMax.toString());
+      Storage.setItem(LEVEL_PROGRESS_KEY, nextMax.toString());
     }
   };
 
@@ -1625,7 +1628,7 @@ export default function RogueSoulGameScreen() {
                         style={styles.equipBtn}
                         onPress={() => {
                           setEquippedSkinId(skin.id);
-                          AsyncStorage.setItem(EQUIPPED_SKIN_KEY, skin.id);
+                          Storage.setItem(EQUIPPED_SKIN_KEY, skin.id);
                         }}
                       >
                         <Text style={styles.equipBtnText}>PAKAI</Text>
@@ -1640,7 +1643,7 @@ export default function RogueSoulGameScreen() {
                             const newSkins = [...unlockedSkinIds, skin.id];
                             saveCoinsGems(newCoins, newGems);
                             setUnlockedSkinIds(newSkins);
-                            AsyncStorage.setItem(SKINS_UNLOCKED_KEY, JSON.stringify(newSkins));
+                            Storage.setItem(SKINS_UNLOCKED_KEY, JSON.stringify(newSkins));
                           } else {
                             alert("Koin atau Permata tidak cukup!");
                           }
@@ -1675,7 +1678,7 @@ export default function RogueSoulGameScreen() {
                         style={styles.equipBtn}
                         onPress={() => {
                           setEquippedWeaponId(wpn.id);
-                          AsyncStorage.setItem(EQUIPPED_WEAPON_KEY, wpn.id);
+                          Storage.setItem(EQUIPPED_WEAPON_KEY, wpn.id);
                         }}
                       >
                         <Text style={styles.equipBtnText}>PAKAI</Text>
@@ -1689,7 +1692,7 @@ export default function RogueSoulGameScreen() {
                             const newWpns = [...unlockedWeaponIds, wpn.id];
                             saveCoinsGems(newCoins, userGems);
                             setUnlockedWeaponIds(newWpns);
-                            AsyncStorage.setItem(WEAPONS_UNLOCKED_KEY, JSON.stringify(newWpns));
+                            Storage.setItem(WEAPONS_UNLOCKED_KEY, JSON.stringify(newWpns));
                           } else {
                             alert("Koin tidak cukup!");
                           }

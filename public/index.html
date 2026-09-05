@@ -875,20 +875,6 @@
     </div>
   </div>
 
-    
-
-      <!-- Quick Email Form -->
-        <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#0099ff] to-[#00f0ff] text-[#050a16] font-black text-xs shadow-md active:scale-95 transition-transform">
-          Masuk Akun
-        </button>
-      </form>
-
-      <!-- Guest Demo Option -->
-        Lanjut sebagai Tamu (Mode Demo)
-      </button>
-
-    </div>
-  </div>
 
     <!-- ADD CHILD / MULTI-USER MODAL -->
   <div id="addChildModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
@@ -1139,7 +1125,86 @@
       }, 2500);
     }
 
+    
+    // === SCREENTIME LIMIT (MAX 60/60 CAP) & GAME TOTAL LOCK SYSTEM ===
+    function isScreenTimeLimitReached() {
+      const child = getActiveChild();
+      if (!child) return false;
+      const limit = child.screentime_limit || 60;
+      const used = child.screentime_used || 0;
+      return used >= limit;
+    }
+
+    function getTimeUntilResetFormatted() {
+      const now = new Date();
+      const nextReset = new Date();
+      nextReset.setHours(24, 0, 0, 0);
+      const diffMs = nextReset.getTime() - now.getTime();
+      const diffSecs = Math.floor(diffMs / 1000);
+      const hours = Math.floor(diffSecs / 3600);
+      const minutes = Math.floor((diffSecs % 3600) / 60);
+      const seconds = diffSecs % 60;
+      return `${hours} Jam ${minutes} Menit ${seconds} Detik`;
+    }
+
+    function updateScreenTimeHUD() {
+      const child = getActiveChild();
+      if (!child) return;
+
+      const limit = child.screentime_limit || 60;
+      const rawUsed = child.screentime_used || 0;
+      const clampedUsed = Math.min(limit, rawUsed); // Cap at max 60/60
+
+      const usedTextEls = document.querySelectorAll('.screentime-used-text');
+      usedTextEls.forEach(el => {
+        el.innerText = `${clampedUsed} / ${limit} Menit`;
+      });
+
+      const barEls = document.querySelectorAll('.screentime-progress-bar');
+      const pct = Math.min(100, Math.round((clampedUsed / limit) * 100));
+      barEls.forEach(el => {
+        el.style.width = `${pct}%`;
+      });
+
+      if (clampedUsed >= limit) {
+        showScreenTimeLockModal();
+      } else {
+        hideScreenTimeLockModal();
+      }
+    }
+
+    function showScreenTimeLockModal() {
+      const modal = document.getElementById('screenTimeLockModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        updateScreenTimeCountdownText();
+      }
+    }
+
+    function hideScreenTimeLockModal() {
+      const modal = document.getElementById('screenTimeLockModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function updateScreenTimeCountdownText() {
+      const countdownEl = document.getElementById('screentimeResetCountdown');
+      if (countdownEl) {
+        countdownEl.innerText = getTimeUntilResetFormatted();
+      }
+    }
+
+    setInterval(() => {
+      if (isScreenTimeLimitReached()) {
+        updateScreenTimeCountdownText();
+      }
+    }, 1000);
+
     function openGame(route) {
+      if (isScreenTimeLimitReached()) {
+        showScreenTimeLockModal();
+        if (typeof SoundFX !== 'undefined' && SoundFX.playPop) SoundFX.playPop();
+        return;
+      }
       SoundFX.playSuccess();
       try {
         localStorage.setItem("robomind_intro_completed", "true");
@@ -1413,10 +1478,23 @@
     }
 
     // Auto-increment screentime counter every 60 seconds of active usage
-    setInterval(() => {
+    setInterval(function() {
       screenTimeUsed++;
       localStorage.setItem('robomind_screentime_minutes', screenTimeUsed.toString());
       updateScreenTimeHUD();
+
+      // Sync screentime to Supabase
+      if (supabaseClient && currentUser) {
+        try {
+          var sc = getActiveChild();
+          if (sc && sc.id && !String(sc.id).startsWith('child-')) {
+            supabaseClient.from('children').update({
+              daily_screentime_minutes: screenTimeUsed,
+              updated_at: new Date().toISOString()
+            }).eq('id', sc.id).then(function() {}).catch(function() {});
+          }
+        } catch (e) {}
+      }
     }, 60000);
 
     
@@ -1438,7 +1516,6 @@
       }
     }
 
-    async 
     // === 8-DIGIT ACCESS TOKEN AUTHENTICATION SYSTEM ===
     function generate8DigitToken() {
       return Math.floor(10000000 + Math.random() * 90000000).toString();
@@ -1581,116 +1658,6 @@
         if (modal) modal.classList.remove('hidden');
       }
     }
-
-    
-      if (!supabaseClient) return;
-      try {
-        // Read URL query params passed from web portal
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlAccessToken = urlParams.get('access_token');
-        const urlRefreshToken = urlParams.get('refresh_token');
-        const urlUserId = urlParams.get('user_id');
-        const urlEmail = urlParams.get('email');
-
-        if (urlAccessToken && urlRefreshToken) {
-          try {
-            const { data } = await supabaseClient.auth.setSession({
-              access_token: urlAccessToken,
-              refresh_token: urlRefreshToken
-            });
-            if (data && data.user) {
-              currentUser = data.user;
-              onUserAuthenticated(data.user);
-              return;
-            }
-          } catch(e) {}
-        }
-        
-        if (urlUserId && urlEmail) {
-          currentUser = { id: urlUserId, email: urlEmail };
-          onUserAuthenticated(currentUser);
-          return;
-        }
-
-        // Fast race condition with 1.5s timeout so app never freezes on slow network
-        const sessionPromise = supabaseClient.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Auth Timeout')), 1500));
-        
-        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
-        if (session && session.user) {
-          currentUser = session.user;
-          onUserAuthenticated(session.user);
-        } else {
-          // If launched inside iframe with parent session or guest mode, don't show login modal
-          const isGuest = localStorage.getItem('robomind_guest_mode') === 'true';
-          if (!isGuest && !urlUserId) {
-            openModal('authGuardModal');
-          } else {
-            localStorage.setItem('robomind_guest_mode', 'true');
-          }
-        }
-      } catch (e) {
-        console.warn("Auth check fast fallback:", e);
-        if (!localStorage.getItem('robomind_active_child_id')) {
-          localStorage.setItem('robomind_guest_mode', 'true');
-        }
-      }
-    }
-
-    async function onUserAuthenticated(user) {
-      closeModal('authGuardModal');
-      localStorage.removeItem('robomind_guest_mode');
-      
-      const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Aira Salsabila';
-      const userEl = document.querySelector('h1.font-extrabold');
-      if (userEl) {
-        userEl.innerHTML = `Halo, ${userName.split(' ')[0]}! <span class="text-xs">👋</span>`;
-      }
-
-      showToast(`👋 Selamat datang kembali, ${userName.split(' ')[0]}!`);
-    }
-
-      if (!supabaseClient) return;
-      try {
-        await supabaseClient.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: window.location.origin
-          }
-        });
-      } catch (e) {
-        showToast('❌ Gagal membuka Google Login');
-      }
-    }
-
-      e.preventDefault();
-      if (!supabaseClient) return;
-      
-
-      try {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) {
-          // If login fails, try signing up
-          const { data: signUpData, error: signUpErr } = await supabaseClient.auth.signUp({ email, password });
-          if (signUpErr) {
-            showToast(`❌ ${error.message}`);
-          } else {
-            showToast('✅ Akun berhasil dibuat! Silakan cek email.');
-            if (signUpData.user) onUserAuthenticated(signUpData.user);
-          }
-        } else if (data.user) {
-          onUserAuthenticated(data.user);
-        }
-      } catch (err) {
-        showToast('❌ Kesalahan autentikasi');
-      }
-    }
-
-      localStorage.setItem('robomind_guest_mode', 'true');
-      closeModal('authGuardModal');
-      showToast('🎮 Masuk sebagai Tamu');
-    }
-
     // Enhanced Telemetry: Record Game Session, Level, XP, Coins & Skill Pillars
     async function recordGameSessionToSupabase(gameId, gameTitle, category, score, xp, level = 1, coins = 50, duration = 120) {
       // 1. Always update local storage
@@ -1705,9 +1672,13 @@
       // 2. Push to Supabase if authenticated
       if (!supabaseClient || !currentUser) return;
       try {
+        var activeChild = getActiveChild();
+        var childId = activeChild ? activeChild.id : null;
+
         // Insert session record
         await supabaseClient.from('game_sessions').insert({
           user_id: currentUser.id,
+          child_id: childId,
           game_id: gameId,
           game_title: gameTitle || gameId,
           category: category || 'kognitif',
@@ -1720,22 +1691,43 @@
         });
 
         // Increment skill pillars in child_skills table
-        const pillarCol = category === 'fokus' ? 'focus_score' : 
-                          category === 'moral' ? 'moral_score' : 
-                          category === 'literasi' ? 'literacy_score' : 'logic_score';
+        var pillarCol = category === 'fokus' ? 'focus_score' : 
+                      category === 'moral' ? 'moral_score' : 
+                      category === 'literasi' ? 'literacy_score' : 'logic_score';
         
-        const { data: currentSkills } = await supabaseClient
+        var skillQuery = await supabaseClient
           .from('child_skills')
           .select('*')
-          .eq('user_id', currentUser.id)
-          .single();
+          .eq('child_id', childId)
+          .maybeSingle();
 
-        if (currentSkills) {
-          const updatedScore = Math.min(100, (currentSkills[pillarCol] || 50) + 2);
+        if (!skillQuery.data) {
+          skillQuery = await supabaseClient
+            .from('child_skills')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .maybeSingle();
+        }
+
+        if (skillQuery.data) {
+          var updatedScore = Math.min(100, (skillQuery.data[pillarCol] || 50) + 2);
           await supabaseClient
             .from('child_skills')
             .update({ [pillarCol]: updatedScore, updated_at: new Date().toISOString() })
-            .eq('user_id', currentUser.id);
+            .eq('id', skillQuery.data.id);
+        } else {
+          await supabaseClient
+            .from('child_skills')
+            .insert({
+              user_id: currentUser.id,
+              child_id: childId,
+              logic_score: pillarCol === 'logic_score' ? 52 : 50,
+              creativity_score: pillarCol === 'creativity_score' ? 52 : 50,
+              literacy_score: pillarCol === 'literacy_score' ? 52 : 50,
+              focus_score: pillarCol === 'focus_score' ? 52 : 50,
+              moral_score: pillarCol === 'moral_score' ? 52 : 50,
+              updated_at: new Date().toISOString()
+            });
         }
       } catch (e) {
         console.warn("Could not push game session telemetry to Supabase:", e);
@@ -1821,7 +1813,17 @@
     function renderChildrenListUI() {
       const container = document.getElementById('childrenProfilesList');
       const countLabel = document.getElementById('childCountLabel');
-      if (countLabel) countLabel.innerText = `${userChildrenList.length} Profil Anak`;
+      if (countLabel) countLabel.innerText = userChildrenList.length + ' Profil Anak';
+
+      var switcher = container ? container.closest('.rounded-2xl') : null;
+      if (switcher) {
+        if (userChildrenList.length <= 1) {
+          switcher.style.display = 'none';
+          return;
+        } else {
+          switcher.style.display = '';
+        }
+      }
       if (!container) return;
 
       container.innerHTML = userChildrenList.map((child, idx) => {
@@ -1979,35 +1981,61 @@
       if (typeof showToast === 'function') showToast('🔍 Memverifikasi kode akses...');
 
       let matchedChild = null;
+      let dbError = false;
 
-      if (window.supabaseClient) {
-        try {
-          const { data } = await window.supabaseClient
-            .from('children')
-            .select('*')
-            .or(`access_token.eq.${rawCode},access_code.eq.${rawCode}`)
-            .single();
+      console.log('[AccessCode] Verifying:', rawCode);
 
-          if (data) {
+      try {
+        const ctrl = new AbortController();
+        const timeoutId = setTimeout(function() { ctrl.abort(); }, 8000);
+
+        const res = await fetch(
+          'https://rmbqodiutuyckuylhlgb.supabase.co/rest/v1/children' +
+            '?select=id,name,age,avatar_url,level,total_xp,coins,daily_screentime_minutes,screentime_limit_minutes' +
+            '&or=(access_token.eq.' + rawCode + ',access_code.eq.' + rawCode + ')',
+          {
+            headers: {
+              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnFvZGl1dHV5Y2t1eWxobGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTEzOTYsImV4cCI6MjA5Nzk2NzM5Nn0.V3o83hhZd5XBYcNoD-cKGTJGJ71mXVzady0XV35K0dU',
+              'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnFvZGl1dHV5Y2t1eWxobGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTEzOTYsImV4cCI6MjA5Nzk2NzM5Nn0.V3o83hhZd5XBYcNoD-cKGTJGJ71mXVzady0XV35K0dU'
+            },
+            signal: ctrl.signal
+          }
+        );
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          console.error('[AccessCode] HTTP error:', res.status);
+          dbError = true;
+        } else {
+          const rows = await res.json();
+          console.log('[AccessCode] DB rows:', rows.length);
+
+          if (rows.length === 1) {
+            const d = rows[0];
             matchedChild = {
-              id: data.id,
-              name: data.name || 'Anak',
-              age: data.age || 7,
-              avatar: data.avatar_url || 'robomind_robot_avatar.png',
-              level: data.level || 1,
-              total_xp: data.total_xp || 0,
-              coins: data.coins || 100,
+              id: d.id,
+              name: d.name || 'Anak',
+              age: d.age || 7,
+              avatar: d.avatar_url || 'robomind_robot_avatar.png',
+              level: d.level || 1,
+              total_xp: d.total_xp || 0,
+              coins: d.coins || 100,
               access_code: rawCode,
-              screentime_used: data.daily_screentime_minutes || 0,
-              screentime_limit: data.screentime_limit_minutes || 60
+              screentime_used: d.daily_screentime_minutes || 0,
+              screentime_limit: d.screentime_limit_minutes || 60
             };
           }
-        } catch (e) {}
+        }
+      } catch (e) {
+        console.error('[AccessCode] Fetch failed:', e.message || e);
+        dbError = true;
       }
 
       if (!matchedChild) {
         if (typeof userChildrenList !== 'undefined') {
-          const found = userChildrenList.find(c => (c.access_code || '').replace(/[^0-9A-Za-z]/g, '').toUpperCase() === rawCode);
+          var found = userChildrenList.find(function(c) {
+            return (c.access_code || '').replace(/[^0-9A-Za-z]/g, '').toUpperCase() === rawCode;
+          });
           if (found) matchedChild = found;
         }
         if (!matchedChild && rawCode === '12345678') {
@@ -2027,30 +2055,27 @@
       }
 
       if (matchedChild) {
+        console.log('[AccessCode] Login OK:', matchedChild.name);
         localStorage.setItem('robomind_active_access_code', rawCode);
-        if (typeof userChildrenList !== 'undefined') {
-          const idx = userChildrenList.findIndex(c => c.id === matchedChild.id || c.access_code === rawCode);
-          if (idx >= 0) {
-            userChildrenList[idx] = matchedChild;
-            if (typeof activeChildIndex !== 'undefined') activeChildIndex = idx;
-          } else {
-            userChildrenList.push(matchedChild);
-            if (typeof activeChildIndex !== 'undefined') activeChildIndex = userChildrenList.length - 1;
-          }
-          localStorage.setItem('robomind_children_profiles', JSON.stringify(userChildrenList));
-          localStorage.setItem('robomind_active_child_id', matchedChild.id);
-        }
+        userChildrenList = [matchedChild];
+        activeChildIndex = 0;
+        currentUser = { id: matchedChild.parent_id || matchedChild.id, email: matchedChild.name + '@robomind.local' };
+        localStorage.setItem('robomind_children_profiles', JSON.stringify(userChildrenList));
+        localStorage.setItem('robomind_active_child_id', matchedChild.id);
 
-        const modal = document.getElementById('accessCodeModal');
+        var modal = document.getElementById('accessCodeModal');
         if (modal) modal.classList.add('hidden');
 
         if (typeof applyActiveChildUI === 'function') applyActiveChildUI();
         if (typeof renderChildrenListUI === 'function') renderChildrenListUI();
         if (typeof SoundFX !== 'undefined' && SoundFX.playSuccess) SoundFX.playSuccess();
-        if (typeof showToast === 'function') showToast(`🎉 Kode Akses Valid! Selamat datang, ${matchedChild.name}!`);
+        if (typeof showToast === 'function') showToast('🎉 Kode Akses Valid! Selamat datang, ' + matchedChild.name + '!');
       } else {
+        console.log('[AccessCode] Failed. dbError:', dbError);
         if (errEl) {
-          errEl.innerText = '❌ Kode Akses tidak ditemukan! Minta kode 8-digit dari Web Pemantauan Orang Tua.';
+          errEl.innerText = dbError
+            ? '⚠️ Gagal memverifikasi ke server database. Periksa koneksi internet lalu coba lagi.'
+            : '❌ Kode Akses tidak ditemukan! Minta kode 8-digit dari Web Pemantauan Orang Tua.';
           errEl.classList.remove('hidden');
         }
         if (typeof SoundFX !== 'undefined' && SoundFX.playPop) SoundFX.playPop();

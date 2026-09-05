@@ -1,19 +1,36 @@
 import React, { useState, useEffect } from "react";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import ChatbotButton from "../components/ChatbotButton";
 import AppIntroFlow from "../components/AppIntroFlow";
 import { autoResetIfNeeded } from "../lib/resetProgress";
+
+const isWeb = typeof window !== "undefined" && typeof document !== "undefined";
+
+const webStorage = {
+  getItem: (key: string) => Promise.resolve(localStorage.getItem(key)),
+  setItem: (key: string, value: string) => { localStorage.setItem(key, value); return Promise.resolve(); },
+};
+
+async function getStorageItem(key: string): Promise<string | null> {
+  if (isWeb) return webStorage.getItem(key);
+  const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+  return AsyncStorage.getItem(key);
+}
+
+async function setStorageItem(key: string, value: string): Promise<void> {
+  if (isWeb) { webStorage.setItem(key, value); return; }
+  const AsyncStorage = (await import("@react-native-async-storage/async-storage")).default;
+  await AsyncStorage.setItem(key, value);
+}
 
 export default function RootLayout() {
   const [showIntro, setShowIntro] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Auto-reset old cached progress on first launch after update
     autoResetIfNeeded().then(() => {
-      return AsyncStorage.getItem("robomind_intro_completed");
+      return getStorageItem("robomind_intro_completed");
     }).then((val) => {
       if (!val) {
         setShowIntro(true);
@@ -25,7 +42,7 @@ export default function RootLayout() {
   }, []);
 
   const handleFinishIntro = async () => {
-    await AsyncStorage.setItem("robomind_intro_completed", "true");
+    await setStorageItem("robomind_intro_completed", "true");
     setShowIntro(false);
   };
 

@@ -11,7 +11,7 @@ import { ScrollView, StyleSheet,
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Storage } from "../lib/storage";
 import { HowToPlayModal } from "../components/HowToPlayModal";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -24,6 +24,7 @@ import Animated, {
 import Svg, { Rect, Circle, Line, Path, Polygon, G } from "react-native-svg";
 import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../constants/Theme";
 import Button from "../components/ui/Button";
+import { saveGameSession } from "../lib/gameProgressService";
 
 const COINS_STORAGE_KEY = "user_coins_balance";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -445,11 +446,11 @@ export default function RoboCircleScreen() {
   useEffect(() => {
     const loadGameData = async () => {
       try {
-        const storedCoins = await AsyncStorage.getItem(COINS_STORAGE_KEY);
+        const storedCoins = await Storage.getItem(COINS_STORAGE_KEY);
         if (storedCoins !== null) {
           setUserCoins(parseInt(storedCoins));
         }
-        const storedLevel = await AsyncStorage.getItem("robo_circle_current_level");
+        const storedLevel = await Storage.getItem("robo_circle_current_level");
         if (storedLevel !== null) {
           setLevel(parseInt(storedLevel));
         }
@@ -595,8 +596,10 @@ export default function RoboCircleScreen() {
                 if (nextCount >= config.targetRobots) {
                   if (level < LEVEL_CONFIGS.length) {
                     setGameState("victory");
+                    saveGameSession({ gameId: "robo-circle", level, score: 100, xpEarned: config.rewardXP, coinsEarned: config.rewardCoins, completed: true });
                   } else {
                     setGameState("completed");
+                    saveGameSession({ gameId: "robo-circle", level, score: 100, xpEarned: config.rewardXP, coinsEarned: config.rewardCoins, completed: true });
                   }
                 }
                 return nextCount;
@@ -653,10 +656,12 @@ export default function RoboCircleScreen() {
     const finalBalance = userCoins + LEVEL_CONFIGS.find((l) => l.level === level)!.rewardCoins;
 
     try {
-      await AsyncStorage.setItem(COINS_STORAGE_KEY, finalBalance.toString());
-      await AsyncStorage.setItem("robo_circle_current_level", nextLvl.toString());
+      await Storage.setItem(COINS_STORAGE_KEY, finalBalance.toString());
+      await Storage.setItem("robo_circle_current_level", nextLvl.toString());
       setUserCoins(finalBalance);
       setLevel(nextLvl);
+      const cfg = LEVEL_CONFIGS.find((l) => l.level === level)!;
+      saveGameSession({ gameId: "robo-circle", level, score: 100, xpEarned: cfg.rewardXP, coinsEarned: cfg.rewardCoins, completed: true });
     } catch (e) {
       console.error("Failed to save progress", e);
       setLevel(nextLvl);
@@ -668,8 +673,10 @@ export default function RoboCircleScreen() {
     const finalBalance = userCoins + LEVEL_CONFIGS.find((l) => l.level === level)!.rewardCoins;
 
     try {
-      await AsyncStorage.setItem(COINS_STORAGE_KEY, finalBalance.toString());
-      await AsyncStorage.setItem("robo_circle_current_level", "1");
+      await Storage.setItem(COINS_STORAGE_KEY, finalBalance.toString());
+      await Storage.setItem("robo_circle_current_level", "1");
+      const cfg = LEVEL_CONFIGS.find((l) => l.level === level)!;
+      saveGameSession({ gameId: "robo-circle", level, score: 100, xpEarned: cfg.rewardXP, coinsEarned: cfg.rewardCoins, completed: true });
       router.back();
     } catch (e) {
       console.error("Failed to save reward coins", e);
@@ -680,7 +687,7 @@ export default function RoboCircleScreen() {
   const handleResetLevelProgress = async () => {
     triggerHaptic("success");
     try {
-      await AsyncStorage.setItem("robo_circle_current_level", "1");
+      await Storage.setItem("robo_circle_current_level", "1");
       setLevel(1);
     } catch (e) {
       console.error("Failed to reset level progress", e);

@@ -10,7 +10,7 @@ import { ScrollView, StyleSheet,
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Storage } from "../lib/storage";
 import { HowToPlayModal } from "../components/HowToPlayModal";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -24,6 +24,7 @@ import Animated, {
 import Svg, { Path, Circle, Rect, Polygon, G, Line, Text as SvgText } from "react-native-svg";
 import { SPACING } from "../constants/Theme";
 import Button from "../components/ui/Button";
+import { saveGameSession } from "../lib/gameProgressService";
 
 const STORAGE_KEY_COINS = "user_coins_balance";
 const STORAGE_KEY_LEVEL = "robot_circuit_current_level";
@@ -519,9 +520,9 @@ export default function RobotCircuitPuzzleScreen() {
   useEffect(() => {
     const loadGameData = async () => {
       try {
-        const storedCoins = await AsyncStorage.getItem(STORAGE_KEY_COINS);
+        const storedCoins = await Storage.getItem(STORAGE_KEY_COINS);
         if (storedCoins !== null) setUserCoins(parseInt(storedCoins));
-        const storedLevel = await AsyncStorage.getItem(STORAGE_KEY_LEVEL);
+        const storedLevel = await Storage.getItem(STORAGE_KEY_LEVEL);
         if (storedLevel !== null) {
           const l = parseInt(storedLevel);
           if (l >= 1 && l <= LEVELS.length) setLevel(l);
@@ -610,7 +611,7 @@ export default function RobotCircuitPuzzleScreen() {
     }
     const newCoins = userCoins - 20;
     setUserCoins(newCoins);
-    AsyncStorage.setItem(STORAGE_KEY_COINS, String(newCoins));
+    Storage.setItem(STORAGE_KEY_COINS, String(newCoins));
     if (target) {
       setHintCellId(target);
       const c = cells.find((x) => x.id === target);
@@ -623,17 +624,18 @@ export default function RobotCircuitPuzzleScreen() {
 
 
   const handleVictoryNext = async () => {
+    saveGameSession({ gameId: "robot-circuit-puzzle", level, score: 100, xpEarned: 50, coinsEarned: 50, completed: true });
     const nextLevelNum = level + 1;
     const newCoins = userCoins + currentLevel.rewardCoins;
     setUserCoins(newCoins);
-    await AsyncStorage.setItem(STORAGE_KEY_COINS, String(newCoins));
+    await Storage.setItem(STORAGE_KEY_COINS, String(newCoins));
     if (nextLevelNum > LEVELS.length) {
       setGameState("completed");
       setLevel(1);
-      await AsyncStorage.setItem(STORAGE_KEY_LEVEL, "1");
+      await Storage.setItem(STORAGE_KEY_LEVEL, "1");
     } else {
       setLevel(nextLevelNum);
-      await AsyncStorage.setItem(STORAGE_KEY_LEVEL, String(nextLevelNum));
+      await Storage.setItem(STORAGE_KEY_LEVEL, String(nextLevelNum));
     }
   };
 

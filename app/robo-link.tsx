@@ -17,7 +17,8 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { GameBackButton } from "../components/GameBackButton";
 import { HowToPlayModal } from "../components/HowToPlayModal";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Storage } from "../lib/storage";
+import { saveGameSession } from "../lib/gameProgressService";
 import * as Haptics from "expo-haptics";
 import Animated, {
   useSharedValue,
@@ -1257,11 +1258,11 @@ export default function RoboLinkScreen() {
           
           setLives((l) => {
             const nextLives = Math.max(0, l - 1);
-            AsyncStorage.setItem(LIVES_STORAGE_KEY, nextLives.toString());
+            Storage.setItem(LIVES_STORAGE_KEY, nextLives.toString());
             if (l === MAX_LIVES) {
               const now = Date.now();
               setLastLossTime(now);
-              AsyncStorage.setItem(LAST_LOSS_STORAGE_KEY, now.toString());
+              Storage.setItem(LAST_LOSS_STORAGE_KEY, now.toString());
             }
             if (nextLives === 0) {
               setGameState("outOfLives");
@@ -1304,17 +1305,17 @@ export default function RoboLinkScreen() {
   useEffect(() => {
     const loadGameData = async () => {
       try {
-        const storedCoins = await AsyncStorage.getItem(COINS_STORAGE_KEY);
+        const storedCoins = await Storage.getItem(COINS_STORAGE_KEY);
         if (storedCoins !== null) {
           setUserCoins(parseInt(storedCoins));
         }
-        const storedLevel = await AsyncStorage.getItem("robo_link_current_level");
+        const storedLevel = await Storage.getItem("robo_link_current_level");
         if (storedLevel !== null) {
           setHighestUnlocked(parseInt(storedLevel));
         }
 
-        const storedLives = await AsyncStorage.getItem(LIVES_STORAGE_KEY);
-        const storedLossTime = await AsyncStorage.getItem(LAST_LOSS_STORAGE_KEY);
+        const storedLives = await Storage.getItem(LIVES_STORAGE_KEY);
+        const storedLossTime = await Storage.getItem(LAST_LOSS_STORAGE_KEY);
         
         let currentLives = storedLives ? parseInt(storedLives) : MAX_LIVES;
         let lossTime = storedLossTime ? parseInt(storedLossTime) : null;
@@ -1331,11 +1332,11 @@ export default function RoboLinkScreen() {
             } else {
               lossTime = lossTime + restored * LIFE_COOLDOWN_MS;
             }
-            await AsyncStorage.setItem(LIVES_STORAGE_KEY, currentLives.toString());
+            await Storage.setItem(LIVES_STORAGE_KEY, currentLives.toString());
             if (lossTime) {
-              await AsyncStorage.setItem(LAST_LOSS_STORAGE_KEY, lossTime.toString());
+              await Storage.setItem(LAST_LOSS_STORAGE_KEY, lossTime.toString());
             } else {
-              await AsyncStorage.removeItem(LAST_LOSS_STORAGE_KEY);
+              await Storage.removeItem(LAST_LOSS_STORAGE_KEY);
             }
           }
         }
@@ -1362,14 +1363,14 @@ export default function RoboLinkScreen() {
       if (remaining <= 0) {
         setLives(prevLives => {
           const newLives = prevLives + 1;
-          AsyncStorage.setItem(LIVES_STORAGE_KEY, newLives.toString());
+          Storage.setItem(LIVES_STORAGE_KEY, newLives.toString());
           if (newLives < MAX_LIVES) {
             const newLossTime = Date.now();
             setLastLossTime(newLossTime);
-            AsyncStorage.setItem(LAST_LOSS_STORAGE_KEY, newLossTime.toString());
+            Storage.setItem(LAST_LOSS_STORAGE_KEY, newLossTime.toString());
           } else {
             setLastLossTime(null);
-            AsyncStorage.removeItem(LAST_LOSS_STORAGE_KEY);
+            Storage.removeItem(LAST_LOSS_STORAGE_KEY);
           }
           return newLives;
         });
@@ -1478,9 +1479,18 @@ export default function RoboLinkScreen() {
     const finalBalance = userCoins + currentConfig.rewardCoins;
     const newHighest = Math.max(highestUnlocked, nextLvl);
 
+    saveGameSession({
+      gameId: "robo-link",
+      level,
+      score: 100,
+      xpEarned: currentConfig.rewardXP,
+      coinsEarned: currentConfig.rewardCoins,
+      completed: true,
+    });
+
     try {
-      await AsyncStorage.setItem(COINS_STORAGE_KEY, finalBalance.toString());
-      await AsyncStorage.setItem("robo_link_current_level", newHighest.toString());
+      await Storage.setItem(COINS_STORAGE_KEY, finalBalance.toString());
+      await Storage.setItem("robo_link_current_level", newHighest.toString());
       setUserCoins(finalBalance);
       setHighestUnlocked(newHighest);
       
@@ -1496,8 +1506,17 @@ export default function RoboLinkScreen() {
     triggerHaptic("success");
     const finalBalance = userCoins + currentConfig.rewardCoins;
 
+    saveGameSession({
+      gameId: "robo-link",
+      level,
+      score: 100,
+      xpEarned: currentConfig.rewardXP,
+      coinsEarned: currentConfig.rewardCoins,
+      completed: true,
+    });
+
     try {
-      await AsyncStorage.setItem(COINS_STORAGE_KEY, finalBalance.toString());
+      await Storage.setItem(COINS_STORAGE_KEY, finalBalance.toString());
       setView("map");
     } catch (e) {
       console.error("Failed to save progress", e);

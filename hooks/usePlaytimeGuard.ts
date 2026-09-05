@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Storage } from "../lib/storage";
 
 export const STORAGE_KEY_PLAYTIME_SEC = "robomind_playtime_seconds_today";
 export const STORAGE_KEY_PLAYTIME_DATE = "robomind_playtime_last_date";
@@ -33,21 +33,21 @@ export function usePlaytimeGuard() {
   const refreshPlaytimeStatus = useCallback(async () => {
     try {
       const todayStr = getTodayDateString();
-      const storedDate = await AsyncStorage.getItem(STORAGE_KEY_PLAYTIME_DATE);
+      const storedDate = await Storage.getItem(STORAGE_KEY_PLAYTIME_DATE);
 
       // New day reset
       if (storedDate !== todayStr) {
-        await AsyncStorage.setItem(STORAGE_KEY_PLAYTIME_DATE, todayStr);
-        await AsyncStorage.setItem(STORAGE_KEY_PLAYTIME_SEC, "0");
+        await Storage.setItem(STORAGE_KEY_PLAYTIME_DATE, todayStr);
+        await Storage.setItem(STORAGE_KEY_PLAYTIME_SEC, "0");
         setPlaytimeSeconds(0);
       } else {
-        const storedTime = await AsyncStorage.getItem(STORAGE_KEY_PLAYTIME_SEC);
+        const storedTime = await Storage.getItem(STORAGE_KEY_PLAYTIME_SEC);
         if (storedTime) {
           setPlaytimeSeconds(parseInt(storedTime, 10));
         }
       }
 
-      const storedCooldown = await AsyncStorage.getItem(STORAGE_KEY_COOLDOWN_UNTIL);
+      const storedCooldown = await Storage.getItem(STORAGE_KEY_COOLDOWN_UNTIL);
       if (storedCooldown) {
         const until = parseInt(storedCooldown, 10);
         const now = Date.now();
@@ -81,19 +81,19 @@ export function usePlaytimeGuard() {
   const tickPlaytime = async (incrementSec = 1) => {
     try {
       const todayStr = getTodayDateString();
-      const storedDate = await AsyncStorage.getItem(STORAGE_KEY_PLAYTIME_DATE);
+      const storedDate = await Storage.getItem(STORAGE_KEY_PLAYTIME_DATE);
       let currentSec = 0;
 
       if (storedDate === todayStr) {
-        const storedTime = await AsyncStorage.getItem(STORAGE_KEY_PLAYTIME_SEC);
+        const storedTime = await Storage.getItem(STORAGE_KEY_PLAYTIME_SEC);
         if (storedTime) currentSec = parseInt(storedTime, 10);
       } else {
-        await AsyncStorage.setItem(STORAGE_KEY_PLAYTIME_DATE, todayStr);
+        await Storage.setItem(STORAGE_KEY_PLAYTIME_DATE, todayStr);
       }
 
       const newSec = currentSec + incrementSec;
       setPlaytimeSeconds(newSec);
-      await AsyncStorage.setItem(STORAGE_KEY_PLAYTIME_SEC, newSec.toString());
+      await Storage.setItem(STORAGE_KEY_PLAYTIME_SEC, newSec.toString());
 
       // If playtime reaches max limit (1 hour), trigger rest cooldown!
       if (newSec >= DEFAULT_MAX_PLAYTIME_SEC) {
@@ -109,16 +109,16 @@ export function usePlaytimeGuard() {
     const until = Date.now() + cooldownDurationSec * 1000;
     setCooldownUntil(until);
     setCooldownRemainingSeconds(cooldownDurationSec);
-    await AsyncStorage.setItem(STORAGE_KEY_COOLDOWN_UNTIL, until.toString());
+    await Storage.setItem(STORAGE_KEY_COOLDOWN_UNTIL, until.toString());
   };
 
   // Parent override reset
   const resetPlaytimeGuard = async () => {
     try {
       const todayStr = getTodayDateString();
-      await AsyncStorage.setItem(STORAGE_KEY_PLAYTIME_DATE, todayStr);
-      await AsyncStorage.setItem(STORAGE_KEY_PLAYTIME_SEC, "0");
-      await AsyncStorage.removeItem(STORAGE_KEY_COOLDOWN_UNTIL);
+      await Storage.setItem(STORAGE_KEY_PLAYTIME_DATE, todayStr);
+      await Storage.setItem(STORAGE_KEY_PLAYTIME_SEC, "0");
+      await Storage.removeItem(STORAGE_KEY_COOLDOWN_UNTIL);
       setPlaytimeSeconds(0);
       setCooldownUntil(null);
       setCooldownRemainingSeconds(0);
