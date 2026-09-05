@@ -9,7 +9,7 @@
  */
 
 import { supabase } from "./supabase";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Storage } from "./storage";
 
 // =========================================================================
 // Game Catalog & Category Mapping
@@ -143,7 +143,35 @@ export interface GameSessionData {
 async function getCurrentUserId(): Promise<string | null> {
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    return session?.user?.id || null;
+    if (session?.user?.id) {
+      console.log("[getCurrentUserId] Got auth session:", session.user.id);
+      return session.user.id;
+    }
+  } catch (e) {
+    console.warn("[getCurrentUserId] getSession error:", e);
+  }
+  // Fallback: access code login stores parent_id as user ID
+  try {
+    const raw = localStorage.getItem("robomind_children_profiles");
+    console.log("[getCurrentUserId] localStorage profiles:", raw ? raw.substring(0, 200) : "NULL");
+    const profiles = JSON.parse(raw || "[]");
+    if (profiles.length > 0 && profiles[0].parent_id) return profiles[0].parent_id;
+    if (profiles.length > 0 && profiles[0].id) return profiles[0].id;
+  } catch (e) {
+    console.warn("[getCurrentUserId] localStorage fallback error:", e);
+  }
+  console.warn("[getCurrentUserId] No userId found!");
+  return null;
+}
+
+/**
+ * Get the active child's ID from localStorage (set during access code login).
+ */
+function getActiveChildId(): string | null {
+  try {
+    const id = localStorage.getItem("robomind_active_child_id") || null;
+    console.log("[getActiveChildId] active_child_id:", id);
+    return id;
   } catch {
     return null;
   }
@@ -157,10 +185,14 @@ async function getCurrentUserId(): Promise<string | null> {
  * or ends a game session.
  */
 export async function saveGameSession(sessionData: GameSessionData): Promise<void> {
+  console.log("[saveGameSession] CALLED:", JSON.stringify(sessionData));
   const userId = await getCurrentUserId();
+  console.log("[saveGameSession] userId:", userId);
+  const childId = getActiveChildId();
+  console.log("[saveGameSession] childId:", childId);
   const meta = GAME_CATALOG[sessionData.gameId];
   if (!meta) {
-    console.warn(`Unknown game ID: ${sessionData.gameId}`);
+    console.warn(`[saveGameSession] Unknown game ID: ${sessionData.gameId}`);
     return;
   }
 
@@ -170,7 +202,7 @@ export async function saveGameSession(sessionData: GameSessionData): Promise<voi
   // 1. Always save to local AsyncStorage as backup
   try {
     const localKey = `robomind_sessions_${meta.id}`;
-    const existing = await AsyncStorage.getItem(localKey);
+    const existing = await Storage.getItem(localKey);
     const sessions: any[] = existing ? JSON.parse(existing) : [];
     sessions.push({
       ...sessionData,
@@ -180,26 +212,32 @@ export async function saveGameSession(sessionData: GameSessionData): Promise<voi
     });
     // Keep last 100 sessions per game
     if (sessions.length > 100) sessions.splice(0, sessions.length - 100);
-    await AsyncStorage.setItem(localKey, JSON.stringify(sessions));
+    await Storage.setItem(localKey, JSON.stringify(sessions));
 
     // Update local cumulative stats
     const totalXpKey = "robomind_total_xp";
     const totalCoinsKey = "user_coins_balance";
-    const currentXp = parseInt((await AsyncStorage.getItem(totalXpKey)) || "0");
-    const currentCoins = parseInt((await AsyncStorage.getItem(totalCoinsKey)) || "100");
-    await AsyncStorage.setItem(totalXpKey, String(currentXp + xp));
-    await AsyncStorage.setItem(totalCoinsKey, String(currentCoins + coins));
+    const currentXp = parseInt((await Storage.getItem(totalXpKey)) || "0");
+    const currentCoins = parseInt((await Storage.getItem(totalCoinsKey)) || "100");
+    await Storage.setItem(totalXpKey, String(currentXp + xp));
+    await Storage.setItem(totalCoinsKey, String(currentCoins + coins));
   } catch (e) {
     console.warn("Local save error:", e);
   }
 
   // 2. Push to Supabase if authenticated
-  if (!userId) return;
+  if (!userId) {
+    console.warn("[saveGameSession] BLOCKED: userId is null, skipping Supabase sync");
+    return;
+  }
 
   try {
+    console.log("[saveGameSession] Inserting to Supabase:", { userId, childId, gameId: meta.id, level: sessionData.level });
+
     // Insert game session record
-    await supabase.from("game_sessions").insert({
+    const { error: insertError } = await supabase.from("game_sessions").insert({
       user_id: userId,
+      child_id: childId,
       game_id: meta.id,
       game_title: meta.title,
       category: meta.category,
@@ -212,13 +250,18 @@ export async function saveGameSession(sessionData: GameSessionData): Promise<voi
       metadata: sessionData.metadata ?? {},
       completed_at: new Date().toISOString(),
     });
+    if (insertError) {
+      console.error("[saveGameSession] INSERT ERROR:", insertError.message, insertError.details);
+    } else {
+      console.log("[saveGameSession] INSERT OK!");
+    }
 
     // Update skill pillars
-    await updateSkillPillars(userId, meta.skillPillars, sessionData.completed ?? false);
+    await updateSkillPillars(userId, childId, meta.skillPillars, sessionData.completed ?? false);
 
     // Update cumulative child stats (total_xp, coins, level, and screentime)
     const durationMin = Math.max(1, Math.round((sessionData.durationSeconds || 120) / 60));
-    await updateChildCumulativeStats(userId, xp, coins, sessionData.level, durationMin);
+    await updateChildCumulativeStats(userId, childId, xp, coins, sessionData.level, durationMin);
   } catch (e) {
     console.warn("Supabase session sync error:", e);
   }
@@ -231,6 +274,7 @@ export async function saveGameSession(sessionData: GameSessionData): Promise<voi
  */
 async function updateSkillPillars(
   userId: string,
+  childId: string | null,
   pillars: SkillPillar[],
   completed: boolean
 ): Promise<void> {
@@ -244,25 +288,32 @@ async function updateSkillPillars(
   };
 
   try {
-    // Get current skills
-    const { data: existing } = await supabase
-      .from("child_skills")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
+    let existing: any = null;
+
+    // Try by child_id first
+    if (childId) {
+      const q = await supabase.from("child_skills").select("*").eq("child_id", childId).maybeSingle();
+      existing = q.data;
+    }
+    // Fallback by user_id
+    if (!existing) {
+      const q = await supabase.from("child_skills").select("*").eq("user_id", userId).maybeSingle();
+      existing = q.data;
+    }
 
     if (existing) {
-      const updates: Record<string, number> = { updated_at: new Date().toISOString() as any };
+      const updates: Record<string, any> = { updated_at: new Date().toISOString() };
       for (const pillar of pillars) {
         const col = columnMap[pillar];
         const current = (existing as any)[col] ?? 50;
         updates[col] = Math.min(100, current + increment);
       }
-      await supabase.from("child_skills").update(updates).eq("user_id", userId);
+      await supabase.from("child_skills").update(updates).eq("id", existing.id);
     } else {
       // Create initial skills record
       const initial: Record<string, any> = {
         user_id: userId,
+        child_id: childId,
         logic_score: 50,
         creativity_score: 50,
         literacy_score: 50,
@@ -285,17 +336,25 @@ async function updateSkillPillars(
  */
 async function updateChildCumulativeStats(
   userId: string,
+  childId: string | null,
   xpEarned: number,
   coinsEarned: number,
   level?: number,
   durationMinutes: number = 2
 ): Promise<void> {
   try {
-    const { data: child } = await supabase
-      .from("children")
-      .select("*")
-      .eq("parent_id", userId)
-      .single();
+    let child: any = null;
+
+    // Try by child_id first
+    if (childId) {
+      const q = await supabase.from("children").select("*").eq("id", childId).maybeSingle();
+      child = q.data;
+    }
+    // Fallback by parent_id
+    if (!child) {
+      const q = await supabase.from("children").select("*").eq("parent_id", userId).maybeSingle();
+      child = q.data;
+    }
 
     if (child) {
       const todayStr = new Date().toISOString().split("T")[0];
@@ -303,7 +362,7 @@ async function updateChildCumulativeStats(
       
       let currentScreentime = child.daily_screentime_minutes || 0;
       if (lastResetDate !== todayStr) {
-        currentScreentime = 0; // Automatic reset on a new day
+        currentScreentime = 0;
       }
 
       const limit = child.screentime_limit_minutes || 60;
@@ -337,11 +396,17 @@ export async function recordScreentime(minutes: number): Promise<void> {
   if (!userId) return;
 
   try {
-    const { data: child } = await supabase
-      .from("children")
-      .select("id, daily_screentime_minutes")
-      .eq("parent_id", userId)
-      .single();
+    const childId = getActiveChildId();
+    let child: any = null;
+
+    if (childId) {
+      const q = await supabase.from("children").select("id, daily_screentime_minutes").eq("id", childId).maybeSingle();
+      child = q.data;
+    }
+    if (!child) {
+      const q = await supabase.from("children").select("id, daily_screentime_minutes").eq("parent_id", userId).maybeSingle();
+      child = q.data;
+    }
 
     if (child) {
       await supabase
@@ -367,12 +432,12 @@ export async function syncLocalProgressToCloud(): Promise<void> {
   try {
     for (const gameId of Object.keys(GAME_CATALOG)) {
       const localKey = `robomind_sessions_${gameId}`;
-      const raw = await AsyncStorage.getItem(localKey);
+      const raw = await Storage.getItem(localKey);
       if (!raw) continue;
 
       const sessions: any[] = JSON.parse(raw);
       const syncedKey = `robomind_synced_count_${gameId}`;
-      const syncedCount = parseInt((await AsyncStorage.getItem(syncedKey)) || "0");
+      const syncedCount = parseInt((await Storage.getItem(syncedKey)) || "0");
 
       // Only sync new sessions that haven't been pushed yet
       const unsynced = sessions.slice(syncedCount);
@@ -395,7 +460,7 @@ export async function syncLocalProgressToCloud(): Promise<void> {
       }));
 
       await supabase.from("game_sessions").insert(rows);
-      await AsyncStorage.setItem(syncedKey, String(sessions.length));
+      await Storage.setItem(syncedKey, String(sessions.length));
     }
     console.log("✅ Local progress synced to Supabase cloud!");
   } catch (e) {
@@ -414,7 +479,7 @@ export async function getLocalGameStats(gameId: string): Promise<{
 }> {
   try {
     const localKey = `robomind_sessions_${gameId}`;
-    const raw = await AsyncStorage.getItem(localKey);
+    const raw = await Storage.getItem(localKey);
     if (!raw) return { totalSessions: 0, highestLevel: 1, totalXp: 0, totalCoins: 0 };
 
     const sessions: any[] = JSON.parse(raw);

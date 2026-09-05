@@ -11,7 +11,7 @@ import { ScrollView, StyleSheet,
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Storage } from "../lib/storage";
 import { HowToPlayModal } from "../components/HowToPlayModal";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -26,6 +26,7 @@ import Animated, {
 import Svg, { Path, Rect, Circle, G } from "react-native-svg";
 import { SPACING } from "../constants/Theme";
 import Button from "../components/ui/Button";
+import { saveGameSession } from "../lib/gameProgressService";
 
 const COINS_STORAGE_KEY = "user_coins_balance";
 const STORAGE_KEY_LEVEL = "robot_escape_current_level";
@@ -693,9 +694,9 @@ export default function RobotEscapeScreen() {
   useEffect(() => {
     const load = async () => {
       try {
-        const coins = await AsyncStorage.getItem(COINS_STORAGE_KEY);
+        const coins = await Storage.getItem(COINS_STORAGE_KEY);
         if (coins !== null) setUserCoins(parseInt(coins));
-        const lvl = await AsyncStorage.getItem(STORAGE_KEY_LEVEL);
+        const lvl = await Storage.getItem(STORAGE_KEY_LEVEL);
         if (lvl !== null) {
           const l = parseInt(lvl);
           if (l >= 1 && l <= LEVELS.length) setLevel(l);
@@ -739,6 +740,7 @@ export default function RobotEscapeScreen() {
       setCompanionText("🎉 Semua robot berhasil keluar! Persimpangan bersih kembali!");
       const t = setTimeout(() => {
         setCoinsReward(currentLevel.reward);
+        saveGameSession({ gameId: "robot-escape", level, score: 100, xpEarned: 50, coinsEarned: 50, completed: true });
         if (level < LEVELS.length) setGameState("victory");
         else setGameState("completed");
       }, 800);
@@ -904,7 +906,7 @@ export default function RobotEscapeScreen() {
     );
     const newCoins = userCoins - 20;
     setUserCoins(newCoins);
-    AsyncStorage.setItem(COINS_STORAGE_KEY, String(newCoins));
+    Storage.setItem(COINS_STORAGE_KEY, String(newCoins));
     if (movable) {
       const idx = robotsRef.current.findIndex((r) => r.id === movable.id);
       setHintId(movable.id);
@@ -942,7 +944,7 @@ export default function RobotEscapeScreen() {
     setShowPause(false);
     setShowLevelSelect(false);
     setShowIntro(true);
-    await AsyncStorage.setItem(STORAGE_KEY_LEVEL, String(targetLvl));
+    await Storage.setItem(STORAGE_KEY_LEVEL, String(targetLvl));
   };
 
   const handleNextLevel = async () => {
@@ -950,23 +952,23 @@ export default function RobotEscapeScreen() {
     const balance = userCoins + coinsReward;
     setUserCoins(balance);
     setCoinsReward(0);
-    await AsyncStorage.setItem(COINS_STORAGE_KEY, String(balance));
+    await Storage.setItem(COINS_STORAGE_KEY, String(balance));
     if (nextLvl > LEVELS.length) {
       setGameState("completed");
       setLevel(1);
-      await AsyncStorage.setItem(STORAGE_KEY_LEVEL, "1");
+      await Storage.setItem(STORAGE_KEY_LEVEL, "1");
     } else {
       setLevel(nextLvl);
       setGameState("playing");
       setShowIntro(true);
-      await AsyncStorage.setItem(STORAGE_KEY_LEVEL, String(nextLvl));
+      await Storage.setItem(STORAGE_KEY_LEVEL, String(nextLvl));
     }
   };
 
   const handleExit = async () => {
     const balance = userCoins + coinsReward;
     setUserCoins(balance);
-    await AsyncStorage.setItem(COINS_STORAGE_KEY, String(balance));
+    await Storage.setItem(COINS_STORAGE_KEY, String(balance));
     router.back();
   };
 

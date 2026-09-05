@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Storage } from "../lib/storage";
 import { HowToPlayModal } from "../components/HowToPlayModal";
 import * as Haptics from "expo-haptics";
 import Animated, {
@@ -414,14 +414,14 @@ export default function EnergyCoreScreen() {
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const storedCoins = await AsyncStorage.getItem(STORAGE_KEY_COINS);
+        const storedCoins = await Storage.getItem(STORAGE_KEY_COINS);
         if (storedCoins !== null) setUserCoins(parseInt(storedCoins));
-        const storedLevel = await AsyncStorage.getItem(STORAGE_KEY_LEVEL);
+        const storedLevel = await Storage.getItem(STORAGE_KEY_LEVEL);
         if (storedLevel !== null) {
           const l = parseInt(storedLevel);
           if (l <= LEVELS.length) setLevel(l);
         }
-        const storedEvo = await AsyncStorage.getItem(STORAGE_KEY_EVOLUTION);
+        const storedEvo = await Storage.getItem(STORAGE_KEY_EVOLUTION);
         if (storedEvo !== null) setRobotEvolution(parseInt(storedEvo));
       } catch (err) {
         console.error(err);
@@ -547,19 +547,19 @@ export default function EnergyCoreScreen() {
     const coinsReward = currentLevelConfig.rewardCoins;
     const finalCoins = userCoins + coinsReward;
     setUserCoins(finalCoins);
-    await AsyncStorage.setItem(STORAGE_KEY_COINS, String(finalCoins));
+    await Storage.setItem(STORAGE_KEY_COINS, String(finalCoins));
 
     const nextEvo = Math.min(100, robotEvolution + 8);
     setRobotEvolution(nextEvo);
-    await AsyncStorage.setItem(STORAGE_KEY_EVOLUTION, String(nextEvo));
+    await Storage.setItem(STORAGE_KEY_EVOLUTION, String(nextEvo));
 
     if (nextLvl > LEVELS.length) {
       setGameState("completed");
       setLevel(1);
-      await AsyncStorage.setItem(STORAGE_KEY_LEVEL, "1");
+      await Storage.setItem(STORAGE_KEY_LEVEL, "1");
     } else {
       setLevel(nextLvl);
-      await AsyncStorage.setItem(STORAGE_KEY_LEVEL, String(nextLvl));
+      await Storage.setItem(STORAGE_KEY_LEVEL, String(nextLvl));
     }
   };
 

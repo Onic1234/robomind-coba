@@ -8,9 +8,10 @@ import { ScrollView, StyleSheet,
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Storage } from "../lib/storage";
 import { HowToPlayModal } from "../components/HowToPlayModal";
 import { COLORS } from "../constants/Theme";
+import { saveGameSession } from "../lib/gameProgressService";
 
 const STORAGE_KEY_LEVEL = "pick_and_drop_current_level";
 const STORAGE_KEY_COINS = "user_coins_balance";
@@ -26,9 +27,9 @@ export default function PickAndDropScreen() {
   useEffect(() => {
     const loadStoredData = async () => {
       try {
-        const storedLevel = await AsyncStorage.getItem(STORAGE_KEY_LEVEL);
+        const storedLevel = await Storage.getItem(STORAGE_KEY_LEVEL);
         if (storedLevel) setCurrentLevel(parseInt(storedLevel));
-        const storedCoins = await AsyncStorage.getItem(STORAGE_KEY_COINS);
+        const storedCoins = await Storage.getItem(STORAGE_KEY_COINS);
         if (storedCoins) setUserCoins(parseInt(storedCoins));
       } catch (e) {
         console.log("Error loading storage:", e);
@@ -45,8 +46,9 @@ export default function PickAndDropScreen() {
         const rewardCoins = data.coins || 150;
         const newCoins = userCoins + rewardCoins;
         setUserCoins(newCoins);
-        await AsyncStorage.setItem(STORAGE_KEY_COINS, newCoins.toString());
-        await AsyncStorage.setItem(STORAGE_KEY_LEVEL, (currentLevel + 1).toString());
+        await Storage.setItem(STORAGE_KEY_COINS, newCoins.toString());
+        await Storage.setItem(STORAGE_KEY_LEVEL, (currentLevel + 1).toString());
+        saveGameSession({ gameId: "pick-and-drop", level: currentLevel, score: 100, xpEarned: 50, coinsEarned: 50, completed: true });
       } else if (data.type === "GO_BACK") {
         router.back();
       }

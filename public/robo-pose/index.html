@@ -1194,6 +1194,27 @@
                 fokus: Math.min(100, 86 + accuracy * 0.14)
             });
 
+            try {
+                const msg = {
+                    type: isVictory ? 'GAME_COMPLETE' : 'GAME_OVER',
+                    gameId: 'robo-pose',
+                    title: 'Robo Pose',
+                    category: 'fokus',
+                    level: selectedLevel,
+                    score: score,
+                    xp: isVictory ? 120 : 30,
+                    coins: score,
+                    duration: 60,
+                    completed: isVictory
+                };
+                if (window.parent && window.parent !== window) window.parent.postMessage(msg, '*');
+                if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+                    window.ReactNativeWebView.postMessage(JSON.stringify(msg));
+                }
+            } catch (e) {
+                console.warn('PostMessage error:', e);
+            }
+
             if (isVictory) {
                 playSound('victory');
                 icon.innerText = "🏆";

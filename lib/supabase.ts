@@ -1,5 +1,3 @@
-import "react-native-url-polyfill/auto";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || "";
@@ -9,15 +7,25 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.warn("Supabase URL or Anon Key is missing from environment variables!");
 }
 
-// Guard storage against SSR / Node environments where window is not defined
-const isServer = typeof window === "undefined";
-const storageAdapter = isServer
+const isWeb = typeof window !== "undefined" && typeof document !== "undefined";
+
+const storageAdapter = isWeb
   ? {
-      getItem: () => Promise.resolve(null),
+      getItem: (key: string) => Promise.resolve(localStorage.getItem(key)),
+      setItem: (key: string, value: string) => {
+        localStorage.setItem(key, value);
+        return Promise.resolve();
+      },
+      removeItem: (key: string) => {
+        localStorage.removeItem(key);
+        return Promise.resolve();
+      },
+    }
+  : {
+      getItem: () => Promise.resolve(null as string | null),
       setItem: () => Promise.resolve(),
       removeItem: () => Promise.resolve(),
-    }
-  : AsyncStorage;
+    };
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

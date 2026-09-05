@@ -25,7 +25,13 @@ export default function Index() {
       <View style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#050a16" />
         <WebView
-          source={{ uri: "file:///android_asset/index.html" }}
+                    androidHardwareAccelerationDisabled={false}
+          renderToHardwareTextureAndroid={true}
+          overScrollMode="never"
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
+          scrollEnabled={false}
+source={{ uri: "file:///android_asset/index.html" }}
           style={styles.webview}
           javaScriptEnabled={true}
           domStorageEnabled={true}

@@ -10,10 +10,11 @@ import { ScrollView, StyleSheet,
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Storage } from "../lib/storage";
 import { HowToPlayModal } from "../components/HowToPlayModal";
 import * as Haptics from "expo-haptics";
 import Svg, { Rect, Circle, Path, Line, Ellipse, Text as SvgText } from "react-native-svg";
+import { saveGameSession } from "../lib/gameProgressService";
 
 const COINS_STORAGE_KEY = "user_coins_balance";
 const LEVEL_STORAGE_KEY = "robo_charge_current_level";
@@ -502,13 +503,13 @@ export default function RoboChargeScreen() {
   useEffect(() => {
     const loadGameProgress = async () => {
       try {
-        const storedCoins = await AsyncStorage.getItem(COINS_STORAGE_KEY);
+        const storedCoins = await Storage.getItem(COINS_STORAGE_KEY);
         if (storedCoins) setUserCoins(parseInt(storedCoins));
 
-        const storedLevel = await AsyncStorage.getItem(LEVEL_STORAGE_KEY);
+        const storedLevel = await Storage.getItem(LEVEL_STORAGE_KEY);
         if (storedLevel) setHighestLevel(parseInt(storedLevel));
 
-        const storedStars = await AsyncStorage.getItem("robo_charge_stars_map");
+        const storedStars = await Storage.getItem("robo_charge_stars_map");
         if (storedStars) setStarsMap(JSON.parse(storedStars));
       } catch (e) {
         console.error(e);
@@ -784,12 +785,14 @@ export default function RoboChargeScreen() {
     setUserCoins(newBalance);
 
     try {
-      await AsyncStorage.setItem(COINS_STORAGE_KEY, newBalance.toString());
-      await AsyncStorage.setItem(LEVEL_STORAGE_KEY, nextLvl.toString());
-      await AsyncStorage.setItem("robo_charge_stars_map", JSON.stringify(newStarsMap));
+      await Storage.setItem(COINS_STORAGE_KEY, newBalance.toString());
+      await Storage.setItem(LEVEL_STORAGE_KEY, nextLvl.toString());
+      await Storage.setItem("robo_charge_stars_map", JSON.stringify(newStarsMap));
     } catch (e) {
       console.error(e);
     }
+
+    saveGameSession({ gameId: "robo-charge", level: activeCity.id, score: 100, xpEarned: 50, coinsEarned: 50, completed: true });
   };
 
   const handleStartPlaying = (idx: number) => {

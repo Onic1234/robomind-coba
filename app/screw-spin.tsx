@@ -16,7 +16,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { GameBackButton } from "../components/GameBackButton";
 import { HowToPlayModal } from "../components/HowToPlayModal";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Storage } from "../lib/storage";
 import * as Haptics from "expo-haptics";
 import { usePlaytimeGuard, formatDurationHMS } from "../hooks/usePlaytimeGuard";
 import { saveGameSession } from "../lib/gameProgressService";
@@ -684,18 +684,18 @@ export default function ScrewSpinScreen() {
 
   const startCooldown = async (durationSec = COOLDOWN_DURATION_SEC) => {
     const until = Date.now() + durationSec * 1000;
-    await AsyncStorage.setItem(STORAGE_KEY_COOLDOWN, until.toString());
+    await Storage.setItem(STORAGE_KEY_COOLDOWN, until.toString());
     setCooldownRemaining(durationSec);
   };
 
   const clearCooldown = async () => {
-    await AsyncStorage.removeItem(STORAGE_KEY_COOLDOWN);
+    await Storage.removeItem(STORAGE_KEY_COOLDOWN);
     setCooldownRemaining(0);
   };
 
   const checkCooldownState = async () => {
     try {
-      const val = await AsyncStorage.getItem(STORAGE_KEY_COOLDOWN);
+      const val = await Storage.getItem(STORAGE_KEY_COOLDOWN);
       if (val) {
         const until = parseInt(val, 10);
         const now = Date.now();
@@ -781,9 +781,9 @@ export default function ScrewSpinScreen() {
   useEffect(() => {
     const loadProgress = async () => {
       try {
-        const savedLvl = await AsyncStorage.getItem(STORAGE_KEY_LEVEL);
+        const savedLvl = await Storage.getItem(STORAGE_KEY_LEVEL);
         if (savedLvl) setCurrentLevel(parseInt(savedLvl, 10));
-        const savedCoins = await AsyncStorage.getItem(STORAGE_KEY_COINS);
+        const savedCoins = await Storage.getItem(STORAGE_KEY_COINS);
         if (savedCoins) setUserCoins(parseInt(savedCoins, 10));
       } catch (err) {
         console.error("Failed to load screw spin progress", err);
@@ -830,7 +830,7 @@ export default function ScrewSpinScreen() {
           style: "destructive",
           onPress: async () => {
             setCurrentLevel(1);
-            await AsyncStorage.setItem(STORAGE_KEY_LEVEL, "1");
+            await Storage.setItem(STORAGE_KEY_LEVEL, "1");
             if (isGameStarted) initLevel(1);
           },
         },
@@ -1010,7 +1010,7 @@ export default function ScrewSpinScreen() {
     const reward = levelData ? levelData.coinsReward : 150;
     const newCoins = userCoins + reward;
     setUserCoins(newCoins);
-    await AsyncStorage.setItem(STORAGE_KEY_COINS, newCoins.toString());
+    await Storage.setItem(STORAGE_KEY_COINS, newCoins.toString());
 
     setIsVictoryModalVisible(true);
   };
@@ -1018,7 +1018,7 @@ export default function ScrewSpinScreen() {
   const handleNextLevel = async () => {
     const nextLvl = currentLevel >= TOTAL_LEVELS ? 1 : currentLevel + 1;
     setCurrentLevel(nextLvl);
-    await AsyncStorage.setItem(STORAGE_KEY_LEVEL, nextLvl.toString());
+    await Storage.setItem(STORAGE_KEY_LEVEL, nextLvl.toString());
     initLevel(nextLvl);
   };
 

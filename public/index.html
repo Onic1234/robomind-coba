@@ -161,29 +161,29 @@
           <!-- Coins -->
           <div class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl bg-[#0a152d]/80 border border-[#1b315b] shadow-sm">
             <span class="text-amber-400 text-xs sm:text-sm">🪙</span>
-            <span class="text-xs font-extrabold text-white val-coins">0</span>
+            <span class="text-xs font-extrabold text-white val-coins">1.790</span>
           </div>
           <!-- Energy -->
           <div class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl bg-[#0a152d]/80 border border-[#1b315b] shadow-sm">
             <span class="text-cyan-400 text-xs sm:text-sm">⚡</span>
-            <span class="text-xs font-extrabold text-white val-energy">100/100</span>
+            <span class="text-xs font-extrabold text-white val-energy">85/100</span>
           </div>
           <!-- Gems -->
           <div class="flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-xl bg-[#0a152d]/80 border border-[#1b315b] shadow-sm">
             <span class="text-pink-400 text-xs sm:text-sm">💎</span>
-            <span class="text-xs font-extrabold text-white val-gems">0</span>
+            <span class="text-xs font-extrabold text-white val-gems">12</span>
           </div>
         </div>
 
-        <!-- Progress Hari Ini (Dynamic per Active Child) -->
+        <!-- Progress Hari Ini -->
         <div class="flex items-center justify-between px-3 py-1.5 rounded-xl bg-[#0a152d]/80 border border-[#1b315b]">
           <div class="flex items-center gap-2 flex-1 mr-3">
             <span class="text-[10px] font-bold text-slate-300 whitespace-nowrap">Progress Hari Ini</span>
             <div class="flex-1 h-2 bg-[#050a16] rounded-full overflow-hidden border border-slate-700/50">
-              <div id="homeDailyProgressBar" class="h-full bg-gradient-to-r from-emerald-500 to-[#00f0ff] rounded-full transition-all duration-500" style="width: 0%;"></div>
+              <div class="h-full bg-gradient-to-r from-emerald-500 to-[#00f0ff] rounded-full w-[70%]"></div>
             </div>
           </div>
-          <span id="homeDailyXpText" class="text-[10px] font-extrabold text-emerald-400 whitespace-nowrap">+0 XP ⭐</span>
+          <span class="text-[10px] font-extrabold text-emerald-400 whitespace-nowrap">+120 XP ⭐</span>
         </div>
       </div>
 
@@ -373,7 +373,7 @@
           <!-- Clean Square Thumbnail -->
           <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-2 shadow-inner bg-slate-950">
             <div class="relative w-full h-full video-preview-box">
-            <video muted loop playsinline autoplay poster="Screw_Spin.png" class="w-full h-full object-cover">
+            <video muted loop playsinline preload="none" poster="Screw_Spin.png" class="w-full h-full object-cover">
               <source src="screw_spin_preview.mp4?v=3" type="video/mp4">
             </video>
           </div>
@@ -393,7 +393,7 @@
           <!-- Clean Square Thumbnail -->
           <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-2 shadow-inner bg-slate-950">
             <div class="relative w-full h-full video-preview-box">
-            <video muted loop playsinline autoplay poster="cover.jpg" class="w-full h-full object-cover">
+            <video muted loop playsinline preload="none" poster="cover.jpg" class="w-full h-full object-cover">
               <source src="robo_bros_preview.mp4?v=3" type="video/mp4">
             </video>
           </div>
@@ -413,7 +413,7 @@
           <!-- Clean Square Thumbnail -->
           <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-2 shadow-inner bg-slate-950">
             <div class="relative w-full h-full video-preview-box">
-            <video muted loop playsinline autoplay poster="rgsl.png" class="w-full h-full object-cover">
+            <video muted loop playsinline preload="none" poster="rgsl.png" class="w-full h-full object-cover">
               <source src="robo_adventures_preview.mp4?v=5" type="video/mp4">
             </video>
           </div>
@@ -433,7 +433,7 @@
           <!-- Clean Square Thumbnail -->
           <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-2 shadow-inner bg-slate-950">
             <div class="relative w-full h-full video-preview-box">
-            <video muted loop playsinline autoplay poster="jakartaMapNewest.png" class="w-full h-full object-cover">
+            <video muted loop playsinline preload="none" poster="jakartaMapNewest.png" class="w-full h-full object-cover">
               <source src="robo_jek_preview.mp4?v=3" type="video/mp4">
             </video>
           </div>
@@ -453,7 +453,7 @@
           <!-- Clean Square Thumbnail -->
           <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-2 shadow-inner bg-slate-950">
             <div class="relative w-full h-full video-preview-box">
-            <video muted loop playsinline autoplay poster="modul_robot.png" class="w-full h-full object-cover">
+            <video muted loop playsinline preload="none" poster="modul_robot.png" class="w-full h-full object-cover">
               <source src="robo_delivery_preview.mp4?v=3" type="video/mp4">
             </video>
           </div>
@@ -473,7 +473,7 @@
           <!-- Clean Square Thumbnail -->
           <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-2 shadow-inner bg-slate-950">
             <div class="relative w-full h-full video-preview-box">
-            <video muted loop playsinline autoplay poster="rbt_link.png" class="w-full h-full object-cover">
+            <video muted loop playsinline preload="none" poster="rbt_link.png" class="w-full h-full object-cover">
               <source src="robo_link_preview.mp4?v=2" type="video/mp4">
             </video>
           </div>
@@ -493,7 +493,7 @@
           <!-- Clean Square Thumbnail -->
           <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-2 shadow-inner bg-slate-950">
             <div class="relative w-full h-full video-preview-box">
-            <video muted loop playsinline autoplay poster="rbt_maze.png" class="w-full h-full object-cover">
+            <video muted loop playsinline preload="none" poster="rbt_maze.png" class="w-full h-full object-cover">
               <source src="robo_maze_preview.mp4?v=2" type="video/mp4">
             </video>
           </div>
@@ -513,7 +513,7 @@
           <!-- Clean Square Thumbnail -->
           <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-2 shadow-inner bg-slate-950">
             <div class="relative w-full h-full video-preview-box">
-            <video muted loop playsinline autoplay poster="rbt_ct.png" class="w-full h-full object-cover">
+            <video muted loop playsinline preload="none" poster="rbt_ct.png" class="w-full h-full object-cover">
               <source src="robo_circuit_preview.mp4?v=3" type="video/mp4">
             </video>
           </div>
@@ -533,7 +533,7 @@
           <!-- Clean Square Thumbnail -->
           <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-2 shadow-inner bg-slate-950">
             <div class="relative w-full h-full video-preview-box">
-            <video muted loop playsinline autoplay poster="enrg_cr.png" class="w-full h-full object-cover">
+            <video muted loop playsinline preload="none" poster="enrg_cr.png" class="w-full h-full object-cover">
               <source src="energy_core_preview.mp4?v=3" type="video/mp4">
             </video>
           </div>
@@ -553,7 +553,7 @@
           <!-- Clean Square Thumbnail -->
           <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-2 shadow-inner bg-slate-950">
             <div class="relative w-full h-full video-preview-box">
-            <video muted loop playsinline autoplay poster="rbt_escp.png" class="w-full h-full object-cover">
+            <video muted loop playsinline preload="none" poster="rbt_escp.png" class="w-full h-full object-cover">
               <source src="robo_escape_preview.mp4?v=3" type="video/mp4">
             </video>
           </div>
@@ -573,7 +573,7 @@
           <!-- Clean Square Thumbnail -->
           <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-2 shadow-inner bg-slate-950">
             <div class="relative w-full h-full video-preview-box">
-            <video muted loop playsinline autoplay poster="rbt_circle.png" class="w-full h-full object-cover">
+            <video muted loop playsinline preload="none" poster="rbt_circle.png" class="w-full h-full object-cover">
               <source src="robo_circle_preview.mp4?v=3" type="video/mp4">
             </video>
           </div>
@@ -593,7 +593,7 @@
           <!-- Clean Square Thumbnail -->
           <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-2 shadow-inner bg-slate-950">
             <div class="relative w-full h-full video-preview-box">
-            <video muted loop playsinline autoplay poster="rbt_chrg.png" class="w-full h-full object-cover">
+            <video muted loop playsinline preload="none" poster="rbt_chrg.png" class="w-full h-full object-cover">
               <source src="robo_charge_preview.mp4?v=3" type="video/mp4">
             </video>
           </div>
@@ -626,24 +626,7 @@
             </button>
           </div>
         </div>
-        <!-- Square Game Card: Master Pose -->
-        <div data-cat="fokus" class="game-item bg-[#0d1b33] rounded-2xl overflow-hidden border border-[#1a2e56] shadow-lg flex flex-col justify-between group hover:border-cyan-400/50 transition-all p-2 sm:p-2.5">
-          <!-- Clean Square Thumbnail -->
-          <div class="relative w-full aspect-square rounded-xl overflow-hidden mb-2 shadow-inner bg-slate-950">
-            <div class="relative w-full h-full overflow-hidden bg-slate-950">
-            <img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="bule_character.png" />
-          </div>
-          </div>
 
-          <!-- Info & Action -->
-          <div class="flex flex-col gap-1 w-full">
-            <span class="text-[8px] sm:text-[9px] font-bold text-cyan-400 uppercase truncate">Kurir & Logistik</span>
-            <h4 class="text-xs sm:text-sm font-black text-white truncate leading-tight">Robo Delivery</h4>
-            <button onclick="openGame('/robo-delivery')" class="mt-1 w-full py-1.5 sm:py-2 bg-gradient-to-r from-[#0099ff] to-[#00e5ff] text-[#050a16] font-black rounded-xl text-[10px] sm:text-xs shadow-md active:scale-95 transition-transform flex items-center justify-center gap-1">
-              <span class="material-symbols-outlined text-xs sm:text-sm">play_arrow</span> PLAY
-            </button>
-          </div>
-        </div>
         <!-- Square Game Card: Robo Pose -->
         <div data-cat="fokus" class="game-item bg-[#0d1b33] rounded-2xl overflow-hidden border border-[#1a2e56] shadow-lg flex flex-col justify-between group hover:border-cyan-400/50 transition-all p-2 sm:p-2.5">
           <!-- Clean Square Thumbnail -->
@@ -669,58 +652,41 @@
     <!-- TAB 3: PROFILE & MULTI-USER (CHILDREN) SETTINGS                          -->
     <!-- ======================================================================= -->
     <section id="tab-profile" class="tab-content hidden flex-1 flex flex-col h-full w-full overflow-y-auto pr-1 pb-4">
-      <div class="flex items-center justify-between mb-2.5 pt-1 flex-shrink-0">
-        <h2 class="text-base sm:text-lg font-black text-white">Profil & Akun 👤</h2>
+      <div class="flex items-center justify-between mb-3 pt-1">
+        <h2 class="text-base sm:text-lg font-black text-white">Profil Penjelajah 👤</h2>
         <button onclick="switchTab('home')" class="px-3 py-1 rounded-xl bg-[#0d1b33] border border-[#1a2e56] text-xs font-bold text-cyan-400 hover:text-white transition-colors">
           ← Home
         </button>
       </div>
 
-      <!-- Parent Google Account Card (Active Login Status) -->
-      <div class="p-3 rounded-2xl bg-gradient-to-r from-[#0d2249] to-[#0b1c3c] border border-cyan-500/30 flex items-center justify-between mb-2.5 shadow-md">
-        <div class="flex items-center gap-2.5 min-w-0">
-          <div class="w-8 h-8 rounded-full border border-cyan-400 overflow-hidden bg-slate-800 flex-shrink-0 flex items-center justify-center text-sm shadow-inner">
-            <span id="parentUserAvatar">👤</span>
-          </div>
-          <div class="min-w-0 truncate">
-            <div class="flex items-center gap-1.5">
-              <span class="text-[8px] font-extrabold text-cyan-400 uppercase tracking-wider">Akun Orang Tua</span>
-              <span id="parentSyncBadge" class="text-[8px] px-1.5 py-0.2 bg-emerald-500/20 text-emerald-400 font-bold rounded border border-emerald-500/30">Google Terhubung</span>
-            </div>
-            <h4 id="parentUserEmail" class="text-xs font-bold text-white truncate">Tamu (Belum Login)</h4>
-          </div>
-        </div>
-        <button id="parentAuthActionBtn" onclick="openModal('authGuardModal')" class="px-2 py-1 bg-[#0099ff] hover:bg-cyan-400 text-[#050a16] text-[9px] font-black rounded-lg shadow-sm transition-all flex-shrink-0">
-          Ganti Akun
-        </button>
-      </div>
-
-      <!-- Active Child Card (Compact & Proportional) -->
-      <div class="p-3 rounded-2xl bg-[#0d1b33] border border-[#1a2e56] flex items-center justify-between mb-2.5 shadow-md">
-        <div class="flex items-center gap-2.5 min-w-0">
-          <div class="w-10 h-10 rounded-full border-2 border-cyan-400 overflow-hidden bg-slate-800 flex-shrink-0">
+      <!-- Active Child Card -->
+      <div class="p-4 rounded-2xl bg-[#0d1b33] border border-[#1a2e56] flex items-center justify-between mb-3 shadow-md">
+        <div class="flex items-center gap-3">
+          <div class="w-13 h-13 rounded-full border-2 border-cyan-400 overflow-hidden bg-slate-800 flex-shrink-0">
             <img id="activeChildAvatarImg" src="robomind_robot_avatar.png?v=3" class="w-full h-full object-cover" />
           </div>
-          <div class="min-w-0 truncate">
-            <span id="activeChildLevelBadge" class="text-[8px] font-black text-cyan-400 uppercase tracking-wider block truncate">Level 1 • Explorer</span>
-            <h3 id="activeChildNameText" class="text-xs sm:text-sm font-black text-white truncate">Pemain Baru</h3>
-            <p id="activeChildStatsText" class="text-[9px] text-slate-400 truncate">⚡ 0 XP • 🪙 0 Koin</p>
+          <div>
+            <span id="activeChildLevelBadge" class="text-[9px] font-black text-cyan-400 uppercase tracking-wider">Level 12 • Junior Explorer</span>
+            <h3 id="activeChildNameText" class="text-sm sm:text-base font-black text-white">Aira Salsabila</h3>
+            <p id="activeChildStatsText" class="text-[10px] text-slate-400">⚡ 1,420 XP • 🪙 1,790 Koin</p>
+            <div class="mt-1 flex items-center gap-1 text-[10px] text-cyan-300 font-mono font-bold bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-400/40 w-max">
+              <span class="material-symbols-outlined text-xs">key</span>
+              <span id="activeChildTokenText">Kode Akses: 1234 - 5678</span>
+            </div>
           </div>
         </div>
-        <button onclick="openModal('addChildModal')" class="px-2 py-1.5 rounded-xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-300 text-[9px] font-black hover:bg-cyan-500/30 transition-all flex items-center gap-1 flex-shrink-0">
-          <span class="material-symbols-outlined text-xs">person_add</span> + Anak
-        </button>
+
       </div>
 
-      <!-- Multi-Child Profile Switcher (Clean & Compact) -->
-      <div class="p-3 rounded-2xl bg-[#0d1b33] border border-[#1a2e56] mb-2.5 shadow-sm">
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-[11px] font-black text-white flex items-center gap-1">
-            <span class="material-symbols-outlined text-xs text-cyan-400">switch_account</span> Profil Anak
+      <!-- Multi-Child Profile Switcher -->
+      <div class="p-3.5 rounded-2xl bg-[#0d1b33] border border-[#1a2e56] mb-3 shadow-sm">
+        <div class="flex items-center justify-between mb-2.5">
+          <span class="text-xs font-black text-white flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-sm text-cyan-400">switch_account</span> Ganti Profil Anak
           </span>
-          <span class="text-[9px] text-slate-400 font-bold" id="childCountLabel">1 Profil</span>
+          <span class="text-[10px] text-slate-400 font-bold" id="childCountLabel">1 Profil</span>
         </div>
-        <div id="childrenProfilesList" class="space-y-1.5 max-h-[160px] overflow-y-auto pr-0.5">
+        <div id="childrenProfilesList" class="space-y-2">
           <!-- Dynamic Child Profiles injected here -->
         </div>
       </div>
@@ -735,20 +701,14 @@
           <button id="soundToggleBtn" onclick="toggleSound()" class="px-3 py-1 bg-[#0099ff] text-white rounded-lg text-xs font-bold">ON</button>
         </div>
 
-        <div class="p-3.5 rounded-2xl bg-[#0d1b33] border border-[#1a2e56] flex items-center justify-between">
-          <div class="flex items-center gap-2.5">
-            <span class="material-symbols-outlined text-amber-400">admin_panel_settings</span>
-            <span class="text-xs font-bold text-white">Pengaturan Batas Waktu</span>
-          </div>
-          <button onclick="openGame('/parent-mode')" class="px-3 py-1 bg-[#f59e0b] text-black rounded-lg text-xs font-black">Buka</button>
-        </div>
+
 
         <div class="p-3.5 rounded-2xl bg-[#0d1b33] border border-[#1a2e56] flex items-center justify-between">
           <div class="flex items-center gap-2.5">
-            <span class="material-symbols-outlined text-red-400">logout</span>
-            <span class="text-xs font-bold text-white">Keluar Akun</span>
+            <span class="material-symbols-outlined text-red-400">key_off</span>
+            <span class="text-xs font-bold text-white">Ganti / Keluar Kode Akses</span>
           </div>
-          <button onclick="logoutUser()" class="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500 hover:text-white rounded-lg text-xs font-bold transition-colors">Logout</button>
+          <button onclick="logoutActiveChildToken()" class="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500 hover:text-white rounded-lg text-xs font-bold transition-colors">Keluar</button>
         </div>
       </div>
     </section>
@@ -890,101 +850,6 @@
     </div>
   </div>
 
-    <!-- ========================================================================= -->
-  <!-- SUPABASE LOGIN & AUTH GUARD MODAL                                         -->
-  <!-- ========================================================================= -->
-  <div id="authGuardModal" class="fixed inset-0 z-[100] bg-[#050a16]/90 backdrop-blur-xl hidden flex items-center justify-center p-4">
-    <div class="bg-[#0b1c3c] rounded-3xl max-w-sm w-full p-6 border border-[#00f0ff]/50 shadow-[0_0_30px_rgba(0,240,255,0.3)] flex flex-col items-center text-center relative">
-      
-      <!-- Mascot Logo -->
-      <div class="relative w-16 h-16 rounded-full border-2 border-cyan-400 p-0.5 mb-3 shadow-[0_0_15px_rgba(0,240,255,0.5)]">
-        <img alt="Robo Avatar" class="w-full h-full object-cover rounded-full bg-slate-900" src="robomind_robot_avatar.png" />
-      </div>
-
-      <h3 class="text-lg font-black text-white leading-tight">Masuk ke RoboMind</h3>
-      <p class="text-xs text-slate-300 mb-5">Hubungkan progres game dengan akun orang tua</p>
-
-      <!-- Google OAuth Button -->
-      <button onclick="loginWithGoogle()" class="w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-xs flex items-center justify-center gap-2.5 shadow-md active:scale-95 transition-all mb-3">
-        <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        <span>Masuk dengan Google</span>
-      </button>
-
-      <div class="relative flex items-center py-2 w-full mb-3">
-        <div class="flex-grow border-t border-slate-700"></div>
-        <span class="flex-shrink-0 mx-3 text-slate-400 text-[10px] uppercase font-bold">atau email</span>
-        <div class="flex-grow border-t border-slate-700"></div>
-      </div>
-
-      <!-- Quick Email Form -->
-      <form onsubmit="handleEmailAuth(event)" class="w-full space-y-2.5 mb-3">
-        <input id="authEmailInput" type="email" placeholder="Email akun..." required class="w-full px-3.5 py-2.5 rounded-xl bg-[#050a16] border border-[#1e3b6e] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-400" />
-        <input id="authPasswordInput" type="password" placeholder="Kata sandi..." required class="w-full px-3.5 py-2.5 rounded-xl bg-[#050a16] border border-[#1e3b6e] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-400" />
-        <button type="submit" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-[#0099ff] to-[#00f0ff] text-[#050a16] font-black text-xs shadow-md active:scale-95 transition-transform">
-          Masuk Akun
-        </button>
-      </form>
-
-      <!-- Guest Demo Option -->
-      <button onclick="continueAsGuest()" class="text-[11px] text-cyan-400 hover:text-white font-bold underline transition-colors">
-        Lanjut sebagai Tamu (Mode Demo)
-      </button>
-
-    </div>
-  </div>
-
-    <!-- ADD CHILD / MULTI-USER MODAL -->
-  <div id="addChildModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-    <div class="bg-[#0b1c3c] rounded-3xl max-w-sm w-full p-5 border border-[#00f0ff]/40 shadow-2xl flex flex-col relative">
-      <button onclick="closeModal('addChildModal')" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-[#122b54] text-slate-300 flex items-center justify-center">
-        <span class="material-symbols-outlined text-sm">close</span>
-      </button>
-      <div class="w-11 h-11 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mb-2 mx-auto">
-        <span class="material-symbols-outlined text-2xl">face</span>
-      </div>
-      <h3 class="text-sm font-black text-white text-center mb-1">Tambah Profil Anak Baru 👶</h3>
-      <p class="text-[10px] text-slate-300 text-center mb-4">Buat akun belajar mandiri untuk anak lain dalam keluarga</p>
-
-      <form onsubmit="handleAddNewChild(event)" class="space-y-3">
-        <div>
-          <label class="text-[10px] font-bold text-slate-300 block mb-1">Nama Panggilan Anak</label>
-          <input id="newChildNameInput" type="text" placeholder="Contoh: Kenzo, Nadine, Rafa..." required class="w-full px-3 py-2 rounded-xl bg-[#050a16] border border-[#1e3b6e] text-white text-xs placeholder-slate-500 focus:outline-none focus:border-cyan-400" />
-        </div>
-        <div>
-          <label class="text-[10px] font-bold text-slate-300 block mb-1">Usia Anak (Tahun)</label>
-          <input id="newChildAgeInput" type="number" min="3" max="15" value="7" required class="w-full px-3 py-2 rounded-xl bg-[#050a16] border border-[#1e3b6e] text-white text-xs focus:outline-none focus:border-cyan-400" />
-        </div>
-        <div>
-          <label class="text-[10px] font-bold text-slate-300 block mb-1">Pilih Karakter Robot</label>
-          <div class="grid grid-cols-4 gap-2">
-            <label class="cursor-pointer border-2 border-cyan-400 rounded-xl p-1 bg-slate-900 flex flex-col items-center">
-              <input type="radio" name="childAvatar" value="robomind_robot_avatar.png" checked class="hidden" />
-              <img src="robomind_robot_avatar.png" class="w-8 h-8 rounded-full object-cover" />
-              <span class="text-[8px] text-cyan-300 font-bold mt-0.5">Aira</span>
-            </label>
-            <label class="cursor-pointer border border-[#1e3b6e] hover:border-cyan-400 rounded-xl p-1 bg-slate-900 flex flex-col items-center">
-              <input type="radio" name="childAvatar" value="robomind_character_2d.png" class="hidden" />
-              <img src="robomind_character_2d.png" class="w-8 h-8 rounded-full object-cover" />
-              <span class="text-[8px] text-slate-300 font-bold mt-0.5">Budi</span>
-            </label>
-            <label class="cursor-pointer border border-[#1e3b6e] hover:border-cyan-400 rounded-xl p-1 bg-slate-900 flex flex-col items-center">
-              <input type="radio" name="childAvatar" value="bule_character.png" class="hidden" />
-              <img src="bule_character.png" class="w-8 h-8 rounded-full object-cover" />
-              <span class="text-[8px] text-slate-300 font-bold mt-0.5">Alex</span>
-            </label>
-            <label class="cursor-pointer border border-[#1e3b6e] hover:border-cyan-400 rounded-xl p-1 bg-slate-900 flex flex-col items-center">
-              <input type="radio" name="childAvatar" value="bule_perempuan.png" class="hidden" />
-              <img src="bule_perempuan.png" class="w-8 h-8 rounded-full object-cover" />
-              <span class="text-[8px] text-slate-300 font-bold mt-0.5">Clara</span>
-            </label>
-          </div>
-        </div>
-        <button type="submit" class="w-full mt-2 py-2.5 bg-gradient-to-r from-[#0099ff] to-[#00f0ff] text-[#050a16] font-black text-xs rounded-xl shadow-md active:scale-95 transition-transform">
-          Simpan Profil Anak
-        </button>
-      </form>
-    </div>
-  </div>
 
   <!-- Toast Notification -->
   <div id="toastNotification" class="fixed top-12 left-1/2 -translate-x-1/2 z-[9999] bg-[#00f0ff] text-[#050a16] px-4 py-2 rounded-full shadow-[0_0_20px_rgba(0,240,255,0.6)] font-black text-xs transition-all duration-300 opacity-0 pointer-events-none flex items-center gap-1.5 whitespace-nowrap">
@@ -1064,42 +929,15 @@
     };
 
     
-    // Clear legacy mock demo keys AND all game level progress from local storage on launch
+    // Clear legacy mock demo keys from local storage on launch
     (function cleanMockStorage() {
-      if (localStorage.getItem('robomind_demo_cleaned_v4') !== 'true') {
-        // Global balances & screentime
+      if (localStorage.getItem('robomind_demo_cleaned_v2') !== 'true') {
         localStorage.removeItem('robomind_total_xp');
         localStorage.removeItem('user_coins_balance');
         localStorage.removeItem('user_gems_balance');
         localStorage.removeItem('robomind_screentime_minutes');
         localStorage.removeItem('robomind_children_profiles');
-        // All game level progress keys
-        localStorage.removeItem('screw_spin_current_level');
-        localStorage.removeItem('screw_spin_coins');
-        localStorage.removeItem('energy_core_current_level');
-        localStorage.removeItem('energy_core_coins');
-        localStorage.removeItem('energy_core_evolution');
-        localStorage.removeItem('robot_circuit_current_level');
-        localStorage.removeItem('robot_circuit_coins');
-        localStorage.removeItem('robot_escape_current_level');
-        localStorage.removeItem('robot_escape_coins');
-        localStorage.removeItem('robo_charge_current_level');
-        localStorage.removeItem('robo_charge_coins');
-        localStorage.removeItem('pick_and_drop_current_level');
-        localStorage.removeItem('pick_and_drop_coins');
-        localStorage.removeItem('pose_master_current_level');
-        localStorage.removeItem('pose_master_coins');
-        localStorage.removeItem('robo_circle_current_level');
-        localStorage.removeItem('robo_circle_coins');
-        localStorage.removeItem('rogue_soul_level_progress');
-        localStorage.removeItem('rogue_soul_coins');
-        localStorage.removeItem('rogue_soul_gems');
-        localStorage.removeItem('rogue_soul_powerups');
-        localStorage.removeItem('robo_link_current_level');
-        localStorage.removeItem('robo_link_lives');
-        localStorage.removeItem('robo_link_last_loss');
-        localStorage.removeItem('robo_link_coins');
-        localStorage.setItem('robomind_demo_cleaned_v4', 'true');
+        localStorage.setItem('robomind_demo_cleaned_v2', 'true');
       }
     })();
 
@@ -1118,6 +956,48 @@
       document.querySelectorAll('.val-gems').forEach(el => el.textContent = AppState.gems);
     }
 
+    
+    // === SMART PERFORMANCE: INSTANT HTML5 VIDEO PREVIEW LOADER ===
+    function checkAndPlayVisibleVideos() {
+      const videos = document.querySelectorAll('video');
+      videos.forEach(v => {
+        if (v.offsetParent === null) {
+          v.pause();
+          return;
+        }
+        const rect = v.getBoundingClientRect();
+        const isVisible = rect.top < window.innerHeight + 100 && rect.bottom > -100;
+        if (isVisible) {
+          v.play().catch(() => {});
+        } else {
+          v.pause();
+        }
+      });
+    }
+
+    let videoObserver = null;
+    function initVideoLazyLoader() {
+      const videos = document.querySelectorAll('video');
+      if ('IntersectionObserver' in window) {
+        videoObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            const v = entry.target;
+            if (entry.isIntersecting && v.offsetParent !== null) {
+              v.play().catch(() => {});
+            } else {
+              v.pause();
+            }
+          });
+        }, { threshold: 0.05 });
+
+        videos.forEach(v => {
+          videoObserver.observe(v);
+        });
+      }
+      setTimeout(checkAndPlayVisibleVideos, 200);
+      setTimeout(checkAndPlayVisibleVideos, 600);
+    }
+
     function switchTab(tabId) {
       SoundFX.playPop();
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
@@ -1133,6 +1013,12 @@
         }
       });
       AppState.activeTab = tabId;
+      if (tabId !== 'play') {
+        document.querySelectorAll('video').forEach(v => v.pause());
+      } else {
+        setTimeout(checkAndPlayVisibleVideos, 100);
+        setTimeout(checkAndPlayVisibleVideos, 300);
+      }
     }
 
     function openModal(id) {
@@ -1161,7 +1047,86 @@
       }, 2500);
     }
 
+    
+    // === SCREENTIME LIMIT (MAX 60/60 CAP) & GAME TOTAL LOCK SYSTEM ===
+    function isScreenTimeLimitReached() {
+      const child = getActiveChild();
+      if (!child) return false;
+      const limit = child.screentime_limit || 60;
+      const used = child.screentime_used || 0;
+      return used >= limit;
+    }
+
+    function getTimeUntilResetFormatted() {
+      const now = new Date();
+      const nextReset = new Date();
+      nextReset.setHours(24, 0, 0, 0);
+      const diffMs = nextReset.getTime() - now.getTime();
+      const diffSecs = Math.floor(diffMs / 1000);
+      const hours = Math.floor(diffSecs / 3600);
+      const minutes = Math.floor((diffSecs % 3600) / 60);
+      const seconds = diffSecs % 60;
+      return `${hours} Jam ${minutes} Menit ${seconds} Detik`;
+    }
+
+    function updateScreenTimeHUD() {
+      const child = getActiveChild();
+      if (!child) return;
+
+      const limit = child.screentime_limit || 60;
+      const rawUsed = child.screentime_used || 0;
+      const clampedUsed = Math.min(limit, rawUsed); // Cap at max 60/60
+
+      const usedTextEls = document.querySelectorAll('.screentime-used-text');
+      usedTextEls.forEach(el => {
+        el.innerText = `${clampedUsed} / ${limit} Menit`;
+      });
+
+      const barEls = document.querySelectorAll('.screentime-progress-bar');
+      const pct = Math.min(100, Math.round((clampedUsed / limit) * 100));
+      barEls.forEach(el => {
+        el.style.width = `${pct}%`;
+      });
+
+      if (clampedUsed >= limit) {
+        showScreenTimeLockModal();
+      } else {
+        hideScreenTimeLockModal();
+      }
+    }
+
+    function showScreenTimeLockModal() {
+      const modal = document.getElementById('screenTimeLockModal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        updateScreenTimeCountdownText();
+      }
+    }
+
+    function hideScreenTimeLockModal() {
+      const modal = document.getElementById('screenTimeLockModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function updateScreenTimeCountdownText() {
+      const countdownEl = document.getElementById('screentimeResetCountdown');
+      if (countdownEl) {
+        countdownEl.innerText = getTimeUntilResetFormatted();
+      }
+    }
+
+    setInterval(() => {
+      if (isScreenTimeLimitReached()) {
+        updateScreenTimeCountdownText();
+      }
+    }, 1000);
+
     function openGame(route) {
+      if (isScreenTimeLimitReached()) {
+        showScreenTimeLockModal();
+        if (typeof SoundFX !== 'undefined' && SoundFX.playPop) SoundFX.playPop();
+        return;
+      }
       SoundFX.playSuccess();
       try {
         localStorage.setItem("robomind_intro_completed", "true");
@@ -1281,18 +1246,24 @@
       SoundFX.playPop();
       currentFeaturedIdx = idx;
       renderFeaturedGame();
+      initVideoLazyLoader();
+      checkChildAccessCodeOnLaunch();
     }
 
     function nextFeaturedGame() {
       SoundFX.playPop();
       currentFeaturedIdx = (currentFeaturedIdx + 1) % FEATURED_GAMES.length;
       renderFeaturedGame();
+      initVideoLazyLoader();
+      checkChildAccessCodeOnLaunch();
     }
 
     function prevFeaturedGame() {
       SoundFX.playPop();
       currentFeaturedIdx = (currentFeaturedIdx - 1 + FEATURED_GAMES.length) % FEATURED_GAMES.length;
       renderFeaturedGame();
+      initVideoLazyLoader();
+      checkChildAccessCodeOnLaunch();
     }
 
     function playCurrentFeaturedGame() {
@@ -1401,23 +1372,22 @@
 
     
     // =========================================================================
-    // SCREEN TIME TRACKER CONTROLLER (PER ACTIVE CHILD)
+    // SCREEN TIME TRACKER CONTROLLER
     // =========================================================================
-    function updateScreenTimeHUD() {
-      const child = getActiveChild();
-      const used = child ? (child.screentime_used || 0) : 0;
-      const limit = child ? (child.screentime_limit || 60) : 60;
+    let screenTimeUsed = parseInt(localStorage.getItem('robomind_screentime_minutes') || '0');
+    let screenTimeLimit = parseInt(localStorage.getItem('robomind_screentime_limit') || '60');
 
+    function updateScreenTimeHUD() {
       const usedEl = document.getElementById('screenTimeUsedText');
       const barEl = document.getElementById('screenTimeBar');
       const remainEl = document.getElementById('screenTimeRemainingText');
 
-      if (usedEl) usedEl.textContent = `${used} / ${limit} Menit`;
+      if (usedEl) usedEl.textContent = `${screenTimeUsed} / ${screenTimeLimit} Menit`;
       
-      const pct = Math.min(100, Math.round((used / limit) * 100));
+      const pct = Math.min(100, Math.round((screenTimeUsed / screenTimeLimit) * 100));
       if (barEl) barEl.style.width = `${pct}%`;
 
-      const remaining = Math.max(0, limit - used);
+      const remaining = Math.max(0, screenTimeLimit - screenTimeUsed);
       if (remainEl) {
         if (remaining > 0) {
           remainEl.textContent = `Sisa Waktu Aman: ${remaining} Menit`;
@@ -1427,42 +1397,25 @@
           remainEl.className = 'text-red-400 font-black animate-pulse';
         }
       }
-
-      // Update Home Stage Daily Progress bar & XP
-      const homeBar = document.getElementById('homeDailyProgressBar');
-      const homeXp = document.getElementById('homeDailyXpText');
-      if (homeBar && child) {
-        const xpProgress = Math.min(100, Math.round(((child.total_xp || 0) % 500) / 5));
-        homeBar.style.width = `${xpProgress}%`;
-      }
-      if (homeXp && child) {
-        homeXp.textContent = `+${child.total_xp || 0} XP ⭐`;
-      }
     }
 
-    // Auto-increment screentime counter every 60 seconds for the active child (capped at limit)
-    setInterval(() => {
-      const child = getActiveChild();
-      if (child) {
-        const limit = child.screentime_limit || 60;
-        const current = child.screentime_used || 0;
-        
-        if (current < limit) {
-          child.screentime_used = current + 1;
-          const cacheKey = currentUser ? `robomind_children_${currentUser.id}` : 'robomind_children_profiles';
-          localStorage.setItem(cacheKey, JSON.stringify(userChildrenList));
-          updateScreenTimeHUD();
+    // Auto-increment screentime counter every 60 seconds of active usage
+    setInterval(function() {
+      screenTimeUsed++;
+      localStorage.setItem('robomind_screentime_minutes', screenTimeUsed.toString());
+      updateScreenTimeHUD();
 
-          // Sync to Supabase if connected
-          if (supabaseClient && currentUser && child.id && !child.id.startsWith('child-default')) {
-            supabaseClient
-              .from('children')
-              .update({ daily_screentime_minutes: child.screentime_used, updated_at: new Date().toISOString() })
-              .eq('id', child.id)
-              .then(() => {})
-              .catch(() => {});
+      // Sync screentime to Supabase
+      if (supabaseClient && currentUser) {
+        try {
+          var sc = getActiveChild();
+          if (sc && sc.id && !String(sc.id).startsWith('child-')) {
+            supabaseClient.from('children').update({
+              daily_screentime_minutes: screenTimeUsed,
+              updated_at: new Date().toISOString()
+            }).eq('id', sc.id).then(function() {}).catch(function() {});
           }
-        }
+        } catch (e) {}
       }
     }, 60000);
 
@@ -1485,124 +1438,148 @@
       }
     }
 
-    async function checkUserAuth() {
-      if (!supabaseClient) return;
-      try {
-        // Read URL query params passed from web portal
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlAccessToken = urlParams.get('access_token');
-        const urlRefreshToken = urlParams.get('refresh_token');
-        const urlUserId = urlParams.get('user_id');
-        const urlEmail = urlParams.get('email');
-
-        if (urlAccessToken && urlRefreshToken) {
-          try {
-            const { data } = await supabaseClient.auth.setSession({
-              access_token: urlAccessToken,
-              refresh_token: urlRefreshToken
-            });
-            if (data && data.user) {
-              currentUser = data.user;
-              onUserAuthenticated(data.user);
-              return;
-            }
-          } catch(e) {}
-        }
-        
-        if (urlUserId && urlEmail) {
-          currentUser = { id: urlUserId, email: urlEmail };
-          onUserAuthenticated(currentUser);
-          return;
-        }
-
-        // Fast race condition with 1.5s timeout so app never freezes on slow network
-        const sessionPromise = supabaseClient.auth.getSession();
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Auth Timeout')), 1500));
-        
-        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
-        if (session && session.user) {
-          currentUser = session.user;
-          onUserAuthenticated(session.user);
-        } else {
-          const isGuest = localStorage.getItem('robomind_guest_mode') === 'true';
-          if (!isGuest && !urlUserId) {
-            openModal('authGuardModal');
-          } else {
-            localStorage.setItem('robomind_guest_mode', 'true');
-          }
-        }
-      } catch (e) {
-        console.warn("Auth check fast fallback:", e);
-        // Fallback to guest mode seamlessly if network is slow/offline
-        if (!localStorage.getItem('robomind_active_child_id')) {
-          localStorage.setItem('robomind_guest_mode', 'true');
-        }
-      }
+    // === 8-DIGIT ACCESS TOKEN AUTHENTICATION SYSTEM ===
+    function generate8DigitToken() {
+      return Math.floor(10000000 + Math.random() * 90000000).toString();
     }
 
-    async function onUserAuthenticated(user) {
-      closeModal('authGuardModal');
-      currentUser = user;
-      localStorage.removeItem('robomind_guest_mode');
-      
-      const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Orang Tua';
-      const userEl = document.querySelector('h1.font-extrabold');
-      if (userEl) {
-        userEl.innerHTML = `Halo, ${userName.split(' ')[0]}! <span class="text-xs">👋</span>`;
-      }
-
-      showToast(`👋 Masuk sebagai: ${userName.split(' ')[0]}`);
-      
-      // Reload children profiles specific to this authenticated parent account
-      await loadChildrenProfiles();
-    }
-
-    async function loginWithGoogle() {
-      if (!supabaseClient) return;
-      try {
-        await supabaseClient.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: window.location.origin
+    function setupPinInputs() {
+      const pins = document.querySelectorAll('.pin-box');
+      pins.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+          if (e.target.value.length === 1 && index < pins.length - 1) {
+            pins[index + 1].focus();
           }
         });
-      } catch (e) {
-        showToast('❌ Gagal membuka Google Login');
-      }
-    }
-
-    async function handleEmailAuth(e) {
-      e.preventDefault();
-      if (!supabaseClient) return;
-      
-      const email = document.getElementById('authEmailInput').value;
-      const password = document.getElementById('authPasswordInput').value;
-
-      try {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) {
-          // If login fails, try signing up
-          const { data: signUpData, error: signUpErr } = await supabaseClient.auth.signUp({ email, password });
-          if (signUpErr) {
-            showToast(`❌ ${error.message}`);
-          } else {
-            showToast('✅ Akun berhasil dibuat! Silakan cek email.');
-            if (signUpData.user) onUserAuthenticated(signUpData.user);
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && !e.target.value && index > 0) {
+            pins[index - 1].focus();
           }
-        } else if (data.user) {
-          onUserAuthenticated(data.user);
+        });
+      });
+    }
+
+    function fillDemoCode(code) {
+      const pins = document.querySelectorAll('.pin-box');
+      const digits = code.replace(/[^0-9]/g, '').split('');
+      pins.forEach((p, idx) => {
+        p.value = digits[idx] || '';
+      });
+      submitAccessCode();
+    }
+
+    async function submitAccessCode() {
+      const pins = document.querySelectorAll('.pin-box');
+      let enteredCode = '';
+      pins.forEach(p => enteredCode += p.value.trim());
+
+      const errEl = document.getElementById('accessCodeErrorMsg');
+      if (errEl) errEl.classList.add('hidden');
+
+      if (enteredCode.length !== 8) {
+        if (errEl) {
+          errEl.innerText = '⚠️ Harap masukkan 8-digit kode akses secara lengkap!';
+          errEl.classList.remove('hidden');
         }
-      } catch (err) {
-        showToast('❌ Kesalahan autentikasi');
+        return;
+      }
+
+      showToast('🔍 Memverifikasi kode akses...');
+
+      let matchedChild = null;
+
+      if (supabaseClient) {
+        try {
+          const { data, error } = await supabaseClient
+            .from('children')
+            .select('*')
+            .or(`access_token.eq.${enteredCode},access_code.eq.${enteredCode}`)
+            .single();
+
+          if (data) {
+            matchedChild = {
+              id: data.id,
+              name: data.name || 'Anak',
+              age: data.age || 7,
+              avatar: data.avatar_url || 'robomind_robot_avatar.png',
+              level: data.level || 1,
+              total_xp: data.total_xp || 0,
+              coins: data.coins || 100,
+              access_code: enteredCode,
+              screentime_used: data.daily_screentime_minutes || 0,
+              screentime_limit: data.screentime_limit_minutes || 60
+            };
+          }
+        } catch (e) {
+          console.warn("Supabase access token query:", e);
+        }
+      }
+
+      if (!matchedChild) {
+        const found = userChildrenList.find(c => (c.access_code || '').replace(/[^0-9]/g, '') === enteredCode);
+        if (found) {
+          matchedChild = found;
+        } else if (enteredCode === '12345678') {
+          matchedChild = {
+            id: 'demo-child-1',
+            name: 'Aira (Demo)',
+            age: 8,
+            avatar: 'robomind_robot_avatar.png',
+            level: 12,
+            total_xp: 2450,
+            coins: 1250,
+            access_code: '12345678',
+            screentime_used: 15,
+            screentime_limit: 60
+          };
+        }
+      }
+
+      if (matchedChild) {
+        localStorage.setItem('robomind_active_access_code', enteredCode);
+        
+        const idx = userChildrenList.findIndex(c => c.id === matchedChild.id || c.access_code === enteredCode);
+        if (idx >= 0) {
+          userChildrenList[idx] = matchedChild;
+          activeChildIndex = idx;
+        } else {
+          userChildrenList.push(matchedChild);
+          activeChildIndex = userChildrenList.length - 1;
+        }
+        localStorage.setItem('robomind_children_profiles', JSON.stringify(userChildrenList));
+        localStorage.setItem('robomind_active_child_id', matchedChild.id);
+
+        closeModal('accessCodeModal');
+        applyActiveChildUI();
+        renderChildrenListUI();
+        SoundFX.playSuccess();
+        showToast(`🎉 Kode Akses Valid! Selamat datang, ${matchedChild.name}!`);
+      } else {
+        if (errEl) {
+          errEl.innerText = '❌ Kode Akses tidak ditemukan! Minta kode 8-digit dari Web Pemantauan Orang Tua.';
+          errEl.classList.remove('hidden');
+        }
+        SoundFX.playPop();
       }
     }
 
-    function continueAsGuest() {
-      localStorage.setItem('robomind_guest_mode', 'true');
-      closeModal('authGuardModal');
-      showToast('🎮 Masuk sebagai Tamu');
+    function logoutActiveChildToken() {
+      localStorage.removeItem('robomind_active_access_code');
+      showToast('🔒 Keluar dari profil anak. Masukkan kode akses baru.');
+      setTimeout(() => {
+        const modal = document.getElementById('accessCodeModal');
+        if (modal) modal.classList.remove('hidden');
+      }, 400);
     }
 
+    function checkChildAccessCodeOnLaunch() {
+      setupPinInputs();
+      const activeCode = localStorage.getItem('robomind_active_access_code');
+      if (!activeCode) {
+        const modal = document.getElementById('accessCodeModal');
+        if (modal) modal.classList.remove('hidden');
+      }
+    }
     // Enhanced Telemetry: Record Game Session, Level, XP, Coins & Skill Pillars
     async function recordGameSessionToSupabase(gameId, gameTitle, category, score, xp, level = 1, coins = 50, duration = 120) {
       // 1. Always update local storage
@@ -1617,9 +1594,13 @@
       // 2. Push to Supabase if authenticated
       if (!supabaseClient || !currentUser) return;
       try {
+        var activeChild = getActiveChild();
+        var childId = activeChild ? activeChild.id : null;
+
         // Insert session record
         await supabaseClient.from('game_sessions').insert({
           user_id: currentUser.id,
+          child_id: childId,
           game_id: gameId,
           game_title: gameTitle || gameId,
           category: category || 'kognitif',
@@ -1632,22 +1613,43 @@
         });
 
         // Increment skill pillars in child_skills table
-        const pillarCol = category === 'fokus' ? 'focus_score' : 
-                          category === 'moral' ? 'moral_score' : 
-                          category === 'literasi' ? 'literacy_score' : 'logic_score';
+        var pillarCol = category === 'fokus' ? 'focus_score' : 
+                      category === 'moral' ? 'moral_score' : 
+                      category === 'literasi' ? 'literacy_score' : 'logic_score';
         
-        const { data: currentSkills } = await supabaseClient
+        var skillQuery = await supabaseClient
           .from('child_skills')
           .select('*')
-          .eq('user_id', currentUser.id)
-          .single();
+          .eq('child_id', childId)
+          .maybeSingle();
 
-        if (currentSkills) {
-          const updatedScore = Math.min(100, (currentSkills[pillarCol] || 50) + 2);
+        if (!skillQuery.data) {
+          skillQuery = await supabaseClient
+            .from('child_skills')
+            .select('*')
+            .eq('user_id', currentUser.id)
+            .maybeSingle();
+        }
+
+        if (skillQuery.data) {
+          var updatedScore = Math.min(100, (skillQuery.data[pillarCol] || 50) + 2);
           await supabaseClient
             .from('child_skills')
             .update({ [pillarCol]: updatedScore, updated_at: new Date().toISOString() })
-            .eq('user_id', currentUser.id);
+            .eq('id', skillQuery.data.id);
+        } else {
+          await supabaseClient
+            .from('child_skills')
+            .insert({
+              user_id: currentUser.id,
+              child_id: childId,
+              logic_score: pillarCol === 'logic_score' ? 52 : 50,
+              creativity_score: pillarCol === 'creativity_score' ? 52 : 50,
+              literacy_score: pillarCol === 'literacy_score' ? 52 : 50,
+              focus_score: pillarCol === 'focus_score' ? 52 : 50,
+              moral_score: pillarCol === 'moral_score' ? 52 : 50,
+              updated_at: new Date().toISOString()
+            });
         }
       } catch (e) {
         console.warn("Could not push game session telemetry to Supabase:", e);
@@ -1696,74 +1698,26 @@
             .order('created_at', { ascending: true });
 
           if (data && data.length > 0) {
-            const cacheKey = `robomind_children_${currentUser.id}`;
-            const localSaved = JSON.parse(localStorage.getItem(cacheKey) || '[]');
-            const todayStr = new Date().toISOString().split("T")[0];
-
-            userChildrenList = data.map(c => {
-              const localMatch = localSaved.find(l => l.id === c.id);
-              const lastUpdateDate = c.updated_at ? new Date(c.updated_at).toISOString().split("T")[0] : todayStr;
-              
-              let screentimeVal = c.daily_screentime_minutes || 0;
-              // Reset if last update was a previous date
-              if (lastUpdateDate !== todayStr) {
-                screentimeVal = 0;
-              } else if (localMatch) {
-                screentimeVal = Math.max(screentimeVal, localMatch.screentime_used || 0);
-              }
-
-              return {
-                id: c.id,
-                name: c.name || 'Pemain Baru',
-                age: c.age || 7,
-                avatar: c.avatar_url || 'robomind_robot_avatar.png',
-                level: c.level || 1,
-                total_xp: c.total_xp || 0,
-                coins: c.coins || 0,
-                screentime_used: Math.min(c.screentime_limit_minutes || 60, screentimeVal),
-                screentime_limit: c.screentime_limit_minutes || 60
-              };
-            });
-            localStorage.setItem(cacheKey, JSON.stringify(userChildrenList));
-          } else {
-            // New parent account with no children yet in DB
-            userChildrenList = [
-              {
-                id: 'child-' + currentUser.id.substring(0, 8),
-                name: 'Pemain Baru',
-                age: 7,
-                avatar: 'robomind_robot_avatar.png',
-                level: 1,
-                total_xp: 0,
-                coins: 0,
-                screentime_used: 0,
-                screentime_limit: 60
-              }
-            ];
+            userChildrenList = data.map(c => ({
+              id: c.id,
+              name: c.name || 'Anak',
+              age: c.age || 7,
+              avatar: c.avatar_url || 'robomind_robot_avatar.png',
+              level: c.level || 1,
+              total_xp: c.total_xp || 0,
+              coins: c.coins || 100,
+              screentime_used: c.daily_screentime_minutes || 0,
+              screentime_limit: c.screentime_limit_minutes || 60
+            }));
           }
         } catch (e) {
           console.warn("Could not load children from Supabase:", e);
         }
       } else {
-        // Guest mode or offline cache
-        const cacheKey = currentUser ? `robomind_children_${currentUser.id}` : 'robomind_children_profiles';
-        const saved = localStorage.getItem(cacheKey);
+        // Load from local storage
+        const saved = localStorage.getItem('robomind_children_profiles');
         if (saved) {
           try { userChildrenList = JSON.parse(saved); } catch (e) {}
-        } else {
-          userChildrenList = [
-            {
-              id: 'child-default',
-              name: 'Pemain Baru',
-              age: 7,
-              avatar: 'robomind_robot_avatar.png',
-              level: 1,
-              total_xp: 0,
-              coins: 0,
-              screentime_used: 0,
-              screentime_limit: 60
-            }
-          ];
         }
       }
 
@@ -1771,19 +1725,37 @@
       const activeId = localStorage.getItem('robomind_active_child_id');
       if (activeId) {
         const foundIdx = userChildrenList.findIndex(c => c.id === activeId);
-        activeChildIndex = foundIdx >= 0 ? foundIdx : 0;
-      } else {
-        activeChildIndex = 0;
+        if (foundIdx >= 0) activeChildIndex = foundIdx;
+      }
+
+      const currentActive = userChildrenList[activeChildIndex] || userChildrenList[0];
+      if (currentActive && typeof currentActive.screentime_used !== 'undefined') {
+        screenTimeUsed = Number(currentActive.screentime_used) || 0;
+        screenTimeLimit = Number(currentActive.screentime_limit) || 60;
+        localStorage.setItem('robomind_screentime_minutes', screenTimeUsed.toString());
+        localStorage.setItem('robomind_screentime_limit', screenTimeLimit.toString());
       }
 
       renderChildrenListUI();
       applyActiveChildUI();
+      if (typeof updateScreenTimeHUD === 'function') updateScreenTimeHUD();
+      if (typeof checkScreenTimeLockStatus === 'function') checkScreenTimeLockStatus();
     }
 
     function renderChildrenListUI() {
       const container = document.getElementById('childrenProfilesList');
       const countLabel = document.getElementById('childCountLabel');
-      if (countLabel) countLabel.innerText = `${userChildrenList.length} Profil Anak`;
+      if (countLabel) countLabel.innerText = userChildrenList.length + ' Profil Anak';
+
+      var switcher = container ? container.closest('.rounded-2xl') : null;
+      if (switcher) {
+        if (userChildrenList.length <= 1) {
+          switcher.style.display = 'none';
+          return;
+        } else {
+          switcher.style.display = '';
+        }
+      }
       if (!container) return;
 
       container.innerHTML = userChildrenList.map((child, idx) => {
@@ -1836,118 +1808,279 @@
       const avatarImg = document.getElementById('activeChildAvatarImg');
 
       if (nameText) nameText.innerText = child.name;
-      if (badgeText) badgeText.innerText = `Level ${child.level} • Explorer`;
+      if (badgeText) badgeText.innerText = `Level ${child.level} • Junior Explorer`;
       if (statsText) statsText.innerText = `⚡ ${child.total_xp} XP • 🪙 ${child.coins} Koin`;
       if (avatarImg) avatarImg.src = child.avatar;
-
-      // Update Parent Account Badge in Profile Tab
-      const parentEmailEl = document.getElementById('parentUserEmail');
-      const parentAvatarEl = document.getElementById('parentUserAvatar');
-      const parentSyncEl = document.getElementById('parentSyncBadge');
-      const parentAuthBtn = document.getElementById('parentAuthActionBtn');
-
-      if (currentUser) {
-        if (parentEmailEl) parentEmailEl.innerText = currentUser.email || 'Akun Google Terhubung';
-        if (parentSyncEl) {
-          parentSyncEl.innerText = 'Google Terhubung ✓';
-          parentSyncEl.className = 'text-[8px] px-1.5 py-0.2 bg-emerald-500/20 text-emerald-400 font-bold rounded border border-emerald-500/30';
-        }
-        if (parentAvatarEl) {
-          const avatarUrl = currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture;
-          if (avatarUrl) {
-            parentAvatarEl.innerHTML = `<img src="${avatarUrl}" class="w-full h-full object-cover rounded-full" />`;
-          } else {
-            parentAvatarEl.innerText = '👤';
-          }
-        }
-        if (parentAuthBtn) parentAuthBtn.innerText = 'Ganti Akun';
-      } else {
-        if (parentEmailEl) parentEmailEl.innerText = 'Mode Tamu (Belum Login)';
-        if (parentSyncEl) {
-          parentSyncEl.innerText = 'Belum Terhubung';
-          parentSyncEl.className = 'text-[8px] px-1.5 py-0.2 bg-amber-500/20 text-amber-400 font-bold rounded border border-amber-500/30';
-        }
-        if (parentAvatarEl) parentAvatarEl.innerText = '👤';
-        if (parentAuthBtn) parentAuthBtn.innerText = 'Login Google';
+      const tokenText = document.getElementById('activeChildTokenText');
+      if (tokenText) {
+        const rawCode = child.access_code || localStorage.getItem('robomind_active_access_code') || '12345678';
+        const formatted = rawCode.length === 8 ? `${rawCode.slice(0, 4)} - ${rawCode.slice(4)}` : rawCode;
+        tokenText.innerText = `Kode Akses: ${formatted}`;
       }
 
       // Update Screen Time HUD
       updateScreenTimeHUD();
     }
 
-    async function handleAddNewChild(e) {
-      e.preventDefault();
-      const name = document.getElementById('newChildNameInput').value.trim();
-      const age = parseInt(document.getElementById('newChildAgeInput').value) || 7;
-      const avatarRadios = document.getElementsByName('childAvatar');
-      let selectedAvatar = 'robomind_robot_avatar.png';
-      for (const r of avatarRadios) {
-        if (r.checked) { selectedAvatar = r.value; break; }
-      }
-
-      if (!name) return;
-
-      const newChildObj = {
-        id: 'child-' + Date.now(),
-        name: name,
-        age: age,
-        avatar: selectedAvatar,
-        level: 1,
-        total_xp: 0,
-        coins: 0,
-        screentime_used: 0,
-        screentime_limit: 60
-      };
-
-      // Push to Supabase if logged in
-      if (supabaseClient && currentUser) {
-        try {
-          const { data, error } = await supabaseClient
-            .from('children')
-            .insert({
-              parent_id: currentUser.id,
-              name: name,
-              level: 1,
-              total_xp: 0,
-              coins: 0,
-              daily_screentime_minutes: 0,
-              screentime_limit_minutes: 60
-            })
-            .select()
-            .single();
-
-          if (data) {
-            newChildObj.id = data.id;
-          }
-        } catch (err) {
-          console.warn("Supabase child insertion:", err);
-        }
-      }
-
-      userChildrenList.push(newChildObj);
-      const cacheKey = currentUser ? `robomind_children_${currentUser.id}` : 'robomind_children_profiles';
-      localStorage.setItem(cacheKey, JSON.stringify(userChildrenList));
-      activeChildIndex = userChildrenList.length - 1;
-      localStorage.setItem('robomind_active_child_id', newChildObj.id);
-
-      closeModal('addChildModal');
-      document.getElementById('newChildNameInput').value = '';
-      renderChildrenListUI();
-      applyActiveChildUI();
-      showToast(`🎉 Profil baru "${name}" berhasil dibuat!`);
-    }
 
     async function logoutUser() {
       if (supabaseClient) {
         try { await supabaseClient.auth.signOut(); } catch (e) {}
       }
-      // Clean local storage cache for old user
       localStorage.removeItem('robomind_guest_mode');
-      localStorage.removeItem('robomind_active_child_id');
-      localStorage.removeItem('robomind_children_profiles');
       showToast('👋 Anda telah keluar dari akun');
-      setTimeout(() => window.location.reload(), 600);
+      setTimeout(() => window.location.reload(), 800);
     }
+
+    
+    
+    // === 100% ROBUST GLOBAL ACCESS CODE SYSTEM ===
+    window.submitAccessCode = async function() {
+      const input = document.getElementById('accessCodeSingleInput');
+      const rawCode = input ? input.value.replace(/[^0-9A-Za-z]/g, '').toUpperCase() : '';
+
+      const errEl = document.getElementById('accessCodeErrorMsg');
+      if (errEl) errEl.classList.add('hidden');
+
+      if (rawCode.length !== 8) {
+        if (errEl) {
+          errEl.innerText = '⚠️ Masukkan 8-digit kode akses secara lengkap!';
+          errEl.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (typeof showToast === 'function') showToast('🔍 Memverifikasi kode akses...');
+
+      let matchedChild = null;
+      let dbError = false;
+
+      console.log('[AccessCode] Verifying:', rawCode);
+
+      try {
+        const ctrl = new AbortController();
+        const timeoutId = setTimeout(function() { ctrl.abort(); }, 8000);
+
+        const res = await fetch(
+          'https://rmbqodiutuyckuylhlgb.supabase.co/rest/v1/children' +
+            '?select=id,name,age,avatar_url,level,total_xp,coins,daily_screentime_minutes,screentime_limit_minutes' +
+            '&or=(access_token.eq.' + rawCode + ',access_code.eq.' + rawCode + ')',
+          {
+            headers: {
+              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnFvZGl1dHV5Y2t1eWxobGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTEzOTYsImV4cCI6MjA5Nzk2NzM5Nn0.V3o83hhZd5XBYcNoD-cKGTJGJ71mXVzady0XV35K0dU',
+              'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnFvZGl1dHV5Y2t1eWxobGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTEzOTYsImV4cCI6MjA5Nzk2NzM5Nn0.V3o83hhZd5XBYcNoD-cKGTJGJ71mXVzady0XV35K0dU'
+            },
+            signal: ctrl.signal
+          }
+        );
+        clearTimeout(timeoutId);
+
+        if (!res.ok) {
+          console.error('[AccessCode] HTTP error:', res.status);
+          dbError = true;
+        } else {
+          const rows = await res.json();
+          console.log('[AccessCode] DB rows:', rows.length);
+
+          if (rows.length === 1) {
+            const d = rows[0];
+            matchedChild = {
+              id: d.id,
+              name: d.name || 'Anak',
+              age: d.age || 7,
+              avatar: d.avatar_url || 'robomind_robot_avatar.png',
+              level: d.level || 1,
+              total_xp: d.total_xp || 0,
+              coins: d.coins || 100,
+              access_code: rawCode,
+              screentime_used: d.daily_screentime_minutes || 0,
+              screentime_limit: d.screentime_limit_minutes || 60
+            };
+          }
+        }
+      } catch (e) {
+        console.error('[AccessCode] Fetch failed:', e.message || e);
+        dbError = true;
+      }
+
+      if (!matchedChild) {
+        if (typeof userChildrenList !== 'undefined') {
+          var found = userChildrenList.find(function(c) {
+            return (c.access_code || '').replace(/[^0-9A-Za-z]/g, '').toUpperCase() === rawCode;
+          });
+          if (found) matchedChild = found;
+        }
+        if (!matchedChild && rawCode === '12345678') {
+          matchedChild = {
+            id: 'demo-child-1',
+            name: 'Aira (Demo)',
+            age: 8,
+            avatar: 'robomind_robot_avatar.png',
+            level: 12,
+            total_xp: 2450,
+            coins: 1250,
+            access_code: '12345678',
+            screentime_used: 15,
+            screentime_limit: 60
+          };
+        }
+      }
+
+      if (matchedChild) {
+        console.log('[AccessCode] Login OK:', matchedChild.name);
+        localStorage.setItem('robomind_active_access_code', rawCode);
+        userChildrenList = [matchedChild];
+        activeChildIndex = 0;
+        currentUser = { id: matchedChild.parent_id || matchedChild.id, email: matchedChild.name + '@robomind.local' };
+        localStorage.setItem('robomind_children_profiles', JSON.stringify(userChildrenList));
+        localStorage.setItem('robomind_active_child_id', matchedChild.id);
+
+        if (typeof matchedChild.screentime_used !== 'undefined') {
+          screenTimeUsed = Number(matchedChild.screentime_used) || 0;
+          screenTimeLimit = Number(matchedChild.screentime_limit) || 60;
+          localStorage.setItem('robomind_screentime_minutes', screenTimeUsed.toString());
+          localStorage.setItem('robomind_screentime_limit', screenTimeLimit.toString());
+        }
+
+        var modal = document.getElementById('accessCodeModal');
+        if (modal) modal.classList.add('hidden');
+
+        if (typeof applyActiveChildUI === 'function') applyActiveChildUI();
+        if (typeof renderChildrenListUI === 'function') renderChildrenListUI();
+        if (typeof updateScreenTimeHUD === 'function') updateScreenTimeHUD();
+        if (typeof checkScreenTimeLockStatus === 'function') checkScreenTimeLockStatus();
+        if (typeof SoundFX !== 'undefined' && SoundFX.playSuccess) SoundFX.playSuccess();
+        if (typeof showToast === 'function') showToast('🎉 Kode Akses Valid! Selamat datang, ' + matchedChild.name + '!');
+      } else {
+        console.log('[AccessCode] Failed. dbError:', dbError);
+        if (errEl) {
+          errEl.innerText = dbError
+            ? '⚠️ Gagal memverifikasi ke server database. Periksa koneksi internet lalu coba lagi.'
+            : '❌ Kode Akses tidak ditemukan! Minta kode 8-digit dari Web Pemantauan Orang Tua.';
+          errEl.classList.remove('hidden');
+        }
+        if (typeof SoundFX !== 'undefined' && SoundFX.playPop) SoundFX.playPop();
+      }
+    };
+
+    window.fetchChildProfileFromSupabase = async function(code) {
+      if (!code) return;
+      try {
+        const res = await fetch(
+          'https://rmbqodiutuyckuylhlgb.supabase.co/rest/v1/children' +
+            '?select=id,name,age,avatar_url,level,total_xp,coins,daily_screentime_minutes,screentime_limit_minutes' +
+            '&or=(access_token.eq.' + code + ',access_code.eq.' + code + ')',
+          {
+            headers: {
+              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnFvZGl1dHV5Y2t1eWxobGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTEzOTYsImV4cCI6MjA5Nzk2NzM5Nn0.V3o83hhZd5XBYcNoD-cKGTJGJ71mXVzady0XV35K0dU',
+              'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtYnFvZGl1dHV5Y2t1eWxobGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzOTEzOTYsImV4cCI6MjA5Nzk2NzM5Nn0.V3o83hhZd5XBYcNoD-cKGTJGJ71mXVzady0XV35K0dU'
+            }
+          }
+        );
+        if (res.ok) {
+          const rows = await res.json();
+          if (rows.length === 1) {
+            const d = rows[0];
+            screenTimeUsed = Number(d.daily_screentime_minutes) || 0;
+            screenTimeLimit = Number(d.screentime_limit_minutes) || 60;
+            localStorage.setItem('robomind_screentime_minutes', screenTimeUsed.toString());
+            localStorage.setItem('robomind_screentime_limit', screenTimeLimit.toString());
+            
+            const matchedChild = {
+              id: d.id,
+              name: d.name || 'Anak',
+              age: d.age || 7,
+              avatar: d.avatar_url || 'robomind_robot_avatar.png',
+              level: d.level || 1,
+              total_xp: d.total_xp || 0,
+              coins: d.coins || 100,
+              access_code: code,
+              screentime_used: screenTimeUsed,
+              screentime_limit: screenTimeLimit
+            };
+            userChildrenList = [matchedChild];
+            activeChildIndex = 0;
+            if (typeof applyActiveChildUI === 'function') applyActiveChildUI();
+            if (typeof updateScreenTimeHUD === 'function') updateScreenTimeHUD();
+            if (typeof checkScreenTimeLockStatus === 'function') checkScreenTimeLockStatus();
+          }
+        }
+      } catch (e) {
+        console.warn('Auto fetch child profile failed:', e);
+      }
+    };
+
+    window.fillDemoCode = function(code) {
+      const input = document.getElementById('accessCodeSingleInput');
+      if (input) {
+        input.value = `${code.slice(0, 4)} - ${code.slice(4)}`;
+      }
+      window.submitAccessCode();
+    };
+
+    window.setupSingleAccessInput = function() {
+      const input = document.getElementById('accessCodeSingleInput');
+      const btnSubmit = document.getElementById('btnSubmitAccessCode');
+      const btnDemo = document.getElementById('btnFillDemoCode');
+
+      if (btnSubmit) btnSubmit.onclick = function() { window.submitAccessCode(); };
+      if (btnDemo) btnDemo.onclick = function() { window.fillDemoCode('12345678'); };
+
+      if (!input) return;
+
+      input.addEventListener('input', (e) => {
+        let raw = e.target.value.replace(/[^0-9A-Za-z]/g, '').toUpperCase();
+        if (raw.length > 8) raw = raw.slice(0, 8);
+
+        if (raw.length > 4) {
+          e.target.value = `${raw.slice(0, 4)} - ${raw.slice(4)}`;
+        } else {
+          e.target.value = raw;
+        }
+
+        if (raw.length === 8) {
+          window.submitAccessCode();
+        }
+      });
+
+      input.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+        let raw = pastedText.replace(/[^0-9A-Za-z]/g, '').toUpperCase();
+        if (raw.length > 8) raw = raw.slice(0, 8);
+
+        if (raw.length > 4) {
+          input.value = `${raw.slice(0, 4)} - ${raw.slice(4)}`;
+        } else {
+          input.value = raw;
+        }
+
+        if (raw.length === 8) {
+          window.submitAccessCode();
+        }
+      });
+    };
+
+    window.checkChildAccessCodeOnLaunch = function() {
+      window.setupSingleAccessInput();
+      const activeCode = localStorage.getItem('robomind_active_access_code');
+      const modal = document.getElementById('accessCodeModal');
+      if (!activeCode) {
+        if (modal) modal.classList.remove('hidden');
+      } else {
+        if (modal) modal.classList.add('hidden');
+        // Auto verify active code on launch to sync screentime & profile from Supabase
+        if (typeof fetchChildProfileFromSupabase === 'function') {
+          fetchChildProfileFromSupabase(activeCode);
+        }
+      }
+    };
+
+
+    function checkUserAuth() {
+      window.checkChildAccessCodeOnLaunch();
+    }
+
 
     document.addEventListener('DOMContentLoaded', () => {
       updateCounters();
@@ -1955,6 +2088,8 @@
       loadChildrenProfiles();
       updateScreenTimeHUD();
       renderFeaturedGame();
+      initVideoLazyLoader();
+      checkChildAccessCodeOnLaunch();
       try {
         const hash = window.location.hash.replace('#', '');
         const urlParams = new URLSearchParams(window.location.search);
@@ -1965,5 +2100,66 @@
       } catch (e) {}
     });
   </script>
+
+  <!-- ========================================================================= -->
+  <!-- PREMIUM CLEAN CARD POP-UP: 8-DIGIT ACCESS CODE (APPLE/FINTECH SLEEK UI)   -->
+  <!-- ========================================================================= -->
+  <div id="accessCodeModal" class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
+    <!-- Clean Card Container -->
+    <div class="relative w-full max-w-sm sm:max-w-md bg-[#0b132b] border border-slate-700/80 rounded-3xl p-7 shadow-2xl text-center flex flex-col items-center gap-5">
+      
+      <!-- Minimalist Icon Badge -->
+      <div class="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+        <span class="material-symbols-outlined text-3xl">key</span>
+      </div>
+
+      <!-- Header Typography -->
+      <div>
+        <h3 class="text-xl sm:text-2xl font-bold text-white tracking-tight font-sans">Kode Akses Game</h3>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1 font-normal">
+          Tempel atau masukkan 8-digit kode dari Web Pemantauan
+        </p>
+      </div>
+
+      <!-- Single Sleek Input Box (Supports Full Paste / Ctrl+V) -->
+      <div class="w-full relative my-1">
+        <input 
+          type="text" 
+          id="accessCodeSingleInput"
+          placeholder="XXXX - XXXX" 
+          maxlength="11"
+          autocomplete="off"
+          autofocus
+          class="w-full py-3.5 px-4 bg-[#050a14] border border-slate-700 focus:border-cyan-400 rounded-2xl text-center text-2xl font-mono font-bold text-cyan-400 tracking-widest outline-none transition-all placeholder:text-slate-600 placeholder:font-normal placeholder:tracking-normal"
+        />
+        <div class="text-[10px] text-slate-500 mt-1.5 flex items-center justify-center gap-1">
+          <span class="material-symbols-outlined text-xs">content_paste</span>
+          <span>Mendukung Paste / Salin Kode (Ctrl+V)</span>
+        </div>
+      </div>
+
+      <div id="accessCodeErrorMsg" class="hidden text-xs font-semibold text-rose-400 bg-rose-500/10 border border-rose-500/30 px-3.5 py-2 rounded-xl w-full text-center"></div>
+
+      <!-- Action Buttons -->
+      <div class="w-full space-y-2 pt-1">
+        <button 
+          id="btnSubmitAccessCode" 
+          class="w-full py-3.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-2xl text-sm transition-all active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-cyan-500/20"
+        >
+          <span>Masuk ke Aplikasi</span>
+          <span class="material-symbols-outlined text-base">arrow_forward</span>
+        </button>
+
+        <button 
+          id="btnFillDemoCode" 
+          class="w-full py-2.5 text-xs text-slate-400 hover:text-cyan-300 font-medium transition-colors cursor-pointer"
+        >
+          Gunakan Kode Demo (1234 - 5678)
+        </button>
+      </div>
+
+    </div>
+  </div>
+
 </body>
 </html>
