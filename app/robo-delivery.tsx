@@ -12,11 +12,10 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { WebView } from "react-native-webview";
 import { HowToPlayModal } from "../components/HowToPlayModal";
 import { COLORS, FONTS } from "../constants/Theme";
-
-const STORAGE_KEY_LEVEL = "robo_delivery_current_level";
-const STORAGE_KEY_COINS = "user_coins_balance";
+import { saveGameSession } from "../lib/gameProgressService";
 
 export default function RoboDeliveryScreen() {
   const router = useRouter();
@@ -25,6 +24,9 @@ export default function RoboDeliveryScreen() {
   const [showHelp, setShowHelp] = useState(true);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  const STORAGE_KEY_COINS = "robomind_user_coins";
+  const STORAGE_KEY_LEVEL = "robomind_delivery_unlocked_level";
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;
@@ -38,12 +40,14 @@ export default function RoboDeliveryScreen() {
 
   useEffect(() => {
     const handler = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener("fullscreenchange", handler);
-    return () => document.removeEventListener("fullscreenchange", handler);
+    if (typeof document !== "undefined") {
+      document.addEventListener('fullscreenchange', handler);
+      return () => document.removeEventListener('fullscreenchange', handler);
+    }
   }, []);
 
   useEffect(() => {
-    const timeout = setTimeout(() => setLoading(false), 2500);
+    const timeout = setTimeout(() => setLoading(false), 3000);
     return () => clearTimeout(timeout);
   }, []);
 
@@ -69,7 +73,7 @@ export default function RoboDeliveryScreen() {
       }
     };
 
-    if (Platform.OS === "web") {
+    if (Platform.OS === "web" && typeof window !== "undefined") {
       window.addEventListener("message", handleMessage);
       return () => window.removeEventListener("message", handleMessage);
     }
@@ -86,18 +90,30 @@ export default function RoboDeliveryScreen() {
           <Text style={styles.headerTitle}>Robo Delivery</Text>
           <View style={{ width: 40 }} />
         </View>
-        <View style={styles.mobileNotice}>
-          <Ionicons name="cube-outline" size={64} color="#0284c7" />
-          <Text style={styles.mobileTitle}>Robo Delivery</Text>
-          <Text style={styles.mobileDesc}>
-            Game Robo Delivery adalah game petualangan map isometrik 3D.
-            Mainkan di versi web browser untuk pengalaman terbaik!
-          </Text>
-          <Pressable style={styles.playBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={20} color="#fff" />
-            <Text style={styles.playBtnText}>KEMBALI</Text>
-          </Pressable>
-        </View>
+        <WebView
+          source={{ uri: "file:///android_asset/robo-delivery/index.html" }}
+          style={styles.webview}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          originWhitelist={["*"]}
+          allowFileAccessFromFileURLs={true}
+          allowUniversalAccessFromFileURLs={true}
+          onMessage={async (e) => {
+            try {
+              const data = typeof e.nativeEvent.data === "string" ? JSON.parse(e.nativeEvent.data) : e.nativeEvent.data;
+              if (data && data.type === "LEVEL_COMPLETE") {
+                const coinsReward = data.coins || 350;
+                const currentCoinsStr = await AsyncStorage.getItem(STORAGE_KEY_COINS);
+                const currentCoins = currentCoinsStr ? parseInt(currentCoinsStr, 10) : 1250;
+                const newCoins = currentCoins + coinsReward;
+                await AsyncStorage.setItem(STORAGE_KEY_COINS, newCoins.toString());
+                if (data.level) {
+                  await AsyncStorage.setItem(STORAGE_KEY_LEVEL, (data.level + 1).toString());
+                }
+              }
+            } catch (err) {}
+          }}
+        />
       </SafeAreaView>
     );
   }
@@ -314,5 +330,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "800",
     fontSize: 14,
+  },
+  webview: {
+    flex: 1,
+    backgroundColor: "#000",
   },
 });

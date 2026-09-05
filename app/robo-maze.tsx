@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { WebView } from "react-native-webview";
 import { HowToPlayModal } from "../components/HowToPlayModal";
 import { saveGameSession } from "../lib/gameProgressService";
 
@@ -34,8 +35,10 @@ export default function RoboMazeScreen() {
 
   useEffect(() => {
     const handler = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener('fullscreenchange', handler);
-    return () => document.removeEventListener('fullscreenchange', handler);
+    if (typeof document !== "undefined") {
+      document.addEventListener('fullscreenchange', handler);
+      return () => document.removeEventListener('fullscreenchange', handler);
+    }
   }, []);
 
   useEffect(() => {
@@ -75,17 +78,31 @@ export default function RoboMazeScreen() {
           <Text style={styles.headerTitle}>Robo Maze</Text>
           <View style={{ width: 40 }} />
         </View>
-        <View style={styles.mobileNotice}>
-          <Ionicons name="grid" size={64} color="#38bdf8" />
-          <Text style={styles.mobileTitle}>Robo Maze</Text>
-          <Text style={styles.mobileDesc}>
-            Game ini hanya bisa dimainkan di versi web browser.
-          </Text>
-          <Pressable style={styles.playBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={20} color="#fff" />
-            <Text style={styles.playBtnText}>KEMBALI</Text>
-          </Pressable>
-        </View>
+        <WebView
+          source={{ uri: "file:///android_asset/robo-maze/index.html" }}
+          style={styles.webview}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          originWhitelist={["*"]}
+          allowFileAccessFromFileURLs={true}
+          allowUniversalAccessFromFileURLs={true}
+          onMessage={(e) => {
+            try {
+              const data = typeof e.nativeEvent.data === "string" ? JSON.parse(e.nativeEvent.data) : e.nativeEvent.data;
+              if (data && (data.type === "GAME_OVER" || data.type === "GAME_COMPLETE" || data.type === "LEVEL_COMPLETE" || data.type === "GAME_RESULT")) {
+                saveGameSession({
+                  gameId: "robo-maze",
+                  level: data.level || 1,
+                  score: data.score || 100,
+                  xpEarned: data.xp || 120,
+                  coinsEarned: data.coins || 50,
+                  completed: data.completed !== false,
+                  durationSeconds: data.duration || 60,
+                });
+              }
+            } catch (err) {}
+          }}
+        />
       </SafeAreaView>
     );
   }
@@ -299,5 +316,9 @@ const styles = StyleSheet.create({
     elevation: 10,
     borderWidth: 1,
     borderColor: "rgba(56, 189, 248, 0.4)",
+  },
+  webview: {
+    flex: 1,
+    backgroundColor: "#000",
   },
 });

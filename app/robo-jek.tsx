@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { WebView } from "react-native-webview";
 import { COLORS, FONTS } from "../constants/Theme";
 import { HowToPlayModal } from "../components/HowToPlayModal";
 import { saveGameSession } from "../lib/gameProgressService";
@@ -36,8 +37,10 @@ export default function RoboJekScreen() {
 
   useEffect(() => {
     const handler = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener('fullscreenchange', handler);
-    return () => document.removeEventListener('fullscreenchange', handler);
+    if (typeof document !== "undefined") {
+      document.addEventListener('fullscreenchange', handler);
+      return () => document.removeEventListener('fullscreenchange', handler);
+    }
   }, []);
 
   useEffect(() => {
@@ -77,18 +80,31 @@ export default function RoboJekScreen() {
           <Text style={styles.headerTitle}>Robo-Jek</Text>
           <View style={{ width: 40 }} />
         </View>
-        <View style={styles.mobileNotice}>
-          <Ionicons name="game-controller" size={64} color="#38bdf8" />
-          <Text style={styles.mobileTitle}>Robo-Jek</Text>
-          <Text style={styles.mobileDesc}>
-            Game Robo-Jek adalah game berbasis web (HTML5 Canvas).
-            Mainkan di versi web browser untuk pengalaman terbaik.
-          </Text>
-          <Pressable style={styles.playBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={20} color="#fff" />
-            <Text style={styles.playBtnText}>KEMBALI</Text>
-          </Pressable>
-        </View>
+        <WebView
+          source={{ uri: "file:///android_asset/robo-jek/index.html" }}
+          style={styles.webview}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          originWhitelist={["*"]}
+          allowFileAccessFromFileURLs={true}
+          allowUniversalAccessFromFileURLs={true}
+          onMessage={(e) => {
+            try {
+              const data = typeof e.nativeEvent.data === "string" ? JSON.parse(e.nativeEvent.data) : e.nativeEvent.data;
+              if (data && (data.type === "GAME_OVER" || data.type === "GAME_COMPLETE" || data.type === "LEVEL_COMPLETE" || data.type === "GAME_RESULT")) {
+                saveGameSession({
+                  gameId: "robo-jek",
+                  level: data.level || 1,
+                  score: data.score || 100,
+                  xpEarned: data.xp || 100,
+                  coinsEarned: data.coins || 40,
+                  completed: data.completed !== false,
+                  durationSeconds: data.duration || 60,
+                });
+              }
+            } catch (err) {}
+          }}
+        />
       </SafeAreaView>
     );
   }
@@ -304,5 +320,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "800",
     fontSize: 14,
+  },
+  webview: {
+    flex: 1,
+    backgroundColor: "#000",
   },
 });

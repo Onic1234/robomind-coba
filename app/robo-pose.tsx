@@ -10,15 +10,18 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { WebView } from "react-native-webview";
 import { useRouter } from "expo-router";
+import { HowToPlayModal } from "../components/HowToPlayModal";
 import { saveGameSession } from "../lib/gameProgressService";
 
 export default function RoboPoseScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const iframeRef = useRef<any>(null);
-  const containerRef = useRef<any>(null);
+  const [showHelp, setShowHelp] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;
@@ -32,21 +35,27 @@ export default function RoboPoseScreen() {
 
   useEffect(() => {
     const handler = () => setIsFullscreen(!!document.fullscreenElement);
-    document.addEventListener('fullscreenchange', handler);
-    return () => document.removeEventListener('fullscreenchange', handler);
+    if (typeof document !== "undefined") {
+      document.addEventListener('fullscreenchange', handler);
+      return () => document.removeEventListener('fullscreenchange', handler);
+    }
   }, []);
 
-  
+  useEffect(() => {
+    const timeout = setTimeout(() => setLoading(false), 3000);
+    return () => clearTimeout(timeout);
+  }, []);
+
   useEffect(() => {
     const messageHandler = (e: MessageEvent) => {
       if (e.data && (e.data.type === "GAME_OVER" || e.data.type === "GAME_COMPLETE" || e.data.type === "LEVEL_COMPLETE" || e.data.type === "GAME_RESULT")) {
         saveGameSession({
           gameId: "robo-pose",
-          level: e.data.level || 1,
-          score: e.data.score || 100,
-          xpEarned: e.data.xp || 80,
-          coinsEarned: e.data.coins || 25,
-          completed: e.data.completed !== false,
+          level: 1,
+          score: 100,
+          xpEarned: 80,
+          coinsEarned: 30,
+          completed: true,
           durationSeconds: e.data.duration || 60,
         });
       }
@@ -68,17 +77,31 @@ export default function RoboPoseScreen() {
           <Text style={styles.headerTitle}>Robo Pose</Text>
           <View style={{ width: 40 }} />
         </View>
-        <View style={styles.mobileNotice}>
-          <Ionicons name="hand-left" size={64} color="#a78bfa" />
-          <Text style={styles.mobileTitle}>Robo Pose</Text>
-          <Text style={styles.mobileDesc}>
-            Game ini hanya bisa dimainkan di versi web browser.
-          </Text>
-          <Pressable style={styles.playBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={20} color="#fff" />
-            <Text style={styles.playBtnText}>KEMBALI</Text>
-          </Pressable>
-        </View>
+        <WebView
+          source={{ uri: "file:///android_asset/robo-pose/index.html" }}
+          style={styles.webview}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          originWhitelist={["*"]}
+          allowFileAccessFromFileURLs={true}
+          allowUniversalAccessFromFileURLs={true}
+          onMessage={(e) => {
+            try {
+              const data = typeof e.nativeEvent.data === "string" ? JSON.parse(e.nativeEvent.data) : e.nativeEvent.data;
+              if (data && (data.type === "GAME_OVER" || data.type === "GAME_COMPLETE" || data.type === "LEVEL_COMPLETE" || data.type === "GAME_RESULT")) {
+                saveGameSession({
+                  gameId: "robo-pose",
+                  level: 1,
+                  score: 100,
+                  xpEarned: 80,
+                  coinsEarned: 30,
+                  completed: true,
+                  durationSeconds: data.duration || 60,
+                });
+              }
+            } catch (err) {}
+          }}
+        />
       </SafeAreaView>
     );
   }
@@ -171,4 +194,5 @@ const styles = StyleSheet.create({
     borderRadius: 50, marginTop: 8,
   },
   playBtnText: { color: "#fff", fontWeight: "800", fontSize: 14 },
+  webview: { flex: 1, backgroundColor: "#000" },
 });
