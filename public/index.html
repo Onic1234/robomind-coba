@@ -1119,7 +1119,24 @@
     }
 
     
-    // === SMART PERFORMANCE: VIDEO LAZY LOADER & AUTO-PAUSER ===
+    // === SMART PERFORMANCE: INSTANT HTML5 VIDEO PREVIEW LOADER ===
+    function checkAndPlayVisibleVideos() {
+      const videos = document.querySelectorAll('video');
+      videos.forEach(v => {
+        if (v.offsetParent === null) {
+          v.pause();
+          return;
+        }
+        const rect = v.getBoundingClientRect();
+        const isVisible = rect.top < window.innerHeight + 100 && rect.bottom > -100;
+        if (isVisible) {
+          v.play().catch(() => {});
+        } else {
+          v.pause();
+        }
+      });
+    }
+
     let videoObserver = null;
     function initVideoLazyLoader() {
       const videos = document.querySelectorAll('video');
@@ -1127,19 +1144,20 @@
         videoObserver = new IntersectionObserver((entries) => {
           entries.forEach(entry => {
             const v = entry.target;
-            if (entry.isIntersecting && AppState.activeTab === 'play') {
+            if (entry.isIntersecting && v.offsetParent !== null) {
               v.play().catch(() => {});
             } else {
               v.pause();
             }
           });
-        }, { threshold: 0.15 });
+        }, { threshold: 0.05 });
 
         videos.forEach(v => {
-          v.pause();
           videoObserver.observe(v);
         });
       }
+      setTimeout(checkAndPlayVisibleVideos, 200);
+      setTimeout(checkAndPlayVisibleVideos, 600);
     }
 
     function switchTab(tabId) {
@@ -1160,14 +1178,8 @@
       if (tabId !== 'play') {
         document.querySelectorAll('video').forEach(v => v.pause());
       } else {
-        setTimeout(() => {
-          document.querySelectorAll('video').forEach(v => {
-            const rect = v.getBoundingClientRect();
-            if (rect.top < window.innerHeight && rect.bottom > 0) {
-              v.play().catch(() => {});
-            }
-          });
-        }, 150);
+        setTimeout(checkAndPlayVisibleVideos, 100);
+        setTimeout(checkAndPlayVisibleVideos, 300);
       }
     }
 
