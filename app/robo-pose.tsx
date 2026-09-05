@@ -128,14 +128,12 @@ export default function RoboPoseScreen() {
         allowFullScreen
       />
 
-      <Pressable onPress={() => router.back()} style={styles.floatingExit}>
-        <Ionicons name="exit-outline" size={20} color="#fff" />
-        <Text style={styles.floatingExitText}>EXIT</Text>
+      <Pressable onPress={() => router.back()} style={styles.floatingExit} title="Keluar Game">
+        <Ionicons name="arrow-back" size={20} color="#fff" />
       </Pressable>
 
-      <Pressable onPress={toggleFullscreen} style={styles.floatingFs}>
-        <Ionicons name={isFullscreen ? "contract" : "expand"} size={20} color="#fff" />
-        <Text style={styles.floatingFsText}>{isFullscreen ? "WINDOW" : "FULL"}</Text>
+      <Pressable onPress={toggleFullscreen} style={styles.floatingFs} title="Fullscreen">
+        <Ionicons name={isFullscreen ? "contract" : "expand"} size={18} color="#a78bfa" />
       </Pressable>
     </View>
   );
@@ -158,24 +156,27 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: "rgba(167, 139, 250, 0.3)",
   },
   floatingExit: {
-    position: "absolute", top: 12, left: 12,
-    flexDirection: "row", alignItems: "center", gap: 5,
-    backgroundColor: "#ef4444", paddingVertical: 6, paddingHorizontal: 12,
-    borderRadius: 20, zIndex: 9999, elevation: 10,
-    shadowColor: "#ef4444", shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4, shadowRadius: 4,
-    borderWidth: 1, borderColor: "rgba(255, 255, 255, 0.2)",
-  },
-  floatingExitText: { color: "#fff", fontSize: 12, fontWeight: "900", letterSpacing: 0.5 },
-  floatingFs: {
-    position: "absolute", top: 12, right: 12,
-    flexDirection: "row", alignItems: "center", gap: 5,
-    backgroundColor: "rgba(15, 23, 42, 0.85)",
-    paddingVertical: 6, paddingHorizontal: 10, borderRadius: 20,
+    position: "absolute", top: 8, left: 8,
+    width: 34, height: 34, borderRadius: 17,
+    alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(15, 23, 42, 0.8)",
     zIndex: 9999, elevation: 10,
-    borderWidth: 1, borderColor: "rgba(167, 139, 250, 0.4)",
+    borderWidth: 1.5, borderColor: "rgba(248, 113, 113, 0.6)",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4, shadowRadius: 4,
   },
-  floatingFsText: { color: "#a78bfa", fontSize: 11, fontWeight: "800", letterSpacing: 0.5 },
+  floatingExitText: { display: "none" },
+  floatingFs: {
+    position: "absolute", top: 8, right: 8,
+    width: 34, height: 34, borderRadius: 17,
+    alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(15, 23, 42, 0.8)",
+    zIndex: 9999, elevation: 10,
+    borderWidth: 1.5, borderColor: "rgba(167, 139, 250, 0.5)",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.4, shadowRadius: 4,
+  },
+  floatingFsText: { display: "none" },
   iframe: {
     position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
     borderWidth: 0, backgroundColor: "#1e1b4b",
