@@ -57,7 +57,6 @@ export default function RootLayout() {
         <Stack.Screen name="pose-master" options={{ headerShown: false }} />
         <Stack.Screen name="screw-spin" options={{ headerShown: false }} />
         <Stack.Screen name="robo-delivery" options={{ headerShown: false }} />
-        <Stack.Screen name="web-portal" options={{ headerShown: false }} />
         <Stack.Screen name="game-dashboard" options={{ headerShown: false }} />
       </Stack>
       <ChatbotButton />
