@@ -126,7 +126,7 @@ source={{ uri: "file:///android_asset/robo-maze/index.html" }}
 
       <iframe
         ref={iframeRef}
-        src="/robo-maze/index.html"
+        src="/web-games/robo-maze/index.html"
         style={styles.iframe}
         onLoad={() => {
           setLoading(false);

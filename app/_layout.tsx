@@ -26,29 +26,22 @@ async function setStorageItem(key: string, value: string): Promise<void> {
 
 export default function RootLayout() {
   const [showIntro, setShowIntro] = useState(false);
-  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    autoResetIfNeeded().then(() => {
-      return getStorageItem("robomind_intro_completed");
-    }).then((val) => {
-      if (!val) {
-        setShowIntro(true);
-      }
-      setIsReady(true);
-    }).catch(() => {
-      setIsReady(true);
-    });
+    autoResetIfNeeded()
+      .then(() => getStorageItem("robomind_intro_completed"))
+      .then((val) => {
+        if (!val) {
+          setShowIntro(true);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleFinishIntro = async () => {
     await setStorageItem("robomind_intro_completed", "true");
     setShowIntro(false);
   };
-
-  if (!isReady) {
-    return null;
-  }
 
   if (showIntro) {
     return <AppIntroFlow onFinish={handleFinishIntro} />;

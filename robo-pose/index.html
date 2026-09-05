@@ -280,9 +280,7 @@
                     <button onclick="pauseGame()" class="p-2.5 bg-indigo-900/80 hover:bg-indigo-800 text-white rounded-2xl border border-indigo-400/40 backdrop-blur-md transition-all shadow-md">
                         <i class="fas fa-pause text-xs"></i>
                     </button>
-                    <button onclick="confirmExitGame()" class="p-2.5 bg-rose-900/80 hover:bg-rose-800 text-rose-200 rounded-2xl border border-rose-400/40 backdrop-blur-md transition-all shadow-md">
-                        <i class="fas fa-xmark text-xs"></i>
-                    </button>
+
                 </div>
             </div>
 
@@ -1230,14 +1228,42 @@
 
         function pauseGame() {
             if (!isGameRunning) return;
-            isPaused = !isPaused;
-            if (!isPaused) {
-                scheduleNextTileSpawn();
-            }
+            isPaused = true;
+            const pauseMdl = document.getElementById('pauseModal');
+            if (pauseMdl) pauseMdl.classList.remove('hidden');
+        }
+
+        function resumeGame() {
+            isPaused = false;
+            const pauseMdl = document.getElementById('pauseModal');
+            if (pauseMdl) pauseMdl.classList.add('hidden');
+            scheduleNextTileSpawn();
+        }
+
+        function restartLevelFromPause() {
+            isPaused = false;
+            const pauseMdl = document.getElementById('pauseModal');
+            if (pauseMdl) pauseMdl.classList.add('hidden');
+            startGame();
         }
 
         function confirmExitGame() {
-            returnToStartMenu();
+            isGameRunning = false;
+            isPaused = false;
+            if (spawnTimeout) clearTimeout(spawnTimeout);
+
+            const pauseMdl = document.getElementById('pauseModal');
+            if (pauseMdl) pauseMdl.classList.add('hidden');
+
+            try {
+                if (window.parent && window.parent !== window) {
+                    window.parent.postMessage({ type: "GAME_EXIT" }, "*");
+                }
+            } catch (e) {}
+
+            document.getElementById('resultModal')?.classList.add('hidden');
+            document.getElementById('gameScreen')?.classList.add('hidden');
+            document.getElementById('startScreen')?.classList.remove('hidden');
         }
 
         function showHelpModal() {
@@ -1248,5 +1274,29 @@
             document.getElementById('helpModal').classList.add('hidden');
         }
     </script>
+
+    <!-- Pause Game Modal -->
+    <div id="pauseModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex flex-col items-center justify-center text-center p-6 transition-all duration-300">
+        <div class="w-full max-w-sm bg-slate-900/90 border border-indigo-500/40 rounded-3xl p-6 shadow-2xl flex flex-col items-center">
+            <div class="w-14 h-14 rounded-2xl bg-indigo-500/20 text-indigo-300 text-2xl flex items-center justify-center mb-3 border border-indigo-400/30">
+                ⏸️
+            </div>
+            <h3 class="heading-font text-2xl font-black text-yellow-300 mb-1">Permainan Di-Pause</h3>
+            <p class="text-xs text-indigo-200/80 mb-6">Pilih aksi di bawah ini untuk melanjutkan atau keluar</p>
+
+            <div class="w-full flex flex-col gap-3">
+                <button onclick="resumeGame()" class="w-full py-3 bg-gradient-to-r from-amber-400 to-orange-400 text-slate-950 font-black rounded-2xl text-sm shadow-md heading-font flex items-center justify-center gap-2 active:translate-y-0.5">
+                    <i class="fas fa-play text-xs"></i> Lanjutkan Bermain
+                </button>
+                <button onclick="restartLevelFromPause()" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-indigo-200 font-bold rounded-2xl text-xs border border-indigo-500/30 flex items-center justify-center gap-2 active:translate-y-0.5">
+                    <i class="fas fa-rotate-right text-xs"></i> Ulangi Level
+                </button>
+                <button onclick="confirmExitGame()" class="w-full py-3 bg-rose-950/60 hover:bg-rose-900/60 text-rose-300 font-bold rounded-2xl text-xs border border-rose-500/40 flex items-center justify-center gap-2 active:translate-y-0.5">
+                    <i class="fas fa-arrow-left text-xs"></i> Keluar ke Menu Utama
+                </button>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

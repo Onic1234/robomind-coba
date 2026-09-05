@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Robo-Jek — Ultra Premium 2D Top-Down Racing Indonesia</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap');
+
+    :root {
+      --bg-dark: #030712;
+      --panel-glass: rgba(15, 23, 42, 0.85);
+      --panel-border: rgba(56, 189, 248, 0.3);
+      --primary-cyan: #06b6d4;
+      --accent-blue: #38bdf8;
+      --neon-green: #10b981;
+      --neon-yellow: #f59e0b;
+      --neon-red: #f43f5e;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #030712;
+      color: var(--text-main);
+      font-family: 'Outfit', 'Plus Jakarta Sans', system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    #game-wrapper {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, #0f172a 0%, #030712 100%);
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    /* AUTO ROTATE PHONE PROMPT OVERLAY */
+    #rotate-prompt {
+      position: fixed;
+      inset: 0;
+      background: rgba(3, 7, 18, 0.96);
+      backdrop-filter: blur(24px);
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 30px;
+    }
+
+    .rotate-icon { font-size: 4.5rem; margin-bottom: 20px; animation: rotatePulse 2s infinite ease-in-out; }
+
+    @keyframes rotatePulse {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(90deg) scale(1.1); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+
+    .rotate-title {
+      font-size: 1.6rem; font-weight: 900;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+
+    .rotate-desc { font-size: 0.9rem; color: var(--text-sub); max-width: 340px; line-height: 1.5; }
+
+    @media screen and (orientation: landscape) {
+      #rotate-prompt { display: none !important; }
+    }
+
+    /* OVERLAY SCREENS */
+    .overlay-screen {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(7, 10, 20, 0.88);
+      backdrop-filter: blur(20px);
+      z-index: 10;
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    .hidden { display: none !important; }
+
+    .brand-tag {
+      font-size: 0.75rem; font-weight: 800; color: var(--primary-cyan);
+      background: rgba(6, 182, 212, 0.12); padding: 5px 16px; border-radius: 50px;
+      border: 1px solid rgba(6, 182, 212, 0.3); margin-bottom: 8px; letter-spacing: 1.5px;
+    }
+
+    .app-title {
+      font-size: 3.2rem; font-weight: 900;
+      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 4px; letter-spacing: -1px;
+    }
+
+    .app-subtitle { font-size: 0.95rem; color: var(--text-sub); margin-bottom: 24px; font-weight: 600; }
+
+    .vehicle-grid { display: flex; gap: 20px; margin-bottom: 28px; flex-wrap: wrap; justify-content: center; }
+
+    .vehicle-card {
+      width: 240px; background: rgba(15, 23, 42, 0.7); border: 1.5px solid rgba(148, 163, 184, 0.15);
+      border-radius: 20px; padding: 20px; cursor: pointer; text-align: center; position: relative;
+    }
+
+    .vehicle-card.selected {
+      border-color: var(--primary-cyan);
+      background: linear-gradient(180deg, rgba(6, 182, 212, 0.18) 0%, rgba(15, 23, 42, 0.9) 100%);
+    }
+
+    .vehicle-icon { font-size: 3.5rem; margin-bottom: 8px; }
+    .vehicle-name { font-size: 1.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
+    .vehicle-desc { font-size: 0.75rem; color: var(--text-sub); line-height: 1.35; margin-bottom: 14px; }
+
+    .btn-action {
+      font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 800; padding: 14px 36px;
+      color: #ffffff; border: none; border-radius: 50px; cursor: pointer;
+    }
+    .btn-blue { background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); }
+    .btn-green { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    .btn-ghost { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(148, 163, 184, 0.2); color: #e2e8f0; padding: 10px 24px; border-radius: 50px; font-weight: 700; cursor: pointer; }
+
+    .modal-box {
+      width: 90%; max-width: 660px; background: var(--panel-glass);
+      border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 24px; padding: 24px 30px; text-align: center;
+    }
+
+    .modal-title { font-size: 1.5rem; font-weight: 800; color: #38bdf8; }
+    .level-list { display: flex; flex-direction: column; gap: 10px; margin: 16px 0; }
+
+    .level-item {
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(30, 41, 59, 0.7); border: 1.5px solid rgba(56, 189, 248, 0.25);
+      border-radius: 16px; padding: 14px 18px; cursor: pointer; transition: all 0.2s ease;
+    }
+    .level-item:hover {
+      background: rgba(14, 165, 233, 0.2); border-color: var(--primary-cyan);
+      transform: translateY(-2px); box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
+    }
+
+    /* COGNITIVE GRAPHICS RESULT PANEL */
+    .cortex-chart-box {
+      background: rgba(11, 19, 41, 0.95);
+      border: 1.5px solid rgba(6, 182, 212, 0.3);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .chart-title {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--primary-cyan);
+    }
+
+    .overall-score-badge {
+      font-size: 1.2rem;
+      font-weight: 900;
+      color: var(--neon-green);
+      background: rgba(16, 185, 129, 0.15);
+      padding: 4px 14px;
+      border-radius: 50px;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    /* BAR CHART VISUALIZATION */
+    .chart-bar-group {
+      margin-bottom: 14px;
+    }
+
+    .chart-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #cbd5e1;
+      margin-bottom: 4px;
+    }
+
+    .chart-bar-track {
+      width: 100%;
+      height: 12px;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .chart-bar-progress {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* VIRTUAL MOBILE CONTROLS */
+    #mobile-controls {
+      position: absolute; bottom: 16px; left: 0; right: 0; height: 100px;
+      pointer-events: none; display: flex; justify-content: space-between; padding: 0 20px; z-index: 5;
+    }
+
+    .touch-group { display: flex; gap: 12px; pointer-events: auto; align-items: center; }
+
+    .touch-btn {
+      width: 60px; height: 60px; border-radius: 50%; background: rgba(15, 23, 42, 0.85);
+      border: 2px solid rgba(56, 189, 248, 0.6); backdrop-filter: blur(8px); color: #ffffff;
+      font-size: 1.5rem; display: flex; align-items: center; justify-content: center;
+      touch-action: manipulation;
+    }
+    .touch-btn:active { background: var(--primary-cyan); transform: scale(0.9); }
+  </style>
+</head>
+<body>
+
+  <!-- ROTATE PHONE PROMPT OVERLAY -->
+  <div id="rotate-prompt">
+    <div class="rotate-icon">🔄📱</div>
+    <div class="rotate-title">PUTAR HP KE LANSKAP</div>
+    <div class="rotate-desc">Sila miringkan / rotate HP Anda ke posisi <strong>Lanskap (Tidur)</strong> untuk pengalaman mengemudi Robo-Jek terbaik!</div>
+  </div>
+
+  <div id="game-wrapper">
+    <canvas id="gameCanvas" width="1024" height="640"></canvas>
+
+    <!-- ON-SCREEN VIRTUAL TOUCH CONTROLS -->
+    <div id="mobile-controls" class="hidden">
+      <div class="touch-group">
+        <div class="touch-btn" id="btn-left">◀</div>
+        <div class="touch-btn" id="btn-right">▶</div>
+      </div>
+
+      <div class="touch-group">
+        <div class="touch-btn" id="btn-down" style="border-color: var(--neon-red);">▼</div>
+        <div class="touch-btn" id="btn-up" style="border-color: var(--neon-green); background: rgba(16, 185, 129, 0.35);">▲</div>
+      </div>
+    </div>
+
+    <!-- SCREEN 1: VEHICLE SELECT -->
+    <div id="screen-vehicle" class="overlay-screen">
+      <div class="brand-tag">⚡ SIMULATOR KOGNITIF ANAK INDONESIA</div>
+      <div class="app-title">ROBO-JEK</div>
+      <div class="app-subtitle">2D Top-Down Delivery Racing & Educational Game</div>
+
+      <div class="vehicle-grid">
+        <div class="vehicle-card selected" onclick="selectVehicle('motor')" id="card-motor">
+          <div class="vehicle-icon">🛵</div>
+          <div class="vehicle-name">ROBO-MOTOR</div>
+          <div class="vehicle-desc">Lincah & Sangat Cepat di perempatan.</div>
+          <div class="stat-row"><span>Kecepatan</span><div class="stat-bar-bg"><div class="stat-bar-fill" style="width: 90%;"></div></div></div>
+          <div class="stat-row"><span>Kelincahan</span><div class="stat-bar-bg"><div class="stat-bar-fill" style="width: 95%;"></div></div></div>
+        </div>
+
+        <div class="vehicle-card" onclick="selectVehicle('car')" id="card-car">
+          <div class="vehicle-icon">🛺</div>
+          <div class="vehicle-name">ROBO-MOBIL</div>
+          <div class="vehicle-desc">Kokoh & Performa Stabil.</div>
+          <div class="stat-row"><span>Kecepatan</span><div class="stat-bar-bg"><div class="stat-bar-fill" style="width: 75%;"></div></div></div>
+          <div class="stat-row"><span>Kelincahan</span><div class="stat-bar-bg"><div class="stat-bar-fill" style="width: 60%;"></div></div></div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 14px;">
+        <button class="btn-action btn-blue" onclick="showWorldMap()">WORLD MAP 🇮🇩</button>
+        <button class="btn-action btn-green" onclick="quickPlay()">MAIN SEKARANG 🎮</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: CITY LEVEL SELECT MODAL -->
+    <div id="screen-city-modal" class="overlay-screen hidden">
+      <div class="modal-box">
+        <div class="modal-title" id="modal-city-name">Banda Aceh</div>
+        <div style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 14px;" id="modal-city-landmark">Landmark: Masjid Raya Baiturrahman</div>
+
+        <div class="level-list" id="level-list-container"></div>
+
+        <button class="btn-ghost" onclick="closeCityModal()">← Kembali ke Map</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: LEVEL RESULT MODAL WITH PREFRONTAL CORTEX & RADAR CHART -->
+    <div id="screen-result" class="overlay-screen hidden">
+      <div class="modal-box" style="max-width: 760px; width: 92%; padding: 20px 24px;">
+        <!-- HEADER / STATUS -->
+        <div style="text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px; margin-bottom: 16px;">
+          <div style="font-size: 0.9rem; font-weight: 800; letter-spacing: 2px; color: var(--neon-yellow);">MISSION COMPLETED</div>
+          <div class="modal-title" style="color: var(--neon-green); font-size: 1.6rem; margin: 2px 0;" id="result-level-title">LEVEL CLEARED!</div>
+          <div style="font-size: 0.85rem; color: var(--text-sub);" id="result-route-desc">Rute Banda Aceh: Masjid Raya ➔ Pelabuhan Ulee Lheue Berhasil!</div>
+        </div>
+
+        <!-- MAIN CONTENT DUAL COLUMN -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
+          
+          <!-- BAGIAN KIRI: HASIL & KOIN -->
+          <div style="background: rgba(15, 23, 42, 0.7); padding: 16px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.2);">
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-sub); text-transform: uppercase; margin-bottom: 8px;">Pencapaian Misi</div>
+            <div style="font-size: 2.2rem; color: var(--neon-yellow); margin-bottom: 12px;" id="result-stars">⭐ ⭐ ⭐</div>
+            
+            <div style="font-size: 0.85rem; line-height: 1.6; color: #e2e8f0; margin-bottom: 16px;">
+              <div id="check-checkpoint">⭐ Melewati seluruh Checkpoint peta <strong style="color:#34d399;" id="res-check-val">(3 / 3)</strong></div>
+              <div id="check-collision">⭐ Bebas tabrakan rintangan kota <strong style="color:#34d399;" id="res-hits-val">(0 Nabrak)</strong></div>
+              <div id="check-dropzone">⭐ Hentikan motor tepat di Drop Zone <strong style="color:#34d399;" id="res-drop-val">(100%)</strong></div>
+            </div>
+
+            <div style="border-top: 1px dashed rgba(255,255,255,0.15); pt-2; margin-top: 10px; padding-top: 10px; font-size: 0.85rem; color: #cbd5e1;">
+              <div style="display:flex; justify-shadow:space-between; justify-content:space-between; margin-bottom:4px;">
+                <span>Loot Bensin Terkumpul:</span> <strong style="color:#f59e0b;" id="res-coin-bensin">+86 Koin</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
+                <span>Rintangan Berhasil Dihindari:</span> <strong style="color:#38bdf8;" id="res-coin-avoid">+67 Koin</strong>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size: 0.95rem; font-weight:800; color:var(--neon-green); border-top: 1px solid rgba(255,255,255,0.1); padding-top:6px;">
+                <span>🪙 TOTAL KOIN HADIAH:</span> <span id="res-coin-total">200 KOIN</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- BAGIAN KANAN: PROFIL KETANGKASAN ANAK -->
+          <div style="background: rgba(15, 23, 42, 0.7); padding: 16px; border-radius: 12px; border: 1px solid rgba(168, 85, 247, 0.3);">
+            <div style="font-size: 0.85rem; font-weight: 800; color: #c084fc; margin-bottom: 4px;">🌟 Profil Ketangkasan Anak</div>
+            <div style="font-size: 0.75rem; color: var(--text-sub); margin-bottom: 12px;">(Refleks, Akurasi & Ketelitian)</div>
+            
+            <!-- RADAR CANVAS -->
+            <div style="display: flex; justify-content: center; align-items: center; position: relative;">
+              <canvas id="radarChartCanvas" width="220" height="180"></canvas>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- NAVIGASI BUTTONS -->
+        <div style="display: flex; gap: 12px; justify-content: center; margin-top: 20px;">
+          <button class="btn-ghost" onclick="returnToMap()">Kembali Ke Peta Utama</button>
+          <button class="btn-action btn-blue" id="btn-next-level" onclick="returnToMap()">Lanjut Level ➔</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentScreen = 'vehicle';
+    let selectedVehicleType = 'motor';
+    let showDebugOverlay = false; // Set false agar peta visual Jakarta bersih tanpa warna hijau/merah debug
+
+    const mapImage = new Image();
+    mapImage.src = 'mapsfix.png';
+
+    const jakartaMapImage = new Image();
+    jakartaMapImage.src = 'jakartaMapNewestNew.png';
+
+    const roadMaskImage = new Image();
+    roadMaskImage.crossOrigin = 'anonymous';
+    roadMaskImage.src = 'road-jkt.png';
+
+    let roadMaskCanvas = document.createElement('canvas');
+    let roadMaskData = null;
+    let roadMaskWidth = 1254;
+    let roadMaskHeight = 1254;
+    let roadMaskLoaded = false;
+
+    roadMaskImage.onload = () => {
+      roadMaskCanvas.width = 1254;
+      roadMaskCanvas.height = 1254;
+      const c = roadMaskCanvas.getContext('2d', { willReadFrequently: true });
+      c.drawImage(roadMaskImage, 0, 0, 1254, 1254);
+      try {
+        roadMaskData = c.getImageData(0, 0, 1254, 1254).data;
+        roadMaskLoaded = true;
+        console.log('✅ Road mask loaded! Data length:', roadMaskData.length);
+        // Quick sanity check: spawn point (500,700) should be white
+        const testIdx = (700 * 1254 + 500) * 4;
+        console.log('Spawn (500,700) R value:', roadMaskData[testIdx], '(should be 255)');
+      } catch (e) {
+        console.error('❌ GAGAL load road mask data (CORS?):', e.message);
+        console.error('Jalankan game via local server: python -m http.server 8080');
+        roadMaskData = null;
+        roadMaskLoaded = false;
+      }
+    };
+    roadMaskImage.onerror = () => {
+      console.error('❌ GAGAL load gambar road_jakarta_processed.png!');
+    };
+
+    const CITIES = [
+      { id: 'aceh', num: 1, name: 'Banda Aceh', province: 'Aceh', landmark: 'Masjid Raya Baiturrahman', x: 53, y: 101, unlocked: false, levels: [{ id: 'aceh-1', title: 'Rute Pasar Baiturrahman', goldTime: 40, maxHits: 1, stars: 0 }] },
+      { id: 'medan', num: 2, name: 'Medan', province: 'Sumatera Utara', landmark: 'Istana Maimun', x: 96, y: 159, unlocked: false, levels: [{ id: 'medan-1', title: 'Rute Jalan Pemuda', goldTime: 38, maxHits: 1, stars: 0 }] },
+      { id: 'pekanbaru', num: 3, name: 'Pekanbaru', province: 'Riau', landmark: 'Masjid An-Nur', x: 139, y: 213, unlocked: false, levels: [{ id: 'pekanbaru-1', title: 'Rute Pekanbaru Express', goldTime: 35, maxHits: 1, stars: 0 }] },
+      { id: 'palembang', num: 4, name: 'Palembang', province: 'Sumatera Selatan', landmark: 'Jembatan Ampera', x: 180, y: 274, unlocked: false, levels: [{ id: 'palembang-1', title: 'Rute Ampera Express', goldTime: 35, maxHits: 1, stars: 0 }] },
+      { id: 'lampung', num: 5, name: 'Lampung', province: 'Lampung', landmark: 'Menara Siger', x: 205, y: 335, unlocked: false, levels: [{ id: 'lampung-1', title: 'Rute Pelabuhan Bakauheni', goldTime: 35, maxHits: 1, stars: 0 }] },
+      { id: 'jakarta', num: 6, name: 'Jakarta', province: 'DKI Jakarta', landmark: 'Monumen Nasional (Monas)', x: 279, y: 392, unlocked: true, levels: [
+        { id: 'jakarta-1', levelNum: 1, title: 'Level 1: Jam Kerja Santai', goldTime: 90, maxHits: 3, targetDeliveries: 2, npcCount: 15, npcSpeedMult: 0.8, stars: 0 },
+        { id: 'jakarta-2', levelNum: 2, title: 'Level 2: Jam Padat Monas', goldTime: 75, maxHits: 2, targetDeliveries: 3, npcCount: 22, npcSpeedMult: 1.1, stars: 0 },
+        { id: 'jakarta-3', levelNum: 3, title: 'Level 3: Rush Hour Jakarta (Tantangan Ekstrem)', goldTime: 60, maxHits: 1, targetDeliveries: 4, npcCount: 30, npcSpeedMult: 1.4, stars: 0 }
+      ] },
+      { id: 'bandung', num: 7, name: 'Bandung', province: 'Jawa Barat', landmark: 'Gedung Sate', x: 357, y: 421, unlocked: false, levels: [{ id: 'bandung-1', title: 'Rute Gedung Sate', goldTime: 35, maxHits: 1, stars: 0 }] },
+      { id: 'semarang', num: 8, name: 'Semarang', province: 'Jawa Tengah', landmark: 'Lawang Sewu', x: 447, y: 437, unlocked: false, levels: [{ id: 'semarang-1', title: 'Rute Lawang Sewu', goldTime: 35, maxHits: 1, stars: 0 }] },
+      { id: 'surabaya', num: 9, name: 'Surabaya', province: 'Jawa Timur', landmark: 'Patung Suro dan Boyo', x: 532, y: 442, unlocked: false, levels: [{ id: 'surabaya-1', title: 'Rute Tunjungan Plaza', goldTime: 40, maxHits: 1, stars: 0 }] },
+      { id: 'malang', num: 10, name: 'Malang', province: 'Jawa Timur', landmark: 'Alun-Alun Malang', x: 615, y: 450, unlocked: false, levels: [{ id: 'malang-1', title: 'Rute Alun-Alun Malang', goldTime: 35, maxHits: 1, stars: 0 }] },
+      { id: 'pontianak', num: 11, name: 'Pontianak', province: 'Kalimantan Barat', landmark: 'Tugu Khatulistiwa', x: 341, y: 195, unlocked: false, levels: [{ id: 'pontianak-1', title: 'Rute Tugu Khatulistiwa', goldTime: 35, maxHits: 1, stars: 0 }] },
+      { id: 'balikpapan', num: 12, name: 'Balikpapan', province: 'Kalimantan Timur', landmark: 'Pantai Manggar', x: 461, y: 261, unlocked: false, levels: [{ id: 'balikpapan-1', title: 'Rute Pantai Manggar', goldTime: 35, maxHits: 1, stars: 0 }] },
+      { id: 'samarinda', num: 13, name: 'Samarinda', province: 'Kalimantan Timur', landmark: 'Sungai Mahakam', x: 497, y: 159, unlocked: false, levels: [{ id: 'samarinda-1', title: 'Rute Sungai Mahakam', goldTime: 35, maxHits: 1, stars: 0 }] },
+      { id: 'makassar', num: 14, name: 'Makassar', province: 'Sulawesi Selatan', landmark: 'Pantai Losari', x: 593, y: 318, unlocked: false, levels: [{ id: 'makassar-1', title: 'Rute Trans Studio', goldTime: 40, maxHits: 1, stars: 0 }] },
+      { id: 'manado', num: 15, name: 'Manado', province: 'Sulawesi Utara', landmark: 'Taman Nasional Bunaken', x: 681, y: 164, unlocked: false, levels: [{ id: 'manado-1', title: 'Rute Bunaken Express', goldTime: 35, maxHits: 1, stars: 0 }] },
+      { id: 'palu', num: 16, name: 'Palu', province: 'Sulawesi Tengah', landmark: 'Jembatan Palu IV', x: 647, y: 232, unlocked: false, levels: [{ id: 'palu-1', title: 'Rute Teluk Palu', goldTime: 35, maxHits: 1, stars: 0 }] },
+      { id: 'ambon', num: 17, name: 'Ambon', province: 'Maluku', landmark: 'Patung Pattimura', x: 760, y: 299, unlocked: false, levels: [{ id: 'ambon-1', title: 'Rute Teluk Ambon', goldTime: 35, maxHits: 1, stars: 0 }] },
+      { id: 'jayapura', num: 18, name: 'Jayapura', province: 'Papua', landmark: 'Jembatan Youtefa', x: 911, y: 307, unlocked: false, levels: [{ id: 'jayapura-1', title: 'Rute Jembatan Youtefa', goldTime: 35, maxHits: 1, stars: 0 }] },
+      { id: 'bali', num: 19, name: 'Denpasar - Bali', province: 'Bali', landmark: 'GWK & Pura Tanah Lot', x: 476, y: 534, unlocked: false, levels: [{ id: 'bali-1', title: 'Delivery Pantai Kuta', goldTime: 35, maxHits: 1, stars: 0 }] },
+      { id: 'mataram', num: 20, name: 'Mataram', province: 'Nusa Tenggara Barat', landmark: 'Sirkuit Mandalika', x: 588, y: 546, unlocked: false, levels: [{ id: 'mataram-1', title: 'Rute Mandalika Express', goldTime: 35, maxHits: 1, stars: 0 }] },
+      { id: 'kupang', num: 21, name: 'Kupang', province: 'Nusa Tenggara Timur', landmark: 'Pantai Lasiana', x: 700, y: 544, unlocked: false, levels: [{ id: 'kupang-1', title: 'Rute Pantai Lasiana', goldTime: 35, maxHits: 1, stars: 0 }] }
+    ];
+
+    let activeCity = CITIES[5]; // Default to Jakarta
+    let activeLevel = CITIES[5].levels[0];
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const VIEW = { width: 1024, height: 640 };
+
+    const keys = {};
+    window.addEventListener('keydown', e => { keys[e.key] = true; keys[e.code] = true; });
+    window.addEventListener('keyup', e => { keys[e.key] = false; keys[e.code] = false; });
+
+    // MOBILE TOUCH CONTROLS BINDING
+    function setupTouchBtn(btnId, keyName) {
+      const btn = document.getElementById(btnId);
+      const startHandler = (e) => { e.preventDefault(); keys[keyName] = true; };
+      const endHandler = (e) => { e.preventDefault(); keys[keyName] = false; };
+
+      btn.addEventListener('touchstart', startHandler);
+      btn.addEventListener('touchend', endHandler);
+      btn.addEventListener('mousedown', startHandler);
+      btn.addEventListener('mouseup', endHandler);
+    }
+
+    setupTouchBtn('btn-left', 'ArrowLeft');
+    setupTouchBtn('btn-right', 'ArrowRight');
+    setupTouchBtn('btn-up', 'ArrowUp');
+    setupTouchBtn('btn-down', 'ArrowDown');
+
+    // Dynamic Orientation Checker for Mobile
+    function checkOrientation() {
+      const prompt = document.getElementById('rotate-prompt');
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
+      const isPortrait = window.innerHeight > window.innerWidth;
+
+      if (isMobile && isPortrait) {
+        prompt.style.display = 'flex';
+      } else {
+        prompt.style.display = 'none';
+      }
+    }
+
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    checkOrientation();
+
+    canvas.addEventListener('mousemove', e => {
+      if (currentScreen !== 'worldmap') { canvas.style.cursor = 'default'; return; }
+      const rect = canvas.getBoundingClientRect();
+      const clickX = (e.clientX - rect.left) * (VIEW.width / rect.width);
+      const clickY = (e.clientY - rect.top) * (VIEW.height / rect.height);
+      const isHover = CITIES.some(city => Math.hypot(clickX - city.x, clickY - city.y) < 40);
+      canvas.style.cursor = isHover ? 'pointer' : 'default';
+    });
+
+    canvas.addEventListener('click', e => {
+      if (currentScreen !== 'worldmap') return;
+      const rect = canvas.getBoundingClientRect();
+      const clickX = (e.clientX - rect.left) * (VIEW.width / rect.width);
+      const clickY = (e.clientY - rect.top) * (VIEW.height / rect.height);
+
+      // Find closest city — prefer unlocked cities
+      let bestUnlocked = null, bestLocked = null;
+      let distUnlocked = Infinity, distLocked = Infinity;
+      CITIES.forEach(city => {
+        const dist = Math.hypot(clickX - city.x, clickY - city.y);
+        if (dist < 200) {
+          if (city.unlocked && dist < distUnlocked) {
+            distUnlocked = dist;
+            bestUnlocked = city;
+          } else if (!city.unlocked && dist < distLocked) {
+            distLocked = dist;
+            bestLocked = city;
+          }
+        }
+      });
+      // Pick unlocked city if within range, even if a locked city is closer
+      if (bestUnlocked && distUnlocked < 200) {
+        openCityModal(bestUnlocked);
+      } else if (bestLocked) {
+        alert(`Kota ${bestLocked.name} masih terkunci! Selesaikan kota sebelumnya.`);
+      }
+    });
+
+    function selectVehicle(type) {
+      selectedVehicleType = type;
+      document.getElementById('card-motor').classList.toggle('selected', type === 'motor');
+      document.getElementById('card-car').classList.toggle('selected', type === 'car');
+    }
+
+    function showWorldMap() {
+      currentScreen = 'worldmap';
+      document.getElementById('screen-vehicle').classList.add('hidden');
+      document.getElementById('screen-city-modal').classList.add('hidden');
+      document.getElementById('screen-result').classList.add('hidden');
+      document.getElementById('mobile-controls').classList.add('hidden');
+    }
+
+    function quickPlay() { startLevel(CITIES[5], CITIES[5].levels[0]); }
+
+    function openCityModal(city) {
+      activeCity = city;
+      document.getElementById('modal-city-name').innerText = city.name;
+      document.getElementById('modal-city-landmark').innerText = `Landmark: ${city.landmark}`;
+
+      const container = document.getElementById('level-list-container');
+      container.innerHTML = '';
+
+      city.levels.forEach((lvl, idx) => {
+        const div = document.createElement('div');
+        div.className = 'level-item';
+        div.onclick = () => startLevel(city, lvl);
+
+        const starsStr = '⭐'.repeat(lvl.stars) + '☆'.repeat(3 - lvl.stars);
+        const reqDeliveries = lvl.targetDeliveries || 3;
+        const npcCountInfo = lvl.npcCount ? `${lvl.npcCount} Kendaraan` : 'Padat';
+        div.innerHTML = `
+          <div style="text-align: left; flex: 1;">
+            <div style="font-weight: 800; font-size: 1.05rem; color: #fff;">${lvl.title}</div>
+            <div style="font-size: 0.78rem; color: var(--text-sub); margin-top: 4px; line-height: 1.4;">
+              🎯 Target: <strong>Antar ${reqDeliveries} Penumpang</strong> | 🚦 Lalu Lintas: <strong>${npcCountInfo}</strong><br>
+              ⏱️ Target Waktu: <strong>≤${lvl.goldTime}s</strong> | 💥 Max Tabrakan: <strong>${lvl.maxHits}x</strong>
+            </div>
+          </div>
+          <div style="font-size: 1.2rem; color: #f59e0b; margin-left: 10px;">${starsStr}</div>
+        `;
+        container.appendChild(div);
+      });
+
+      document.getElementById('screen-city-modal').classList.remove('hidden');
+    }
+
+    function closeCityModal() { document.getElementById('screen-city-modal').classList.add('hidden'); }
+    function returnToMap() { document.getElementById('screen-result').classList.add('hidden'); document.getElementById('mobile-controls').classList.add('hidden'); showWorldMap(); }
+    function retryLevel() { document.getElementById('screen-result').classList.add('hidden'); startLevel(activeCity, activeLevel); }
+
+    let WORLD = { width: 1254, height: 1254 };
+    let CAMERA_ZOOM = 1.35; // Ideal zoom: follow closely without being too close
+    let camera = { x: 0, y: 0, shake: 0 };
+
+    // === WAYPOINT ROAD NETWORK (roaddpalingbarujkt.png) ===
+    // Exact road centers: X = 60, 456, 880, 1205 | Y = 50, 368, 695, 885, 1005, 1225
+    const WAYPOINTS = [
+      // === ROW 1 (y=50) ===
+      { id: 0, x: 60, y: 50, connections: [1, 4] },
+      { id: 1, x: 456, y: 50, connections: [0, 2, 5] },
+      { id: 2, x: 880, y: 50, connections: [1, 3, 6] },
+      { id: 3, x: 1205, y: 50, connections: [2, 7] },
+
+      // === ROW 2 (y=368) ===
+      { id: 4, x: 60, y: 368, connections: [0, 5, 8] },
+      { id: 5, x: 456, y: 368, connections: [1, 4, 6, 9] },   // Player spawn intersection
+      { id: 6, x: 880, y: 368, connections: [2, 5, 7, 10] },
+      { id: 7, x: 1205, y: 368, connections: [3, 6, 11] },
+
+      // === ROW 3 (y=695) ===
+      { id: 8, x: 60, y: 695, connections: [4, 9, 13] },
+      { id: 9, x: 456, y: 695, connections: [5, 8, 10, 22, 23] },
+      { id: 10, x: 880, y: 695, connections: [6, 9, 11, 15] },
+      { id: 11, x: 1205, y: 695, connections: [7, 10, 16] },
+
+      // === MID-BLOCK CROSSROAD & BOULEVARD (y=780..885) ===
+      { id: 22, x: 380, y: 780, connections: [9, 12] },       // West boulevard branch
+      { id: 23, x: 540, y: 780, connections: [9, 12] },       // East boulevard branch
+      { id: 12, x: 456, y: 885, connections: [22, 23, 14, 15] }, // Mid crossroad west
+      { id: 15, x: 880, y: 885, connections: [10, 12, 17] },     // Mid crossroad east
+
+      // === ROW 4 (y=1005) ===
+      { id: 13, x: 60, y: 1005, connections: [8, 14, 18] },
+      { id: 14, x: 456, y: 1005, connections: [12, 13, 17, 19] },
+      { id: 17, x: 880, y: 1005, connections: [15, 14, 16, 20] },
+      { id: 16, x: 1205, y: 1005, connections: [11, 17, 21] },
+
+      // === ROW 5 (y=1225) ===
+      { id: 18, x: 60, y: 1225, connections: [13, 19] },
+      { id: 19, x: 456, y: 1225, connections: [14, 18, 20] },
+      { id: 20, x: 880, y: 1225, connections: [17, 19, 21] },
+      { id: 21, x: 1205, y: 1225, connections: [16, 20] },
+    ];
+
+    function findShortestPath(startX, startY, targetX, targetY) {
+      // Find nearest waypoint to start
+      let startWpId = 0, minStartDist = Infinity;
+      WAYPOINTS.forEach((wp, idx) => {
+        const d = Math.hypot(wp.x - startX, wp.y - startY);
+        if (d < minStartDist) { minStartDist = d; startWpId = idx; }
+      });
+
+      // Find nearest waypoint to target
+      let targetWpId = 0, minTargetDist = Infinity;
+      WAYPOINTS.forEach((wp, idx) => {
+        const d = Math.hypot(wp.x - targetX, wp.y - targetY);
+        if (d < minTargetDist) { minTargetDist = d; targetWpId = idx; }
+      });
+
+      // BFS to find shortest path of waypoints
+      const queue = [[startWpId]];
+      const visited = new Set([startWpId]);
+      let shortestWpPath = [startWpId, targetWpId];
+
+      while (queue.length > 0) {
+        const path = queue.shift();
+        const node = path[path.length - 1];
+
+        if (node === targetWpId) {
+          shortestWpPath = path;
+          break;
+        }
+
+        const wp = WAYPOINTS[node];
+        for (const neighbor of wp.connections) {
+          if (!visited.has(neighbor)) {
+            visited.add(neighbor);
+            queue.push([...path, neighbor]);
+          }
+        }
+      }
+
+      // Build coordinates array: [playerPos, wp1, wp2, ..., targetPos]
+      const points = [{ x: startX, y: startY }];
+      shortestWpPath.forEach(id => {
+        points.push({ x: WAYPOINTS[id].x, y: WAYPOINTS[id].y });
+      });
+      points.push({ x: targetX, y: targetY });
+      return points;
+    }
+
+    // === PRECISION LANE-BASED NPC TRAFFIC SYSTEM ===
+    // Every vehicle drives strictly in its designated left-hand lane (12px offset from road centerline).
+    // Positions, speeds, and turns are calculated along verified road segments.
+    
+    function getSegmentData(fromId, toId, laneOffset = 12) {
+      const from = WAYPOINTS[fromId] || WAYPOINTS[0];
+      const to = WAYPOINTS[toId] || WAYPOINTS[1];
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const ux = dx / len;
+      const uy = dy / len;
+      // Perpendicular left vector for Indonesian left-hand driving:
+      const px = uy * laneOffset;
+      const py = -ux * laneOffset;
+      return {
+        startX: from.x + px,
+        startY: from.y + py,
+        endX: to.x + px,
+        endY: to.y + py,
+        ux, uy, len,
+        angle: Math.atan2(dy, dx) * 180 / Math.PI + 90
+      };
+    }
+
+    function createNPC(startWpId, color, speedMult = 1.0) {
+      const fromNode = WAYPOINTS[startWpId];
+      const targetWpId = fromNode.connections[Math.floor(Math.random() * fromNode.connections.length)];
+      const seg = getSegmentData(startWpId, targetWpId);
+      const progress = Math.random() * 0.75 + 0.1;
+      const baseSpd = (60 + Math.random() * 25) * speedMult;
+
+      return {
+        fromWpId: startWpId,
+        toWpId: targetWpId,
+        prevWpId: -1,
+        progress: progress,
+        segLen: seg.len,
+        x: seg.startX + (seg.endX - seg.startX) * progress,
+        y: seg.startY + (seg.endY - seg.startY) * progress,
+        w: 14, h: 24,
+        angle: seg.angle,
+        targetAngle: seg.angle,
+        baseSpeed: baseSpd,
+        currentSpeed: baseSpd,
+        color: color,
+        isBraking: false,
+        haltedTimer: 0
+      };
+    }
+
+    const NPC_COLORS = [
+      '#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6',
+      '#06b6d4', '#ec4899', '#10b981', '#f97316',
+      '#a855f7', '#eab308', '#14b8a6', '#e11d48'
+    ];
+
+    function spawnAllNPCs(count = 14, speedMult = 1.0) {
+      const npcs = [];
+      const totalWp = WAYPOINTS.length;
+      for (let i = 0; i < count; i++) {
+        const startWpId = (i * 2) % totalWp;
+        const color = NPC_COLORS[i % NPC_COLORS.length];
+        npcs.push(createNPC(startWpId, color, speedMult));
+      }
+      return npcs;
+    }
+
+    // === MULTI-PASSENGER SYSTEM ===
+    // Semua posisi di jalan yang sudah terverifikasi aman
+    const PASSENGER_POOL = [
+      { name: 'Pak Budi', pickupX: 880, pickupY: 200, dropoffX: 60, dropoffY: 540, fare: 15000 },
+      { name: 'Bu Sari', pickupX: 1024, pickupY: 368, dropoffX: 456, dropoffY: 695, fare: 12000 },
+      { name: 'Andi', pickupX: 60, pickupY: 540, dropoffX: 1024, dropoffY: 1225, fare: 18000 },
+      { name: 'Dewi', pickupX: 880, pickupY: 885, dropoffX: 456, dropoffY: 50, fare: 20000 },
+      { name: 'Rizky', pickupX: 1205, pickupY: 1110, dropoffX: 250, dropoffY: 368, fare: 16000 },
+      { name: 'Maya', pickupX: 456, pickupY: 1005, dropoffX: 1205, dropoffY: 885, fare: 14000 },
+    ];
+
+    const DELIVERIES_TO_WIN = 3;
+    let passengers = [];
+    let currentPassenger = null; // penumpang yg sedang dijemput/diantar
+    let deliveriesCompleted = 0;
+    let totalFare = 0;
+
+    function initPassengers() {
+      passengers = PASSENGER_POOL.map((p, i) => ({
+        id: i, name: p.name,
+        pickupX: p.pickupX, pickupY: p.pickupY,
+        dropoffX: p.dropoffX, dropoffY: p.dropoffY,
+        fare: p.fare,
+        status: 'waiting', // waiting, picked, delivered
+        radius: 22
+      }));
+      currentPassenger = null;
+      deliveriesCompleted = 0;
+      totalFare = 0;
+    }
+
+    let player = {
+      x: 422, y: 364, width: 6, height: 14, angle: 0, speed: 0,
+      maxSpeed: 200, acceleration: 180, deceleration: 200, turnSpeed: 180, type: 'motor'
+    };
+
+    let trafficNPCs = spawnAllNPCs();
+
+    let levelTime = 0;
+    let collisions = 0;
+    let gameStatus = 'playing';
+    let lastHitTime = 0;
+
+    function startLevel(city, level) {
+      activeCity = city || CITIES[5] || CITIES[0];
+      if (!activeCity.levels || activeCity.levels.length === 0) {
+        activeCity = CITIES[5];
+      }
+      activeLevel = level || activeCity.levels[0];
+      currentScreen = 'game';
+
+      document.getElementById('screen-vehicle').classList.add('hidden');
+      document.getElementById('screen-city-modal').classList.add('hidden');
+      document.getElementById('screen-result').classList.add('hidden');
+      document.getElementById('mobile-controls').classList.remove('hidden');
+
+      const isMotor = selectedVehicleType === 'motor';
+      player = {
+        x: 456, y: 368,
+        width: isMotor ? 6 : 12,
+        height: isMotor ? 14 : 22,
+        angle: 0, speed: 0,
+        maxSpeed: isMotor ? 200 : 170,
+        acceleration: isMotor ? 180 : 140,
+        deceleration: isMotor ? 200 : 160,
+        turnSpeed: isMotor ? 180 : 140,
+        type: selectedVehicleType
+      };
+
+      initPassengers();
+      const nCount = activeLevel.npcCount || 10;
+      const nSpeedMult = activeLevel.npcSpeedMult || 1.0;
+      trafficNPCs = spawnAllNPCs(nCount, nSpeedMult);
+
+      levelTime = 0;
+      collisions = 0;
+      gameStatus = 'playing';
+      lastHitTime = 0;
+
+      // Center camera immediately
+      camera.x = player.x - (VIEW.width / CAMERA_ZOOM) / 2;
+      camera.y = player.y - (VIEW.height / CAMERA_ZOOM) / 2;
+    }
+
+    let lastFrameTime = performance.now();
+
+    function isPointOnRoad(px, py) {
+      if (px < 10 || px > WORLD.width - 10 || py < 10 || py > WORLD.height - 10) return false;
+      
+      // If roadMaskData is loaded, use it
+      if (roadMaskData) {
+        const ix = Math.floor(px);
+        const iy = Math.floor(py);
+        const idx = (iy * 1254 + ix) * 4;
+        return roadMaskData[idx] > 120;
+      }
+      
+      // Fallback grid check: check if close to grid roads (width of road is approx 60px)
+      const roadWidth = 60;
+      const verticalRoads = [60, 456, 880, 1205];
+      const horizontalRoads = [50, 368, 695, 885, 1005, 1225];
+      
+      // Check vertical roads
+      for (const x of verticalRoads) {
+        if (Math.abs(px - x) < roadWidth / 2) return true;
+      }
+      // Check horizontal roads
+      for (const y of horizontalRoads) {
+        if (Math.abs(py - y) < roadWidth / 2) return true;
+      }
+      
+      // Check split boulevard branches
+      if (py >= 695 && py <= 885 && (Math.abs(px - 380) < 30 || Math.abs(px - 540) < 30)) {
+        return true;
+      }
+      
+      return false;
+    }
+
+    function isVehicleOnRoad(x, y, angle, width, height) {
+      const halfW = width / 2;
+      const halfH = height / 2;
+      const rad = (angle - 90) * (Math.PI / 180);
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+
+      // 4 Titik Sudut Hitbox Mobil: Depan-Kiri, Depan-Kanan, Belakang-Kiri, Belakang-Kanan
+      const corners = [
+        { dx: -halfW, dy: -halfH }, // Depan-Kiri
+        { dx: halfW, dy: -halfH },  // Depan-Kanan
+        { dx: -halfW, dy: halfH },  // Belakang-Kiri
+        { dx: halfW, dy: halfH }    // Belakang-Kanan
+      ];
+
+      for (let c of corners) {
+        const rx = x + (c.dx * cos - c.dy * sin);
+        const ry = y + (c.dx * sin + c.dy * cos);
+        if (!isPointOnRoad(rx, ry)) return false;
+      }
+      return true;
+    }
+
+    function update(dt) {
+      if (currentScreen !== 'game' || gameStatus === 'won') return;
+
+      levelTime += dt;
+
+      const isUp = keys['w'] || keys['W'] || keys['ArrowUp'];
+      const isDown = keys['s'] || keys['S'] || keys['ArrowDown'];
+      const isLeft = keys['a'] || keys['A'] || keys['ArrowLeft'];
+      const isRight = keys['d'] || keys['D'] || keys['ArrowRight'];
+
+      let inputX = 0;
+      let inputY = 0;
+      if (isLeft) inputX = -1;
+      if (isRight) inputX = 1;
+      if (isUp) inputY = -1;
+      if (isDown) inputY = 1;
+
+      const hasInput = inputX !== 0 || inputY !== 0;
+
+      if (hasInput) {
+        player.speed = Math.min(player.speed + player.acceleration * dt, player.maxSpeed);
+        const len = Math.hypot(inputX, inputY);
+        const dirX = inputX / len;
+        const dirY = inputY / len;
+
+        // Instantly rotate mecha/bike to face movement direction
+        player.angle = Math.atan2(dirY, dirX) * (180 / Math.PI) + 90;
+
+        const moveStep = player.speed * dt;
+        const dx = dirX * moveStep;
+        const dy = dirY * moveStep;
+
+        const nextX = player.x + dx;
+        const nextY = player.y + dy;
+
+        if (isVehicleOnRoad(nextX, nextY, player.angle, player.width, player.height)) {
+          player.x = nextX;
+          player.y = nextY;
+        } else if (isVehicleOnRoad(nextX, player.y, player.angle, player.width, player.height)) {
+          player.x = nextX;
+          player.speed *= 0.2;
+        } else if (isVehicleOnRoad(player.x, nextY, player.angle, player.width, player.height)) {
+          player.y = nextY;
+          player.speed *= 0.2;
+        } else {
+          const now = performance.now();
+          if (Math.abs(player.speed) > 10 && now - lastHitTime > 1000) {
+            collisions++;
+            lastHitTime = now;
+            camera.shake = 0.35;
+          }
+          player.speed = 0;
+        }
+      } else {
+        player.speed = Math.max(0, player.speed - player.deceleration * dt);
+      }
+
+      trafficNPCs.forEach((npc, npcIdx) => {
+        const seg = getSegmentData(npc.fromWpId, npc.toWpId);
+        npc.segLen = seg.len;
+        npc.targetAngle = seg.angle;
+
+        // Smooth angle rotation (natural turn, no snapping)
+        let angleDiff = npc.targetAngle - npc.angle;
+        while (angleDiff > 180) angleDiff -= 360;
+        while (angleDiff < -180) angleDiff += 360;
+        npc.angle += angleDiff * Math.min(1, 12 * dt);
+
+        // Direction vector for vehicle heading
+        const faceRad = (npc.angle - 90) * Math.PI / 180;
+        const dirX = Math.cos(faceRad);
+        const dirY = Math.sin(faceRad);
+
+        // --- CAR FOLLOWING & COLLISION BRAKING ---
+        let shouldBrake = false;
+
+        // 1. Check other NPCs ahead in same corridor / lane
+        for (let j = 0; j < trafficNPCs.length; j++) {
+          if (j === npcIdx) continue;
+          const other = trafficNPCs[j];
+          const ox = other.x - npc.x;
+          const oy = other.y - npc.y;
+          const od = Math.hypot(ox, oy);
+          if (od < 50) {
+            const dot = dirX * ox + dirY * oy;
+            const cross = Math.abs(dirX * oy - dirY * ox);
+            const otherRad = (other.angle - 90) * Math.PI / 180;
+            const dotHeading = dirX * Math.cos(otherRad) + dirY * Math.sin(otherRad);
+            // Only brake for vehicles ahead in our lane, NOT oncoming traffic
+            if (dot > 0 && cross < 16 && dotHeading > -0.4) {
+              shouldBrake = true;
+              break;
+            }
+          }
+        }
+
+        // 2. Check Player ahead
+        const distToPlayer = Math.hypot(player.x - npc.x, player.y - npc.y);
+        if (distToPlayer < 50) {
+          const px = player.x - npc.x;
+          const py = player.y - npc.y;
+          const dot = dirX * px + dirY * py;
+          const cross = Math.abs(dirX * py - dirY * px);
+          if (dot > 0 && cross < 18) {
+            shouldBrake = true;
+          }
+        }
+
+        // --- SPEED & BRAKE DYNAMICS ---
+        if (npc.haltedTimer > 0) {
+          npc.haltedTimer -= dt;
+          npc.currentSpeed = 0;
+          npc.isBraking = true;
+        } else if (shouldBrake) {
+          npc.isBraking = true;
+          npc.currentSpeed = Math.max(0, npc.currentSpeed - 320 * dt);
+        } else {
+          npc.isBraking = false;
+          npc.currentSpeed = Math.min(npc.baseSpeed, npc.currentSpeed + 160 * dt);
+        }
+
+        // --- ADVANCE POSITION ALONG ROAD LANE ---
+        if (npc.segLen > 0) {
+          npc.progress += (npc.currentSpeed / npc.segLen) * dt;
+        }
+
+        // --- INTERSECTION / CORNER TRANSITION ---
+        if (npc.progress >= 1.0) {
+          npc.prevWpId = npc.fromWpId;
+          npc.fromWpId = npc.toWpId;
+          const currNode = WAYPOINTS[npc.fromWpId];
+          let candidates = currNode.connections.filter(id => id !== npc.prevWpId);
+          if (candidates.length === 0) candidates = currNode.connections;
+          npc.toWpId = candidates[Math.floor(Math.random() * candidates.length)];
+          npc.progress = 0.0;
+        }
+
+        // Compute current exact (X, Y) from segment geometry
+        const curSeg = getSegmentData(npc.fromWpId, npc.toWpId);
+        npc.x = curSeg.startX + (curSeg.endX - curSeg.startX) * Math.min(1, Math.max(0, npc.progress));
+        npc.y = curSeg.startY + (curSeg.endY - curSeg.startY) * Math.min(1, Math.max(0, npc.progress));
+
+        // --- CRASH COLLISION WITH PLAYER ---
+        if (distToPlayer < 22) {
+          const now = performance.now();
+          if (Math.abs(player.speed) > 10 && now - lastHitTime > 1000) {
+            collisions++;
+            lastHitTime = now;
+            camera.shake = 0.35;
+            player.speed = -player.speed * 0.5;
+            npc.currentSpeed = 0;
+            npc.haltedTimer = 1.5;
+          }
+        }
+      });
+
+      // === MULTI-PASSENGER PICKUP/DROPOFF LOGIC ===
+      if (!currentPassenger) {
+        // Belum ada penumpang di kendaraan — cek apakah dekat salah satu penumpang
+        for (const p of passengers) {
+          if (p.status !== 'waiting') continue;
+          const dist = Math.hypot(player.x - p.pickupX, player.y - p.pickupY);
+          if (dist < 18) {
+            p.status = 'picked';
+            currentPassenger = p;
+            break;
+          }
+        }
+      } else {
+        // Ada penumpang — cek apakah sampai di dropoff
+        const dist = Math.hypot(player.x - currentPassenger.dropoffX, player.y - currentPassenger.dropoffY);
+        if (dist < 22) {
+          currentPassenger.status = 'delivered';
+          deliveriesCompleted++;
+          totalFare += currentPassenger.fare;
+          currentPassenger = null;
+
+          // Cek menang berdasarkan target level yang aktif
+          const targetReq = activeLevel.targetDeliveries || DELIVERIES_TO_WIN;
+          if (deliveriesCompleted >= targetReq) {
+            gameStatus = 'won';
+            document.getElementById('mobile-controls').classList.add('hidden');
+            calculateResult();
+          }
+        }
+      }
+
+      // CAMERA FOLLOW & BOUNDARY CLAMP (NO OFFSIDE OUTSIDE MAP)
+      const visibleW = VIEW.width / CAMERA_ZOOM;
+      const visibleH = VIEW.height / CAMERA_ZOOM;
+
+      let targetCamX = player.x - visibleW / 2;
+      let targetCamY = player.y - visibleH / 2;
+
+
+
+      camera.x += (targetCamX - camera.x) * 0.12;
+      camera.y += (targetCamY - camera.y) * 0.12;
+
+      if (camera.shake > 0) camera.shake -= dt;
+    }
+
+    // CALCULATE DATA & ANIMATE COGNITIVE BAR CHART GRAPH
+    function calculateResult() {
+      let stars = 1;
+      if (collisions <= activeLevel.maxHits) stars++;
+      if (levelTime <= activeLevel.goldTime && collisions <= activeLevel.maxHits) stars++;
+
+      activeLevel.stars = Math.max(activeLevel.stars, stars);
+      document.getElementById('result-stars').innerText = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+
+      // Update Level Titles & Route Description
+      document.getElementById('result-level-title').innerText = `${activeCity.name.toUpperCase()} CLEARED!`;
+      document.getElementById('result-route-desc').innerText = `Rute ${activeCity.name}: ${activeCity.landmark} ➔ Selesai!`;
+
+      // Checkpoints & Collisions Values
+      document.getElementById('res-check-val').innerText = `(3 / 3)`;
+      document.getElementById('res-hits-val').innerText = `(${collisions} Nabrak)`;
+      document.getElementById('res-drop-val').innerText = `(100%)`;
+
+      // Coin Calculations
+      const coinBensin = 86;
+      const coinAvoid = Math.max(0, 100 - (collisions * 15));
+      const totalCoin = coinBensin + coinAvoid + (deliveriesCompleted * 15);
+
+      document.getElementById('res-coin-bensin').innerText = `+${coinBensin} Koin`;
+      document.getElementById('res-coin-avoid').innerText = `+${coinAvoid} Koin`;
+      document.getElementById('res-coin-total').innerText = `${totalCoin} KOIN`;
+
+      // 5-Point Radar Chart calculation for Prefrontal Cortex
+      // 1. Perencanaan Rute (80 - 100%)
+      const ruteScore = Math.min(100, Math.max(50, Math.round(95 - (collisions * 8))));
+      // 2. Keputusan Cepat (75 - 100%)
+      const speedRatio = activeLevel.goldTime / Math.max(1, levelTime);
+      const keputusanScore = Math.min(100, Math.max(40, Math.round(speedRatio * 90)));
+      // 3. Kontrol Diri (Tabrakan)
+      const kontrolDiriScore = Math.max(20, 100 - (collisions * 20));
+      // 4. Memori Kerja
+      const memoriKerjaScore = Math.min(100, Math.max(50, Math.round(85 + (deliveriesCompleted * 5))));
+      // 5. Logika Spasial
+      const logikaSpasialScore = Math.round((ruteScore * 0.5) + (kontrolDiriScore * 0.5));
+
+      // Draw Radar Chart on HTML5 Canvas
+      drawRadarChart([ruteScore, keputusanScore, kontrolDiriScore, memoriKerjaScore, logikaSpasialScore]);
+
+      document.getElementById('screen-result').classList.remove('hidden');
+    }
+
+    function drawRadarChart(scores) {
+      const canvas = document.getElementById('radarChartCanvas');
+      if (!canvas) return;
+      const rctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      rctx.clearRect(0, 0, w, h);
+
+      const centerX = w / 2;
+      const centerY = h / 2 - 5;
+      const radius = 62;
+      const labels = ['Perencanaan Rute', 'Keputusan Cepat', 'Kontrol Diri', 'Memori Kerja', 'Logika Spasial'];
+      const numPoints = labels.length;
+
+      // Draw Background Polygon Webs
+      for (let level = 1; level <= 4; level++) {
+        const r = (radius / 4) * level;
+        rctx.beginPath();
+        for (let i = 0; i < numPoints; i++) {
+          const angle = (i * 2 * Math.PI / numPoints) - (Math.PI / 2);
+          const x = centerX + r * Math.cos(angle);
+          const y = centerY + r * Math.sin(angle);
+          if (i === 0) rctx.moveTo(x, y);
+          else rctx.lineTo(x, y);
+        }
+        rctx.closePath();
+        rctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+        rctx.lineWidth = 1;
+        rctx.stroke();
+      }
+
+      // Draw Axis Lines
+      for (let i = 0; i < numPoints; i++) {
+        const angle = (i * 2 * Math.PI / numPoints) - (Math.PI / 2);
+        const x = centerX + radius * Math.cos(angle);
+        const y = centerY + radius * Math.sin(angle);
+        rctx.beginPath();
+        rctx.moveTo(centerX, centerY);
+        rctx.lineTo(x, y);
+        rctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        rctx.stroke();
+
+        // Draw Labels
+        const labelRadius = radius + 18;
+        const lx = centerX + labelRadius * Math.cos(angle);
+        const ly = centerY + labelRadius * Math.sin(angle);
+        rctx.fillStyle = '#cbd5e1';
+        rctx.font = 'bold 9px "Outfit", sans-serif';
+        rctx.textAlign = Math.abs(lx - centerX) < 5 ? 'center' : (lx > centerX ? 'left' : 'right');
+        rctx.textBaseline = Math.abs(ly - centerY) < 5 ? 'middle' : (ly > centerY ? 'top' : 'bottom');
+        rctx.fillText(labels[i], lx, ly);
+      }
+
+      // Draw Filled Data Polygon
+      rctx.beginPath();
+      for (let i = 0; i < numPoints; i++) {
+        const score = scores[i] / 100;
+        const angle = (i * 2 * Math.PI / numPoints) - (Math.PI / 2);
+        const x = centerX + (radius * score) * Math.cos(angle);
+        const y = centerY + (radius * score) * Math.sin(angle);
+        if (i === 0) rctx.moveTo(x, y);
+        else rctx.lineTo(x, y);
+      }
+      rctx.closePath();
+
+      rctx.fillStyle = 'rgba(168, 85, 247, 0.35)';
+      rctx.fill();
+      rctx.strokeStyle = '#c084fc';
+      rctx.lineWidth = 2;
+      rctx.stroke();
+
+      // Draw Data Dots
+      for (let i = 0; i < numPoints; i++) {
+        const score = scores[i] / 100;
+        const angle = (i * 2 * Math.PI / numPoints) - (Math.PI / 2);
+        const x = centerX + (radius * score) * Math.cos(angle);
+        const y = centerY + (radius * score) * Math.sin(angle);
+        rctx.beginPath();
+        rctx.arc(x, y, 3.5, 0, Math.PI * 2);
+        rctx.fillStyle = '#f0abfc';
+        rctx.fill();
+      }
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, VIEW.width, VIEW.height);
+
+      if (currentScreen === 'vehicle') {
+        ctx.fillStyle = '#0b1329';
+        ctx.fillRect(0, 0, VIEW.width, VIEW.height);
+      } else if (currentScreen === 'worldmap') {
+        renderWorldMap();
+      } else if (currentScreen === 'game') {
+        renderGameplay();
+      }
+    }
+
+    function renderWorldMap() {
+      if (mapImage.complete && mapImage.naturalWidth > 0) {
+        ctx.globalAlpha = 1.0;
+        ctx.drawImage(mapImage, 0, 0, VIEW.width, VIEW.height);
+      } else {
+        ctx.fillStyle = '#091326';
+        ctx.fillRect(0, 0, VIEW.width, VIEW.height);
+      }
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 22px "Outfit", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('WORLD MAP INDONESIA 🇮🇩', 32, 45);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px "Outfit", sans-serif';
+      ctx.fillText('Klik Node Kota yang Terbuka untuk Memilih Sub-Level', 32, 70);
+
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+      ctx.setLineDash([8, 8]);
+      ctx.beginPath();
+      CITIES.forEach((city, idx) => {
+        if (idx === 0) ctx.moveTo(city.x, city.y);
+        else ctx.lineTo(city.x, city.y);
+      });
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      const t = performance.now() / 1000;
+      CITIES.forEach(city => {
+        if (city.unlocked) {
+          ctx.lineWidth = 2;
+          ctx.strokeStyle = '#38bdf8';
+          ctx.beginPath();
+          ctx.arc(city.x, city.y, 22 + Math.sin(t * 4) * 4, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
+        ctx.fillStyle = city.unlocked ? '#0284c7' : '#334155';
+        ctx.beginPath();
+        ctx.arc(city.x, city.y, 18, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = city.unlocked ? '#38bdf8' : '#64748b';
+        ctx.stroke();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(city.unlocked ? '📍' : '🔒', city.x, city.y + 4);
+
+        ctx.fillStyle = city.unlocked ? '#f8fafc' : '#64748b';
+        ctx.font = 'bold 14px "Outfit", sans-serif';
+        ctx.fillText(city.name, city.x, city.y + 36);
+
+        const totalStars = city.levels.reduce((acc, l) => acc + l.stars, 0);
+        ctx.fillStyle = '#f59e0b';
+        ctx.font = '12px "Outfit", sans-serif';
+        ctx.fillText(`⭐ ${totalStars}/${city.levels.length * 3}`, city.x, city.y + 52);
+      });
+    }
+
+    function renderGameplay() {
+      ctx.save();
+
+      // Apply Zoom Transform centered on viewport
+      ctx.scale(CAMERA_ZOOM, CAMERA_ZOOM);
+
+      let shakeX = 0, shakeY = 0;
+      if (camera.shake > 0) {
+        shakeX = (Math.random() - 0.5) * 12;
+        shakeY = (Math.random() - 0.5) * 12;
+      }
+      ctx.translate(-camera.x + shakeX, -camera.y + shakeY);
+
+      // OUTER WORLD LANDSCAPE (Draw behind the map)
+      ctx.fillStyle = '#1b3f22'; // Forest green
+      ctx.fillRect(-600, -600, WORLD.width + 1200, WORLD.height + 1200);
+
+      // JAKARTA MAP BACKGROUND
+      if (jakartaMapImage.complete && jakartaMapImage.naturalWidth > 0) {
+        ctx.drawImage(jakartaMapImage, 0, 0, WORLD.width, WORLD.height);
+      } else {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, WORLD.width, WORLD.height);
+      }
+
+      // City Border Wall
+      ctx.strokeStyle = '#334155'; // Slate-700
+      ctx.lineWidth = 14;
+      ctx.strokeRect(0, 0, WORLD.width, WORLD.height);
+
+      // DEBUG OVERLAY (Semi-transparent overlay: Red for non-road collision, Green for road)
+      if (showDebugOverlay && roadMaskCanvas) {
+        ctx.save();
+        ctx.globalAlpha = 0.38;
+        // Draw green Tint over road
+        ctx.fillStyle = '#10b981';
+        ctx.fillRect(0, 0, WORLD.width, WORLD.height);
+        
+        // Overlay mask (black areas block green, white areas let green pass)
+        ctx.globalCompositeOperation = 'difference';
+        ctx.drawImage(roadMaskCanvas, 0, 0, WORLD.width, WORLD.height);
+        ctx.restore();
+      }
+
+
+
+      // TRAFFIC CARS
+      trafficNPCs.forEach(npc => {
+        ctx.save();
+        ctx.translate(npc.x, npc.y);
+        ctx.rotate(npc.angle * Math.PI / 180);
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.fillRect(-npc.w / 2 + 3, -npc.h / 2 + 3, npc.w, npc.h);
+
+        ctx.fillStyle = npc.color;
+        ctx.fillRect(-npc.w / 2, -npc.h / 2, npc.w, npc.h);
+
+        ctx.fillStyle = '#1e293b';
+        ctx.fillRect(-npc.w / 2 + 4, -npc.h / 2 + 8, npc.w - 8, 10);
+
+        ctx.fillStyle = '#fef08a';
+        ctx.fillRect(-npc.w / 2 + 2, -npc.h / 2, 5, 3);
+        ctx.fillRect(npc.w / 2 - 7, -npc.h / 2, 5, 3);
+
+        ctx.fillStyle = npc.isBraking ? '#ef4444' : '#7f1d1d';
+        ctx.fillRect(-npc.w / 2 + 2, npc.h / 2 - 3, 5, 3);
+        ctx.fillRect(npc.w / 2 - 7, npc.h / 2 - 3, 5, 3);
+
+        ctx.restore();
+      });
+
+      // === RENDER WAITING PASSENGERS (pickup points) ===
+      // Hanya tampil jika player belum membawa penumpang (currentPassenger === null)
+      if (!currentPassenger) {
+        passengers.forEach(p => {
+          if (p.status !== 'waiting') return;
+          const pulse = Math.sin(performance.now() / 250 + p.id) * 5;
+
+          // Label
+          ctx.fillStyle = 'rgba(2, 132, 199, 0.9)';
+          ctx.fillRect(p.pickupX - 40, p.pickupY - 50, 80, 22);
+          ctx.fillStyle = '#ffffff'; ctx.font = 'bold 9px "Outfit", sans-serif'; ctx.textAlign = 'center';
+          ctx.fillText(p.name + ' 🖐', p.pickupX, p.pickupY - 35);
+          ctx.fillStyle = '#a5f3fc'; ctx.font = 'bold 8px "Outfit", sans-serif';
+          ctx.fillText('Rp ' + (p.fare/1000) + 'k', p.pickupX, p.pickupY - 25);
+
+          // Glow (Pickup Zone)
+          ctx.fillStyle = 'rgba(34, 197, 94, 0.2)';
+          ctx.beginPath(); ctx.arc(p.pickupX, p.pickupY, 20 + pulse, 0, Math.PI * 2); ctx.fill();
+
+          // Circle Base (Pickup Zone)
+          ctx.fillStyle = 'rgba(34, 197, 94, 0.4)';
+          ctx.strokeStyle = '#22c55e';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath(); ctx.arc(p.pickupX, p.pickupY, 15, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+          // Stylized top-down character sprite (On road center)
+          ctx.save();
+          ctx.translate(p.pickupX, p.pickupY);
+
+          // Character shadow
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+          ctx.beginPath(); ctx.arc(2, 4, 6, 0, Math.PI * 2); ctx.fill();
+
+          // Shoulders / Shirt
+          ctx.fillStyle = '#ef4444'; // Red jacket
+          ctx.beginPath();
+          ctx.roundRect(-6, -4, 12, 8, 3);
+          ctx.fill();
+
+          // Skin Head
+          ctx.fillStyle = '#fdba74'; // Warm skin tone
+          ctx.beginPath(); ctx.arc(0, -5, 4, 0, Math.PI * 2); ctx.fill();
+
+          // Hair / Cap
+          ctx.fillStyle = '#1e293b'; // Slate cap
+          ctx.beginPath();
+          ctx.arc(0, -6, 4, Math.PI, 0);
+          ctx.fill();
+
+          // Animated Waving Hand
+          const wave = Math.sin(performance.now() / 120 + p.id) * 0.4 - 0.4;
+          ctx.save();
+          ctx.translate(-4, -1);
+          ctx.rotate(wave);
+          ctx.fillStyle = '#fdba74';
+          ctx.fillRect(-2, -5, 2.5, 6);
+          ctx.restore();
+
+          ctx.restore();
+        });
+      }
+
+      // === RENDER CURRENT DROPOFF (if carrying passenger) ===
+      if (currentPassenger) {
+        const dp = currentPassenger;
+        const pulse = Math.sin(performance.now() / 200) * 8;
+
+        // Label
+        ctx.fillStyle = 'rgba(202, 138, 4, 0.9)';
+        ctx.fillRect(dp.dropoffX - 50, dp.dropoffY - 55, 100, 24);
+        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 10px "Outfit", sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText('ANTAR ' + dp.name, dp.dropoffX, dp.dropoffY - 38);
+
+        // Glow
+        ctx.fillStyle = 'rgba(250, 204, 21, 0.3)';
+        ctx.beginPath(); ctx.arc(dp.dropoffX, dp.dropoffY, 35 + pulse, 0, Math.PI * 2); ctx.fill();
+
+        // Circle
+        ctx.fillStyle = '#eab308';
+        ctx.beginPath(); ctx.arc(dp.dropoffX, dp.dropoffY, 30, 0, Math.PI * 2); ctx.fill();
+
+        // Icon
+        ctx.fillStyle = '#0f172a'; ctx.font = 'bold 20px sans-serif';
+        ctx.fillText('📍', dp.dropoffX, dp.dropoffY + 7);
+      }
+
+      // PLAYER VEHICLE
+      renderPlayerVehicle();
+
+      ctx.restore();
+
+      renderTargetArrow();
+      renderModernHUD();
+      renderModernMinimap();
+      renderSpeedometerDial();
+    }
+
+    function drawModernRoadHorizontal(y, roadWidth) {
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(0, y - 16, WORLD.width, roadWidth + 32);
+
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(0, y, WORLD.width, roadWidth);
+
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.moveTo(0, y + roadWidth / 2);
+      ctx.lineTo(WORLD.width, y + roadWidth / 2);
+      ctx.stroke();
+    }
+
+    function drawModernRoadVertical(x, roadWidth) {
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(x - 16, 0, roadWidth + 32, WORLD.height);
+
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(x, 0, roadWidth, WORLD.height);
+
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.moveTo(x + roadWidth / 2, 0);
+      ctx.lineTo(x + roadWidth / 2, WORLD.height);
+      ctx.stroke();
+    }
+
+    function renderPlayerVehicle() {
+      ctx.save();
+      ctx.translate(player.x, player.y);
+      ctx.rotate(player.angle * Math.PI / 180);
+
+      const isMotor = player.type === 'motor';
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+      ctx.fillRect(-player.width / 2 + 4, -player.height / 2 + 4, player.width, player.height);
+
+      if (isMotor) {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(-3, -player.height / 2 - 3, 6, 8);
+        ctx.fillRect(-3, player.height / 2 - 5, 6, 8);
+
+        ctx.fillStyle = '#0284c7';
+        ctx.fillRect(-player.width / 2, -player.height / 2 + 4, player.width, player.height - 8);
+
+        ctx.fillStyle = '#16a34a';
+        ctx.beginPath(); ctx.arc(0, 1, 7, 0, Math.PI * 2); ctx.fill();
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(-4, -3, 8, 4);
+
+        ctx.fillStyle = 'rgba(254, 240, 138, 0.45)';
+        ctx.beginPath();
+        ctx.moveTo(-6, -player.height / 2);
+        ctx.lineTo(-18, -player.height / 2 - 40);
+        ctx.lineTo(18, -player.height / 2 - 40);
+        ctx.lineTo(6, -player.height / 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(-player.width / 2 - 3, -player.height / 2 + 4, 5, 12);
+        ctx.fillRect(player.width / 2 - 2, -player.height / 2 + 4, 5, 12);
+        ctx.fillRect(-player.width / 2 - 3, player.height / 2 - 16, 5, 12);
+        ctx.fillRect(player.width / 2 - 2, player.height / 2 - 16, 5, 12);
+
+        ctx.fillStyle = '#7c3aed';
+        ctx.fillRect(-player.width / 2, -player.height / 2, player.width, player.height);
+
+        ctx.fillStyle = '#38bdf8';
+        ctx.fillRect(-player.width / 2 + 3, -player.height / 2 + 10, player.width - 6, 12);
+
+        ctx.fillStyle = 'rgba(254, 240, 138, 0.45)';
+        ctx.beginPath();
+        ctx.moveTo(-9, -player.height / 2);
+        ctx.lineTo(-20, -player.height / 2 - 45);
+        ctx.lineTo(20, -player.height / 2 - 45);
+        ctx.lineTo(9, -player.height / 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function renderTargetArrow() {
+      let targetX, targetY, color;
+
+      if (currentPassenger) {
+        // Arahkan ke dropoff penumpang saat ini
+        targetX = currentPassenger.dropoffX;
+        targetY = currentPassenger.dropoffY;
+        color = '#f59e0b';
+      } else {
+        // Arahkan ke penumpang terdekat yang masih waiting
+        let nearest = null;
+        let nearestDist = Infinity;
+        for (const p of passengers) {
+          if (p.status !== 'waiting') continue;
+          const d = Math.hypot(p.pickupX - player.x, p.pickupY - player.y);
+          if (d < nearestDist) { nearestDist = d; nearest = p; }
+        }
+        if (!nearest) return;
+        targetX = nearest.pickupX;
+        targetY = nearest.pickupY;
+        color = '#10b981';
+      }
+
+      const angle = Math.atan2(targetY - player.y, targetX - player.x);
+      ctx.save();
+      ctx.translate(VIEW.width / 2, 45);
+      ctx.rotate(angle);
+
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.moveTo(28, 0);
+      ctx.lineTo(-18, -18);
+      ctx.lineTo(-6, 0);
+      ctx.lineTo(-18, 18);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.lineWidth = 2; ctx.strokeStyle = '#0f172a'; ctx.stroke();
+      ctx.restore();
+    }
+
+    function renderModernHUD() {
+      ctx.save();
+      const hudH = 130;
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+      ctx.fillRect(20, 20, 340, hudH);
+      ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)'; ctx.strokeRect(20, 20, 340, hudH);
+
+      ctx.fillStyle = '#06b6d4';
+      ctx.fillRect(20, 20, 340, 3);
+
+      ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 14px "Outfit", sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText(`⏱ Waktu: ${levelTime.toFixed(1)}s`, 36, 45);
+
+      ctx.fillStyle = collisions <= activeLevel.maxHits ? '#10b981' : '#f43f5e'; ctx.font = 'bold 13px "Outfit", sans-serif';
+      ctx.fillText(`💥 Tabrakan: ${collisions}x (Max ⭐3: ${activeLevel.maxHits}x)`, 36, 68);
+
+      // Delivery progress
+      const targetReq = activeLevel.targetDeliveries || DELIVERIES_TO_WIN;
+      ctx.fillStyle = '#f59e0b'; ctx.font = 'bold 14px "Outfit", sans-serif';
+      ctx.fillText(`🚖 Antar: ${deliveriesCompleted} / ${targetReq} (${activeLevel.title || ''})`, 36, 92);
+
+      // Current task
+      ctx.font = 'bold 12px "Outfit", sans-serif';
+      if (currentPassenger) {
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillText(`📍 Antar ${currentPassenger.name} — Rp ${(currentPassenger.fare/1000)}k`, 36, 112);
+      } else {
+        const waiting = passengers.filter(p => p.status === 'waiting').length;
+        ctx.fillStyle = '#34d399';
+        ctx.fillText(`🧑 ${waiting} penumpang menunggu — jemput!`, 36, 112);
+      }
+
+      // Total fare
+      if (totalFare > 0) {
+        ctx.fillStyle = '#a5f3fc'; ctx.font = 'bold 11px "Outfit", sans-serif';
+        ctx.fillText(`💰 Total: Rp ${(totalFare/1000)}k`, 36, 132);
+      }
+
+      ctx.restore();
+    }
+
+    function renderModernMinimap() {
+      const mapW = 200;
+      const mapH = 133;
+      const mapX = VIEW.width - mapW - 20;
+      const mapY = 20;
+      const scaleX = mapW / WORLD.width;
+      const scaleY = mapH / WORLD.height;
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.fillRect(mapX, mapY, mapW, mapH);
+
+      if (jakartaMapImage.complete && jakartaMapImage.naturalWidth > 0) {
+        ctx.globalAlpha = 0.95;
+        ctx.drawImage(jakartaMapImage, mapX, mapY, mapW, mapH);
+        ctx.globalAlpha = 1.0;
+      }
+
+      ctx.lineWidth = 2; ctx.strokeStyle = '#38bdf8'; ctx.strokeRect(mapX, mapY, mapW, mapH);
+
+      // Title bar background
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+      ctx.fillRect(mapX, mapY, mapW, 20);
+
+      ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 11px "Outfit", sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('GPS MINIMAP 🗺️', mapX + mapW / 2, mapY + 14);
+
+      // === RENDER NAVIGATION PATH LINE (Thick glowing yellow/green route on minimap) ===
+      let navTargetX, navTargetY;
+      if (currentPassenger) {
+        navTargetX = currentPassenger.dropoffX;
+        navTargetY = currentPassenger.dropoffY;
+      } else {
+        // Nearest waiting passenger
+        let nearest = null;
+        let nearestDist = Infinity;
+        for (const p of passengers) {
+          if (p.status !== 'waiting') continue;
+          const d = Math.hypot(p.pickupX - player.x, p.pickupY - player.y);
+          if (d < nearestDist) { nearestDist = d; nearest = p; }
+        }
+        if (nearest) {
+          navTargetX = nearest.pickupX;
+          navTargetY = nearest.pickupY;
+        }
+      }
+
+      if (navTargetX !== undefined && navTargetY !== undefined) {
+        const pathPoints = findShortestPath(player.x, player.y, navTargetX, navTargetY);
+        
+        if (pathPoints.length >= 2) {
+          ctx.save();
+          // Glow effect under line
+          ctx.lineWidth = 6;
+          ctx.strokeStyle = currentPassenger ? 'rgba(234, 179, 8, 0.4)' : 'rgba(16, 185, 129, 0.4)';
+          ctx.beginPath();
+          ctx.moveTo(mapX + pathPoints[0].x * scaleX, mapY + pathPoints[0].y * scaleY);
+          for (let i = 1; i < pathPoints.length; i++) {
+            ctx.lineTo(mapX + pathPoints[i].x * scaleX, mapY + pathPoints[i].y * scaleY);
+          }
+          ctx.stroke();
+
+          // Main line
+          ctx.lineWidth = 3.5;
+          ctx.strokeStyle = currentPassenger ? '#facc15' : '#34d399';
+          ctx.setLineDash([6, 3]);
+          ctx.beginPath();
+          ctx.moveTo(mapX + pathPoints[0].x * scaleX, mapY + pathPoints[0].y * scaleY);
+          for (let i = 1; i < pathPoints.length; i++) {
+            ctx.lineTo(mapX + pathPoints[i].x * scaleX, mapY + pathPoints[i].y * scaleY);
+          }
+          ctx.stroke();
+          ctx.restore();
+        }
+      }
+
+      // Render waiting passengers on minimap (glowing green dots) only when NOT carrying someone
+      if (!currentPassenger) {
+        passengers.forEach(p => {
+          if (p.status === 'waiting') {
+            const px = mapX + p.pickupX * scaleX;
+            const py = mapY + p.pickupY * scaleY;
+            ctx.fillStyle = '#22c55e';
+            ctx.beginPath(); ctx.arc(px, py, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.lineWidth = 1.5; ctx.strokeStyle = '#ffffff'; ctx.stroke();
+          }
+        });
+      }
+
+      // Render active passenger dropoff destination on minimap (glowing yellow flag)
+      if (currentPassenger) {
+        const dx = mapX + currentPassenger.dropoffX * scaleX;
+        const dy = mapY + currentPassenger.dropoffY * scaleY;
+        ctx.fillStyle = '#facc15';
+        ctx.beginPath(); ctx.arc(dx, dy, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.lineWidth = 2; ctx.strokeStyle = '#0f172a'; ctx.stroke();
+      }
+
+      // Render player position on minimap (bright cyan icon with white border)
+      const plx = mapX + player.x * scaleX;
+      const ply = mapY + player.y * scaleY;
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath(); ctx.arc(plx, ply, 5.5, 0, Math.PI * 2); ctx.fill();
+      ctx.lineWidth = 2; ctx.strokeStyle = '#ffffff'; ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function renderSpeedometerDial() {
+      const centerX = VIEW.width - 90;
+      const centerY = VIEW.height - 90;
+      const radius = 65;
+
+      ctx.save();
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
+      ctx.beginPath(); ctx.arc(centerX, centerY, radius, 0, Math.PI * 2); ctx.fill();
+
+      ctx.lineWidth = 3; ctx.strokeStyle = '#0284c7'; ctx.stroke();
+
+      const startAngle = 0.75 * Math.PI;
+      const endAngle = 2.25 * Math.PI;
+
+      ctx.lineWidth = 8; ctx.strokeStyle = '#334155';
+      ctx.beginPath(); ctx.arc(centerX, centerY, radius - 12, startAngle, endAngle); ctx.stroke();
+
+      const currentSpd = Math.max(0, Math.abs(player.speed));
+      const spdRatio = Math.min(currentSpd / player.maxSpeed, 1);
+      const activeAngle = startAngle + spdRatio * (endAngle - startAngle);
+
+      const colorGrad = currentSpd > 350 ? '#f43f5e' : currentSpd > 200 ? '#f59e0b' : '#38bdf8';
+
+      ctx.lineWidth = 8; ctx.strokeStyle = colorGrad;
+      ctx.beginPath(); ctx.arc(centerX, centerY, radius - 12, startAngle, activeAngle); ctx.stroke();
+
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(activeAngle);
+
+      ctx.strokeStyle = '#f43f5e'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(radius - 18, 0); ctx.stroke();
+
+      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(0, 0, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+
+      ctx.fillStyle = '#f8fafc'; ctx.font = 'bold 16px monospace'; ctx.textAlign = 'center';
+      ctx.fillText(`${Math.round(currentSpd)}`, centerX, centerY + 25);
+
+      ctx.fillStyle = '#38bdf8'; ctx.font = 'bold 9px sans-serif';
+      ctx.fillText('KM/H', centerX, centerY + 38);
+
+      ctx.restore();
+    }
+
+    function mainLoop(now) {
+      try {
+        const dt = Math.min((now - lastFrameTime) / 1000, 0.1);
+        lastFrameTime = now;
+
+        update(dt);
+        render();
+      } catch (err) {
+        console.error('Game loop error:', err);
+      }
+
+      requestAnimationFrame(mainLoop);
+    }
+
+    requestAnimationFrame(mainLoop);
+  </script>
+</body>
+</html>

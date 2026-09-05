@@ -1,0 +1,1364 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Invisible Maze Adventure</title>
+  <!-- Tailwind CSS untuk styling instan & modern -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome untuk ikon gratis -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap');
+    
+    body {
+      font-family: 'Fredoka', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      background: #111827;
+      overflow-x: hidden;
+    }
+
+    /* Cyberpunk/Sci-Fi Light Lab Grid Background */
+    .cyber-bg {
+      background: radial-gradient(circle at 50% 50%, #f8fafc 0%, #cbd5e1 100%);
+      background-image: 
+        radial-gradient(circle at 50% 50%, #f8fafc 0%, #cbd5e1 100%),
+        linear-gradient(rgba(14, 165, 233, 0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(14, 165, 233, 0.12) 1px, transparent 1px);
+      background-size: 100% 100%, 20px 20px, 20px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Floating binary stream particles - Increased contrast */
+    .cyber-particle {
+      position: absolute;
+      color: rgba(14, 165, 233, 0.35);
+      font-family: monospace;
+      font-size: 11px;
+      font-weight: bold;
+      user-select: none;
+      pointer-events: none;
+      animation: floatParticles 25s linear infinite;
+      z-index: 1;
+      white-space: nowrap;
+    }
+
+    @keyframes floatParticles {
+      0% { transform: translateY(120%) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.8; }
+      90% { opacity: 0.8; }
+      100% { transform: translateY(-120%) rotate(10deg); opacity: 0; }
+    }
+
+    /* Futuristic Robot Hovering Animation (Idle) */
+    @keyframes robotIdle {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-5px) rotate(1deg); }
+    }
+    .animate-slime-idle {
+      animation: robotIdle 2s ease-in-out infinite;
+    }
+
+    /* Futuristic Robot Thruster Dash Animation (Step) */
+    @keyframes robotDash {
+      0% { transform: scale(1) translateY(0); }
+      40% { transform: scale(0.9, 1.1) translateY(-10px); }
+      75% { transform: scale(1.05, 0.95) translateY(1px); }
+      100% { transform: scale(1) translateY(0); }
+    }
+    .animate-slime-jump {
+      animation: robotDash 0.25s ease-out;
+    }
+
+    /* Efek getar layar saat menabrak rintangan gaib */
+    @keyframes shake {
+      0%, 100% { transform: translate(0, 0); }
+      10%, 30%, 50%, 70%, 90% { transform: translate(-5px, 3px); }
+      20%, 40%, 60%, 80% { transform: translate(5px, -3px); }
+    }
+    .shake-screen {
+      animation: shake 0.3s ease-in-out;
+    }
+
+    /* Kilatan merah tanda darah berkurang */
+    @keyframes flashRed {
+      0%, 100% { background-color: transparent; }
+      50% { background-color: rgba(239, 68, 68, 0.35); }
+    }
+    .flash-error {
+      animation: flashRed 0.3s ease-in-out;
+    }
+
+    /* Transisi mulus rintangan saat memudar */
+    .wall-transition {
+      transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s ease;
+    }
+
+    /* Glow states for Game Container */
+    .game-glow-memory {
+      box-shadow: 0 0 35px rgba(245, 158, 11, 0.4), inset 0 2px 8px rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.6) !important;
+    }
+    .game-glow-play {
+      box-shadow: 0 0 35px rgba(34, 211, 238, 0.35), inset 0 2px 8px rgba(34, 211, 238, 0.15);
+      border-color: rgba(34, 211, 238, 0.5) !important;
+    }
+    .game-glow-hit {
+      box-shadow: 0 0 45px rgba(239, 68, 68, 0.65), inset 0 2px 8px rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.8) !important;
+    }
+
+    #gameContainer {
+      aspect-ratio: 9 / 6;
+      max-height: 86vh;
+      max-width: 129vh; /* 86vh * 1.5 aspect ratio */
+      width: 100%;
+    }
+
+    /* Rotate prompt overlay for mobile portrait */
+    #rotate-prompt {
+      position: fixed; inset: 0;
+      background: rgba(3, 7, 18, 0.96);
+      backdrop-filter: blur(24px);
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 30px;
+    }
+    .rotate-icon { font-size: 4.5rem; margin-bottom: 20px; animation: rotatePulse 2s infinite ease-in-out; }
+    @keyframes rotatePulse {
+      0% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(90deg) scale(1.1); }
+      100% { transform: rotate(0deg) scale(1); }
+    }
+    .rotate-title { font-size: 1.6rem; font-weight: 900; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+    .rotate-desc { font-size: 0.9rem; color: #94a3b8; max-width: 340px; line-height: 1.5; }
+    @media screen and (orientation: landscape) {
+      #rotate-prompt { display: none !important; }
+    }
+
+    /* Landscape mobile: compact layout */
+    @media screen and (orientation: landscape) and (max-height: 500px) {
+      body { padding: 4px !important; }
+      #gameContainer { max-height: 96vh; padding: 6px !important; border-width: 2px !important; border-radius: 12px !important; }
+      #gameContainer .text-[10px] { font-size: 7px !important; }
+      #gameContainer .text-[9px] { font-size: 7px !important; }
+      #gameContainer .px-2\.5 { padding-left: 5px !important; padding-right: 5px !important; }
+      #gameContainer .py-1 { padding-top: 2px !important; padding-bottom: 2px !important; }
+      #mazeGrid { inset: 8px !important; }
+      .w-24 { width: 56px !important; }
+      .h-24 { height: 56px !important; }
+      .w-7 { width: 18px !important; }
+      .h-7 { height: 18px !important; }
+      .w-8 { width: 22px !important; }
+      .h-8 { height: 22px !important; }
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-2 md:p-4 text-white overflow-hidden bg-slate-950">
+
+  <!-- Rotate phone prompt overlay -->
+  <div id="rotate-prompt">
+    <div class="rotate-icon">🔄📱</div>
+    <div class="rotate-title">PUTAR HP KE LANSKAP</div>
+    <div class="rotate-desc">Sila miringkan / rotate HP Anda ke posisi <strong>Lanskap (Tidur)</strong> untuk bermain Robo Maze!</div>
+  </div>
+
+  <!-- Overlay untuk efek kilatan merah saat menabrak -->
+  <div id="flashOverlay" class="fixed inset-0 pointer-events-none z-50"></div>
+
+  <!-- Frame Utama Arena Game (Satu Environment Game Utuh) -->
+  <div id="gameContainer" class="cyber-bg rounded-3xl shadow-2xl border-4 border-slate-300 flex flex-col p-3 md:p-5 transition-all duration-300 relative select-none">
+    
+    <!-- HUD / Status Bar Atas (Terintegrasi di dalam Frame Game) -->
+    <div class="w-full flex items-center justify-between gap-2 pb-2.5 border-b border-slate-300/80 z-20">
+      <div class="flex items-center gap-2">
+        <div class="bg-cyan-600 hover:bg-cyan-700 transition px-2.5 py-1 rounded-xl font-bold text-[10px] md:text-xs text-white shadow-md flex items-center gap-1">
+          <i class="fa-solid fa-microchip"></i> Level <span id="levelDisplay">2</span>
+        </div>
+        <div class="text-[9px] md:text-[11px] font-bold text-slate-500 tracking-wide flex items-center gap-1">
+          System: <span id="gameStatus" class="text-amber-600 font-bold">Mengingat...</span>
+        </div>
+      </div>
+      
+      <!-- Status Indikator (Nyawa & Langkah) -->
+      <div class="flex items-center gap-2 font-bold text-[10px] md:text-xs">
+        <div class="flex items-center gap-1 bg-rose-100 px-2.5 py-1 rounded-xl border border-rose-300 text-rose-700 shadow-sm">
+          <i class="fa-solid fa-heart text-rose-600 animate-pulse"></i>
+          <span>Core: <span id="lifeDisplay">3</span></span>
+        </div>
+        <div class="flex items-center gap-1 bg-indigo-100 px-2.5 py-1 rounded-xl border border-indigo-300 text-indigo-700 shadow-sm">
+          <i class="fa-solid fa-gauge text-indigo-600"></i>
+          <span>Langkah: <span id="stepDisplay">0</span></span>
+        </div>
+      </div>
+
+      <!-- Tombol Fungsional -->
+      <div class="flex items-center gap-1.5">
+        <button id="btnPeek" class="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 px-2.5 py-1.5 rounded-xl font-bold text-[9px] md:text-[11px] text-white flex items-center gap-1 transition active:scale-95 shadow-md">
+          <i class="fa-solid fa-eye"></i> Intip (<span id="peekDisplay">2</span>)
+        </button>
+        <button id="btnReset" class="bg-slate-700 hover:bg-slate-600 px-2.5 py-1.5 rounded-xl font-bold text-[9px] md:text-[11px] text-white transition active:scale-95 shadow-md">
+          <i class="fa-solid fa-rotate-left"></i> Reset
+        </button>
+      </div>
+    </div>
+
+    <!-- Area Permainan Utama -->
+    <div class="flex-1 w-full pt-3 relative overflow-hidden flex items-center justify-center">
+      
+      <!-- Timer Countdown 8 Detik (Melayang) -->
+      <div id="timerOverlay" class="absolute top-4 left-1/2 -translate-x-1/2 z-30 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-extrabold px-4 py-2 rounded-full text-xs md:text-base flex items-center gap-2 shadow-2xl border-2 border-white animate-bounce">
+        <i class="fa-solid fa-hourglass-start animate-spin"></i>
+        Ingat Rintangan! <span id="timerText" class="text-sm md:text-lg">8s</span>
+      </div>
+
+      <!-- Wrapper Grid Labirin (Menjaga Rasio Aspek 9:6) -->
+      <div class="relative h-full aspect-[9/6] w-auto">
+        <!-- Cyber Particles Melayang (Latar Belakang) -->
+        <div class="cyber-particle top-[10%] left-[10%]" style="animation-delay: 0s; animation-duration: 22s;">010110</div>
+        <div class="cyber-particle top-[40%] left-[45%]" style="animation-delay: 4s; animation-duration: 30s;">SYSTEM_OK</div>
+        <div class="cyber-particle top-[70%] left-[20%]" style="animation-delay: 8s; animation-duration: 18s;">1001</div>
+        <div class="cyber-particle top-[25%] left-[75%]" style="animation-delay: 2s; animation-duration: 26s;">[RUNNING]</div>
+        <div class="cyber-particle top-[80%] left-[80%]" style="animation-delay: 6s; animation-duration: 32s;">0xAA55</div>
+
+        <div id="mazeGrid" class="absolute inset-5 md:inset-8 z-10">
+          <!-- Komponen visual maze akan digambar otomatis melalui JavaScript -->
+        </div>
+
+        <!-- Panel Kontrol D-Pad Melayang (Kaca Transparan di Pojok Kanan Bawah) -->
+        <div class="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 md:bottom-4 md:right-4 z-30 pointer-events-auto">
+          <div class="relative w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center bg-slate-950/10 backdrop-blur-[1px] border border-white/5 shadow-2xl rounded-full p-2 opacity-70 hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
+            <!-- Tombol Tengah Dekoratif -->
+            <div class="absolute w-8 h-8 sm:w-11 sm:h-11 md:w-12 md:h-12 bg-slate-950/15 rounded-full flex items-center justify-center text-indigo-900/30 border border-white/5">
+              <i class="fa-solid fa-gamepad text-xs sm:text-sm md:text-base animate-pulse"></i>
+            </div>
+            <!-- D-Pad Atas -->
+            <button id="ctrlUp" class="absolute top-0.5 sm:top-1 w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-indigo-600/20 hover:bg-indigo-500/40 active:bg-indigo-700/60 active:scale-95 rounded-md sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow-sm text-indigo-900/80 font-bold border-b border-indigo-800/15">
+              <i class="fa-solid fa-chevron-up text-xs sm:text-sm md:text-base"></i>
+            </button>
+            <!-- D-Pad Bawah -->
+            <button id="ctrlDown" class="absolute bottom-0.5 sm:bottom-1 w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-indigo-600/20 hover:bg-indigo-500/40 active:bg-indigo-700/60 active:scale-95 rounded-md sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow-sm text-indigo-900/80 font-bold border-b border-indigo-800/15">
+              <i class="fa-solid fa-chevron-down text-xs sm:text-sm md:text-base"></i>
+            </button>
+            <!-- D-Pad Kiri -->
+            <button id="ctrlLeft" class="absolute left-0.5 sm:left-1 w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-indigo-600/20 hover:bg-indigo-500/40 active:bg-indigo-700/60 active:scale-95 rounded-md sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow-sm text-indigo-900/80 font-bold border-b border-indigo-800/15">
+              <i class="fa-solid fa-chevron-left text-xs sm:text-sm md:text-base"></i>
+            </button>
+            <!-- D-Pad Kanan -->
+            <button id="ctrlRight" class="absolute right-0.5 sm:right-1 w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-indigo-600/20 hover:bg-indigo-500/40 active:bg-indigo-700/60 active:scale-95 rounded-md sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow-sm text-indigo-900/80 font-bold border-b border-indigo-800/15">
+              <i class="fa-solid fa-chevron-right text-xs sm:text-sm md:text-base"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <!-- Modal Hasil Game (2-COLUMN COGNITIVE RADAR CHART) -->
+  <div id="gameModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center z-50 p-4">
+    <div class="max-h-[92vh] overflow-y-auto bg-slate-950 border-2 border-cyan-500/40 max-w-2xl w-full rounded-3xl p-6 shadow-[0_0_40px_rgba(6,182,212,0.3)] text-left transform scale-95 transition-all duration-300">
+      
+      <!-- HEADER -->
+      <div class="text-center border-b border-white/10 pb-4 mb-4">
+        <div id="modalBadgeText" class="text-xs font-extrabold text-amber-400 tracking-widest uppercase mb-1">MISSION COMPLETED</div>
+        <h2 id="modalTitle" class="text-2xl font-black text-emerald-400">LABIRIN GAIB CLEARED!</h2>
+        <p id="modalSubtitle" class="text-xs text-slate-400 mt-1">Rute Labirin Gaib: Robocube ➔ Portal Finish Selesai!</p>
+      </div>
+
+      <!-- DUAL COLUMN CONTAINER -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        
+        <!-- LEFT COLUMN: PENCAPAIAN MISI -->
+        <div class="bg-slate-900/80 border border-cyan-500/25 rounded-2xl p-4 flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-bold text-slate-400 tracking-wider mb-2">PENCAPAIAN MISI</div>
+            
+            <!-- STARS -->
+            <div id="modalStars" class="text-center text-3xl text-amber-400 mb-3">⭐ ⭐ ⭐</div>
+
+            <!-- CHECKLIST -->
+            <div class="space-y-1.5 text-xs text-slate-200 mb-4">
+              <div class="flex items-center gap-2">
+                <span class="text-amber-400">⭐</span>
+                <span>Sampai di titik Finish zone <strong class="text-emerald-400" id="checkFinish">(100%)</strong></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-amber-400">⭐</span>
+                <span>Bebas nabrak dinding kayu <strong class="text-emerald-400" id="checkHits">(0 Nabrak)</strong></span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-amber-400">⭐</span>
+                <span>Daya ingat posisi jalan <strong class="text-emerald-400" id="checkSteps">(Efisien)</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- LOOT BREAKDOWN -->
+          <div class="border-t border-white/10 pt-3 space-y-1 text-xs">
+            <div class="flex justify-between">
+              <span class="text-slate-400">Loot Energi Terkumpul:</span>
+              <span class="font-bold text-amber-400" id="lootBaseCoins">+85 Koin</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-400">Bonus Tanpa Nabrak:</span>
+              <span class="font-bold text-sky-400" id="lootBonusCoins">+15 Koin</span>
+            </div>
+            <div class="flex justify-between border-t border-white/10 pt-1.5 mt-1">
+              <span class="font-bold text-emerald-400">TOTAL SOULONS / KOIN:</span>
+              <span class="font-black text-emerald-400 text-sm" id="lootTotalCoins">100 KOIN</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: ANALISIS PERKEMBANGAN OTAK -->
+        <div class="bg-slate-900/80 border border-purple-500/35 rounded-2xl p-4 flex flex-col items-center justify-center">
+          <div class="text-sm font-bold text-purple-400 mb-0.5 text-center">🧠 Analisis Perkembangan Otak</div>
+          <div class="text-[10px] text-slate-400 mb-3 text-center">(Prefrontal Cortex & Kontrol Emosi)</div>
+
+          <!-- RADAR CHART CANVAS -->
+          <div class="relative w-[190px] h-[190px] flex items-center justify-center">
+            <canvas id="brainRadarCanvas" width="190" height="190"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOTTOM ACTION BUTTONS -->
+      <div class="flex gap-3 justify-center items-center">
+        <button id="modalSelectLevelBtn" class="px-5 py-3 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-bold text-xs transition">
+          Kembali Ke Peta Utama
+        </button>
+        <button id="modalActionBtn" class="px-7 py-3 rounded-full bg-sky-600 hover:bg-sky-500 text-white font-black text-sm shadow-[0_4px_14px_rgba(2,132,199,0.4)] transition">
+          Lanjut Level ➔
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal Pilihan Level -->
+  <div id="levelModal" class="fixed inset-0 bg-slate-950/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-slate-900 border-2 border-white/10 max-w-md w-full rounded-3xl p-6 shadow-2xl">
+      <h2 class="text-2xl font-bold mb-1 text-center">Pilih Peta Labirin</h2>
+      <p class="text-slate-400 text-xs text-center mb-6">Pilih variasi rintangan sebelum mulai bermain</p>
+      
+      <div class="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+        <!-- Level 1 -->
+        <button onclick="selectLevel(1)" class="w-full flex items-center justify-between p-3.5 bg-slate-850 hover:bg-slate-800/80 border border-slate-700 rounded-2xl transition text-left group">
+          <div>
+            <div class="font-bold text-sky-400 text-base group-hover:text-sky-300">Level 1: Pemanasan</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Sederhana dan aman untuk membiasakan arah gerak.</div>
+          </div>
+          <i class="fa-solid fa-circle-play text-xl text-sky-400 group-hover:scale-110 transition"></i>
+        </button>
+        
+        <!-- Level 2 -->
+        <button onclick="selectLevel(2)" class="w-full flex items-center justify-between p-3.5 bg-slate-850 hover:bg-slate-800/80 border border-slate-700 rounded-2xl transition text-left group">
+          <div>
+            <div class="font-bold text-amber-400 text-base group-hover:text-amber-300 flex items-center gap-1.5">
+              Level 2: Replica Map <i class="fa-solid fa-star text-xs"></i>
+            </div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Map terstruktur dengan jalur bercabang.</div>
+          </div>
+          <i class="fa-solid fa-circle-play text-xl text-amber-400 group-hover:scale-110 transition"></i>
+        </button>
+
+        <!-- Level 3 -->
+        <button onclick="selectLevel(3)" class="w-full flex items-center justify-between p-3.5 bg-slate-850 hover:bg-slate-800/80 border border-slate-700 rounded-2xl transition text-left group">
+          <div>
+            <div class="font-bold text-emerald-400 text-base group-hover:text-emerald-300">Level 3: Jalur Berliku (S-Corridor)</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Sudah diperbaiki 100% ada jalur keluar menuju target!</div>
+          </div>
+          <i class="fa-solid fa-circle-play text-xl text-emerald-400 group-hover:scale-110 transition"></i>
+        </button>
+
+        <!-- Level 4 -->
+        <button onclick="selectLevel(4)" class="w-full flex items-center justify-between p-3.5 bg-slate-850 hover:bg-slate-800/80 border border-slate-700 rounded-2xl transition text-left group">
+          <div>
+            <div class="font-bold text-cyan-400 text-base group-hover:text-cyan-300">Level 4: Zig-Zag Crossing</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Rintangan zigg-zagg memotong memori spasial.</div>
+          </div>
+          <i class="fa-solid fa-circle-play text-xl text-cyan-400 group-hover:scale-110 transition"></i>
+        </button>
+
+        <!-- Level 5 -->
+        <button onclick="selectLevel(5)" class="w-full flex items-center justify-between p-3.5 bg-slate-850 hover:bg-slate-800/80 border border-slate-700 rounded-2xl transition text-left group">
+          <div>
+            <div class="font-bold text-purple-400 text-base group-hover:text-purple-300">Level 5: Perangkap Cabang Ganda</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Menguji pengambilan keputusan yang cepat.</div>
+          </div>
+          <i class="fa-solid fa-circle-play text-xl text-purple-400 group-hover:scale-110 transition"></i>
+        </button>
+
+        <!-- Level 6 -->
+        <button onclick="selectLevel(6)" class="w-full flex items-center justify-between p-3.5 bg-slate-850 hover:bg-slate-800/80 border border-slate-700 rounded-2xl transition text-left group">
+          <div>
+            <div class="font-bold text-pink-400 text-base group-hover:text-pink-300">Level 6: Spiral Labirin Putar</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Memutar menuju pusat target. Cuma 1 intip!</div>
+          </div>
+          <i class="fa-solid fa-circle-play text-xl text-pink-400 group-hover:scale-110 transition"></i>
+        </button>
+
+        <!-- Level 7 -->
+        <button onclick="selectLevel(7)" class="w-full flex items-center justify-between p-3.5 bg-slate-850 hover:bg-slate-800/80 border border-slate-700 rounded-2xl transition text-left group">
+          <div>
+            <div class="font-bold text-yellow-400 text-base group-hover:text-yellow-300">Level 7: Ring Ganda</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Dinding berlapis ganda mengelilingi portal.</div>
+          </div>
+          <i class="fa-solid fa-circle-play text-xl text-yellow-400 group-hover:scale-110 transition"></i>
+        </button>
+
+        <!-- Level 8 -->
+        <button onclick="selectLevel(8)" class="w-full flex items-center justify-between p-3.5 bg-slate-850 hover:bg-slate-800/80 border border-slate-700 rounded-2xl transition text-left group">
+          <div>
+            <div class="font-bold text-orange-400 text-base group-hover:text-orange-300">Level 8: Cyber Matrix</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Sekatan rapat ala sirkuit motherboard.</div>
+          </div>
+          <i class="fa-solid fa-circle-play text-xl text-orange-400 group-hover:scale-110 transition"></i>
+        </button>
+
+        <!-- Level 9 -->
+        <button onclick="selectLevel(9)" class="w-full flex items-center justify-between p-3.5 bg-slate-850 hover:bg-slate-800/80 border border-slate-700 rounded-2xl transition text-left group">
+          <div>
+            <div class="font-bold text-indigo-400 text-base group-hover:text-indigo-300">Level 9: Master Memory Labyrinth</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Tingkat kerumitan tinggi untuk memori kerja.</div>
+          </div>
+          <i class="fa-solid fa-circle-play text-xl text-indigo-400 group-hover:scale-110 transition"></i>
+        </button>
+
+        <!-- Level 10 -->
+        <button onclick="selectLevel(10)" class="w-full flex items-center justify-between p-3.5 bg-slate-850 hover:bg-slate-800/80 border border-slate-700 rounded-2xl transition text-left group">
+          <div>
+            <div class="font-bold text-rose-500 text-base group-hover:text-rose-400 flex items-center gap-1.5">
+              Level 10: Grandmaster Ultimate Maze 🔥
+            </div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Tantangan puncak! Labirin tersulit dengan 1 Intip.</div>
+          </div>
+          <i class="fa-solid fa-circle-play text-xl text-rose-500 group-hover:scale-110 transition"></i>
+        </button>
+      </div>
+      
+      <button onclick="toggleLevelModal(false)" class="w-full mt-6 bg-slate-800 text-slate-300 font-bold py-2.5 rounded-xl text-sm transition hover:bg-slate-750">
+        Tutup Menu
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // SYSTEM AUDIO SINTETIS (Web Audio API)
+    // ==========================================
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playSound(type) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      const now = audioCtx.currentTime;
+
+      if (type === 'move') {
+        // Nada Plop menggemaskan untuk Slime melangkah
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(160, now);
+        osc.frequency.exponentialRampToValueAtTime(320, now + 0.12);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+        osc.start(now);
+        osc.stop(now + 0.12);
+      } 
+      else if (type === 'hit') {
+        // Bunyi dug saat menabrak rintangan gaib
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(110, now);
+        osc.frequency.linearRampToValueAtTime(50, now + 0.25);
+        gain.gain.setValueAtTime(0.65, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      } 
+      else if (type === 'tick') {
+        // Detak jam penanda waktu mengingat berkurang
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(750, now);
+        gain.gain.setValueAtTime(0.04, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+        osc.start(now);
+        osc.stop(now + 0.05);
+      }
+      else if (type === 'invisible') {
+        // Efek suara ketika rintangan memudar
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.setValueAtTime(554.37, now + 0.08);
+        osc.frequency.setValueAtTime(659.25, now + 0.16);
+        gain.gain.setValueAtTime(0.12, now);
+        gain.gain.exponentialRampToValueAtTime(0.005, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      }
+      else if (type === 'victory') {
+        // Melodi kemenangan ceria
+        const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+          const oscSeq = audioCtx.createOscillator();
+          const gainSeq = audioCtx.createGain();
+          oscSeq.connect(gainSeq);
+          gainSeq.connect(audioCtx.destination);
+          
+          oscSeq.type = 'sine';
+          oscSeq.frequency.setValueAtTime(freq, now + (idx * 0.08));
+          gainSeq.gain.setValueAtTime(0.18, now + (idx * 0.08));
+          gainSeq.gain.exponentialRampToValueAtTime(0.001, now + (idx * 0.08) + 0.3);
+          
+          oscSeq.start(now + (idx * 0.08));
+          oscSeq.stop(now + (idx * 0.08) + 0.35);
+        });
+      } 
+      else if (type === 'gameover') {
+        // Nada sedih saat kalah
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(200, now);
+        osc.frequency.linearRampToValueAtTime(90, now + 0.65);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.65);
+        osc.start(now);
+        osc.stop(now + 0.65);
+      }
+    }
+
+    // ==========================================
+    // DEKLARASI DATA GRID & LEVEL (9x6)
+    // ==========================================
+    const COLS = 9;
+    const ROWS = 6;
+
+    const levels = {
+      1: {
+        start: { x: 0, y: 5 },
+        goal: { x: 8, y: 0 },
+        walls: [
+          { type: 'H', x: 0, y: 2, len: 3 }, 
+          { type: 'V', x: 3, y: 0, len: 3 }, 
+          { type: 'H', x: 4, y: 3, len: 4 },
+          { type: 'V', x: 5, y: 1, len: 3 },
+        ],
+        peeks: 3,
+        maxHitsAllowed: 3
+      },
+      2: {
+        start: { x: 6, y: 0 },
+        goal: { x: 0, y: 5 },
+        walls: [
+          { type: 'H', x: 4, y: 0, len: 3 },
+          { type: 'V', x: 2, y: 0, len: 1 },
+          { type: 'V', x: 2, y: 1, len: 1 },
+          { type: 'V', x: 3, y: 1, len: 1 },
+          { type: 'H', x: 0, y: 2, len: 1 },
+          { type: 'H', x: 2, y: 2, len: 4 },
+          { type: 'V', x: 6, y: 2, len: 1 },
+          { type: 'V', x: 5, y: 3, len: 1 },
+          { type: 'H', x: 0, y: 3, len: 2 },
+          { type: 'H', x: 3, y: 3, len: 3 },
+          { type: 'H', x: 7, y: 3, len: 2 },
+          { type: 'V', x: 1, y: 4, len: 1 },
+          { type: 'H', x: 3, y: 4, len: 5 },
+          { type: 'V', x: 2, y: 5, len: 1 }
+        ],
+        peeks: 2,
+        maxHitsAllowed: 3
+      },
+      3: {
+        // Level 3: Jalur Berliku S-Corridor (VERIFIED SOLVABLE 100%)
+        start: { x: 0, y: 0 },
+        goal: { x: 8, y: 5 },
+        walls: [
+          { type: 'V', x: 1, y: 0, len: 3 },
+          { type: 'H', x: 2, y: 1, len: 4 },
+          { type: 'V', x: 4, y: 2, len: 3 },
+          { type: 'H', x: 0, y: 4, len: 4 },
+          { type: 'V', x: 6, y: 0, len: 4 },
+          { type: 'H', x: 6, y: 4, len: 2 }
+        ],
+        peeks: 2,
+        maxHitsAllowed: 3
+      },
+      4: {
+        // Level 4: Zig-Zag Crossing (VERIFIED SOLVABLE 100%)
+        start: { x: 0, y: 0 },
+        goal: { x: 8, y: 5 },
+        walls: [
+          { type: 'H', x: 0, y: 1, len: 6 },
+          { type: 'V', x: 6, y: 1, len: 2 },
+          { type: 'H', x: 2, y: 3, len: 6 },
+          { type: 'V', x: 2, y: 4, len: 2 },
+          { type: 'H', x: 4, y: 4, len: 4 }
+        ],
+        peeks: 2,
+        maxHitsAllowed: 3
+      },
+      5: {
+        // Level 5: Perangkap Cabang Ganda (VERIFIED SOLVABLE 100%)
+        start: { x: 4, y: 0 },
+        goal: { x: 4, y: 5 },
+        walls: [
+          { type: 'V', x: 3, y: 0, len: 4 },
+          { type: 'V', x: 5, 'y': 1, len: 4 },
+          { type: 'H', x: 0, y: 2, len: 3 },
+          { type: 'H', x: 6, y: 3, len: 3 },
+          { type: 'H', x: 2, y: 4, len: 5 }
+        ],
+        peeks: 2,
+        maxHitsAllowed: 3
+      },
+      6: {
+        // Level 6: Spiral Labirin Putar (VERIFIED SOLVABLE 100%)
+        start: { x: 0, y: 0 },
+        goal: { x: 4, y: 2 },
+        walls: [
+          { type: 'H', x: 0, y: 0, len: 8 },
+          { type: 'V', x: 7, y: 1, len: 4 },
+          { type: 'H', x: 1, y: 4, len: 6 },
+          { type: 'V', x: 1, y: 2, len: 2 },
+          { type: 'H', x: 2, y: 1, len: 4 }
+        ],
+        peeks: 1,
+        maxHitsAllowed: 3
+      },
+      7: {
+        // Level 7: Ring Ganda (VERIFIED SOLVABLE 100%)
+        start: { x: 0, y: 5 },
+        goal: { x: 8, y: 0 },
+        walls: [
+          { type: 'V', x: 0, y: 1, len: 4 },
+          { type: 'H', x: 1, y: 0, len: 7 },
+          { type: 'V', x: 7, 'y': 1, len: 4 },
+          { type: 'H', x: 2, y: 4, len: 5 },
+          { type: 'V', x: 2, y: 2, len: 2 },
+          { type: 'H', x: 3, y: 2, len: 3 }
+        ],
+        peeks: 1,
+        maxHitsAllowed: 3
+      },
+      8: {
+        // Level 8: Cyber Matrix (VERIFIED SOLVABLE 100%)
+        start: { x: 0, y: 0 },
+        goal: { x: 8, y: 5 },
+        walls: [
+          { type: 'H', x: 0, y: 1, len: 4 },
+          { type: 'V', x: 4, y: 0, len: 3 },
+          { type: 'H', x: 5, y: 2, len: 3 },
+          { type: 'V', x: 2, y: 3, len: 2 },
+          { type: 'H', x: 3, y: 4, len: 4 },
+          { type: 'V', x: 7, y: 3, len: 2 }
+        ],
+        peeks: 1,
+        maxHitsAllowed: 3
+      },
+      9: {
+        // Level 9: Master Memory Labyrinth (VERIFIED SOLVABLE 100%)
+        start: { x: 0, y: 5 },
+        goal: { x: 8, y: 0 },
+        walls: [
+          { type: 'H', x: 0, y: 4, len: 3 },
+          { type: 'V', x: 2, y: 1, len: 4 },
+          { type: 'H', x: 3, y: 1, len: 4 },
+          { type: 'V', x: 5, y: 2, len: 3 },
+          { type: 'H', x: 1, y: 2, len: 3 },
+          { type: 'H', x: 4, y: 3, len: 3 },
+          { type: 'V', x: 7, y: 0, len: 3 }
+        ],
+        peeks: 1,
+        maxHitsAllowed: 3
+      },
+      10: {
+        // Level 10: Grandmaster Ultimate Maze (VERIFIED SOLVABLE 100%)
+        start: { x: 0, y: 0 },
+        goal: { x: 8, y: 5 },
+        walls: [
+          { type: 'V', x: 0, y: 1, len: 3 },
+          { type: 'H', x: 1, y: 0, len: 3 },
+          { type: 'V', x: 3, y: 1, len: 3 },
+          { type: 'H', x: 2, y: 4, len: 4 },
+          { type: 'V', x: 5, y: 0, len: 3 },
+          { type: 'H', x: 6, y: 2, len: 2 },
+          { type: 'V', x: 7, y: 3, len: 2 },
+          { type: 'H', x: 4, y: 2, len: 2 },
+          { type: 'V', x: 2, y: 1, len: 2 }
+        ],
+        peeks: 1,
+        maxHitsAllowed: 3
+      }
+    };
+
+    // Status Game Berjalan
+    let currentLevel = 2; // Default ke replica screenshot
+    let playerPos = { x: 0, y: 0 };
+    let lives = 3;
+    let steps = 0;
+    let peeksLeft = 2;
+    let showWalls = true;
+    let isGameActive = false;
+    let countdownTimer = null;
+    let wallIndex = new Set(); // Indeks pendeteksi tabrakan instan
+
+    // ==========================================
+    // INISIALISASI GAMEPLAY & LEVEL
+    // ==========================================
+    function initLevel(lvlIdx) {
+      currentLevel = lvlIdx;
+      const lvlData = levels[lvlIdx];
+      
+      playerPos = { ...lvlData.start };
+      lives = 3;
+      steps = 0;
+      peeksLeft = lvlData.peeks;
+      showWalls = true;
+      isGameActive = false;
+      
+      if (countdownTimer) clearInterval(countdownTimer);
+
+      // Sinkronkan data ke UI Header
+      document.getElementById('levelDisplay').textContent = currentLevel;
+      document.getElementById('lifeDisplay').textContent = lives;
+      document.getElementById('stepDisplay').textContent = steps;
+      document.getElementById('peekDisplay').textContent = peeksLeft;
+      document.getElementById('btnPeek').disabled = false;
+      document.getElementById('gameStatus').textContent = "Mengingat...";
+      document.getElementById('gameStatus').className = "text-amber-600 font-bold";
+
+      // Bangun sistem koordinat pemutus dinding
+      buildCollisionIndex(lvlData.walls);
+
+      // Gambar elemen visual game ke layar
+      renderGrid();
+
+      // Jalankan hitung mundur 8 detik
+      startMemoryPhase();
+    }
+
+    // Mengonversi koordinat rintangan menjadi key string relasi titik yang terputus
+    function buildCollisionIndex(walls) {
+      wallIndex.clear();
+      walls.forEach(w => {
+        if (w.type === 'H') {
+          // Papan Horizontal memblokir pergerakan vertikal antara baris y dan y+1
+          for (let i = 0; i < w.len; i++) {
+            const cx = w.x + i;
+            const cy = w.y;
+            if (cx < COLS && cy < ROWS - 1) {
+              const nodeA = `${cx},${cy}`;
+              const nodeB = `${cx},${cy+1}`;
+              wallIndex.add(`${nodeA}-${nodeB}`);
+              wallIndex.add(`${nodeB}-${nodeA}`);
+            }
+          }
+        } else if (w.type === 'V') {
+          // Papan Vertikal memblokir pergerakan horizontal antara kolom x dan x+1
+          for (let i = 0; i < w.len; i++) {
+            const cx = w.x;
+            const cy = w.y + i;
+            if (cx < COLS - 1 && cy < ROWS) {
+              const nodeA = `${cx},${cy}`;
+              const nodeB = `${cx+1},${cy}`;
+              wallIndex.add(`${nodeA}-${nodeB}`);
+              wallIndex.add(`${nodeB}-${nodeA}`);
+            }
+          }
+        }
+      });
+    }
+
+    // Melakukan render titik, rintangan, karakter, dan tujuan di grid
+    function renderGrid() {
+      const grid = document.getElementById('mazeGrid');
+      grid.innerHTML = ''; 
+
+      const colStep = 100 / (COLS - 1);
+      const rowStep = 100 / (ROWS - 1);
+
+      // 1. Gambar Titik 9x6 (Nodes Jalur Aman)
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const dot = document.createElement('div');
+          dot.className = "absolute w-6 h-6 md:w-8 md:h-8 bg-slate-950 border border-cyan-500/30 rounded-full flex items-center justify-center shadow-[0_0_6px_rgba(34,211,238,0.2)] z-10 hover:border-cyan-400 transition-colors";
+          dot.style.left = `${c * colStep}%`;
+          dot.style.top = `${r * rowStep}%`;
+          dot.style.transform = "translate(-50%, -50%)";
+          dot.innerHTML = `<span class="w-1.5 h-1.5 md:w-2 md:h-2 bg-cyan-400 rounded-full shadow-[0_0_6px_rgba(34,211,238,0.8)] animate-pulse"></span>`;
+          grid.appendChild(dot);
+        }
+      }
+
+      // 2. Gambar Stasiun Pengisian Daya (Goal Pos)
+      const goalPos = levels[currentLevel].goal;
+      const goal = document.createElement('div');
+      goal.id = "goalElement";
+      goal.className = "absolute z-20 flex items-center justify-center text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.85)] w-10 h-10 md:w-14 md:h-14";
+      goal.style.left = `${goalPos.x * colStep}%`;
+      goal.style.top = `${goalPos.y * rowStep}%`;
+      goal.style.transform = "translate(-50%, -50%)";
+      goal.innerHTML = `<div class="animate-bounce text-3xl md:text-5xl flex items-center justify-center"><i class="fa-solid fa-charging-station"></i></div>`;
+      grid.appendChild(goal);
+
+      // 3. Gambar Pagar Laser Neon (Obstacles)
+      const lvlData = levels[currentLevel];
+      lvlData.walls.forEach((w, idx) => {
+        const board = document.createElement('div');
+        board.className = "absolute wall-transition rounded-xl z-15 flex items-center justify-center border border-rose-500/50 shadow-lg";
+        board.style.background = "linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)";
+        board.style.boxShadow = "0 0 10px rgba(244,63,94,0.85), inset 0 1px 2px rgba(255,255,255,0.3)";
+        board.style.opacity = showWalls ? "1" : "0";
+        board.setAttribute('data-wall-id', idx);
+
+        if (w.type === 'H') {
+          // Melintang horizontal di sela-sela baris
+          const widthPct = w.len * colStep;
+          board.style.width = `${widthPct}%`;
+          board.style.height = "10px";
+          board.style.left = `${(w.x - 0.5) * colStep}%`;
+          board.style.top = `${(w.y + 0.5) * rowStep}%`;
+          board.style.transform = "translateY(-50%)";
+          board.innerHTML = `<div class="w-full h-[1.5px] bg-rose-300 opacity-60 animate-pulse"></div>`;
+        } else {
+          // Memanjang vertikal di sela-sela kolom
+          const heightPct = w.len * rowStep;
+          board.style.height = `${heightPct}%`;
+          board.style.width = "10px";
+          board.style.left = `${(w.x + 0.5) * colStep}%`;
+          board.style.top = `${(w.y - 0.5) * rowStep}%`;
+          board.style.transform = "translateX(-50%)";
+          board.innerHTML = `<div class="h-full w-[1.5px] bg-rose-300 opacity-60 animate-pulse"></div>`;
+        }
+
+        grid.appendChild(board);
+      });
+
+      // 4. Gambar Robot Karakter Menggunakan Inline SVG
+      const slime = document.createElement('div');
+      slime.id = "slimeCharacter";
+      slime.className = "absolute z-30 transition-all duration-200 flex items-center justify-center drop-shadow-[0_0_12px_rgba(34,211,238,0.85)] w-12 h-12 md:w-16 md:h-16";
+      slime.style.left = `${playerPos.x * colStep}%`;
+      slime.style.top = `${playerPos.y * rowStep}%`;
+      slime.style.transform = "translate(-50%, -50%)";
+      
+      slime.innerHTML = `
+        <div class="w-full h-full animate-slime-idle">
+          <svg viewBox="0 0 100 100" class="w-full h-full">
+            <!-- Antena -->
+            <rect x="47" y="6" width="6" height="12" fill="#64748b" rx="2" />
+            <circle cx="50" cy="5" r="4" fill="#22d3ee" class="animate-pulse" />
+            <!-- Ear Bolts -->
+            <rect x="14" y="30" width="6" height="14" rx="2" fill="#475569" />
+            <rect x="80" y="30" width="6" height="14" rx="2" fill="#475569" />
+            <!-- Kepala Robot -->
+            <rect x="20" y="15" width="60" height="44" rx="12" fill="#94a3b8" stroke="#475569" stroke-width="3" />
+            <!-- Layar Visor -->
+            <rect x="28" y="22" width="44" height="20" rx="6" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
+            <!-- Mata Laser / Visor Menyala -->
+            <rect x="32" y="28" width="36" height="8" rx="4" fill="#22d3ee" class="animate-pulse" />
+            <!-- Sorot Kilau Layar -->
+            <circle cx="36" cy="32" r="1.5" fill="#ffffff" opacity="0.8" />
+            <!-- Leher -->
+            <rect x="44" y="59" width="12" height="6" fill="#475569" />
+            <!-- Badan Logam -->
+            <path d="M 32,65 L 68,65 L 72,88 L 28,88 Z" fill="#64748b" stroke="#475569" stroke-width="3" />
+            <!-- Inti Energi (Reactor Core) -->
+            <circle cx="50" cy="76" r="5" fill="#22d3ee" />
+          </svg>
+        </div>
+      `;
+      grid.appendChild(slime);
+    }
+
+    // ==========================================
+    // MEKANIK HAFALAN & VISIBILITAS RINTANGAN
+    // ==========================================
+    function startMemoryPhase() {
+      const overlay = document.getElementById('timerOverlay');
+      const timerText = document.getElementById('timerText');
+      overlay.classList.remove('hidden');
+
+      const container = document.getElementById('gameContainer');
+      if (container) {
+        container.classList.remove('game-glow-play', 'game-glow-hit');
+        container.classList.add('game-glow-memory');
+      }
+
+      let timeLeft = 8;
+      timerText.textContent = `${timeLeft}s`;
+
+      countdownTimer = setInterval(() => {
+        timeLeft--;
+        timerText.textContent = `${timeLeft}s`;
+        playSound('tick');
+
+        if (timeLeft <= 0) {
+          clearInterval(countdownTimer);
+          overlay.classList.add('hidden');
+          activateInvisibleMode();
+        }
+      }, 1000);
+    }
+
+    // Memudarkan semua rintangan kayu
+    function activateInvisibleMode() {
+      showWalls = false;
+      playSound('invisible');
+      
+      const walls = document.querySelectorAll('[data-wall-id]');
+      walls.forEach(w => w.style.opacity = "0");
+
+      isGameActive = true;
+      document.getElementById('gameStatus').textContent = "Hati-hati, Cari Jalan!";
+      document.getElementById('gameStatus').className = "text-emerald-600 font-bold animate-pulse";
+
+      const container = document.getElementById('gameContainer');
+      if (container) {
+        container.classList.remove('game-glow-memory', 'game-glow-hit');
+        container.classList.add('game-glow-play');
+      }
+    }
+
+    // Fitur Intip Singkat (Peek)
+    function usePeek() {
+      if (!isGameActive || peeksLeft <= 0 || showWalls) return;
+
+      peeksLeft--;
+      document.getElementById('peekDisplay').textContent = peeksLeft;
+      if (peeksLeft === 0) {
+        document.getElementById('btnPeek').disabled = true;
+      }
+
+      // Tampilkan dinding kembali
+      const walls = document.querySelectorAll('[data-wall-id]');
+      walls.forEach(w => w.style.opacity = "1");
+      playSound('invisible');
+
+      // Hilangkan kembali dalam 1.5 detik
+      setTimeout(() => {
+        if (isGameActive && !showWalls) {
+          walls.forEach(w => w.style.opacity = "0");
+        }
+      }, 1500);
+    }
+
+    // ==========================================
+    // PERGERAKAN SLIME & VALIDASI TABRAKAN
+    // ==========================================
+    function movePlayer(dx, dy) {
+      if (!isGameActive) return;
+
+      const nextX = playerPos.x + dx;
+      const nextY = playerPos.y + dy;
+
+      // Batasi agar tidak keluar area 9x6
+      if (nextX < 0 || nextX >= COLS || nextY < 0 || nextY >= ROWS) {
+        return; 
+      }
+
+      // Cek apakah ada rintangan kayu yang memisahkan posisi sekarang dengan posisi tujuan
+      const currentPath = `${playerPos.x},${playerPos.y}-${nextX},${nextY}`;
+      if (wallIndex.has(currentPath)) {
+        triggerCollision();
+        return;
+      }
+
+      // Melangkah berhasil
+      playerPos.x = nextX;
+      playerPos.y = nextY;
+      steps++;
+      document.getElementById('stepDisplay').textContent = steps;
+
+      playSound('move');
+      triggerVibration(40);
+
+      // Animasikan slime melangkah secara halus
+      const colStep = 100 / (COLS - 1);
+      const rowStep = 100 / (ROWS - 1);
+      const slime = document.getElementById('slimeCharacter');
+      if (slime) {
+        slime.style.left = `${playerPos.x * colStep}%`;
+        slime.style.top = `${playerPos.y * rowStep}%`;
+        
+        const innerSlime = slime.firstElementChild;
+        if (innerSlime) {
+          innerSlime.classList.remove('animate-slime-idle');
+          innerSlime.classList.add('animate-slime-jump');
+          setTimeout(() => {
+            innerSlime.classList.remove('animate-slime-jump');
+            innerSlime.classList.add('animate-slime-idle');
+          }, 250);
+        }
+      }
+
+      // Cek apakah mencapai piala emas
+      const goalPos = levels[currentLevel].goal;
+      if (playerPos.x === goalPos.x && playerPos.y === goalPos.y) {
+        triggerVictory();
+      }
+    }
+
+    // Penanganan tabrakan dengan rintangan gaib
+    function triggerCollision() {
+      playSound('hit');
+      triggerVibration([100, 50, 100]);
+
+      // Getarkan arena game
+      const container = document.getElementById('gameContainer');
+      if (container) {
+        container.classList.add('shake-screen');
+        container.classList.remove('game-glow-play', 'game-glow-memory');
+        container.classList.add('game-glow-hit');
+        
+        setTimeout(() => {
+          container.classList.remove('shake-screen');
+          container.classList.remove('game-glow-hit');
+          if (isGameActive) {
+            container.classList.add('game-glow-play');
+          }
+        }, 300);
+      }
+
+      // Kilatan merah darah berkurang
+      const overlay = document.getElementById('flashOverlay');
+      overlay.classList.add('flash-error');
+      setTimeout(() => overlay.classList.remove('flash-error'), 300);
+
+      lives--;
+      document.getElementById('lifeDisplay').textContent = lives;
+
+      if (lives <= 0) {
+        triggerGameOver();
+      }
+    }
+
+    // ==========================================
+    // MODAL POP-UP MENANG & KALAH
+    // ==========================================
+    function showModal(title, desc, iconHTML, btnText, callback) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalDesc').innerHTML = desc;
+      document.getElementById('modalIcon').innerHTML = iconHTML;
+      
+      const actBtn = document.getElementById('modalActionBtn');
+      actBtn.textContent = btnText;
+      actBtn.onclick = () => {
+        toggleModal(false);
+        callback();
+      };
+
+      toggleModal(true);
+    }
+
+    function toggleModal(show) {
+      const modal = document.getElementById('gameModal');
+      if (show) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      } else {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function toggleLevelModal(show) {
+      const lvlModal = document.getElementById('levelModal');
+      if (show) {
+        lvlModal.classList.remove('hidden');
+        lvlModal.classList.add('flex');
+      } else {
+        lvlModal.classList.add('hidden');
+        lvlModal.classList.remove('flex');
+      }
+    }
+
+    function selectLevel(lvl) {
+      toggleLevelModal(false);
+      toggleModal(false);
+      initLevel(lvl);
+    }
+
+    function drawRadarChart(canvasId, scores) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width;
+      const height = canvas.height;
+      const center = width / 2;
+      const radius = 52;
+      ctx.clearRect(0, 0, width, height);
+
+      const axes = [
+        { name: "Spasial", val: scores.spasial || 85 },
+        { name: "Keputusan", val: scores.keputusan || 90 },
+        { name: "Kontrol Diri", val: scores.kontrolDiri || 78 },
+        { name: "Memori Kerja", val: scores.memori || 95 },
+        { name: "Fokus", val: scores.fokus || 88 }
+      ];
+      const numAxes = axes.length;
+
+      // Grid rings
+      [0.2, 0.4, 0.6, 0.8, 1.0].forEach(rFactor => {
+        ctx.beginPath();
+        for (let i = 0; i < numAxes; i++) {
+          const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+          const x = center + radius * rFactor * Math.cos(angle);
+          const y = center + radius * rFactor * Math.sin(angle);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+
+      // Axis Spokes
+      for (let i = 0; i < numAxes; i++) {
+        const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+        const x = center + radius * Math.cos(angle);
+        const y = center + radius * Math.sin(angle);
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+        ctx.stroke();
+      }
+
+      // Filled Polygon
+      ctx.beginPath();
+      axes.forEach((axis, i) => {
+        const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+        const r = radius * (Math.min(100, Math.max(20, axis.val)) / 100);
+        const x = center + r * Math.cos(angle);
+        const y = center + r * Math.sin(angle);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(168, 85, 247, 0.45)';
+      ctx.fill();
+      ctx.strokeStyle = '#c084fc';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Glowing Data Points
+      axes.forEach((axis, i) => {
+        const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+        const r = radius * (Math.min(100, Math.max(20, axis.val)) / 100);
+        const x = center + r * Math.cos(angle);
+        const y = center + r * Math.sin(angle);
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+        ctx.strokeStyle = '#a855f7';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      });
+
+      // Axis Labels
+      ctx.font = 'bold 9px Fredoka, sans-serif';
+      ctx.fillStyle = '#f8fafc';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      axes.forEach((axis, i) => {
+        const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+        const labelR = radius + 18;
+        const x = center + labelR * Math.cos(angle);
+        const y = center + labelR * Math.sin(angle);
+        ctx.fillText(axis.name, x, y);
+      });
+    }
+
+    function triggerVictory() {
+      isGameActive = false;
+      playSound('victory');
+      triggerVibration([80, 50, 80, 50, 120]);
+      
+      const container = document.getElementById('gameContainer');
+      if (container) {
+        container.classList.remove('game-glow-play', 'game-glow-memory', 'game-glow-hit');
+      }
+
+      // Show path walls
+      const walls = document.querySelectorAll('[data-wall-id]');
+      walls.forEach(w => w.style.opacity = "1");
+
+      const hasNext = levels[currentLevel + 1] !== undefined;
+
+      const maxLives = levels[currentLevel].maxHitsAllowed || 3;
+      const hits = Math.max(0, maxLives - lives);
+      let stars = "⭐ ⭐ ⭐";
+      if (hits === 1) stars = "⭐ ⭐ ☆";
+      if (hits >= 2) stars = "⭐ ☆ ☆";
+
+      const baseCoins = 85;
+      const bonusCoins = hits === 0 ? 15 : 0;
+      const totalCoins = baseCoins + bonusCoins;
+
+      document.getElementById('modalBadgeText').innerText = "MISSION COMPLETED";
+      document.getElementById('modalTitle').innerText = `LEVEL 0${currentLevel} CLEARED!`;
+      document.getElementById('modalSubtitle').innerText = `Rute Labirin Gaib: Robocube ➔ Portal Finish Selesai!`;
+      document.getElementById('modalStars').innerText = stars;
+
+      document.getElementById('checkFinish').innerText = "(100%)";
+      document.getElementById('checkHits').innerText = `(${hits} Nabrak)`;
+      document.getElementById('checkSteps').innerText = `(${steps} Langkah)`;
+
+      document.getElementById('lootBaseCoins').innerText = `+${baseCoins} Koin`;
+      document.getElementById('lootBonusCoins').innerText = `+${bonusCoins} Koin`;
+      document.getElementById('lootTotalCoins').innerText = `${totalCoins} KOIN`;
+
+      const actionBtn = document.getElementById('modalActionBtn');
+      actionBtn.innerText = hasNext ? "Lanjut Level ➔" : "Main Lagi 🎮";
+      actionBtn.onclick = () => {
+        toggleModal(false);
+        if (hasNext) {
+          initLevel(currentLevel + 1);
+        } else {
+          initLevel(currentLevel);
+        }
+      };
+
+      toggleModal(true);
+
+      setTimeout(() => {
+        drawRadarChart('brainRadarCanvas', {
+          spasial: Math.max(60, 100 - hits * 12),
+          keputusan: 92,
+          kontrolDiri: Math.max(50, 100 - hits * 15),
+          memori: Math.max(70, 100 - (steps - 10) * 2),
+          fokus: 90
+        });
+      }, 50);
+    }
+
+    function triggerGameOver() {
+      isGameActive = false;
+      playSound('gameover');
+      triggerVibration([200, 100, 200]);
+
+      const container = document.getElementById('gameContainer');
+      if (container) {
+        container.classList.remove('game-glow-play', 'game-glow-memory', 'game-glow-hit');
+      }
+
+      // Tunjukkan rintangan kayu yang menghalangi agar pemain tahu letak kesalahannya
+      const walls = document.querySelectorAll('[data-wall-id]');
+      walls.forEach(w => w.style.opacity = "1");
+
+      showModal(
+        "Game Over! 💀", 
+        "Kamu terlalu sering menabrak kayu tak terlihat dan kehabisan nyawa.", 
+        `<i class="fa-solid fa-skull text-rose-500 animate-pulse"></i>`,
+        "Coba Lagi",
+        () => initLevel(currentLevel)
+      );
+    }
+
+    // ==========================================
+    // SISTEM PENGONTROL & LISTENERS (KEYBOARD & MOBILE)
+    // ==========================================
+    
+    // Kontrol Keyboard (Panah & WASD)
+    window.addEventListener('keydown', (e) => {
+      if (!isGameActive) return;
+      
+      switch (e.key) {
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+          e.preventDefault();
+          movePlayer(0, -1);
+          break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+          e.preventDefault();
+          movePlayer(0, 1);
+          break;
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          e.preventDefault();
+          movePlayer(-1, 0);
+          break;
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+          e.preventDefault();
+          movePlayer(1, 0);
+          break;
+      }
+    });
+
+    // Vibration Feedback Helper
+    function triggerVibration(duration) {
+      if (typeof navigator !== 'undefined' && navigator.vibrate) {
+        try {
+          navigator.vibrate(duration);
+        } catch (e) {
+          // Gagal getar (tidak didukung/tidak diizinkan oleh sistem)
+        }
+      }
+    }
+
+    // Set up D-pad buttons using pointer events for maximum responsiveness
+    function setupMobileButton(id, dx, dy) {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      
+      const handler = (e) => {
+        e.preventDefault();
+        movePlayer(dx, dy);
+        triggerVibration(40);
+      };
+      
+      btn.addEventListener('pointerdown', handler);
+      btn.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+    }
+
+    setupMobileButton('ctrlUp', 0, -1);
+    setupMobileButton('ctrlDown', 0, 1);
+    setupMobileButton('ctrlLeft', -1, 0);
+    setupMobileButton('ctrlRight', 1, 0);
+
+    // Kontrol Header & Menu
+    document.getElementById('btnPeek').addEventListener('click', usePeek);
+    document.getElementById('btnReset').addEventListener('click', () => initLevel(currentLevel));
+    document.getElementById('modalSelectLevelBtn').addEventListener('click', () => {
+      toggleModal(false);
+      toggleLevelModal(true);
+    });
+
+    // Orientation Check for Mobile
+    function checkOrientation() {
+      const prompt = document.getElementById('rotate-prompt');
+      if (!prompt) return;
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
+      const isPortrait = window.innerHeight > window.innerWidth;
+      prompt.style.display = (isMobile && isPortrait) ? 'flex' : 'none';
+    }
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    checkOrientation();
+
+    // Jalankan Game Pertama kali
+    window.addEventListener('DOMContentLoaded', () => {
+      initLevel(2);
+    });
+  </script>
+</body>
+</html>
