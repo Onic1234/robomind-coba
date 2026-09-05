@@ -745,10 +745,10 @@
 
         <div class="p-3.5 rounded-2xl bg-[#0d1b33] border border-[#1a2e56] flex items-center justify-between">
           <div class="flex items-center gap-2.5">
-            <span class="material-symbols-outlined text-red-400">logout</span>
-            <span class="text-xs font-bold text-white">Keluar Akun</span>
+            <span class="material-symbols-outlined text-red-400">key_off</span>
+            <span class="text-xs font-bold text-white">Ganti / Keluar Kode Akses</span>
           </div>
-          <button onclick="logoutUser()" class="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500 hover:text-white rounded-lg text-xs font-bold transition-colors">Logout</button>
+          <button onclick="logoutActiveChildToken()" class="px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500 hover:text-white rounded-lg text-xs font-bold transition-colors">Keluar</button>
         </div>
       </div>
     </section>
@@ -890,31 +890,7 @@
     </div>
   </div>
 
-    <!-- ========================================================================= -->
-  <!-- SUPABASE LOGIN & AUTH GUARD MODAL                                         -->
-  <!-- ========================================================================= -->
-  <div id="authGuardModal" class="fixed inset-0 z-[100] bg-[#050a16]/90 backdrop-blur-xl hidden flex items-center justify-center p-4">
-    <div class="bg-[#0b1c3c] rounded-3xl max-w-sm w-full p-6 border border-[#00f0ff]/50 shadow-[0_0_30px_rgba(0,240,255,0.3)] flex flex-col items-center text-center relative">
-      
-      <!-- Mascot Logo -->
-      <div class="relative w-16 h-16 rounded-full border-2 border-cyan-400 p-0.5 mb-3 shadow-[0_0_15px_rgba(0,240,255,0.5)]">
-        <img alt="Robo Avatar" class="w-full h-full object-cover rounded-full bg-slate-900" src="robomind_robot_avatar.png" />
-      </div>
-
-      <h3 class="text-lg font-black text-white leading-tight">Masuk ke RoboMind</h3>
-      <p class="text-xs text-slate-300 mb-5">Hubungkan progres game dengan akun orang tua</p>
-
-      <!-- Google OAuth Button -->
-      <button onclick="loginWithGoogle()" class="w-full py-3 px-4 rounded-xl bg-white hover:bg-slate-100 text-slate-900 font-extrabold text-xs flex items-center justify-center gap-2.5 shadow-md active:scale-95 transition-all mb-3">
-        <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-        <span>Masuk dengan Google</span>
-      </button>
-
-      <div class="relative flex items-center py-2 w-full mb-3">
-        <div class="flex-grow border-t border-slate-700"></div>
-        <span class="flex-shrink-0 mx-3 text-slate-400 text-[10px] uppercase font-bold">atau email</span>
-        <div class="flex-grow border-t border-slate-700"></div>
-      </div>
+    
 
       <!-- Quick Email Form -->
       <form onsubmit="handleEmailAuth(event)" class="w-full space-y-2.5 mb-3">
@@ -1330,6 +1306,7 @@
       currentFeaturedIdx = idx;
       renderFeaturedGame();
       initVideoLazyLoader();
+      checkChildAccessCodeOnLaunch();
     }
 
     function nextFeaturedGame() {
@@ -1337,6 +1314,7 @@
       currentFeaturedIdx = (currentFeaturedIdx + 1) % FEATURED_GAMES.length;
       renderFeaturedGame();
       initVideoLazyLoader();
+      checkChildAccessCodeOnLaunch();
     }
 
     function prevFeaturedGame() {
@@ -1344,6 +1322,7 @@
       currentFeaturedIdx = (currentFeaturedIdx - 1 + FEATURED_GAMES.length) % FEATURED_GAMES.length;
       renderFeaturedGame();
       initVideoLazyLoader();
+      checkChildAccessCodeOnLaunch();
     }
 
     function playCurrentFeaturedGame() {
@@ -1536,7 +1515,151 @@
       }
     }
 
-    async function checkUserAuth() {
+    async 
+    // === 8-DIGIT ACCESS TOKEN AUTHENTICATION SYSTEM ===
+    function generate8DigitToken() {
+      return Math.floor(10000000 + Math.random() * 90000000).toString();
+    }
+
+    function setupPinInputs() {
+      const pins = document.querySelectorAll('.pin-box');
+      pins.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+          if (e.target.value.length === 1 && index < pins.length - 1) {
+            pins[index + 1].focus();
+          }
+        });
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Backspace' && !e.target.value && index > 0) {
+            pins[index - 1].focus();
+          }
+        });
+      });
+    }
+
+    function fillDemoCode(code) {
+      const pins = document.querySelectorAll('.pin-box');
+      const digits = code.replace(/[^0-9]/g, '').split('');
+      pins.forEach((p, idx) => {
+        p.value = digits[idx] || '';
+      });
+      submitAccessCode();
+    }
+
+    async function submitAccessCode() {
+      const pins = document.querySelectorAll('.pin-box');
+      let enteredCode = '';
+      pins.forEach(p => enteredCode += p.value.trim());
+
+      const errEl = document.getElementById('accessCodeErrorMsg');
+      if (errEl) errEl.classList.add('hidden');
+
+      if (enteredCode.length !== 8) {
+        if (errEl) {
+          errEl.innerText = '⚠️ Harap masukkan 8-digit kode akses secara lengkap!';
+          errEl.classList.remove('hidden');
+        }
+        return;
+      }
+
+      showToast('🔍 Memverifikasi kode akses...');
+
+      let matchedChild = null;
+
+      if (supabaseClient) {
+        try {
+          const { data, error } = await supabaseClient
+            .from('children')
+            .select('*')
+            .or(`access_token.eq.${enteredCode},access_code.eq.${enteredCode}`)
+            .single();
+
+          if (data) {
+            matchedChild = {
+              id: data.id,
+              name: data.name || 'Anak',
+              age: data.age || 7,
+              avatar: data.avatar_url || 'robomind_robot_avatar.png',
+              level: data.level || 1,
+              total_xp: data.total_xp || 0,
+              coins: data.coins || 100,
+              access_code: enteredCode,
+              screentime_used: data.daily_screentime_minutes || 0,
+              screentime_limit: data.screentime_limit_minutes || 60
+            };
+          }
+        } catch (e) {
+          console.warn("Supabase access token query:", e);
+        }
+      }
+
+      if (!matchedChild) {
+        const found = userChildrenList.find(c => (c.access_code || '').replace(/[^0-9]/g, '') === enteredCode);
+        if (found) {
+          matchedChild = found;
+        } else if (enteredCode === '12345678') {
+          matchedChild = {
+            id: 'demo-child-1',
+            name: 'Aira (Demo)',
+            age: 8,
+            avatar: 'robomind_robot_avatar.png',
+            level: 12,
+            total_xp: 2450,
+            coins: 1250,
+            access_code: '12345678',
+            screentime_used: 15,
+            screentime_limit: 60
+          };
+        }
+      }
+
+      if (matchedChild) {
+        localStorage.setItem('robomind_active_access_code', enteredCode);
+        
+        const idx = userChildrenList.findIndex(c => c.id === matchedChild.id || c.access_code === enteredCode);
+        if (idx >= 0) {
+          userChildrenList[idx] = matchedChild;
+          activeChildIndex = idx;
+        } else {
+          userChildrenList.push(matchedChild);
+          activeChildIndex = userChildrenList.length - 1;
+        }
+        localStorage.setItem('robomind_children_profiles', JSON.stringify(userChildrenList));
+        localStorage.setItem('robomind_active_child_id', matchedChild.id);
+
+        closeModal('accessCodeModal');
+        applyActiveChildUI();
+        renderChildrenListUI();
+        SoundFX.playSuccess();
+        showToast(`🎉 Kode Akses Valid! Selamat datang, ${matchedChild.name}!`);
+      } else {
+        if (errEl) {
+          errEl.innerText = '❌ Kode Akses tidak ditemukan! Minta kode 8-digit dari Web Pemantauan Orang Tua.';
+          errEl.classList.remove('hidden');
+        }
+        SoundFX.playPop();
+      }
+    }
+
+    function logoutActiveChildToken() {
+      localStorage.removeItem('robomind_active_access_code');
+      showToast('🔒 Keluar dari profil anak. Masukkan kode akses baru.');
+      setTimeout(() => {
+        const modal = document.getElementById('accessCodeModal');
+        if (modal) modal.classList.remove('hidden');
+      }, 400);
+    }
+
+    function checkChildAccessCodeOnLaunch() {
+      setupPinInputs();
+      const activeCode = localStorage.getItem('robomind_active_access_code');
+      if (!activeCode) {
+        const modal = document.getElementById('accessCodeModal');
+        if (modal) modal.classList.remove('hidden');
+      }
+    }
+
+    function checkUserAuth() { return;
       if (!supabaseClient) return;
       try {
         // Read URL query params passed from web portal
@@ -2007,6 +2130,7 @@
       updateScreenTimeHUD();
       renderFeaturedGame();
       initVideoLazyLoader();
+      checkChildAccessCodeOnLaunch();
       try {
         const hash = window.location.hash.replace('#', '');
         const urlParams = new URLSearchParams(window.location.search);
@@ -2017,5 +2141,48 @@
       } catch (e) {}
     });
   </script>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: KODE AKSES ANAK (8-DIGIT ACCESS TOKEN AUTH)                       -->
+  <!-- ========================================================================= -->
+  <div id="accessCodeModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md hidden">
+    <div class="relative w-full max-w-md bg-[#0a1329] border-2 border-[#00f0ff] rounded-3xl p-6 shadow-[0_0_40px_rgba(0,240,255,0.3)] text-center flex flex-col items-center gap-4">
+      
+      <!-- Hologram Icon -->
+      <div class="w-16 h-16 rounded-2xl bg-[#00f0ff]/10 border border-[#00f0ff] flex items-center justify-center shadow-[0_0_20px_rgba(0,240,255,0.4)]">
+        <span class="material-symbols-outlined text-[#00f0ff] text-3xl animate-pulse">key</span>
+      </div>
+
+      <div>
+        <h3 class="text-xl font-black text-white tracking-wide">MASUKKAN KODE AKSES</h3>
+        <p class="text-xs text-slate-300 mt-1">Minta 8-digit kode akses dari Pemantauan Orang Tua di Web Portal</p>
+      </div>
+
+      <!-- 8-Digit PIN Input Container -->
+      <div class="w-full flex justify-center items-center gap-1.5 sm:gap-2 my-2">
+        <input type="text" maxlength="1" id="pin-1" class="pin-box w-9 h-11 sm:w-10 sm:h-12 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_10px_rgba(0,240,255,0.5)] rounded-xl text-center text-lg font-black text-[#00f0ff] outline-none uppercase" />
+        <input type="text" maxlength="1" id="pin-2" class="pin-box w-9 h-11 sm:w-10 sm:h-12 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_10px_rgba(0,240,255,0.5)] rounded-xl text-center text-lg font-black text-[#00f0ff] outline-none uppercase" />
+        <input type="text" maxlength="1" id="pin-3" class="pin-box w-9 h-11 sm:w-10 sm:h-12 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_10px_rgba(0,240,255,0.5)] rounded-xl text-center text-lg font-black text-[#00f0ff] outline-none uppercase" />
+        <input type="text" maxlength="1" id="pin-4" class="pin-box w-9 h-11 sm:w-10 sm:h-12 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_10px_rgba(0,240,255,0.5)] rounded-xl text-center text-lg font-black text-[#00f0ff] outline-none uppercase" />
+        <span class="text-slate-500 font-bold">-</span>
+        <input type="text" maxlength="1" id="pin-5" class="pin-box w-9 h-11 sm:w-10 sm:h-12 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_10px_rgba(0,240,255,0.5)] rounded-xl text-center text-lg font-black text-[#00f0ff] outline-none uppercase" />
+        <input type="text" maxlength="1" id="pin-6" class="pin-box w-9 h-11 sm:w-10 sm:h-12 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_10px_rgba(0,240,255,0.5)] rounded-xl text-center text-lg font-black text-[#00f0ff] outline-none uppercase" />
+        <input type="text" maxlength="1" id="pin-7" class="pin-box w-9 h-11 sm:w-10 sm:h-12 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_10px_rgba(0,240,255,0.5)] rounded-xl text-center text-lg font-black text-[#00f0ff] outline-none uppercase" />
+        <input type="text" maxlength="1" id="pin-8" class="pin-box w-9 h-11 sm:w-10 sm:h-12 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_10px_rgba(0,240,255,0.5)] rounded-xl text-center text-lg font-black text-[#00f0ff] outline-none uppercase" />
+      </div>
+
+      <div id="accessCodeErrorMsg" class="hidden text-xs font-bold text-rose-400 bg-rose-500/10 border border-rose-500/30 px-3 py-1.5 rounded-lg w-full"></div>
+
+      <!-- Action Button -->
+      <button onclick="submitAccessCode()" class="w-full py-3 bg-gradient-to-r from-[#0099ff] to-[#00f0ff] text-[#050a16] font-black rounded-2xl text-sm shadow-[0_0_20px_rgba(0,240,255,0.4)] active:scale-95 transition-transform flex items-center justify-center gap-2">
+        <span class="material-symbols-outlined text-lg">login</span> MASUK GAME
+      </button>
+
+      <div class="text-[11px] text-slate-400 mt-1">
+        Atau gunakan kode demo: <span class="font-mono text-[#00f0ff] font-bold cursor-pointer underline" onclick="fillDemoCode('12345678')">1234 - 5678</span>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
