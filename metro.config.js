@@ -4,8 +4,8 @@ const { getDefaultConfig } = require('expo/metro-config');
 const config = getDefaultConfig(__dirname);
 
 // Enable sourceExts and assetExts for Three.js / GLTF 3D models
-config.resolver.sourceExts = ['js', 'jsx', 'json', 'ts', 'tsx', 'cjs', 'mjs'];
-config.resolver.assetExts = [...config.resolver.assetExts, 'glb', 'gltf'];
+config.resolver.sourceExts = Array.from(new Set([...config.resolver.sourceExts, 'cjs', 'mjs']));
+config.resolver.assetExts = Array.from(new Set([...config.resolver.assetExts, 'glb', 'gltf']));
 
 // Custom resolver returning direct file paths for packages that trigger Metro resolution bugs
 config.resolver.resolveRequest = (context, moduleName, platform) => {

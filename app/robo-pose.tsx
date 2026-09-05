@@ -10,56 +10,61 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { WebView } from "react-native-webview";
 import { useRouter } from "expo-router";
+import { HowToPlayModal } from "../components/HowToPlayModal";
+import { saveGameSession } from "../lib/gameProgressService";
 
 export default function RoboPoseScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [isPseudoFullscreen, setIsPseudoFullscreen] = useState(false);
-  const iframeRef = useRef<any>(null);
-  const containerRef = useRef<any>(null);
+  const [showHelp, setShowHelp] = useState(true);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const toggleFullscreen = useCallback(() => {
     const el = containerRef.current;
-    if (typeof document === "undefined") return;
-
-    const requestFs = el?.requestFullscreen || el?.webkitRequestFullscreen || el?.mozRequestFullScreen || el?.msRequestFullscreen;
-    const exitFs = document.exitFullscreen || (document as any).webkitExitFullscreen || (document as any).mozCancelFullScreen || (document as any).msExitFullscreen;
-    const currentFs = document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement;
-
-    if (requestFs && !isPseudoFullscreen) {
-      if (!currentFs) {
-        requestFs.call(el).then(() => setIsFullscreen(true)).catch(() => {
-          setIsPseudoFullscreen((prev) => !prev);
-          setIsFullscreen((prev) => !prev);
-        });
-      } else {
-        if (exitFs) {
-          exitFs.call(document).then(() => setIsFullscreen(false)).catch(() => {});
-        }
-        setIsFullscreen(false);
-      }
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      el.requestFullscreen?.().then(() => setIsFullscreen(true)).catch(() => {});
     } else {
-      // iOS Safari (iPhone) Fallback: Pseudo Fullscreen using CSS fixed positioning
-      setIsPseudoFullscreen((prev) => !prev);
-      setIsFullscreen((prev) => !prev);
+      document.exitFullscreen?.().then(() => setIsFullscreen(false)).catch(() => {});
     }
-  }, [isPseudoFullscreen]);
+  }, []);
 
   useEffect(() => {
-    if (typeof document === "undefined") return;
-    const handler = () => {
-      const currentFs = !!(document.fullscreenElement || (document as any).webkitFullscreenElement);
-      setIsFullscreen(currentFs || isPseudoFullscreen);
+    const handler = () => setIsFullscreen(!!document.fullscreenElement);
+    if (typeof document !== "undefined") {
+      document.addEventListener('fullscreenchange', handler);
+      return () => document.removeEventListener('fullscreenchange', handler);
+    }
+  }, []);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setLoading(false), 3000);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  useEffect(() => {
+    const messageHandler = (e: MessageEvent) => {
+      if (e.data && (e.data.type === "GAME_OVER" || e.data.type === "GAME_COMPLETE" || e.data.type === "LEVEL_COMPLETE" || e.data.type === "GAME_RESULT")) {
+        saveGameSession({
+          gameId: "robo-pose",
+          level: 1,
+          score: 100,
+          xpEarned: 80,
+          coinsEarned: 30,
+          completed: true,
+          durationSeconds: e.data.duration || 60,
+        });
+      }
     };
-    document.addEventListener("fullscreenchange", handler);
-    document.addEventListener("webkitfullscreenchange", handler);
-    return () => {
-      document.removeEventListener("fullscreenchange", handler);
-      document.removeEventListener("webkitfullscreenchange", handler);
-    };
-  }, [isPseudoFullscreen]);
+    if (typeof window !== "undefined") {
+      window.addEventListener("message", messageHandler);
+      return () => window.removeEventListener("message", messageHandler);
+    }
+  }, []);
 
   if (Platform.OS !== "web") {
     return (
@@ -72,27 +77,37 @@ export default function RoboPoseScreen() {
           <Text style={styles.headerTitle}>Robo Pose</Text>
           <View style={{ width: 40 }} />
         </View>
-        <View style={styles.mobileNotice}>
-          <Ionicons name="hand-left" size={64} color="#a78bfa" />
-          <Text style={styles.mobileTitle}>Robo Pose</Text>
-          <Text style={styles.mobileDesc}>
-            Game ini hanya bisa dimainkan di versi web browser.
-          </Text>
-          <Pressable style={styles.playBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={20} color="#fff" />
-            <Text style={styles.playBtnText}>KEMBALI</Text>
-          </Pressable>
-        </View>
+        <WebView
+          source={{ uri: "file:///android_asset/robo-pose/index.html" }}
+          style={styles.webview}
+          javaScriptEnabled={true}
+          domStorageEnabled={true}
+          originWhitelist={["*"]}
+          allowFileAccessFromFileURLs={true}
+          allowUniversalAccessFromFileURLs={true}
+          onMessage={(e) => {
+            try {
+              const data = typeof e.nativeEvent.data === "string" ? JSON.parse(e.nativeEvent.data) : e.nativeEvent.data;
+              if (data && (data.type === "GAME_OVER" || data.type === "GAME_COMPLETE" || data.type === "LEVEL_COMPLETE" || data.type === "GAME_RESULT")) {
+                saveGameSession({
+                  gameId: "robo-pose",
+                  level: 1,
+                  score: 100,
+                  xpEarned: 80,
+                  coinsEarned: 30,
+                  completed: true,
+                  durationSeconds: data.duration || 60,
+                });
+              }
+            } catch (err) {}
+          }}
+        />
       </SafeAreaView>
     );
   }
 
   return (
-    <View ref={containerRef} style={[
-        styles.webContainer,
-        isPseudoFullscreen && styles.pseudoFullscreenContainer,
-      ]} {...({ onClick: () => iframeRef.current?.focus() } as any)}
-    >
+    <View ref={containerRef} style={styles.webContainer} onClick={() => iframeRef.current?.focus()}>
       <StatusBar hidden />
 
       {loading && (
@@ -106,7 +121,6 @@ export default function RoboPoseScreen() {
         ref={iframeRef}
         src="/robo-pose/index.html"
         style={styles.iframe}
-        allow="camera; microphone; autoplay; fullscreen"
         onLoad={() => {
           setLoading(false);
           iframeRef.current?.focus();
@@ -129,17 +143,7 @@ export default function RoboPoseScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#1e1b4b" },
-  webContainer: { flex: 1, backgroundColor: "#1e1b4b", width: "100%", height: "100%" },
-  pseudoFullscreenContainer: {
-    position: "fixed" as any,
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    width: "100vw" as any,
-    height: "100vh" as any,
-    zIndex: 999999,
-  },
+  webContainer: { flex: 1, backgroundColor: "#1e1b4b" },
   header: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 16, paddingVertical: 12,
@@ -190,4 +194,5 @@ const styles = StyleSheet.create({
     borderRadius: 50, marginTop: 8,
   },
   playBtnText: { color: "#fff", fontWeight: "800", fontSize: 14 },
+  webview: { flex: 1, backgroundColor: "#000" },
 });

@@ -3,7 +3,7 @@ import { StyleSheet, View, Platform, StatusBar } from "react-native";
 import { useRouter } from "expo-router";
 import { WebView } from "react-native-webview";
 
-export default function Index() {
+export default function GameDashboardScreen() {
   const router = useRouter();
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
@@ -50,7 +50,7 @@ export default function Index() {
         ref={iframeRef}
         src="/app-home.html"
         style={styles.iframe as any}
-        title="RoboMind Cyber Game Dashboard"
+        title="RoboMind Game Dashboard"
       />
     </View>
   );
