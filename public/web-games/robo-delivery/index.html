@@ -1101,18 +1101,23 @@
       document.getElementById('screenWin').classList.remove('hidden');
 
       try {
-        if (window.ReactNativeWebView) {
-          window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'LEVEL_COMPLETE',
-            coins: currentLevelData.rewardCoins,
-            level: currentLevelData.id
-          }));
-        } else if (window.parent && window.parent !== window) {
-          window.parent.postMessage(JSON.stringify({
-            type: 'LEVEL_COMPLETE',
-            coins: currentLevelData.rewardCoins,
-            level: currentLevelData.id
-          }), '*');
+        const msg = {
+          type: 'GAME_COMPLETE',
+          gameId: 'robo-delivery',
+          title: 'Robo Delivery',
+          category: 'kognitif',
+          level: currentLevelData.id || 1,
+          score: 100,
+          xp: 120,
+          coins: currentLevelData.rewardCoins || 50,
+          duration: 60,
+          completed: true
+        };
+        if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+          window.ReactNativeWebView.postMessage(JSON.stringify(msg));
+        }
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage(msg, '*');
         }
       } catch (e) {
         console.log('Post message error:', e);

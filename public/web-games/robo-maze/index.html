@@ -1234,6 +1234,27 @@
 
       toggleModal(true);
 
+      try {
+        const msg = {
+          type: 'GAME_COMPLETE',
+          gameId: 'robo-maze',
+          title: 'Robo Maze',
+          category: 'kognitif',
+          level: currentLevel,
+          score: 100,
+          xp: 120,
+          coins: totalCoins,
+          duration: 60,
+          completed: true
+        };
+        if (window.parent && window.parent !== window) window.parent.postMessage(msg, '*');
+        if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+          window.ReactNativeWebView.postMessage(JSON.stringify(msg));
+        }
+      } catch (e) {
+        console.warn('PostMessage error:', e);
+      }
+
       setTimeout(() => {
         drawRadarChart('brainRadarCanvas', {
           spasial: Math.max(60, 100 - hits * 12),
