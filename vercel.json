@@ -1,8 +1,10 @@
 {
-  "buildCommand": "npx expo export --platform web",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "cleanUrls": true,
+  "cleanUrls": false,
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/web-games/(.*)", "destination": "/web-games/$1" },
+    { "source": "/_expo/(.*)", "destination": "/_expo/$1" },
+    { "source": "/((?!web-games|_expo|.*\\..*).*)", "destination": "/index.html" }
   ]
 }
