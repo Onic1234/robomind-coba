@@ -1987,37 +1987,7 @@
   <!-- ========================================================================= -->
   <!-- MODAL: KODE AKSES ANAK (8-DIGIT ACCESS TOKEN AUTH - PURE & BEAUTIFUL UI) -->
   <!-- ========================================================================= -->
-  <div id="accessCodeModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-xl hidden">
-    <div class="relative w-full max-w-md bg-[#0a1329] border-2 border-[#00f0ff] rounded-3xl p-6 sm:p-8 shadow-[0_0_50px_rgba(0,240,255,0.4)] text-center flex flex-col items-center gap-4">
-      
-      <!-- Hologram Mascot Icon -->
-      <div class="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-[#0099ff]/20 to-[#00f0ff]/10 border-2 border-[#00f0ff] flex items-center justify-center shadow-[0_0_25px_rgba(0,240,255,0.5)]">
-        <span class="material-symbols-outlined text-[#00f0ff] text-3xl sm:text-4xl animate-pulse">key</span>
-      </div>
-
-      <div>
-        <h3 class="text-xl sm:text-2xl font-black text-white tracking-wide font-sans">MASUKKAN KODE AKSES</h3>
-        <p class="text-xs sm:text-sm text-slate-300 mt-1 font-medium leading-relaxed">
-          Minta 8-digit kode akses dari <span class="text-[#00f0ff] font-bold">Web Pemantauan Orang Tua</span>
-        </p>
-      </div>
-
-      <!-- 8-Digit PIN Input Container -->
-      <div class="w-full flex justify-center items-center gap-1 sm:gap-2 my-2">
-        <div class="flex items-center gap-1 sm:gap-1.5">
-          <input type="text" maxlength="1" id="pin-1" class="pin-box w-8 h-11 sm:w-10 sm:h-13 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_12px_rgba(0,240,255,0.6)] rounded-xl text-center text-lg sm:text-xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
-          <input type="text" maxlength="1" id="pin-2" class="pin-box w-8 h-11 sm:w-10 sm:h-13 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_12px_rgba(0,240,255,0.6)] rounded-xl text-center text-lg sm:text-xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
-          <input type="text" maxlength="1" id="pin-3" class="pin-box w-8 h-11 sm:w-10 sm:h-13 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_12px_rgba(0,240,255,0.6)] rounded-xl text-center text-lg sm:text-xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
-          <input type="text" maxlength="1" id="pin-4" class="pin-box w-8 h-11 sm:w-10 sm:h-13 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_12px_rgba(0,240,255,0.6)] rounded-xl text-center text-lg sm:text-xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
-        </div>
-        <span class="text-[#00f0ff] font-black text-lg sm:text-xl px-0.5">-</span>
-        <div class="flex items-center gap-1 sm:gap-1.5">
-          <input type="text" maxlength="1" id="pin-5" class="pin-box w-8 h-11 sm:w-10 sm:h-13 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_12px_rgba(0,240,255,0.6)] rounded-xl text-center text-lg sm:text-xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
-          <input type="text" maxlength="1" id="pin-6" class="pin-box w-8 h-11 sm:w-10 sm:h-13 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_12px_rgba(0,240,255,0.6)] rounded-xl text-center text-lg sm:text-xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
-          <input type="text" maxlength="1" id="pin-7" class="pin-box w-8 h-11 sm:w-10 sm:h-13 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_12px_rgba(0,240,255,0.6)] rounded-xl text-center text-lg sm:text-xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
-          <input type="text" maxlength="1" id="pin-8" class="pin-box w-8 h-11 sm:w-10 sm:h-13 bg-[#050a16] border-2 border-[#1a2e56] focus:border-[#00f0ff] focus:shadow-[0_0_12px_rgba(0,240,255,0.6)] rounded-xl text-center text-lg sm:text-xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
-        </div>
-      </div>
+  
 
       <div id="accessCodeErrorMsg" class="hidden text-xs font-bold text-rose-400 bg-rose-500/15 border border-rose-500/40 px-3.5 py-2 rounded-xl w-full text-center"></div>
 
@@ -2028,6 +1998,61 @@
 
       <div class="text-xs text-slate-400 mt-1">
         Coba Kode Akses Demo: <span class="font-mono text-[#00f0ff] font-extrabold cursor-pointer underline hover:text-white transition-colors" onclick="fillDemoCode('12345678')">1234 - 5678</span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- GLOWING CARD POP-UP: KODE AKSES ANAK (PROMINENT & BEAUTIFUL CENTER CARD)   -->
+  <!-- ========================================================================= -->
+  <div id="accessCodeModal" class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-[#050a16]/95 backdrop-blur-2xl">
+    <!-- Card Container -->
+    <div class="relative w-full max-w-sm sm:max-w-md bg-[#0d1b33] border-2 border-[#00f0ff] rounded-3xl p-6 sm:p-8 shadow-[0_0_60px_rgba(0,240,255,0.4)] text-center flex flex-col items-center gap-4 transition-all">
+      
+      <!-- Top Decorative Sci-Fi Ray -->
+      <div class="absolute -top-12 left-1/2 -translate-x-1/2 w-40 h-20 bg-[#00f0ff]/20 rounded-full blur-2xl pointer-events-none"></div>
+
+      <!-- Hologram Mascot Icon -->
+      <div class="relative w-20 h-20 rounded-3xl bg-[#00f0ff]/15 border-2 border-[#00f0ff] flex items-center justify-center shadow-[0_0_30px_rgba(0,240,255,0.6)] my-1">
+        <span class="material-symbols-outlined text-[#00f0ff] text-4xl animate-pulse">key</span>
+      </div>
+
+      <div>
+        <h3 class="text-xl sm:text-2xl font-black text-white tracking-wide font-sans leading-tight">MASUK GAME ROBOMIND</h3>
+        <p class="text-xs sm:text-sm text-cyan-300 font-semibold mt-1.5 leading-snug">
+          Masukkan 8-Digit Kode Akses dari <br class="hidden sm:inline" /><span class="text-white font-extrabold underline">Web Pemantauan Orang Tua</span>
+        </p>
+      </div>
+
+      <!-- 8-Digit PIN Input Box Container -->
+      <div class="w-full flex flex-col items-center gap-2 my-1">
+        <div class="flex items-center justify-center gap-1 sm:gap-2 w-full">
+          <div class="flex items-center gap-1 sm:gap-1.5">
+            <input type="text" maxlength="1" id="pin-1" class="pin-box w-9 h-12 sm:w-11 sm:h-14 bg-[#050a16] border-2 border-[#00f0ff]/60 focus:border-[#00f0ff] focus:shadow-[0_0_15px_rgba(0,240,255,0.8)] focus:scale-105 rounded-xl text-center text-xl sm:text-2xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
+            <input type="text" maxlength="1" id="pin-2" class="pin-box w-9 h-12 sm:w-11 sm:h-14 bg-[#050a16] border-2 border-[#00f0ff]/60 focus:border-[#00f0ff] focus:shadow-[0_0_15px_rgba(0,240,255,0.8)] focus:scale-105 rounded-xl text-center text-xl sm:text-2xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
+            <input type="text" maxlength="1" id="pin-3" class="pin-box w-9 h-12 sm:w-11 sm:h-14 bg-[#050a16] border-2 border-[#00f0ff]/60 focus:border-[#00f0ff] focus:shadow-[0_0_15px_rgba(0,240,255,0.8)] focus:scale-105 rounded-xl text-center text-xl sm:text-2xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
+            <input type="text" maxlength="1" id="pin-4" class="pin-box w-9 h-12 sm:w-11 sm:h-14 bg-[#050a16] border-2 border-[#00f0ff]/60 focus:border-[#00f0ff] focus:shadow-[0_0_15px_rgba(0,240,255,0.8)] focus:scale-105 rounded-xl text-center text-xl sm:text-2xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
+          </div>
+          <span class="text-[#00f0ff] font-black text-xl sm:text-2xl px-0.5">-</span>
+          <div class="flex items-center gap-1 sm:gap-1.5">
+            <input type="text" maxlength="1" id="pin-5" class="pin-box w-9 h-12 sm:w-11 sm:h-14 bg-[#050a16] border-2 border-[#00f0ff]/60 focus:border-[#00f0ff] focus:shadow-[0_0_15px_rgba(0,240,255,0.8)] focus:scale-105 rounded-xl text-center text-xl sm:text-2xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
+            <input type="text" maxlength="1" id="pin-6" class="pin-box w-9 h-12 sm:w-11 sm:h-14 bg-[#050a16] border-2 border-[#00f0ff]/60 focus:border-[#00f0ff] focus:shadow-[0_0_15px_rgba(0,240,255,0.8)] focus:scale-105 rounded-xl text-center text-xl sm:text-2xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
+            <input type="text" maxlength="1" id="pin-7" class="pin-box w-9 h-12 sm:w-11 sm:h-14 bg-[#050a16] border-2 border-[#00f0ff]/60 focus:border-[#00f0ff] focus:shadow-[0_0_15px_rgba(0,240,255,0.8)] focus:scale-105 rounded-xl text-center text-xl sm:text-2xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
+            <input type="text" maxlength="1" id="pin-8" class="pin-box w-9 h-12 sm:w-11 sm:h-14 bg-[#050a16] border-2 border-[#00f0ff]/60 focus:border-[#00f0ff] focus:shadow-[0_0_15px_rgba(0,240,255,0.8)] focus:scale-105 rounded-xl text-center text-xl sm:text-2xl font-black text-[#00f0ff] font-mono outline-none uppercase transition-all" />
+          </div>
+        </div>
+      </div>
+
+      <div id="accessCodeErrorMsg" class="hidden text-xs sm:text-sm font-bold text-rose-300 bg-rose-500/20 border border-rose-500/50 px-4 py-2 rounded-xl w-full text-center shadow-sm"></div>
+
+      <!-- Action Button -->
+      <button onclick="submitAccessCode()" class="w-full py-3.5 sm:py-4 bg-gradient-to-r from-[#0099ff] to-[#00f0ff] hover:from-[#00b3ff] hover:to-[#33f3ff] text-[#050a16] font-black rounded-2xl text-sm sm:text-base shadow-[0_0_30px_rgba(0,240,255,0.5)] active:scale-95 transition-all flex items-center justify-center gap-2 mt-2 cursor-pointer">
+        <span class="material-symbols-outlined text-2xl">sports_esports</span> MASUK GAME NOW
+      </button>
+
+      <div class="text-xs text-slate-300 mt-1">
+        Atau klik untuk kode demo: <span class="font-mono text-[#00f0ff] font-extrabold cursor-pointer underline hover:text-white transition-colors bg-[#00f0ff]/10 px-2 py-0.5 rounded border border-[#00f0ff]/30" onclick="fillDemoCode('12345678')">1234 - 5678</span>
       </div>
     </div>
   </div>
