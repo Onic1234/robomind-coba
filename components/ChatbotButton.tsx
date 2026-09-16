@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { StyleSheet, View, Text, Pressable, Modal, TextInput, ScrollView, KeyboardAvoidingView, Platform, PanResponder, Animated, Dimensions } from "react-native";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
+import { usePathname } from "expo-router";
 import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../constants/Theme";
 
 interface Message {
@@ -9,7 +10,26 @@ interface Message {
   text: string;
 }
 
+const GAME_ROUTES = [
+  "/robo-jek",
+  "/robo-bros",
+  "/robo-maze",
+  "/robo-pose",
+  "/robo-charge",
+  "/robo-circle",
+  "/robo-link",
+  "/robot-escape",
+  "/robot-circuit-puzzle",
+  "/energy-core",
+  "/rogue-soul",
+  "/pick-and-drop",
+  "/screw-spin",
+  "/robo-delivery",
+  "/game-dashboard",
+];
+
 export default function ChatbotButton() {
+  const pathname = usePathname();
   const [modalVisible, setModalVisible] = useState(false);
   const [bottomOffset, setBottomOffset] = useState<number>(Platform.OS === "ios" ? 104 : 80);
   
@@ -157,6 +177,11 @@ export default function ChatbotButton() {
     "Tanya progress belajar",
     "Tips belajar anak",
   ];
+
+  const isGameScreen = GAME_ROUTES.some((route) => pathname === route || pathname?.startsWith(route + "/"));
+  if (isGameScreen) {
+    return null;
+  }
 
   return (
     <>
