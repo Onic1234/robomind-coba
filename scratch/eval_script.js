@@ -1,458 +1,24 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Robo Delivery - Labirin Menara Arsitektural</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      user-select: none;
-      -webkit-user-select: none;
-      margin: 0;
-      padding: 0;
-    }
-    body, html {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      font-family: 'Comic Sans MS', 'Chalkboard SE', 'Segoe UI', sans-serif;
-      background: #ffffff;
-      color: #0f172a;
-    }
-    #game-container {
-      position: relative;
-      width: 100vw;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #ffffff;
-    }
-    canvas {
-      display: block;
-      touch-action: none;
-    }
 
-    .sketch-badge {
-      background: #38bdf8;
-      border: 3px solid #000000;
-      border-radius: 18px;
-      padding: 6px 16px;
-      font-size: 1.25rem;
-      font-weight: 900;
-      color: #ffffff;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 4px 4px 0px #000000;
-      text-shadow: 1px 1px 0px #000;
-    }
+const jsdom = require('jsdom');
+const { JSDOM } = jsdom;
+const dom = new JSDOM(`<!DOCTYPE html><html><body>
+<canvas id="gameCanvas"></canvas>
+<div id="timerDisplay">05:00</div>
+<div id="levelDisplay">Level 1</div>
+<div id="robotStatusText">Kosong</div>
+<div id="instructionText">Sentuh</div>
+</body></html>`, { runScripts: 'outside-only', url: 'http://localhost/' });
 
-    .sketch-btn {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: #ffffff;
-      border: 3px solid #000000;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      cursor: pointer;
-      box-shadow: 4px 4px 0px #000000;
-      transition: transform 0.1s, box-shadow 0.1s;
-    }
-    .sketch-btn:active {
-      transform: translate(2px, 2px);
-      box-shadow: 2px 2px 0px #000000;
-    }
+const window = dom.window;
+const document = window.document;
+global.window = window;
+global.document = document;
+global.Image = window.Image;
+global.requestAnimationFrame = (cb) => setTimeout(cb, 16);
+global.AudioContext = class {};
 
-    .hud-top-left {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      z-index: 50;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-    .hud-top-right {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      z-index: 50;
-      display: flex;
-      gap: 12px;
-    }
-    .hud-bottom-right {
-      position: absolute;
-      bottom: 24px;
-      right: 24px;
-      z-index: 50;
-    }
+try {
 
-    .carrying-hud {
-      position: absolute;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #ffffff;
-      border: 3px solid #000000;
-      border-radius: 30px;
-      padding: 8px 24px;
-      color: #0f172a;
-      font-weight: 900;
-      font-size: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      box-shadow: 4px 4px 0px #000000;
-      z-index: 50;
-      pointer-events: none;
-    }
-
-    .instruction-banner {
-      position: absolute;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #ffffff;
-      border: 3px solid #000000;
-      padding: 8px 22px;
-      border-radius: 20px;
-      font-weight: 900;
-      font-size: 1rem;
-      color: #000000;
-      box-shadow: 4px 4px 0px #000000;
-      pointer-events: none;
-      animation: bounceText 2s infinite;
-      z-index: 40;
-    }
-    @keyframes bounceText {
-      0%, 100% { transform: translateX(-50%) translateY(0); }
-      50% { transform: translateX(-50%) translateY(-6px); }
-    }
-
-    @media (max-width: 640px) {
-      .hud-top-left {
-        top: 8px;
-        left: 8px;
-        gap: 5px;
-      }
-      .hud-top-right {
-        top: 8px;
-        right: 8px;
-        gap: 5px;
-      }
-      .sketch-badge {
-        padding: 3px 8px;
-        font-size: 0.78rem;
-        border-width: 2px;
-        box-shadow: 2px 2px 0px #000000;
-        gap: 3px;
-      }
-      .sketch-btn {
-        width: 34px;
-        height: 34px;
-        font-size: 1rem;
-        border-width: 2px;
-        box-shadow: 2px 2px 0px #000000;
-      }
-      .hud-bottom-right {
-        bottom: 12px;
-        right: 12px;
-      }
-      .hud-bottom-right .sketch-btn {
-        width: 38px;
-        height: 38px;
-        font-size: 1.1rem;
-      }
-      .carrying-hud {
-        bottom: 12px;
-        padding: 5px 14px;
-        font-size: 0.78rem;
-        border-width: 2px;
-        border-radius: 20px;
-        box-shadow: 3px 3px 0px #000000;
-        gap: 8px;
-      }
-      .instruction-banner {
-        bottom: 64px;
-        padding: 4px 12px;
-        font-size: 0.72rem;
-        white-space: nowrap;
-        border-width: 2px;
-        border-radius: 14px;
-        box-shadow: 2px 2px 0px #000000;
-      }
-    }
-
-    .overlay-screen {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background: rgba(15, 23, 42, 0.4);
-      backdrop-filter: blur(6px);
-      z-index: 100;
-      opacity: 1;
-      transition: opacity 0.3s ease;
-    }
-    .overlay-screen.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .card-modal {
-      background: #ffffff;
-      border: 4px solid #000000;
-      border-radius: 28px;
-      padding: 32px;
-      text-align: center;
-      box-shadow: 8px 8px 0px #000000;
-      max-width: 440px;
-      width: 90%;
-      animation: popIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    @keyframes popIn {
-      0% { transform: scale(0.7); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
-    }
-
-    .title-logo {
-      font-size: 2.2rem;
-      font-weight: 900;
-      color: #000000;
-      margin-bottom: 6px;
-      letter-spacing: -0.5px;
-    }
-    .subtitle-logo {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #64748b;
-      margin-bottom: 20px;
-    }
-
-    .btn-main {
-      background: #38bdf8;
-      color: #ffffff;
-      font-size: 1.25rem;
-      font-weight: 900;
-      border: 3px solid #000000;
-      padding: 12px 36px;
-      border-radius: 99px;
-      cursor: pointer;
-      box-shadow: 4px 4px 0px #000000;
-      transition: transform 0.1s, box-shadow 0.1s;
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      margin: 8px;
-      text-shadow: 1px 1px 0px #000;
-    }
-    .btn-main:active {
-      transform: translate(2px, 2px);
-      box-shadow: 2px 2px 0px #000000;
-    }
-    .btn-secondary {
-      background: #ffffff;
-      color: #000000;
-      font-size: 1rem;
-      font-weight: 800;
-      border: 3px solid #000000;
-      padding: 10px 24px;
-      border-radius: 99px;
-      cursor: pointer;
-      margin: 6px;
-      box-shadow: 3px 3px 0px #000000;
-      transition: all 0.15s;
-    }
-    .btn-secondary:hover {
-      background: #f1f5f9;
-    }
-
-    .level-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin: 16px 0;
-    }
-    .level-btn {
-      background: #ffffff;
-      border: 3px solid #000000;
-      border-radius: 16px;
-      padding: 14px;
-      font-size: 1.2rem;
-      font-weight: 900;
-      color: #000000;
-      cursor: pointer;
-      box-shadow: 3px 3px 0px #000000;
-      transition: all 0.15s;
-    }
-    .level-btn.locked {
-      background: #f1f5f9;
-      color: #94a3b8;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-    .level-btn.active {
-      background: #38bdf8;
-      color: #ffffff;
-      text-shadow: 1px 1px 0px #000;
-    }
-  </style>
-
-  <!-- ===== RoboMind shared game result/report skin (auto-injected) ===== -->
-  <style id="rb-result-skin">
-    /* Overlay layar hasil: konsisten di semua game */
-    .overlay-screen.hidden {
-      display: none !important;
-    }
-    .overlay-screen {
-      flex-direction: column !important;
-      align-items: center !important;
-      justify-content: center !important;
-      padding: 16px !important;
-      overflow-y: auto !important;
-      background: rgba(3, 7, 18, 0.88) !important;
-      -webkit-backdrop-filter: blur(8px);
-      backdrop-filter: blur(8px);
-    }
-    /* Kartu hasil: lebar & tinggi dibatasi, isi discroll DI DALAM kartu */
-    .card-modal,
-    #screen-result .modal-box,
-    #resultModal > div,
-    #gameModal > div {
-      width: 100% !important;
-      max-width: 440px !important;
-      max-height: 90vh !important;
-      overflow-y: auto !important;
-      box-sizing: border-box !important;
-      margin: auto !important;
-      padding: 20px !important;
-      border-radius: 24px !important;
-      border: 2px solid rgba(56, 189, 248, 0.45) !important;
-      background: #0B132B !important;
-      color: #E2E8F0 !important;
-      text-align: center !important;
-      box-shadow: 0 0 40px rgba(0, 229, 255, 0.25) !important;
-    }
-    /* Baris bintang seragam */
-    #modalStars,
-    #result-stars,
-    #res_stars,
-    .rb-stars {
-      font-size: 2rem !important;
-      line-height: 1.2 !important;
-      letter-spacing: 5px !important;
-      color: #FBBF24 !important;
-      text-align: center !important;
-    }
-    /* Grid dua kolom jadi satu kolom di layar sempit */
-    .rb-result-grid {
-      display: grid !important;
-      grid-template-columns: 1fr 1fr !important;
-      gap: 16px !important;
-      align-items: start !important;
-    }
-    @media (max-width: 560px) {
-      .card-modal,
-      #screen-result .modal-box,
-      #resultModal > div,
-      #gameModal > div { max-width: 100% !important; }
-      .rb-result-grid { grid-template-columns: 1fr !important; }
-    }
-  </style>
-</head>
-<body>
-
-  <div id="game-container">
-    <canvas id="gameCanvas"></canvas>
-
-    <div class="hud-top-left">
-      <div id="hudTimer" class="sketch-badge">
-        ⏱️ <span id="timerVal">06:55</span>
-      </div>
-      <div id="hudLevel" class="sketch-badge" style="background: #ffffff; color: #000000; text-shadow: none;">
-        🗺️ <span id="levelVal">Level 1</span>
-      </div>
-    </div>
-
-    <div class="hud-top-right">
-      <button class="sketch-btn" onclick="toggleAudio()" id="soundToggleBtn">🔊</button>
-      <button class="sketch-btn" onclick="showSettingsModal()">⚙️</button>
-    </div>
-
-    <div class="hud-bottom-right">
-      <button class="sketch-btn" onclick="toggleZoom()" id="zoomBtn" title="Zoom Map">🔍</button>
-    </div>
-
-    <div class="carrying-hud">
-      <div id="carryingIcon" style="font-size: 1.5rem;">🤖</div>
-      <div>
-        <div style="font-size: 0.7rem; color: #64748b; text-transform: uppercase;">STATUS ROBOT</div>
-        <div id="carryingText">Tangan Kosong</div>
-      </div>
-    </div>
-
-    <div id="instructionBanner" class="instruction-banner">
-      SENTUH LINGKARAN UNTUK BERGERAK
-    </div>
-
-    <div id="screenTitle" class="overlay-screen">
-      <div class="card-modal">
-        <div style="font-size: 3.5rem; margin-bottom: 6px;">🤖📦🍕</div>
-        <div class="title-logo">ROBO DELIVERY</div>
-        <div class="subtitle-logo">Labirin Menara Arsitektural Isometrik</div>
-        <div style="margin-bottom: 20px; font-size: 0.95rem; color: #475569; line-height: 1.5;">
-          Jelajahi labirin menara bertingkat dengan koridor berliku, ambil makanan, dan antar ke orang yang menunggu di puncaknya sebelum timer habis!
-          <br><span style="color: #ef4444; font-weight: 800;">⚠️ Hati-hati menabrak orang berjalan!</span>
-        </div>
-        <button class="btn-main" onclick="startGame()">PLAY ▶</button>
-        <button class="btn-secondary" onclick="showLevelSelect()">PILIH LEVEL 🗺️</button>
-      </div>
-    </div>
-
-    <div id="screenLevelSelect" class="overlay-screen hidden">
-      <div class="card-modal">
-        <div class="title-logo">PILIH LEVEL MAP</div>
-        <div class="subtitle-logo">Pilih tantangan maze pengantaran makanan</div>
-        <div class="level-grid" id="levelGridContainer"></div>
-        <button class="btn-secondary" onclick="hideLevelSelect()">Kembali</button>
-      </div>
-    </div>
-
-    <div id="screenWin" class="overlay-screen hidden">
-      <div class="card-modal">
-        <div style="font-size: 3rem; margin-bottom: 6px;">⭐⭐⭐</div>
-        <div class="title-logo" style="color: #16a34a;">MISI SUKSES!</div>
-        <div class="subtitle-logo">Semua makanan berhasil diantar tepat waktu!</div>
-        
-        <div style="background: #f0fdf4; border: 3px solid #000000; border-radius: 18px; padding: 14px; margin: 14px 0; font-weight: 900; font-size: 1.1rem; box-shadow: 3px 3px 0px #000000;">
-          🪙 Reward: <span id="rewardCoinsVal">+350</span> Koin RoboMind!
-        </div>
-
-        <button class="btn-main" onclick="nextLevel()">LEVEL NEXT ▶</button>
-        <button class="btn-secondary" onclick="retryLevel()">Ulangi Level 🔄</button>
-      </div>
-    </div>
-
-    <div id="screenLose" class="overlay-screen hidden">
-      <div class="card-modal">
-        <div style="font-size: 3.5rem; margin-bottom: 6px;">⏱️❌</div>
-        <div class="title-logo" style="color: #dc2626;">WAKTU HABIS!</div>
-        <div class="subtitle-logo">Robot gagal mengantar semua makanan sebelum timer habis.</div>
-        <button class="btn-main" style="background: #dc2626;" onclick="retryLevel()">COBA LAGI 🔄</button>
-        <button class="btn-secondary" onclick="showTitleScreen()">Menu Utama 🏠</button>
-      </div>
-    </div>
-
-  </div>
-
-  <script>
     /* ==========================================================================
        CANVAS & SYSTEM SETUP
        ========================================================================== */
@@ -460,36 +26,6 @@
     const ctx = canvas ? canvas.getContext('2d') : null;
     let scaleFactor = 1.0;
     let hoveredNodeId = null;
-
-    /* ==========================================================================
-       GLOBAL GAME VARIABLES & STATE
-       ========================================================================== */
-    let isGameRunning = false;
-    let timerInterval = null;
-    let currentLevelIndex = 0;
-    let currentLevelData = null;
-
-    const robotState = {
-      pathQueue: [],
-      currentNodeId: 0,
-      prevNodeId: 0,
-      targetNodeId: null,
-      isMoving: false,
-      moveProgress: 0,
-      carryingFood: null,
-      bumpAnim: 0,
-      x: 0,
-      y: 0,
-      z: 0
-    };
-
-    
-    function computeCamera() {
-      // Refresh canvas scale and camera parameters
-      if (canvas) {
-        scaleFactor = Math.min((window.innerWidth || 800) / 800, (window.innerHeight || 600) / 600);
-      }
-    }
 
     function resizeCanvas() {
       if (!canvas) return;
@@ -819,66 +355,25 @@
     /* ==========================================================================
        LEVEL DEFINITIONS (map-aligned node & edge positions for maps_robo-delivery2.png)
        ========================================================================== */
-            const MAP_NODES_BASE = [
-      // --- TOP MOUNTAIN CORRIDOR & STAIRS (To Customer 1) ---
-      { id: 0,  x: 21.0, y: 22.8 },  // Dapur Utama / Start (Top-Left)
-      { id: 1,  x: 27.2, y: 20.2 },  // Tikungan Teras Kiri Atas
-      { id: 2,  x: 29.5, y: 19.2 },  // Atas Tangga Kiri
-      { id: 3,  x: 32.5, y: 24.5 },  // Bawah Tangga Kiri
-      { id: 4,  x: 35.2, y: 16.5 },  // Tikungan Lorong Atas Tengah
-      { id: 5,  x: 44.0, y: 12.4 },  // Lorong Atas Tengah
-      { id: 6,  x: 48.0, y: 14.0 },  // Atas Tangga Tengah
-      { id: 7,  x: 52.0, y: 19.0 },  // Bawah Tangga Tengah
-      { id: 8,  x: 55.6, y: 15.5 },  // Teras Atas Kanan
-      { id: 9,  x: 64.0, y: 13.0 },  // Atas Tangga Puncak
-      { id: 10, x: 71.3, y: 11.4 },  // Bawah Tangga Puncak
-      { id: 11, x: 80.0, y: 8.3  },  // Puncak Kanan (Pelanggan 1)
-
-      // --- MID LEVEL CORRIDOR, BRIDGES & STAIRS (To Customer 2) ---
-      { id: 12, x: 18.0, y: 28.0 },  // Atas Tangga Turun Kiri
-      { id: 13, x: 15.5, y: 35.0 },  // Bawah Tangga Turun Kiri
-      { id: 14, x: 21.0, y: 44.5 },  // Tikungan Teras Tengah Kiri
-      { id: 15, x: 28.5, y: 39.0 },  // Ujung Teras Tengah Kiri
-      { id: 16, x: 36.1, y: 33.1 },  // Masuk Jembatan Kiri
-      { id: 17, x: 41.5, y: 35.5 },  // Keluar Jembatan Kiri
-      { id: 18, x: 46.8, y: 37.3 },  // Puncak Jembatan Lengkung Utama
-      { id: 19, x: 51.5, y: 32.0 },  // Masuk Taman Tengah
-      { id: 20, x: 56.6, y: 28.0 },  // Jalur Taman Tengah
-      { id: 21, x: 62.0, y: 26.0 },  // Masuk Jembatan Lengkung Kanan
-      { id: 22, x: 67.4, y: 27.0 },  // Keluar Jembatan Lengkung Kanan
-      { id: 23, x: 69.3, y: 39.4 },  // Teras Tengah Kanan (Pelanggan 2)
-
-      // --- LOWER LEVEL FOREST GARDEN & STAIRS (To Customer 3) ---
-      { id: 24, x: 18.0, y: 52.0 },  // Atas Tangga Bawah Kiri
-      { id: 25, x: 15.6, y: 60.1 },  // Bawah Tangga Bawah Kiri
-      { id: 26, x: 19.5, y: 70.0 },  // Tikungan Taman Bawah Kiri
-      { id: 27, x: 23.0, y: 80.8 },  // Kedai Burger (Taman Bawah Kiri)
-      { id: 28, x: 30.5, y: 73.0 },  // Ujung Taman Bawah Kiri
-      { id: 29, x: 37.1, y: 66.3 },  // Jalur Tengah Bawah
-      { id: 30, x: 44.0, y: 73.0 },  // Tikungan Taman Bawah Tengah
-      { id: 31, x: 50.8, y: 80.8 },  // Kedai Hadiah (Taman Bawah Tengah)
-      { id: 32, x: 59.0, y: 76.0 },  // Masuk Jembatan Bawah Kanan
-      { id: 33, x: 66.4, y: 76.7 },  // Keluar Jembatan Bawah Kanan
-      { id: 34, x: 74.2, y: 87.0 },  // Platform Bawah Kanan (Pelanggan 3)
-      { id: 35, x: 77.0, y: 68.0 },  // Bawah Tangga Samping Kanan
-      { id: 36, x: 81.0, y: 53.9 }   // Atas Tangga Samping Kanan
+    const MAP_NODES_BASE = [
+      { id: 0, x: 20.5, y: 22 }, // Top-Left Start / Food Platform
+      { id: 1, x: 35, y: 27 },   // Upper Landing 1
+      { id: 2, x: 52, y: 34 },   // Center High Bridge
+      { id: 3, x: 62, y: 20 },   // Upper Landing 2
+      { id: 4, x: 84, y: 10 },   // Top-Right Peak Customer 1
+      { id: 5, x: 33, y: 43 },   // Mid-Left Terrace Food 2
+      { id: 6, x: 50, y: 52 },   // Center Low Platform
+      { id: 7, x: 73, y: 36 },   // Mid-Right Terrace Customer 2
+      { id: 8, x: 18, y: 78 },   // Lower-Left Gift Platform
+      { id: 9, x: 48, y: 78 },   // Lower-Center Terrace
+      { id: 10, x: 75, y: 84 }    // Lower-Right Customer 3
     ];
 
     const MAP_EDGES_BASE = [
-      // Jalur Atas (Puncak Gunung ke Pelanggan 1)
-      [0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 10], [10, 11],
-
-      // Jalur Tengah (Teras & Jembatan ke Pelanggan 2)
-      [0, 12], [12, 13], [13, 14], [14, 15], [15, 16], [16, 17], [17, 18], [18, 19], [19, 20], [20, 21], [21, 22], [22, 23],
-
-      // Jalur Bawah (Taman Hutan ke Pelanggan 3)
-      [14, 24], [24, 25], [25, 26], [26, 27], [27, 28], [28, 29], [29, 30], [30, 31], [31, 32], [32, 33], [33, 34],
-
-      // Tangga & Jembatan Penghubung Antar-Level
-      [4, 16],
-      [20, 23],
-      [23, 36], [36, 35], [35, 34],
-      [18, 29]
+      [0, 1], [1, 2], [2, 3], [3, 4],
+      [1, 5], [5, 6], [6, 7],
+      [5, 8], [8, 9], [9, 10],
+      [6, 9]
     ];
 
     const LEVELS = [
@@ -894,10 +389,10 @@
           { nodeId: 0, food: FOOD_TYPES.PIZZA }
         ],
         customers: [
-          { id: 'c1', nodeId: 11, wantsFood: FOOD_TYPES.PIZZA, delivered: false, gender: 'female' }
+          { id: 'c1', nodeId: 4, wantsFood: FOOD_TYPES.PIZZA, delivered: false, gender: 'female' }
         ],
         obstacles: [
-          { id: 'obs1', path: [1, 2, 3, 4, 5, 6, 7], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.012, icon: '⚠️' }
+          { id: 'obs1', path: [1, 2, 3], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.015, icon: '🚶‍♂️' }
         ]
       },
       {
@@ -910,15 +405,15 @@
         startNode: 0,
         foodStations: [
           { nodeId: 0, food: FOOD_TYPES.PIZZA },
-          { nodeId: 27, food: FOOD_TYPES.BURGER }
+          { nodeId: 5, food: FOOD_TYPES.BURGER }
         ],
         customers: [
-          { id: 'c1', nodeId: 11, wantsFood: FOOD_TYPES.PIZZA, delivered: false, gender: 'female' },
-          { id: 'c2', nodeId: 23, wantsFood: FOOD_TYPES.BURGER, delivered: false, gender: 'male' }
+          { id: 'c1', nodeId: 4, wantsFood: FOOD_TYPES.PIZZA, delivered: false, gender: 'female' },
+          { id: 'c2', nodeId: 7, wantsFood: FOOD_TYPES.BURGER, delivered: false, gender: 'male' }
         ],
         obstacles: [
-          { id: 'obs1', path: [1, 2, 3, 4, 5, 6, 7], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.012, icon: '⚠️' },
-          { id: 'obs2', path: [14, 15, 16, 17, 18, 19, 20], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.014, icon: '⚠️' }
+          { id: 'obs1', path: [1, 2, 3], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.015, icon: '🚶‍♂️' },
+          { id: 'obs2', path: [5, 6, 7], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.016, icon: '🚶‍♀️' }
         ]
       },
       {
@@ -931,18 +426,66 @@
         startNode: 0,
         foodStations: [
           { nodeId: 0, food: FOOD_TYPES.PIZZA },
-          { nodeId: 27, food: FOOD_TYPES.BURGER },
-          { nodeId: 31, food: FOOD_TYPES.GIFT }
+          { nodeId: 5, food: FOOD_TYPES.BURGER },
+          { nodeId: 8, food: FOOD_TYPES.GIFT }
         ],
         customers: [
-          { id: 'c1', nodeId: 11, wantsFood: FOOD_TYPES.PIZZA, delivered: false, gender: 'female' },
-          { id: 'c2', nodeId: 23, wantsFood: FOOD_TYPES.BURGER, delivered: false, gender: 'male' },
-          { id: 'c3', nodeId: 34, wantsFood: FOOD_TYPES.GIFT, delivered: false, gender: 'female' }
+          { id: 'c1', nodeId: 4, wantsFood: FOOD_TYPES.PIZZA, delivered: false, gender: 'female' },
+          { id: 'c2', nodeId: 7, wantsFood: FOOD_TYPES.BURGER, delivered: false, gender: 'male' },
+          { id: 'c3', nodeId: 10, wantsFood: FOOD_TYPES.GIFT, delivered: false, gender: 'female' }
         ],
         obstacles: [
-          { id: 'obs1', path: [1, 2, 3, 4, 5, 6, 7], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.012, icon: '⚠️' },
-          { id: 'obs2', path: [14, 15, 16, 17, 18, 19, 20], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.014, icon: '⚠️' },
-          { id: 'obs3', path: [28, 29, 30, 31, 32, 33, 34], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.013, icon: '⚠️' }
+          { id: 'obs1', path: [1, 2, 3], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.016, icon: '🚶‍♂️' },
+          { id: 'obs2', path: [5, 6, 7], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.017, icon: '🚶‍♀️' },
+          { id: 'obs3', path: [8, 9, 10], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.015, icon: '🛸' }
+        ]
+      },
+      {
+        id: 4,
+        title: "Metropolis High",
+        timeLimit: 320,
+        rewardCoins: 650,
+        nodes: MAP_NODES_BASE,
+        edges: MAP_EDGES_BASE,
+        startNode: 0,
+        foodStations: [
+          { nodeId: 0, food: FOOD_TYPES.PIZZA },
+          { nodeId: 5, food: FOOD_TYPES.JUICE },
+          { nodeId: 8, food: FOOD_TYPES.CAKE }
+        ],
+        customers: [
+          { id: 'c1', nodeId: 4, wantsFood: FOOD_TYPES.PIZZA, delivered: false, gender: 'female' },
+          { id: 'c2', nodeId: 7, wantsFood: FOOD_TYPES.JUICE, delivered: false, gender: 'male' },
+          { id: 'c3', nodeId: 10, wantsFood: FOOD_TYPES.CAKE, delivered: false, gender: 'female' }
+        ],
+        obstacles: [
+          { id: 'obs1', path: [1, 2, 3], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.018, icon: '🚶‍♂️' },
+          { id: 'obs2', path: [5, 6, 7], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.018, icon: '🧹' },
+          { id: 'obs3', path: [8, 9, 10], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.017, icon: '🚧' }
+        ]
+      },
+      {
+        id: 5,
+        title: "Grand Citadel",
+        timeLimit: 360,
+        rewardCoins: 800,
+        nodes: MAP_NODES_BASE,
+        edges: MAP_EDGES_BASE,
+        startNode: 0,
+        foodStations: [
+          { nodeId: 0, food: FOOD_TYPES.PIZZA },
+          { nodeId: 5, food: FOOD_TYPES.BURGER },
+          { nodeId: 8, food: FOOD_TYPES.GIFT }
+        ],
+        customers: [
+          { id: 'c1', nodeId: 4, wantsFood: FOOD_TYPES.PIZZA, delivered: false, gender: 'female' },
+          { id: 'c2', nodeId: 7, wantsFood: FOOD_TYPES.BURGER, delivered: false, gender: 'male' },
+          { id: 'c3', nodeId: 10, wantsFood: FOOD_TYPES.GIFT, delivered: false, gender: 'female' }
+        ],
+        obstacles: [
+          { id: 'obs1', path: [0, 1, 2, 3, 4], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.020, icon: '🚶‍♂️' },
+          { id: 'obs2', path: [1, 5, 6, 7], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.020, icon: '🚶‍♀️' },
+          { id: 'obs3', path: [5, 8, 9, 10], currentIndex: 0, targetIndex: 1, t: 0, speed: 0.019, icon: '🧹' }
         ]
       }
     ];
@@ -1180,104 +723,25 @@
       document.getElementById('screenLose').classList.remove('hidden');
     }
 
-    
     /* ==========================================================================
-       BFS PATHFINDING & QUEUED MOVEMENT
+       MOVEMENT & PATHFINDING
        ========================================================================== */
-    
     function isEdgeConnected(fromId, toId) {
-      if (!currentLevelData || !currentLevelData.edges) return false;
+      if (!currentLevelData) return false;
       return currentLevelData.edges.some(e => 
         (e[0] === fromId && e[1] === toId) || (e[1] === fromId && e[0] === toId)
       );
     }
 
-    function findPath(startId, targetId) {
-      if (startId === targetId || !currentLevelData) return [];
-      const queue = [[startId]];
-      const visited = new Set([startId]);
-
-      while (queue.length > 0) {
-        const path = queue.shift();
-        const curr = path[path.length - 1];
-        if (curr === targetId) return path.slice(1);
-
-        for (const edge of currentLevelData.edges) {
-          let neighbor = null;
-          if (edge[0] === curr) neighbor = edge[1];
-          else if (edge[1] === curr) neighbor = edge[0];
-
-          if (neighbor !== null && !visited.has(neighbor)) {
-            visited.add(neighbor);
-            queue.push([...path, neighbor]);
-          }
-        }
-      }
-      return [];
-    }
-
     function moveToNode(targetId) {
-      if (!isGameRunning || !currentLevelData) return;
+      if (!isGameRunning || robotState.isMoving) return;
+      if (!isEdgeConnected(robotState.currentNodeId, targetId)) return;
 
-      const startNodeId = robotState.isMoving ? (robotState.targetNodeId || robotState.currentNodeId) : robotState.currentNodeId;
-      const path = findPath(startNodeId, targetId);
-      if (path.length === 0) return;
-
-      const banner = document.getElementById('instructionBanner');
-      if (banner) banner.style.display = 'none';
-
-      if (!robotState.isMoving) {
-        robotState.pathQueue = path;
-        startNextPathStep();
-      } else {
-        robotState.pathQueue = path;
-      }
-      playSound('step');
-    }
-
-    function startNextPathStep() {
-      if (!robotState.pathQueue || robotState.pathQueue.length === 0) {
-        robotState.isMoving = false;
-        robotState.targetNodeId = null;
-        checkArrival();
-        return;
-      }
-
-      const nextId = robotState.pathQueue.shift();
       robotState.prevNodeId = robotState.currentNodeId;
-      robotState.targetNodeId = nextId;
+      robotState.targetNodeId = targetId;
       robotState.isMoving = true;
       robotState.moveProgress = 0;
-    }
-
-    function updateRobot() {
-      if (!robotState.isMoving || !currentLevelData) return;
-
-      robotState.moveProgress += 0.08;
-      if (robotState.moveProgress >= 1.0) {
-        robotState.moveProgress = 1.0;
-        robotState.currentNodeId = robotState.targetNodeId;
-
-        const currN = currentLevelData.nodes.find(n => n.id === robotState.currentNodeId);
-        if (currN) {
-          const pos = proj(currN.x, currN.y, currN.z);
-          robotState.x = pos.x;
-          robotState.y = pos.y;
-        }
-
-        startNextPathStep();
-      } else {
-        const fromNode = currentLevelData.nodes.find(n => n.id === robotState.currentNodeId);
-        const toNode = currentLevelData.nodes.find(n => n.id === robotState.targetNodeId);
-        if (fromNode && toNode) {
-          const p1 = proj(fromNode.x, fromNode.y, fromNode.z);
-          const p2 = proj(toNode.x, toNode.y, toNode.z);
-
-          const t = robotState.moveProgress;
-          robotState.x = p1.x + (p2.x - p1.x) * t;
-          robotState.y = p1.y + (p2.y - p1.y) * t;
-        }
-      }
+      playSound('step');
     }
 
     function checkObstacleCollisions() {
@@ -1855,50 +1319,34 @@
 
       if (!currentLevelData) return;
 
-      // 7. Track Jalur Node & Path Polyline (Following exact maze corridors & stairs)
+      // 7. Track Jalur Node (Clean & Minimalist - Only connected paths near Robot)
       currentLevelData.edges.forEach(edge => {
         const n1 = currentLevelData.nodes.find(n => n.id === edge[0]);
         const n2 = currentLevelData.nodes.find(n => n.id === edge[1]);
-        const isConnectedToRobot = (robotState.currentNodeId === n1.id || robotState.currentNodeId === n2.id);
+        const isCurrentEdge = (robotState.currentNodeId === n1.id || robotState.currentNodeId === n2.id);
 
-        if (isConnectedToRobot) {
+        if (isCurrentEdge) {
           const p1 = P(n1.x, n1.y, n1.z);
           const p2 = P(n2.x, n2.y, n2.z);
 
-          ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
-          ctx.lineWidth = 2.5 * scaleFactor;
-          ctx.setLineDash([4 * scaleFactor, 4 * scaleFactor]);
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+          ctx.lineWidth = 3.5 * scaleFactor;
+          ctx.setLineDash([6 * scaleFactor, 4 * scaleFactor]);
           ctx.beginPath();
           ctx.moveTo(p1.x, p1.y);
           ctx.lineTo(p2.x, p2.y);
           ctx.stroke();
           ctx.setLineDash([]);
+
+          const pulseT = ((Date.now() * 0.0025) % 1);
+          const px = p1.x + (p2.x - p1.x) * pulseT;
+          const py = p1.y + (p2.y - p1.y) * pulseT;
+          ctx.fillStyle = '#f59e0b';
+          ctx.beginPath();
+          ctx.arc(px, py, 3.5 * scaleFactor, 0, Math.PI * 2);
+          ctx.fill();
         }
       });
-
-      // Draw active queued path polyline (if path exists)
-      const fullPath = [robotState.currentNodeId, ...(robotState.pathQueue || [])];
-      if (robotState.isMoving && robotState.targetNodeId !== null && !fullPath.includes(robotState.targetNodeId)) {
-        fullPath.splice(1, 0, robotState.targetNodeId);
-      }
-
-      if (fullPath.length >= 2) {
-        ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 4 * scaleFactor;
-        ctx.setLineDash([6 * scaleFactor, 4 * scaleFactor]);
-        ctx.beginPath();
-        
-        for (let i = 0; i < fullPath.length; i++) {
-          const node = currentLevelData.nodes.find(n => n.id === fullPath[i]);
-          if (node) {
-            const p = P(node.x, node.y, node.z);
-            if (i === 0) ctx.moveTo(p.x, p.y);
-            else ctx.lineTo(p.x, p.y);
-          }
-        }
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
 
       // 8. Waypoint Nodes Presisi
       currentLevelData.nodes.forEach(node => {
@@ -2226,6 +1674,8 @@
     loadLevel(0);
     requestAnimationFrame(gameLoop);
 
-  </script>
-</body>
-</html>
+  
+    console.log("SUCCESS_EVAL");
+} catch(e) {
+    console.error("FAIL_EVAL:", e);
+}

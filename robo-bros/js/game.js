@@ -116,7 +116,16 @@ function drawRoboMindBrandingLogo(x, y) {
 	konten.restore();
 }
 
-function startScreen(){	
+
+function setTouchControlsVisible(visible) {
+	var ctrl = document.getElementById("touchControls");
+	if (ctrl) {
+		ctrl.style.display = visible ? "flex" : "none";
+	}
+}
+
+function startScreen(){
+	setTouchControlsVisible(false);	
 	hapusLayar("#0f172a");
 	drawRoboMindBrandingLogo(590, 210);
 	var startBtn = tombol(dataGambar.startBtn, 600, 360);
@@ -125,6 +134,7 @@ function startScreen(){
 	}
 }
 function halamanCover(){
+	setTouchControlsVisible(false);
 	hapusLayar("#0f172a");
 	gambarFull(dataGambar.cover);
 	var playBtn = tombol(dataGambar.playBtn, 1100, 500);
@@ -151,9 +161,14 @@ function setAwal(){
 	game.hero.animJatuh = dataGambar.fall;
 	game.hero.animMati = dataGambar.hit;
 	game.skalaSprite = 2;	
-	//setPlatform(map_1, dataGambar.tileset, 32, game.hero);
 	setPlatform(this["map_"+game.level], dataGambar.tileset, 32, game.hero);
-	game.gameOver = ulangiPermainan;
+
+	// Automatically show Defeat Statistics Modal when player dies!
+	game.gameOver = function() {
+		game.aktif = false;
+		showBrosResultModal(false);
+	};
+
 	//set item
 	setPlatformItem(1, dataGambar.item1);
 	setPlatformItem(2, dataGambar.item2);
@@ -172,11 +187,13 @@ function setAwal(){
 }
 
 function mulaiPermainan(){
+	setTouchControlsVisible(true);
 	jalankan(gameLoop);
 	transisi("in");
 }
 
 function ulangiPermainan(){	
+	setTouchControlsVisible(true);
 	setAwal();	
 	game.aktif = true;
 	jalankan(gameLoop);
@@ -213,17 +230,246 @@ function cekItem(){
 	if (game.triggerID == 1){
 		game.triggerID = 0;
 		game.aktif = false;
-		transisi("out", naikLevel);		
+		// Automatically show Victory Statistics Modal when player reaches finish flag!
+		showBrosResultModal(true);
 	}
 }
 
-function naikLevel(){
-	game.level++;
-	if (game.level > 10){
-		transisi("in");
-		jalankan(halamanCover);
-	}else{
+function drawBrosRadarChart(canvasId, scores) {
+	const canvas = document.getElementById(canvasId);
+	if (!canvas) return;
+	const ctx = canvas.getContext('2d');
+	const dpr = window.devicePixelRatio || 1;
+
+	const cssWidth = 210;
+	const cssHeight = 190;
+	canvas.width = cssWidth * dpr;
+	canvas.height = cssHeight * dpr;
+	canvas.style.width = cssWidth + 'px';
+	canvas.style.height = cssHeight + 'px';
+
+	ctx.scale(dpr, dpr);
+	ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+	const centerX = cssWidth / 2;
+	const centerY = cssHeight / 2 + 2;
+	const radius = 55;
+
+	const axes = [
+		{ name: "Spasial", val: scores.spasial || 88, align: "center", dy: -12 },
+		{ name: "Keputusan", val: scores.keputusan || 92, align: "left", dy: 2 },
+		{ name: "Kontrol Diri", val: scores.kontrolDiri || 85, align: "left", dy: 10 },
+		{ name: "Memori Kerja", val: scores.memori || 90, align: "right", dy: 10 },
+		{ name: "Fokus", val: scores.fokus || 95, align: "right", dy: 2 }
+	];
+	const numAxes = axes.length;
+
+	// Grid Pentagon rings
+	[0.25, 0.5, 0.75, 1.0].forEach((rFactor, idx) => {
+		ctx.beginPath();
+		for (let i = 0; i < numAxes; i++) {
+			const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+			const x = centerX + radius * rFactor * Math.cos(angle);
+			const y = centerY + radius * rFactor * Math.sin(angle);
+			if (i === 0) ctx.moveTo(x, y);
+			else ctx.lineTo(x, y);
+		}
+		ctx.closePath();
+		ctx.strokeStyle = idx === 3 ? 'rgba(168, 85, 247, 0.4)' : 'rgba(56, 189, 248, 0.2)';
+		ctx.lineWidth = 1;
+		ctx.stroke();
+	});
+
+	// Axis Spokes
+	for (let i = 0; i < numAxes; i++) {
+		const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+		const x = centerX + radius * Math.cos(angle);
+		const y = centerY + radius * Math.sin(angle);
+		ctx.beginPath();
+		ctx.moveTo(centerX, centerY);
+		ctx.lineTo(x, y);
+		ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+		ctx.stroke();
+	}
+
+	// Filled Translucent Polygon
+	ctx.beginPath();
+	axes.forEach((axis, i) => {
+		const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+		const r = radius * (Math.min(100, Math.max(20, axis.val)) / 100);
+		const x = centerX + r * Math.cos(angle);
+		const y = centerY + r * Math.sin(angle);
+		if (i === 0) ctx.moveTo(x, y);
+		else ctx.lineTo(x, y);
+	});
+	ctx.closePath();
+	ctx.fillStyle = 'rgba(168, 85, 247, 0.45)';
+	ctx.fill();
+	ctx.strokeStyle = '#c084fc';
+	ctx.lineWidth = 2.5;
+	ctx.stroke();
+
+	// Glowing Nodes
+	axes.forEach((axis, i) => {
+		const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+		const r = radius * (Math.min(100, Math.max(20, axis.val)) / 100);
+		const x = centerX + r * Math.cos(angle);
+		const y = centerY + r * Math.sin(angle);
+		ctx.beginPath();
+		ctx.arc(x, y, 4, 0, Math.PI * 2);
+		ctx.fillStyle = '#ffffff';
+		ctx.fill();
+		ctx.strokeStyle = '#a855f7';
+		ctx.lineWidth = 2;
+		ctx.stroke();
+	});
+
+	// Axis Text Labels
+	ctx.font = 'bold 9.5px system-ui, sans-serif';
+	ctx.fillStyle = '#e2e8f0';
+
+	axes.forEach((axis, i) => {
+		const angle = (Math.PI * 2 * i) / numAxes - Math.PI / 2;
+		const labelR = radius + 18;
+		const x = centerX + labelR * Math.cos(angle);
+		const y = centerY + labelR * Math.sin(angle) + (axis.dy || 0);
+		ctx.textAlign = axis.align || 'center';
+		ctx.fillText(axis.name, x, y);
+	});
+}
+
+var lastModalResultWin = true;
+
+function showBrosResultModal(isWin) {
+	setTouchControlsVisible(false);
+	if (typeof isWin === 'undefined') isWin = true;
+	lastModalResultWin = isWin;
+
+	const modal = document.getElementById('resultModal');
+	if (!modal) return;
+
+	modal.style.display = 'flex';
+	const currentLvl = (game && game.level) ? game.level : 1;
+	const baseScore = (game && game.score) ? game.score : (isWin ? 170 : 50);
+	const bonusScore = isWin ? 44 : 0;
+	const totalScore = baseScore + bonusScore;
+
+	const missionTagEl = document.getElementById('modalMissionTag');
+	if (missionTagEl) {
+		missionTagEl.innerText = isWin ? "🎉 MISI SELESAI!" : "💪 TETAP SEMANGAT!";
+		missionTagEl.style.color = isWin ? "#F59E0B" : "#38BDF8";
+	}
+
+	const titleEl = document.getElementById('modalLevelTitle');
+	if (titleEl) {
+		titleEl.innerText = isWin ? `HEBAT! LEVEL ${currentLvl} SELESAI!` : `YAH, ROBOT TERHENTI DI LEVEL ${currentLvl}`;
+		titleEl.style.color = isWin ? "#34D399" : "#EF4444";
+	}
+
+	const subTextEl = document.getElementById('modalSubText');
+	if (subTextEl) {
+		subTextEl.innerText = isWin ? "Kamu berhasil mengumpulkan buah dan menyeberang dengan aman!" : "Jangan menyerah! Robotmu sudah berjuang hebat, yuk coba lagi!";
+	}
+
+	const starEl = document.getElementById('modalStars');
+	if (starEl) {
+		starEl.innerText = isWin ? "⭐ ⭐ ⭐" : "⭐ ☆ ☆";
+	}
+
+	const fruitEl = document.getElementById('resFruitCount');
+	if (fruitEl) fruitEl.innerText = isWin ? "8 / 8 Buah Segar" : `${Math.floor(baseScore / 10)} Buah Segar`;
+
+	const accuracyEl = document.getElementById('resAccuracy');
+	if (accuracyEl) accuracyEl.innerText = isWin ? "100% Bebas Luka" : "Tersenggol Rintangan";
+
+	const timeEl = document.getElementById('resTimeBonus');
+	if (timeEl) timeEl.innerText = isWin ? "+27 Detik" : "+0 Detik";
+
+	const scoreTextEl = document.getElementById('modalScoreText');
+	if (scoreTextEl) scoreTextEl.innerText = `+${baseScore} Koin`;
+
+	const bonusTextEl = document.getElementById('modalBonusText');
+	if (bonusTextEl) bonusTextEl.innerText = `+${bonusScore} Koin`;
+
+	const coinTextEl = document.getElementById('modalCoinText');
+	if (coinTextEl) coinTextEl.innerText = `${totalScore} KOIN`;
+
+	const btnNext = document.getElementById('btnNextLevel');
+	if (btnNext) {
+		if (!isWin) {
+			btnNext.innerText = "🔄 Coba Lagi";
+			btnNext.style.background = "linear-gradient(135deg, #EF4444, #DC2626)";
+		} else if (currentLvl >= 10) {
+			btnNext.innerText = "Klaim Hadiah Ultimate 🏆";
+			btnNext.style.background = "linear-gradient(135deg, #10B981, #059669)";
+		} else {
+			btnNext.innerText = `Lanjut ke Level ${currentLvl + 1} ➔`;
+			btnNext.style.background = "linear-gradient(135deg, #0284C7, #0B84FF)";
+		}
+	}
+
+	setTimeout(() => {
+		drawBrosRadarChart('brosRadarCanvas', isWin ? {
+			spasial: 88,
+			keputusan: 92,
+			kontrolDiri: 85,
+			memori: 90,
+			fokus: 95
+		} : {
+			spasial: 62,
+			keputusan: 55,
+			kontrolDiri: 58,
+			memori: 70,
+			fokus: 60
+		});
+	}, 50);
+
+	try {
+		const msg = {
+			type: isWin ? 'GAME_COMPLETE' : 'GAME_OVER',
+			gameId: 'robo-bros',
+			title: 'Robo Bros',
+			category: 'kognitif',
+			level: currentLvl,
+			score: totalScore,
+			xp: isWin ? 120 : 30,
+			coins: totalScore,
+			duration: 60,
+			completed: isWin
+		};
+		if (window.parent && window.parent !== window) window.parent.postMessage(msg, '*');
+		if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+			window.ReactNativeWebView.postMessage(JSON.stringify(msg));
+		}
+	} catch (e) {
+		console.warn('PostMessage error:', e);
+	}
+}
+
+function continueNextLevel() {
+	const modal = document.getElementById('resultModal');
+	if (modal) modal.style.display = 'none';
+
+	if (lastModalResultWin) {
+		game.level++;
+		if (game.level > 10) {
+			game.level = 1;
+			jalankan(halamanCover);
+		} else {
+			game.status = "mulai";
+			setAwal();
+		}
+	} else {
+		// Retry level on defeat
 		game.status = "mulai";
 		setAwal();
 	}
+}
+
+function exitToCover() {
+	setTouchControlsVisible(false);
+	const modal = document.getElementById('resultModal');
+	if (modal) modal.style.display = 'none';
+	game.level = 1;
+	jalankan(halamanCover);
 }
