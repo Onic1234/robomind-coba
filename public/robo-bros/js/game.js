@@ -116,7 +116,16 @@ function drawRoboMindBrandingLogo(x, y) {
 	konten.restore();
 }
 
-function startScreen(){	
+
+function setTouchControlsVisible(visible) {
+	var ctrl = document.getElementById("touchControls");
+	if (ctrl) {
+		ctrl.style.display = visible ? "flex" : "none";
+	}
+}
+
+function startScreen(){
+	setTouchControlsVisible(false);	
 	hapusLayar("#0f172a");
 	drawRoboMindBrandingLogo(590, 210);
 	var startBtn = tombol(dataGambar.startBtn, 600, 360);
@@ -125,6 +134,7 @@ function startScreen(){
 	}
 }
 function halamanCover(){
+	setTouchControlsVisible(false);
 	hapusLayar("#0f172a");
 	gambarFull(dataGambar.cover);
 	var playBtn = tombol(dataGambar.playBtn, 1100, 500);
@@ -177,11 +187,13 @@ function setAwal(){
 }
 
 function mulaiPermainan(){
+	setTouchControlsVisible(true);
 	jalankan(gameLoop);
 	transisi("in");
 }
 
 function ulangiPermainan(){	
+	setTouchControlsVisible(true);
 	setAwal();	
 	game.aktif = true;
 	jalankan(gameLoop);
@@ -329,6 +341,7 @@ function drawBrosRadarChart(canvasId, scores) {
 var lastModalResultWin = true;
 
 function showBrosResultModal(isWin) {
+	setTouchControlsVisible(false);
 	if (typeof isWin === 'undefined') isWin = true;
 	lastModalResultWin = isWin;
 
@@ -454,6 +467,7 @@ function continueNextLevel() {
 }
 
 function exitToCover() {
+	setTouchControlsVisible(false);
 	const modal = document.getElementById('resultModal');
 	if (modal) modal.style.display = 'none';
 	game.level = 1;
