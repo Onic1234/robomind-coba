@@ -1458,14 +1458,11 @@ export default function RogueSoulGameScreen() {
         </View>
       </View>
 
-      {/* 1. TITLE MAIN MENU SCREEN (Identical to Screenshot) */}
+      {/* 1. TITLE MAIN MENU SCREEN (Responsive Landscape Layout) */}
       {viewState === "menu" && (
         <View style={styles.menuContainer}>
           {/* Medieval Tavern Background Artwork */}
-          <View style={styles.tavernBackground}>
-            <View style={styles.torchGlowLeft} />
-            <View style={styles.torchGlowRight} />
-          </View>
+          <View style={styles.tavernBackground} />
 
           {/* Wooden Sign Board Header */}
           <View style={styles.titleWrapper}>
@@ -1476,57 +1473,60 @@ export default function RogueSoulGameScreen() {
               ]}
             />
             <View style={styles.titleSignBoard}>
-            <View style={styles.titleRivetLeft} />
-            <View style={styles.titleRivetRight} />
-            <Text style={styles.titleTextMain}>ROBO ADVENTURER</Text>
-            <View style={styles.titleBadgeTwo}>
-              <Text style={styles.titleBadgeTwoText}>RUNNER</Text>
-            </View>
+              <View style={styles.titleRivetLeft} />
+              <View style={styles.titleRivetRight} />
+              <Text style={styles.titleTextMain}>ROBO ADVENTURER</Text>
+              <View style={styles.titleBadgeTwo}>
+                <Text style={styles.titleBadgeTwoText}>RUNNER</Text>
+              </View>
             </View>
           </View>
 
           {/* Studio Branding */}
           <View style={styles.brandCorner}>
-            <MaterialCommunityIcons name="fire" size={28} color="#F97316" />
+            <MaterialCommunityIcons name="fire" size={20} color="#F97316" />
             <Text style={styles.brandTitle}>SOULGAME</Text>
             <Text style={styles.brandSub}>STUDIO</Text>
           </View>
 
-          {/* Wooden Menu Buttons Stack */}
-          <View style={styles.menuButtonsStack}>
-            <Pressable style={styles.woodenButton} onPress={() => setViewState("levels")}>
-              <View style={styles.btnRivetLeft} />
-              <Text style={styles.woodenButtonText}>PLAY CAMPAIGN</Text>
-              <View style={styles.btnRivetRight} />
-            </Pressable>
+          {/* Horizontal Row for Mobile Landscape: Buttons on Left, Barrel CTA on Right */}
+          <View style={styles.menuRowContainer}>
+            {/* Wooden Menu Buttons Stack */}
+            <View style={styles.menuButtonsStack}>
+              <Pressable style={styles.woodenButton} onPress={() => setViewState("levels")}>
+                <View style={styles.btnRivetLeft} />
+                <Text style={styles.woodenButtonText}>PLAY CAMPAIGN</Text>
+                <View style={styles.btnRivetRight} />
+              </Pressable>
 
-            <Pressable style={styles.woodenButton} onPress={() => setViewState("shop")}>
-              <View style={styles.btnRivetLeft} />
-              <Text style={styles.woodenButtonText}>ARMORY & SHOP</Text>
-              <View style={styles.btnRivetRight} />
-            </Pressable>
+              <Pressable style={styles.woodenButton} onPress={() => setViewState("shop")}>
+                <View style={styles.btnRivetLeft} />
+                <Text style={styles.woodenButtonText}>ARMORY & SHOP</Text>
+                <View style={styles.btnRivetRight} />
+              </Pressable>
 
-            <Pressable style={styles.woodenButton} onPress={() => setViewState("achievements")}>
-              <View style={styles.btnRivetLeft} />
-              <Text style={styles.woodenButtonText}>ACHIEVEMENTS</Text>
-              <View style={styles.btnRivetRight} />
-            </Pressable>
-          </View>
-
-          {/* Barrel CTA (Center Barrel from Screenshot) */}
-          <View style={styles.barrelCenterCard}>
-            <View style={styles.barrelTopStrap} />
-            <View style={styles.barrelSwordTop}>
-              <Ionicons name="shield-half" size={24} color="#CBD5E1" />
+              <Pressable style={styles.woodenButton} onPress={() => setViewState("achievements")}>
+                <View style={styles.btnRivetLeft} />
+                <Text style={styles.woodenButtonText}>ACHIEVEMENTS</Text>
+                <View style={styles.btnRivetRight} />
+              </Pressable>
             </View>
-            <Pressable
-              style={styles.barrelPlayBtn}
-              onPress={() => startLevelSession(CAMPAIGN_LEVELS[0], true)}
-            >
-              <Text style={styles.barrelPlayText}>PLAY</Text>
-              <Text style={styles.barrelSubText}>ENDLESS MODE</Text>
-            </Pressable>
-            <View style={styles.barrelBottomStrap} />
+
+            {/* Barrel CTA (Center Barrel from Screenshot) */}
+            <View style={styles.barrelCenterCard}>
+              <View style={styles.barrelTopStrap} />
+              <View style={styles.barrelSwordTop}>
+                <Ionicons name="shield-half" size={20} color="#CBD5E1" />
+              </View>
+              <Pressable
+                style={styles.barrelPlayBtn}
+                onPress={() => startLevelSession(CAMPAIGN_LEVELS[0], true)}
+              >
+                <Text style={styles.barrelPlayText}>PLAY</Text>
+                <Text style={styles.barrelSubText}>ENDLESS MODE</Text>
+              </Pressable>
+              <View style={styles.barrelBottomStrap} />
+            </View>
           </View>
         </View>
       )}
@@ -2071,178 +2071,169 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
   },
   tavernBackground: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "#1E1B4B",
     opacity: 0.85,
   },
-  torchGlowLeft: {
-    position: "absolute",
-    top: 40,
-    left: 20,
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "rgba(249, 115, 22, 0.25)",
-  },
-  torchGlowRight: {
-    position: "absolute",
-    top: 40,
-    right: 20,
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "rgba(249, 115, 22, 0.25)",
-  },
   titleWrapper: {
     position: "relative",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: 30,
+    marginBottom: 12,
+    marginTop: 2,
   },
   titleGlowPulse: {
     position: "absolute",
-    width: 360,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "rgba(245, 158, 11, 0.45)",
+    width: 280,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "rgba(245, 158, 11, 0.25)",
   },
   titleSignBoard: {
-    width: 320,
+    width: 280,
     backgroundColor: "#78350F",
-    borderWidth: 4,
+    borderWidth: 3,
     borderColor: "#451A03",
-    borderRadius: 16,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: 6,
     alignItems: "center",
     position: "relative",
     ...SHADOWS.premium,
   },
   titleRivetLeft: {
     position: "absolute",
-    top: 8,
-    left: 8,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    top: 6,
+    left: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: "#94A3B8",
   },
   titleRivetRight: {
     position: "absolute",
-    top: 8,
-    right: 8,
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: "#94A3B8",
   },
   titleTextMain: {
-    fontSize: 28,
+    fontSize: 20,
     fontWeight: "900",
     color: "#FEF08A",
-    letterSpacing: 2,
+    letterSpacing: 1.5,
     textShadowColor: "#000000",
-    textShadowOffset: { width: 2, height: 2 },
-    textShadowRadius: 4,
+    textShadowOffset: { width: 1.5, height: 1.5 },
+    textShadowRadius: 3,
   },
   titleBadgeTwo: {
     position: "absolute",
-    top: -12,
-    right: -12,
+    top: -8,
+    right: -8,
     backgroundColor: "#DC2626",
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: "#FFFFFF",
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 1.5,
+    borderRadius: 5,
   },
   titleBadgeTwoText: {
     color: "#FFFFFF",
     fontWeight: "900",
-    fontSize: 16,
+    fontSize: 11,
   },
   brandCorner: {
     position: "absolute",
-    top: 20,
-    right: 20,
+    bottom: 8,
+    right: 16,
     alignItems: "center",
+    opacity: 0.8,
   },
   brandTitle: {
-    fontSize: 10,
+    fontSize: 9,
     fontWeight: "900",
     color: "#F97316",
   },
   brandSub: {
-    fontSize: 8,
+    fontSize: 7,
     fontWeight: "800",
     color: "#CBD5E1",
   },
-  menuButtonsStack: {
+  menuRowContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 20,
     width: "100%",
-    maxWidth: 280,
-    gap: 14,
-    marginBottom: 30,
+    maxWidth: 540,
+  },
+  menuButtonsStack: {
+    width: 230,
+    gap: 8,
   },
   woodenButton: {
     backgroundColor: "#92400E",
-    borderWidth: 3,
+    borderWidth: 2.5,
     borderColor: "#451A03",
-    borderRadius: 12,
-    paddingVertical: 12,
+    borderRadius: 10,
+    paddingVertical: 8,
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     ...SHADOWS.medium,
   },
   btnRivetLeft: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: "#CBD5E1",
   },
   btnRivetRight: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    width: 6,
+    height: 6,
+    borderRadius: 3,
     backgroundColor: "#CBD5E1",
   },
   woodenButtonText: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: "900",
     color: "#FFFFFF",
-    letterSpacing: 1,
+    letterSpacing: 0.8,
   },
   barrelCenterCard: {
-    width: 200,
+    width: 170,
     backgroundColor: "#78350F",
-    borderWidth: 3,
+    borderWidth: 2.5,
     borderColor: "#451A03",
-    borderRadius: 16,
-    padding: 12,
+    borderRadius: 14,
+    padding: 8,
     alignItems: "center",
   },
   barrelTopStrap: {
     width: "100%",
-    height: 4,
+    height: 3,
     backgroundColor: "#451A03",
-    marginBottom: 8,
+    marginBottom: 6,
   },
   barrelBottomStrap: {
     width: "100%",
-    height: 4,
+    height: 3,
     backgroundColor: "#451A03",
-    marginTop: 8,
+    marginTop: 6,
   },
   barrelSwordTop: {
-    marginBottom: 6,
+    marginBottom: 4,
   },
   barrelPlayBtn: {
     backgroundColor: "#16A34A",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
     borderRadius: 8,
     alignItems: "center",
     width: "100%",
@@ -2250,12 +2241,12 @@ const styles = StyleSheet.create({
   barrelPlayText: {
     color: "#FFFFFF",
     fontWeight: "900",
-    fontSize: 14,
+    fontSize: 13,
   },
   barrelSubText: {
     color: "#FEF08A",
     fontWeight: "800",
-    fontSize: 9,
+    fontSize: 8,
   },
   modalViewContainer: {
     flex: 1,
