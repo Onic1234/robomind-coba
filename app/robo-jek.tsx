@@ -137,18 +137,32 @@ source={{ uri: "file:///android_asset/robo-jek/index.html" }}
         allowFullScreen
       />
 
-      <Pressable onPress={() => router.back()} style={styles.floatingExit}>
-        <Ionicons name="exit-outline" size={20} color="#fff" />
-        <Text style={styles.floatingExitText}>EXIT</Text>
-      </Pressable>
+      {/* Top Left Navigation & Help Pod */}
+      <View style={styles.topLeftControls}>
+        <Pressable
+          onPress={() => router.back()}
+          style={({ pressed }) => [styles.floatingExit, pressed && { opacity: 0.8, transform: [{ scale: 0.96 }] }]}
+        >
+          <Ionicons name="arrow-back" size={15} color="#fff" />
+          <Text style={styles.floatingExitText}>EXIT</Text>
+        </Pressable>
 
-      <Pressable onPress={toggleFullscreen} style={styles.floatingFs}>
-        <Ionicons name={isFullscreen ? "contract" : "expand"} size={20} color="#fff" />
+        <Pressable
+          onPress={() => setShowHelp(true)}
+          style={({ pressed }) => [styles.floatingHelp, pressed && { opacity: 0.8, transform: [{ scale: 0.96 }] }]}
+        >
+          <Ionicons name="help-circle" size={16} color="#38bdf8" />
+          <Text style={styles.floatingHelpText}>TIPS</Text>
+        </Pressable>
+      </View>
+
+      {/* Top Right Fullscreen Pod */}
+      <Pressable
+        onPress={toggleFullscreen}
+        style={({ pressed }) => [styles.floatingFs, pressed && { opacity: 0.8, transform: [{ scale: 0.96 }] }]}
+      >
+        <Ionicons name={isFullscreen ? "contract" : "expand"} size={15} color="#38bdf8" />
         <Text style={styles.floatingFsText}>{isFullscreen ? "WINDOW" : "FULL"}</Text>
-      </Pressable>
-
-      <Pressable onPress={() => setShowHelp(true)} style={styles.floatingHelp}>
-        <Ionicons name="help-circle" size={22} color="#fff" />
       </Pressable>
 
       <HowToPlayModal
@@ -208,66 +222,99 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(56, 189, 248, 0.3)",
   },
-  floatingExit: {
+  topLeftControls: {
     position: "absolute",
-    top: 16,
-    left: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: "#ef4444",
-    paddingVertical: 10,
-    paddingHorizontal: 18,
-    borderRadius: 12,
+    top: 12,
+    left: 12,
+    flexDirection: "column",
+    gap: 8,
     zIndex: 9999,
     elevation: 10,
+    ...Platform.select({
+      web: {
+        top: "max(12px, env(safe-area-inset-top, 12px))",
+        left: "max(12px, env(safe-area-inset-left, 12px))",
+      } as any,
+      default: {},
+    }),
+  },
+  floatingExit: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    backgroundColor: "rgba(239, 68, 68, 0.92)",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(254, 202, 202, 0.35)",
     shadowColor: "#ef4444",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
   },
   floatingExitText: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: 11,
     fontWeight: "900",
-    letterSpacing: 1,
+    letterSpacing: 0.8,
+  },
+  floatingHelp: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 5,
+    backgroundColor: "rgba(15, 23, 42, 0.92)",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(56, 189, 248, 0.4)",
+    shadowColor: "#38bdf8",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+  },
+  floatingHelpText: {
+    color: "#38bdf8",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: 0.8,
   },
   floatingFs: {
     position: "absolute",
-    top: 16,
-    right: 16,
+    top: 12,
+    right: 12,
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    backgroundColor: "rgba(15, 23, 42, 0.85)",
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 12,
+    justifyContent: "center",
+    gap: 5,
+    backgroundColor: "rgba(15, 23, 42, 0.92)",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 10,
     zIndex: 9999,
     elevation: 10,
     borderWidth: 1,
     borderColor: "rgba(56, 189, 248, 0.4)",
+    shadowColor: "#38bdf8",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    ...Platform.select({
+      web: {
+        top: "max(12px, env(safe-area-inset-top, 12px))",
+        right: "max(12px, env(safe-area-inset-right, 12px))",
+      } as any,
+      default: {},
+    }),
   },
   floatingFsText: {
     color: "#38bdf8",
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: "800",
-    letterSpacing: 1,
-  },
-  floatingHelp: {
-    position: "absolute",
-    top: 16,
-    left: 108,
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(15, 23, 42, 0.85)",
-    zIndex: 9999,
-    elevation: 10,
-    borderWidth: 1,
-    borderColor: "rgba(56, 189, 248, 0.4)",
+    letterSpacing: 0.8,
   },
   iframe: {
     position: "absolute",

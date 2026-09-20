@@ -144,8 +144,12 @@
 
     /* Landscape mobile: compact layout */
     @media screen and (orientation: landscape) and (max-height: 500px) {
-      body { padding: 4px !important; }
-      #gameContainer { max-height: 96vh; padding: 6px !important; border-width: 2px !important; border-radius: 12px !important; }
+      body {
+        padding: 4px !important;
+        padding-left: max(6px, env(safe-area-inset-left)) !important;
+        padding-right: max(6px, env(safe-area-inset-right)) !important;
+      }
+      #gameContainer { max-height: 90vh; padding: 6px !important; border-width: 2px !important; border-radius: 14px !important; }
       #gameContainer .text-[10px] { font-size: 7px !important; }
       #gameContainer .text-[9px] { font-size: 7px !important; }
       #gameContainer .px-2\.5 { padding-left: 5px !important; padding-right: 5px !important; }
