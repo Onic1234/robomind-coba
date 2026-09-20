@@ -44,7 +44,7 @@ import Svg, {
 } from "react-native-svg";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const GAME_CANVAS_WIDTH = Math.min(SCREEN_WIDTH - 24, 380);
+const GAME_CANVAS_WIDTH = Math.min(SCREEN_WIDTH - 16, 420);
 const STORAGE_KEY_LEVEL = "screw_spin_current_level";
 const STORAGE_KEY_COINS = "user_coins_balance";
 const STORAGE_KEY_COOLDOWN = "screw_spin_cooldown_until";
@@ -1133,7 +1133,7 @@ export default function ScrewSpinScreen() {
             style={({ pressed }) => [styles.circleIconButton, styles.backCircleBtn, pressed && styles.btnPressed]}
             onPress={() => setIsGameStarted(false)}
           >
-            <Ionicons name="arrow-back" size={22} color="#FFFFFF" />
+            <Ionicons name="arrow-back" size={18} color="#FFFFFF" />
           </Pressable>
 
           <View style={styles.headerLevelContainer}>
@@ -1150,7 +1150,7 @@ export default function ScrewSpinScreen() {
           >
             <Ionicons
               name={timeLeft <= 10 ? "alert-circle" : "time-outline"}
-              size={16}
+              size={13}
               color={timeLeft <= 10 ? "#FF4081" : timeLeft <= 30 ? "#F59E0B" : "#00E5FF"}
             />
             <Text
@@ -1169,21 +1169,21 @@ export default function ScrewSpinScreen() {
               style={({ pressed }) => [styles.smallSquareBtn, pressed && styles.btnPressed]}
               onPress={() => setShowHelp(true)}
             >
-              <Ionicons name="help-circle-sharp" size={20} color="#FFFFFF" />
+              <Ionicons name="help-circle-sharp" size={17} color="#FFFFFF" />
             </Pressable>
 
             <Pressable
               style={({ pressed }) => [styles.smallSquareBtn, pressed && styles.btnPressed]}
               onPress={() => setIsSettingsModalVisible(true)}
             >
-              <Ionicons name="settings-sharp" size={20} color="#FFFFFF" />
+              <Ionicons name="settings-sharp" size={17} color="#FFFFFF" />
             </Pressable>
 
             <Pressable
               style={({ pressed }) => [styles.smallSquareBtn, styles.restartBtn, pressed && styles.btnPressed]}
               onPress={handleRestartLevel}
             >
-              <Ionicons name="refresh-sharp" size={20} color="#FFFFFF" />
+              <Ionicons name="refresh-sharp" size={17} color="#FFFFFF" />
             </Pressable>
           </View>
         </View>
@@ -1590,9 +1590,9 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   circleIconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: "center",
     justifyContent: "center",
     elevation: 6,
@@ -1614,7 +1614,8 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.96 }],
   },
   splashCardContainer: {
-    width: GAME_CANVAS_WIDTH,
+    width: "100%",
+    maxWidth: 420,
     height: 520,
     backgroundColor: "#0F172A",
     borderRadius: 32,
@@ -1645,7 +1646,7 @@ const styles = StyleSheet.create({
   titleText3DFront: {
     fontSize: 44,
     fontWeight: "900",
-    color: "#00F0FF",
+    color: "#00E5FF",
     letterSpacing: 3,
     textShadowColor: "#00B8D4",
     textShadowOffset: { width: 1, height: 2 },
@@ -1662,10 +1663,10 @@ const styles = StyleSheet.create({
   subTitleText3DFront: {
     fontSize: 40,
     fontWeight: "900",
-    color: "#FFFFFF",
+    color: "#84FFFF",
     letterSpacing: 3,
-    marginTop: -4,
-    textShadowColor: "#38BDF8",
+    marginTop: 20,
+    textShadowColor: "#00B8D4",
     textShadowOffset: { width: 1, height: 2 },
     textShadowRadius: 8,
   },
@@ -1677,11 +1678,22 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: "rgba(0, 229, 255, 0.3)",
   },
+  levelBadgePreview: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 229, 255, 0.12)",
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: "rgba(0, 229, 255, 0.4)",
+    gap: 8,
+    marginVertical: 10,
+  },
   levelBadgeText: {
     color: "#00E5FF",
     fontSize: 18,
     fontWeight: "800",
-    letterSpacing: 1.5,
   },
   playButton3D: {
     width: 190,
@@ -1725,18 +1737,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#090E1A",
     alignItems: "center",
+    paddingHorizontal: 6,
   },
   gameCanvas: {
-    width: GAME_CANVAS_WIDTH,
+    width: "100%",
+    maxWidth: 420,
     flex: 1,
     backgroundColor: "#0F172A",
     borderRadius: 24,
     borderWidth: 2.5,
     borderColor: "rgba(0, 229, 255, 0.35)",
-    marginVertical: 10,
+    marginVertical: 6,
     alignItems: "center",
-    paddingTop: 12,
-    paddingBottom: 20,
+    paddingTop: 10,
+    paddingBottom: 16,
     overflow: "hidden",
   },
   gameHeader: {
@@ -1744,32 +1758,33 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    marginBottom: 12,
+    paddingHorizontal: 6,
+    marginBottom: 10,
   },
   headerLevelContainer: {
     backgroundColor: "rgba(0, 229, 255, 0.12)",
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: "rgba(0, 229, 255, 0.3)",
   },
   headerLevelText: {
     color: "#00E5FF",
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: "800",
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   headerRightGroup: {
     flexDirection: "row",
-    gap: 8,
+    gap: 5,
+    alignItems: "center",
   },
   smallSquareBtn: {
-    width: 38,
-    height: 38,
+    width: 34,
+    height: 34,
     backgroundColor: "rgba(255, 255, 255, 0.1)",
-    borderRadius: 10,
+    borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
@@ -1777,6 +1792,7 @@ const styles = StyleSheet.create({
   },
   restartBtn: {
     backgroundColor: "#FF1744",
+    borderColor: "rgba(255, 23, 68, 0.5)",
   },
 
   // Top Collector Boxes (Robotic Energy Modules)
@@ -2249,11 +2265,11 @@ const styles = StyleSheet.create({
   headerTimerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 4,
     backgroundColor: "rgba(0, 229, 255, 0.12)",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 5,
+    borderRadius: 10,
     borderWidth: 1,
     borderColor: "rgba(0, 229, 255, 0.3)",
   },
@@ -2267,7 +2283,7 @@ const styles = StyleSheet.create({
   },
   headerTimerText: {
     color: "#00E5FF",
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: "800",
   },
   cooldownModalBadge: {
