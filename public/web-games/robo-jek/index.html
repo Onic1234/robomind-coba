@@ -554,13 +554,12 @@
       const move = (clientX, clientY) => {
         const r = zone.getBoundingClientRect();
         let dx = clientX - (r.left + r.width / 2);
-        let dy = clientY - (r.top + r.height / 2);
-        const dist = Math.hypot(dx, dy) || 1;
-        if (dist > maxR) { dx = dx / dist * maxR; dy = dy / dist * maxR; }
-        knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-        const nx = dx / maxR, ny = dy / maxR;
-        if (Math.hypot(nx, ny) < 0.18) { touchInput.x = 0; touchInput.y = 0; touchInput.active = false; }
-        else { touchInput.x = nx; touchInput.y = ny; touchInput.active = true; }
+        if (dx > maxR) dx = maxR;
+        if (dx < -maxR) dx = -maxR;
+        knob.style.transform = `translate(calc(-50% + ${dx}px), -50%)`;
+        const nx = dx / maxR;
+        if (Math.abs(nx) < 0.18) { touchInput.x = 0; touchInput.y = 0; touchInput.active = false; }
+        else { touchInput.x = nx; touchInput.y = 0; touchInput.active = true; }
       };
       const start = (e) => { dragging = true; const t = e.touches ? e.touches[0] : e; move(t.clientX, t.clientY); e.preventDefault(); };
       const onmove = (e) => { if (!dragging) return; const t = e.touches ? e.touches[0] : e; move(t.clientX, t.clientY); e.preventDefault(); };
@@ -1008,27 +1007,47 @@
       const isLeft = keys['a'] || keys['A'] || keys['ArrowLeft'];
       const isRight = keys['d'] || keys['D'] || keys['ArrowRight'];
 
-      let inputX = 0;
-      let inputY = 0;
-      if (isLeft) inputX -= 1;
-      if (isRight) inputX += 1;
-      if (isUp) inputY -= 1;
-      if (isDown) inputY += 1;
-      if (touchInput.active) { inputX += touchInput.x; inputY += touchInput.y; }
-      if (touchGas) inputY -= 1;
-      if (touchBrake) inputY += 1;
+      // === CAR-LIKE CONTROL MODEL ===
+      // Steering: analog joystick X (or A/D arrows). Analog only turns heading.
+      let steer = 0;
+      if (isLeft) steer -= 1;
+      if (isRight) steer += 1;
+      if (touchInput.active) steer += touchInput.x;
+      steer = Math.max(-1, Math.min(1, steer));
 
-      const hasInput = inputX !== 0 || inputY !== 0;
+      // Throttle (gas) and brake/reverse
+      const throttle = isUp || touchGas;
+      const brake = isDown || touchBrake;
+      const maxReverse = player.maxSpeed * 0.45;
 
-      if (hasInput) {
+      // Turn heading (slightly damped at high speed for control)
+      if (steer !== 0) {
+        const speedFactor = 1 - 0.35 * Math.min(1, Math.abs(player.speed) / player.maxSpeed);
+        player.angle += steer * player.turnSpeed * dt * speedFactor;
+      }
+
+      // Longitudinal speed
+      if (throttle) {
         player.speed = Math.min(player.speed + player.acceleration * dt, player.maxSpeed);
-        const len = Math.hypot(inputX, inputY);
-        const dirX = inputX / len;
-        const dirY = inputY / len;
+      } else if (brake) {
+        if (player.speed > 0.5) {
+          player.speed = Math.max(0, player.speed - player.deceleration * 2.2 * dt);
+        } else {
+          // Already stopped -> reverse slowly (does NOT rotate the vehicle)
+          player.speed = Math.max(player.speed - player.acceleration * dt, -maxReverse);
+        }
+      } else {
+        // Coast: gradual slow down (tidak langsung 0)
+        const coast = player.deceleration * 0.55;
+        if (player.speed > 0) player.speed = Math.max(0, player.speed - coast * dt);
+        else if (player.speed < 0) player.speed = Math.min(0, player.speed + coast * dt);
+      }
 
-        // Instantly rotate mecha/bike to face movement direction
-        player.angle = Math.atan2(dirY, dirX) * (180 / Math.PI) + 90;
-
+      // Move along the vehicle heading (angle: 0 = up)
+      if (Math.abs(player.speed) > 0.01) {
+        const rad = player.angle * Math.PI / 180;
+        const dirX = Math.sin(rad);
+        const dirY = -Math.cos(rad);
         const moveStep = player.speed * dt;
         const dx = dirX * moveStep;
         const dy = dirY * moveStep;
@@ -1054,8 +1073,6 @@
           }
           player.speed = 0;
         }
-      } else {
-        player.speed = Math.max(0, player.speed - player.deceleration * dt);
       }
 
       trafficNPCs.forEach((npc, npcIdx) => {
@@ -1878,9 +1895,9 @@
     }
 
     function renderSpeedometerDial() {
-      const centerX = VIEW.width - 90;
-      const centerY = VIEW.height - 90;
-      const radius = 65;
+      const centerX = VIEW.width / 2;
+      const centerY = VIEW.height - 74;
+      const radius = 58;
 
       ctx.save();
       ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
