@@ -116,19 +116,19 @@
     }
 
     .app-title {
-      font-size: 3.2rem; font-weight: 900;
+      font-size: 2.2rem; font-weight: 900;
       background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      margin-bottom: 4px; letter-spacing: -1px;
+      margin-bottom: 2px; letter-spacing: -1px;
     }
 
-    .app-subtitle { font-size: 0.95rem; color: var(--text-sub); margin-bottom: 24px; font-weight: 600; }
+    .app-subtitle { font-size: 0.8rem; color: var(--text-sub); margin-bottom: 12px; font-weight: 600; }
 
-    .vehicle-grid { display: flex; gap: 20px; margin-bottom: 28px; flex-wrap: wrap; justify-content: center; }
+    .vehicle-grid { display: flex; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; justify-content: center; }
 
     .vehicle-card {
-      width: 240px; background: rgba(15, 23, 42, 0.7); border: 1.5px solid rgba(148, 163, 184, 0.15);
-      border-radius: 20px; padding: 20px; cursor: pointer; text-align: center; position: relative;
+      width: 190px; background: rgba(15, 23, 42, 0.7); border: 1.5px solid rgba(148, 163, 184, 0.15);
+      border-radius: 16px; padding: 14px; cursor: pointer; text-align: center; position: relative;
     }
 
     .vehicle-card.selected {
@@ -136,9 +136,9 @@
       background: linear-gradient(180deg, rgba(6, 182, 212, 0.18) 0%, rgba(15, 23, 42, 0.9) 100%);
     }
 
-    .vehicle-icon { font-size: 3.5rem; margin-bottom: 8px; }
-    .vehicle-name { font-size: 1.2rem; font-weight: 800; color: var(--text-main); margin-bottom: 4px; }
-    .vehicle-desc { font-size: 0.75rem; color: var(--text-sub); line-height: 1.35; margin-bottom: 14px; }
+    .vehicle-icon { font-size: 2.4rem; margin-bottom: 4px; }
+    .vehicle-name { font-size: 1rem; font-weight: 800; color: var(--text-main); margin-bottom: 3px; }
+    .vehicle-desc { font-size: 0.68rem; color: var(--text-sub); line-height: 1.3; margin-bottom: 8px; }
 
     .btn-action {
       font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 800; padding: 14px 36px;
@@ -232,19 +232,97 @@
 
     /* VIRTUAL MOBILE CONTROLS */
     #mobile-controls {
-      position: absolute; bottom: 16px; left: 0; right: 0; height: 100px;
-      pointer-events: none; display: flex; justify-content: space-between; padding: 0 20px; z-index: 5;
+      position: absolute; bottom: 18px; left: 0; right: 0; height: 130px;
+      pointer-events: none; display: flex; justify-content: space-between; align-items: flex-end;
+      padding: 0 22px; z-index: 5;
     }
 
-    .touch-group { display: flex; gap: 12px; pointer-events: auto; align-items: center; }
-
-    .touch-btn {
-      width: 60px; height: 60px; border-radius: 50%; background: rgba(15, 23, 42, 0.85);
-      border: 2px solid rgba(56, 189, 248, 0.6); backdrop-filter: blur(8px); color: #ffffff;
-      font-size: 1.5rem; display: flex; align-items: center; justify-content: center;
-      touch-action: manipulation;
+    /* Left: analog joystick */
+    .joy-zone {
+      pointer-events: auto; width: 116px; height: 116px; border-radius: 50%;
+      background: radial-gradient(circle at 50% 50%, rgba(15,23,42,0.55), rgba(15,23,42,0.85));
+      border: 2px solid rgba(56, 189, 248, 0.45); backdrop-filter: blur(8px);
+      position: relative; touch-action: none; box-shadow: inset 0 0 18px rgba(56,189,248,0.25);
     }
-    .touch-btn:active { background: var(--primary-cyan); transform: scale(0.9); }
+    .joy-knob {
+      position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; border-radius: 50%;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle at 35% 30%, #7dd3fc, #0284c7);
+      border: 2px solid rgba(255,255,255,0.7); box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+
+    /* Right: gas + reverse pedals */
+    .pedal-group { pointer-events: auto; display: flex; align-items: flex-end; gap: 12px; }
+    .pedal {
+      width: 78px; height: 78px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 0.85rem; color: #fff; letter-spacing: 0.5px;
+      border: 2px solid rgba(255,255,255,0.35); touch-action: none; user-select: none; backdrop-filter: blur(6px);
+    }
+    .pedal-brake { width: 60px; height: 60px; font-size: 0.68rem; background: rgba(239,68,68,0.5); border-color: rgba(248,113,113,0.8); }
+    .pedal-gas { background: linear-gradient(180deg, #22c55e, #15803d); border-color: rgba(134,239,172,0.9); box-shadow: 0 0 16px rgba(34,197,94,0.5); }
+    .pedal.active { transform: scale(0.94); filter: brightness(1.15); }
+  </style>
+
+  <!-- ===== RoboMind shared game result/report skin (auto-injected) ===== -->
+  <style id="rb-result-skin">
+    /* Overlay layar hasil: konsisten di semua game */
+    .overlay-screen.hidden {
+      display: none !important;
+    }
+    .overlay-screen {
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 16px !important;
+      overflow-y: auto !important;
+      background: rgba(3, 7, 18, 0.88) !important;
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+    }
+    /* Kartu hasil: lebar & tinggi dibatasi, isi discroll DI DALAM kartu */
+    .card-modal,
+    #screen-result .modal-box,
+    #resultModal > div,
+    #gameModal > div {
+      width: 100% !important;
+      max-width: 440px !important;
+      max-height: 90vh !important;
+      overflow-y: auto !important;
+      box-sizing: border-box !important;
+      margin: auto !important;
+      padding: 20px !important;
+      border-radius: 24px !important;
+      border: 2px solid rgba(56, 189, 248, 0.45) !important;
+      background: #0B132B !important;
+      color: #E2E8F0 !important;
+      text-align: center !important;
+      box-shadow: 0 0 40px rgba(0, 229, 255, 0.25) !important;
+    }
+    /* Baris bintang seragam */
+    #modalStars,
+    #result-stars,
+    #res_stars,
+    .rb-stars {
+      font-size: 2rem !important;
+      line-height: 1.2 !important;
+      letter-spacing: 5px !important;
+      color: #FBBF24 !important;
+      text-align: center !important;
+    }
+    /* Grid dua kolom jadi satu kolom di layar sempit */
+    .rb-result-grid {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 16px !important;
+      align-items: start !important;
+    }
+    @media (max-width: 560px) {
+      .card-modal,
+      #screen-result .modal-box,
+      #resultModal > div,
+      #gameModal > div { max-width: 100% !important; }
+      .rb-result-grid { grid-template-columns: 1fr !important; }
+    }
   </style>
 </head>
 <body>
@@ -261,14 +339,15 @@
 
     <!-- ON-SCREEN VIRTUAL TOUCH CONTROLS -->
     <div id="mobile-controls" class="hidden">
-      <div class="touch-group">
-        <div class="touch-btn" id="btn-left">◀</div>
-        <div class="touch-btn" id="btn-right">▶</div>
+      <!-- LEFT: analog joystick -->
+      <div class="joy-zone" id="joy-zone">
+        <div class="joy-knob" id="joy-knob"></div>
       </div>
 
-      <div class="touch-group">
-        <div class="touch-btn" id="btn-down" style="border-color: var(--neon-red);">▼</div>
-        <div class="touch-btn" id="btn-up" style="border-color: var(--neon-green); background: rgba(16, 185, 129, 0.35);">▲</div>
+      <!-- RIGHT: GAS (main) + reverse -->
+      <div class="pedal-group">
+        <div class="pedal pedal-brake" id="btn-brake">REM</div>
+        <div class="pedal pedal-gas" id="btn-gas">GAS</div>
       </div>
     </div>
 
@@ -325,7 +404,7 @@
         </div>
 
         <!-- MAIN CONTENT DUAL COLUMN -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
+        <div class="rb-result-grid">
           
           <!-- BAGIAN KIRI: HASIL & KOIN -->
           <div style="background: rgba(15, 23, 42, 0.7); padding: 16px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.2);">
@@ -456,22 +535,60 @@
     window.addEventListener('keydown', e => { keys[e.key] = true; keys[e.code] = true; });
     window.addEventListener('keyup', e => { keys[e.key] = false; keys[e.code] = false; });
 
-    // MOBILE TOUCH CONTROLS BINDING
-    function setupTouchBtn(btnId, keyName) {
-      const btn = document.getElementById(btnId);
-      const startHandler = (e) => { e.preventDefault(); keys[keyName] = true; };
-      const endHandler = (e) => { e.preventDefault(); keys[keyName] = false; };
+    // MOBILE TOUCH CONTROLS: analog joystick (left) + gas/reverse pedals (right)
+    const touchInput = { x: 0, y: 0, active: false };
+    let touchGas = false;
+    let touchBrake = false;
 
-      btn.addEventListener('touchstart', startHandler);
-      btn.addEventListener('touchend', endHandler);
-      btn.addEventListener('mousedown', startHandler);
-      btn.addEventListener('mouseup', endHandler);
-    }
+    (function setupJoystick() {
+      const zone = document.getElementById('joy-zone');
+      const knob = document.getElementById('joy-knob');
+      if (!zone || !knob) return;
+      const maxR = 34;
+      let dragging = false;
+      const reset = () => {
+        dragging = false;
+        touchInput.x = 0; touchInput.y = 0; touchInput.active = false;
+        knob.style.transform = 'translate(-50%, -50%)';
+      };
+      const move = (clientX, clientY) => {
+        const r = zone.getBoundingClientRect();
+        let dx = clientX - (r.left + r.width / 2);
+        let dy = clientY - (r.top + r.height / 2);
+        const dist = Math.hypot(dx, dy) || 1;
+        if (dist > maxR) { dx = dx / dist * maxR; dy = dy / dist * maxR; }
+        knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+        const nx = dx / maxR, ny = dy / maxR;
+        if (Math.hypot(nx, ny) < 0.18) { touchInput.x = 0; touchInput.y = 0; touchInput.active = false; }
+        else { touchInput.x = nx; touchInput.y = ny; touchInput.active = true; }
+      };
+      const start = (e) => { dragging = true; const t = e.touches ? e.touches[0] : e; move(t.clientX, t.clientY); e.preventDefault(); };
+      const onmove = (e) => { if (!dragging) return; const t = e.touches ? e.touches[0] : e; move(t.clientX, t.clientY); e.preventDefault(); };
+      zone.addEventListener('touchstart', start, { passive: false });
+      zone.addEventListener('touchmove', onmove, { passive: false });
+      zone.addEventListener('touchend', reset);
+      zone.addEventListener('touchcancel', reset);
+      zone.addEventListener('mousedown', start);
+      window.addEventListener('mousemove', onmove);
+      window.addEventListener('mouseup', reset);
+    })();
 
-    setupTouchBtn('btn-left', 'ArrowLeft');
-    setupTouchBtn('btn-right', 'ArrowRight');
-    setupTouchBtn('btn-up', 'ArrowUp');
-    setupTouchBtn('btn-down', 'ArrowDown');
+    (function setupPedals() {
+      const bind = (id, on, off) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const down = (e) => { e.preventDefault(); el.classList.add('active'); on(); };
+        const up = (e) => { if (e) e.preventDefault(); el.classList.remove('active'); off(); };
+        el.addEventListener('touchstart', down, { passive: false });
+        el.addEventListener('touchend', up);
+        el.addEventListener('touchcancel', up);
+        el.addEventListener('mousedown', down);
+        el.addEventListener('mouseup', up);
+        el.addEventListener('mouseleave', up);
+      };
+      bind('btn-gas', () => { touchGas = true; }, () => { touchGas = false; });
+      bind('btn-brake', () => { touchBrake = true; }, () => { touchBrake = false; });
+    })();
 
     // Dynamic Orientation Checker for Mobile
     function checkOrientation() {
@@ -891,24 +1008,53 @@
       const isLeft = keys['a'] || keys['A'] || keys['ArrowLeft'];
       const isRight = keys['d'] || keys['D'] || keys['ArrowRight'];
 
-      let inputX = 0;
-      let inputY = 0;
-      if (isLeft) inputX = -1;
-      if (isRight) inputX = 1;
-      if (isUp) inputY = -1;
-      if (isDown) inputY = 1;
+      // === CAR-LIKE CONTROL MODEL ===
+      // Keyboard steering (A/D); analog is 360° (like ML)
+      let steer = 0;
+      if (isLeft) steer -= 1;
+      if (isRight) steer += 1;
 
-      const hasInput = inputX !== 0 || inputY !== 0;
+      // Throttle (gas) and brake/reverse
+      const throttle = isUp || touchGas;
+      const brake = isDown || touchBrake;
+      const maxReverse = player.maxSpeed * 0.45;
 
-      if (hasInput) {
+      // Heading control
+      if (touchInput.active) {
+        // 360° analog: rotate the car toward the stick direction
+        const targetAngle = Math.atan2(touchInput.x, -touchInput.y) * 180 / Math.PI;
+        let diff = targetAngle - player.angle;
+        while (diff > 180) diff -= 360;
+        while (diff < -180) diff += 360;
+        const maxTurn = player.turnSpeed * dt;
+        player.angle += Math.max(-maxTurn, Math.min(maxTurn, diff));
+      } else if (steer !== 0) {
+        const speedFactor = 1 - 0.35 * Math.min(1, Math.abs(player.speed) / player.maxSpeed);
+        player.angle += steer * player.turnSpeed * dt * speedFactor;
+      }
+
+      // Longitudinal speed
+      if (throttle) {
         player.speed = Math.min(player.speed + player.acceleration * dt, player.maxSpeed);
-        const len = Math.hypot(inputX, inputY);
-        const dirX = inputX / len;
-        const dirY = inputY / len;
+      } else if (brake) {
+        if (player.speed > 0.5) {
+          player.speed = Math.max(0, player.speed - player.deceleration * 2.2 * dt);
+        } else {
+          // Already stopped -> reverse slowly (does NOT rotate the vehicle)
+          player.speed = Math.max(player.speed - player.acceleration * dt, -maxReverse);
+        }
+      } else {
+        // Coast: gradual slow down (tidak langsung 0)
+        const coast = player.deceleration * 0.55;
+        if (player.speed > 0) player.speed = Math.max(0, player.speed - coast * dt);
+        else if (player.speed < 0) player.speed = Math.min(0, player.speed + coast * dt);
+      }
 
-        // Instantly rotate mecha/bike to face movement direction
-        player.angle = Math.atan2(dirY, dirX) * (180 / Math.PI) + 90;
-
+      // Move along the vehicle heading (angle: 0 = up)
+      if (Math.abs(player.speed) > 0.01) {
+        const rad = player.angle * Math.PI / 180;
+        const dirX = Math.sin(rad);
+        const dirY = -Math.cos(rad);
         const moveStep = player.speed * dt;
         const dx = dirX * moveStep;
         const dy = dirY * moveStep;
@@ -934,8 +1080,6 @@
           }
           player.speed = 0;
         }
-      } else {
-        player.speed = Math.max(0, player.speed - player.deceleration * dt);
       }
 
       trafficNPCs.forEach((npc, npcIdx) => {
@@ -1758,9 +1902,9 @@
     }
 
     function renderSpeedometerDial() {
-      const centerX = VIEW.width - 90;
-      const centerY = VIEW.height - 90;
-      const radius = 65;
+      const centerX = VIEW.width / 2;
+      const centerY = VIEW.height - 74;
+      const radius = 58;
 
       ctx.save();
       ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';

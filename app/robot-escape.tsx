@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { ScrollView, StyleSheet,
+import { StyleSheet,
   View,
   Text,
   Pressable,
@@ -13,6 +13,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Storage } from "../lib/storage";
 import { HowToPlayModal } from "../components/HowToPlayModal";
+import { GameResultModal } from "../components/GameResultModal";
 import * as Haptics from "expo-haptics";
 import Animated, {
   useSharedValue,
@@ -1295,115 +1296,56 @@ export default function RobotEscapeScreen() {
       </Modal>
 
       {/* TWO-COLUMN VICTORY & COMPLETED RESULT MODAL WITH 5-AXIS RADAR CHART */}
-      <Modal visible={gameState === "victory" || gameState === "completed"} transparent animationType="fade">
-        {(() => {
-          const isFinished = gameState === "completed";
-          const starsEarned = starsFor(taps, currentLevel.robots.length);
-          const totalCoins = userCoins + coinsReward;
-          const radarScores = {
-            spasial: Math.min(100, Math.max(70, 95 - (taps - currentLevel.robots.length) * 5)),
-            keputusan: Math.min(100, Math.max(65, 88 + level * 2)),
-            kontrolDiri: Math.min(100, Math.max(75, starsEarned === 3 ? 98 : 82)),
-            memori: Math.min(100, Math.max(70, 85 + level * 1.5)),
-            fokus: Math.min(100, Math.max(65, 90 - (taps - currentLevel.robots.length) * 4)),
-          };
+      {(() => {
+        const isFinished = gameState === "completed";
+        const starsEarned = starsFor(taps, currentLevel.robots.length);
+        const totalCoins = userCoins + coinsReward;
+        const radarScores = {
+          spasial: Math.min(100, Math.max(70, 95 - (taps - currentLevel.robots.length) * 5)),
+          keputusan: Math.min(100, Math.max(65, 88 + level * 2)),
+          kontrolDiri: Math.min(100, Math.max(75, starsEarned === 3 ? 98 : 82)),
+          memori: Math.min(100, Math.max(70, 85 + level * 1.5)),
+          fokus: Math.min(100, Math.max(65, 90 - (taps - currentLevel.robots.length) * 4)),
+        };
 
-          return (
-            <View style={styles.modalOverlay}>
-              <View style={styles.resultBoxContainer}>
-                {/* HEADER TITLE */}
-                <View style={styles.modalHeaderSec}>
-                  <Text style={styles.modalSubBadge}>
-                    {isFinished ? "ALL MISSIONS CLEARED" : "PERSIMPANGAN BERSIH"}
-                  </Text>
-                  <Text style={styles.modalMainTitle}>
-                    {isFinished ? "SEMUA LEVEL SELESAI!" : `PERSIMPANGAN BERSIH! LEVEL ${level}`}
-                  </Text>
-                  <Text style={styles.modalSubTitle}>
-                    {currentLevel.title} selesai — semua robot berhasil keluar tanpa tabrakan.
-                  </Text>
-                </View>
-
-                {/* TWO COLUMNS BODY */}
-                <View style={styles.modalBodyTwoCols}>
-                  {/* LEFT COLUMN: PENCAPAIAN MISI */}
-                  <View style={styles.leftPencapaianCard}>
-                    <Text style={styles.colSectionHeader}>PENCAPAIAN MISI</Text>
-
-                    <View style={styles.starsRowNew}>
-                      {[1, 2, 3].map((s) => (
-                        <Ionicons
-                          key={s}
-                          name={s <= starsEarned ? "star" : "star-outline"}
-                          size={26}
-                          color="#F59E0B"
-                        />
-                      ))}
-                    </View>
-
-                    <View style={styles.bulletListSec}>
-                      <Text style={styles.bulletItemText}>
-                        ⭐ Ketukan Digunakan: <Text style={{ color: "#34D399", fontWeight: "bold" }}>{taps} Ketukan</Text>
-                      </Text>
-                      <Text style={styles.bulletItemText}>
-                        ⭐ Efisiensi Navigasi: <Text style={{ color: "#38BDF8", fontWeight: "bold" }}>
-                          {taps <= currentLevel.robots.length ? "Akurasi Sempurna!" : "Sangat Baik"}
-                        </Text>
-                      </Text>
-                      <Text style={styles.bulletItemText}>
-                        ⭐ Robot Dikeluarkan: <Text style={{ color: "#FACC15", fontWeight: "bold" }}>{currentLevel.robots.length} / {currentLevel.robots.length} Robot</Text>
-                      </Text>
-                    </View>
-
-                    <View style={styles.colDividerLine} />
-
-                    <View style={styles.lootRowLine}>
-                      <Text style={styles.lootLabelText}>Hadiah Koin Misi:</Text>
-                      <Text style={styles.lootValText}>+{coinsReward} Koin</Text>
-                    </View>
-                    <View style={styles.lootRowLine}>
-                      <Text style={styles.lootLabelText}>Bonus Efisiensi:</Text>
-                      <Text style={styles.lootValText}>+{starsEarned * 10} Koin</Text>
-                    </View>
-
-                    <View style={styles.totalCoinsHighlightBox}>
-                      <Text style={styles.totalCoinsBoxLabel}>TOTAL KOIN SAYA:</Text>
-                      <Text style={styles.totalCoinsBoxVal}>{totalCoins} KOIN</Text>
-                    </View>
-                  </View>
-
-                  {/* RIGHT COLUMN: ANALISIS PERKEMBANGAN OTAK & RADAR CHART */}
-                  <View style={styles.rightRadarCard}>
-                    <Text style={styles.colSectionHeader}>🧠 Analisis Perkembangan Otak</Text>
-                    <Text style={styles.radarSubHeader}>Prefrontal Cortex & Kontrol Emosi</Text>
-
-                    <View style={styles.radarChartCanvasWrap}>
-                      <EscapeRadarChart scores={radarScores} />
-                    </View>
-                  </View>
-                </View>
-
-                {/* BOTTOM ACTION BUTTONS */}
-                <View style={styles.resultActionsRowNew}>
-                  <Pressable style={styles.btnMenuPill} onPress={handleExit}>
-                    <Text style={styles.btnMenuPillText}>Kembali Ke Peta Utama</Text>
-                  </Pressable>
-
-                  <Pressable style={styles.btnMenuPill} onPress={() => setShowLevelSelect(true)}>
-                    <Text style={styles.btnMenuPillText}>Pilih Level</Text>
-                  </Pressable>
-
-                  <Pressable style={styles.btnRetryPill} onPress={isFinished ? handleExit : handleNextLevel}>
-                    <Text style={styles.btnRetryPillText}>
-                      {isFinished ? "Klaim Hadiah & Selesai" : "Misi Berikutnya"}
-                    </Text>
-                  </Pressable>
-                </View>
-              </View>
-            </View>
-          );
-        })()}
-      </Modal>
+        return (
+          <GameResultModal
+            visible={gameState === "victory" || gameState === "completed"}
+            variant={isFinished ? "completed" : "victory"}
+            badge={isFinished ? "All Missions Cleared" : "Persimpangan Bersih"}
+            title={isFinished ? "SEMUA LEVEL SELESAI!" : `PERSIMPANGAN BERSIH! LEVEL ${level}`}
+            subtitle={`${currentLevel.title} selesai — semua robot berhasil keluar tanpa tabrakan.`}
+            stars={starsEarned}
+            statsTitle="Pencapaian Misi"
+            stats={[
+              { label: "Ketukan Digunakan", value: `${taps} Ketukan`, ok: true },
+              {
+                label: "Efisiensi Navigasi",
+                value: taps <= currentLevel.robots.length ? "Akurasi Sempurna!" : "Sangat Baik",
+                ok: true,
+              },
+              {
+                label: "Robot Dikeluarkan",
+                value: `${currentLevel.robots.length} / ${currentLevel.robots.length} Robot`,
+                ok: true,
+              },
+            ]}
+            loot={[
+              { label: "Hadiah Koin Misi:", value: `+${coinsReward} Koin` },
+              { label: "Bonus Efisiensi:", value: `+${starsEarned * 10} Koin` },
+            ]}
+            total={{ label: "Total Koin Saya", value: `${totalCoins} KOIN` }}
+            radarTitle="🧠 Analisis Perkembangan Otak"
+            radar={<EscapeRadarChart scores={radarScores} />}
+            secondaryLabel="Kembali Ke Peta Utama"
+            onSecondary={handleExit}
+            tertiaryLabel="Pilih Level"
+            onTertiary={() => setShowLevelSelect(true)}
+            primaryLabel={isFinished ? "Klaim Hadiah & Selesai" : "Misi Berikutnya"}
+            onPrimary={isFinished ? handleExit : handleNextLevel}
+          />
+        );
+      })()}
 
       <HowToPlayModal
         visible={showHelp}

@@ -5,7 +5,6 @@ import {
   Text,
   Pressable,
   Platform,
-  Modal,
   StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,6 +16,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { GameBackButton } from "../components/GameBackButton";
 import { HowToPlayModal } from "../components/HowToPlayModal";
+import { GameResultModal } from "../components/GameResultModal";
 import { Storage } from "../lib/storage";
 import { saveGameSession } from "../lib/gameProgressService";
 import * as Haptics from "expo-haptics";
@@ -30,7 +30,6 @@ import Animated, {
 } from "react-native-reanimated";
 import Svg, { Line, Circle, Path, Rect, G, Polygon } from "react-native-svg";
 import { COLORS, SPACING, SHAPES, FONTS, SHADOWS } from "../constants/Theme";
-import Button from "../components/ui/Button";
 
 const COINS_STORAGE_KEY = "user_coins_balance";
 const LIVES_STORAGE_KEY = "robo_link_lives";
@@ -1730,24 +1729,23 @@ export default function RoboLinkScreen() {
         </ScrollView>
 
         {/* OUT OF LIVES MODAL IN MAP */}
-        <Modal visible={gameState === "outOfLives"} transparent animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <View style={[styles.victoryIconCircle, { backgroundColor: "#FEF2F2" }]}>
-                <Ionicons name="heart-half" size={50} color="#EF4444" />
-              </View>
-              <Text style={styles.modalTitle}>NYAWA HABIS!</Text>
-              <Text style={styles.modalSubtitle}>Tunggu energi pulih untuk melanjutkan main. 1 Nyawa pulih dalam 15 menit.</Text>
-              <View style={styles.rewardSummary}>
-                <Text style={styles.rewardLabel}>WAKTU TUNGGU</Text>
-                <Text style={{ fontSize: 24, fontWeight: "bold", color: "#EF4444" }}>
-                  {Math.floor(cooldownLeft / 60)}:{(cooldownLeft % 60).toString().padStart(2, "0")}
-                </Text>
-              </View>
-              <Button title="Kembali" onPress={() => setGameState("playing")} variant="primary" style={{ width: "100%", backgroundColor: "#64748B" }} />
-            </View>
+        <GameResultModal
+          visible={gameState === "outOfLives"}
+          variant="defeat"
+          icon={<Ionicons name="heart-half" size={50} color="#EF4444" />}
+          title="NYAWA HABIS!"
+          subtitle="Tunggu energi pulih untuk melanjutkan main. 1 Nyawa pulih dalam 15 menit."
+          primaryLabel="Kembali"
+          onPrimary={() => setGameState("playing")}
+          primaryTone="retry"
+        >
+          <View style={styles.rewardSummary}>
+            <Text style={styles.rewardLabel}>WAKTU TUNGGU</Text>
+            <Text style={{ fontSize: 24, fontWeight: "bold", color: "#EF4444" }}>
+              {Math.floor(cooldownLeft / 60)}:{(cooldownLeft % 60).toString().padStart(2, "0")}
+            </Text>
           </View>
-        </Modal>
+        </GameResultModal>
 
         <HowToPlayModal
           visible={showHelp}
@@ -2175,217 +2173,113 @@ export default function RoboLinkScreen() {
       )}
 
       {/* VICTORY MODAL OVERLAY - 2 COLUMN COGNITIVE RADAR CHART */}
-      <Modal visible={gameState === "victory"} transparent animationType="fade">
-        <ScrollView style={{ flex: 1, backgroundColor: "rgba(3, 7, 18, 0.88)" }} contentContainerStyle={{ flexGrow: 1, justifyContent: "center", alignItems: "center", paddingVertical: 12, paddingHorizontal: 10 }}>
-          <View style={styles.resultModalCard}>
-            {/* HEADER */}
-            <View style={styles.resultHeader}>
-              <Text style={styles.resultBadgeText}>MISSION COMPLETED</Text>
-              <Text style={styles.resultTitleText}>LEVEL {String(level).padStart(2, "0")} CLEARED!</Text>
-              <Text style={styles.resultSubtitleText}>
-                Sirkuit Data Berhasil Disambungkan!
-              </Text>
-            </View>
-
-            {/* DUAL COLUMN CONTAINER */}
-            <View style={styles.resultGrid}>
-              {/* LEFT COLUMN: PENCAPAIAN MISI */}
-              <View style={styles.resultColumnLeft}>
-                <Text style={styles.columnTitle}>PENCAPAIAN MISI</Text>
-                
-                {/* STARS */}
-                <View style={styles.starRow}>
-                  <Text style={styles.starText}>⭐ ⭐ ⭐</Text>
-                </View>
-
-                {/* CHECKLIST */}
-                <View style={styles.checklistContainer}>
-                  <Text style={styles.checkItem}>⭐ Kabel 100% <Text style={styles.checkVal}>(Sukses)</Text></Text>
-                  <Text style={styles.checkItem}>⭐ Waktu sirkuit <Text style={styles.checkVal}>(Bonus Cepat)</Text></Text>
-                  <Text style={styles.checkItem}>⭐ Kebocoran daya <Text style={styles.checkVal}>(0 Leak)</Text></Text>
-                </View>
-
-                {/* LOOT BREAKDOWN */}
-                <View style={styles.lootBreakdown}>
-                  <View style={styles.lootRow}>
-                    <Text style={styles.lootLabel}>Loot Base / Bonus:</Text>
-                    <Text style={styles.lootVal}>+{currentConfig.rewardCoins} / +25</Text>
-                  </View>
-                  <View style={styles.totalRow}>
-                    <Text style={styles.totalLabel}>TOTAL KOIN:</Text>
-                    <Text style={styles.totalVal}>{currentConfig.rewardCoins + 25} KOIN</Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* RIGHT COLUMN: ANALISIS PERKEMBANGAN OTAK */}
-              <View style={styles.resultColumnRight}>
-                <Text style={styles.brainTitle}>🧠 Perkembangan Otak</Text>
-                <Text style={styles.brainSubtitle}>(Cognitive Radar)</Text>
-
-                {/* RADAR CHART */}
-                <View style={styles.radarWrapper}>
-                  <RadarChart
-                    size={140}
-                    data={[
-                      { axis: "Spasial", score: 85 },
-                      { axis: "Keputusan", score: 90 },
-                      { axis: "Kontrol Diri", score: 78 },
-                      { axis: "Memori Kerja", score: 95 },
-                      { axis: "Fokus", score: 88 },
-                    ]}
-                  />
-                </View>
-              </View>
-            </View>
-
-            {/* ACTION BUTTONS */}
-            <View style={styles.resultActions}>
-              <Pressable style={styles.btnGhost} onPress={() => router.back()}>
-                <Text style={styles.btnGhostText}>Kembali Ke Menu</Text>
-              </Pressable>
-              <Pressable style={styles.btnPrimaryNext} onPress={handleNextLevel}>
-                <Text style={styles.btnPrimaryNextText}>Lanjut Level ➔</Text>
-              </Pressable>
-            </View>
-          </View>
-        </ScrollView>
-      </Modal>
+      <GameResultModal
+        visible={gameState === "victory"}
+        variant="victory"
+        badge="Mission Completed"
+        title={`LEVEL ${String(level).padStart(2, "0")} CLEARED!`}
+        subtitle="Sirkuit Data Berhasil Disambungkan!"
+        stars={3}
+        statsTitle="Pencapaian Misi"
+        stats={[
+          { label: "Kabel", value: "(Sukses)", ok: true },
+          { label: "Waktu sirkuit", value: "(Bonus Cepat)", ok: true },
+          { label: "Kebocoran daya", value: "(0 Leak)", ok: true },
+        ]}
+        loot={[{ label: "Loot Base / Bonus:", value: `+${currentConfig.rewardCoins} / +25` }]}
+        total={{ label: "Total Koin", value: `${currentConfig.rewardCoins + 25} KOIN` }}
+        radarTitle="🧠 Perkembangan Otak"
+        radar={
+          <RadarChart
+            size={140}
+            data={[
+              { axis: "Spasial", score: 85 },
+              { axis: "Keputusan", score: 90 },
+              { axis: "Kontrol Diri", score: 78 },
+              { axis: "Memori Kerja", score: 95 },
+              { axis: "Fokus", score: 88 },
+            ]}
+          />
+        }
+        secondaryLabel="Kembali Ke Menu"
+        onSecondary={() => router.back()}
+        primaryLabel="Lanjut Level ➔"
+        onPrimary={handleNextLevel}
+      />
 
       {/* COMPLETED ALL LEVELS MODAL OVERLAY */}
-      <Modal visible={gameState === "completed"} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={[styles.victoryIconCircle, { backgroundColor: "#FFF7ED" }]}>
-              <Ionicons name="medal" size={50} color="#D97706" />
-            </View>
-            <Text style={styles.modalTitle}>PETUALANGAN SELESAI!</Text>
-            <Text style={styles.modalSubtitle}>Luar biasa! Kamu berhasil menghubungkan seluruh jaringan sirkuit komputer Robo-Link!</Text>
-
-            <View style={styles.rewardSummary}>
-              <Text style={styles.rewardLabel}>HADIAH TOTAL</Text>
-              <View style={styles.rewardBadge}>
-                <MaterialCommunityIcons name={"currency-usd" as any} size={20} color="#F59E0B" />
-                <Text style={styles.rewardBadgeText}>+{currentConfig.rewardCoins} Koin</Text>
-              </View>
-            </View>
-
-            <Button
-              title="Klaim Hadiah & Selesai"
-              onPress={handleClaimAndExit}
-              variant="primary"
-              style={{ width: "100%" }}
-            />
+      <GameResultModal
+        visible={gameState === "completed"}
+        variant="completed"
+        icon={<Ionicons name="medal" size={50} color="#D97706" />}
+        title="PETUALANGAN SELESAI!"
+        subtitle="Luar biasa! Kamu berhasil menghubungkan seluruh jaringan sirkuit komputer Robo-Link!"
+        primaryLabel="Klaim Hadiah & Selesai"
+        onPrimary={handleClaimAndExit}
+      >
+        <View style={styles.rewardSummary}>
+          <Text style={styles.rewardLabel}>HADIAH TOTAL</Text>
+          <View style={styles.rewardBadge}>
+            <MaterialCommunityIcons name={"currency-usd" as any} size={20} color="#F59E0B" />
+            <Text style={styles.rewardBadgeText}>+{currentConfig.rewardCoins} Koin</Text>
           </View>
         </View>
-      </Modal>
+      </GameResultModal>
 
       {/* FAILED MODAL OVERLAY - 2 COLUMN COGNITIVE RADAR CHART */}
-      <Modal visible={gameState === "failed"} transparent animationType="fade">
-        <ScrollView style={{ flex: 1, backgroundColor: "rgba(3, 7, 18, 0.88)" }} contentContainerStyle={{ flexGrow: 1, justifyContent: "center", alignItems: "center", paddingVertical: 12, paddingHorizontal: 10 }}>
-          <View style={[styles.resultModalCard, { borderColor: "rgba(239, 68, 68, 0.4)" }]}>
-            {/* HEADER */}
-            <View style={styles.resultHeader}>
-              <Text style={[styles.resultBadgeText, { color: "#EF4444" }]}>MISSION FAILED</Text>
-              <Text style={[styles.resultTitleText, { color: "#F87171" }]}>WAKTU HABIS!</Text>
-              <Text style={styles.resultSubtitleText}>
-                Sirkuit Data Gagal Tersambung Dalam Batas Waktu.
-              </Text>
-            </View>
-
-            {/* DUAL COLUMN CONTAINER */}
-            <View style={styles.resultGrid}>
-              {/* LEFT COLUMN: EVALUASI MISI */}
-              <View style={[styles.resultColumnLeft, { borderColor: "rgba(239, 68, 68, 0.25)" }]}>
-                <Text style={styles.columnTitle}>EVALUASI MISI</Text>
-                
-                {/* STARS */}
-                <View style={styles.starRow}>
-                  <Text style={styles.starText}>☆ ☆ ☆</Text>
-                </View>
-
-                {/* CHECKLIST */}
-                <View style={styles.checklistContainer}>
-                  <Text style={styles.checkItem}>❌ Kabel sirkuit <Text style={[styles.checkVal, { color: "#F87171" }]}> (Terputus)</Text></Text>
-                  <Text style={styles.checkItem}>⚠️ Batas waktu <Text style={styles.checkVal}>(Waktu Habis)</Text></Text>
-                  <Text style={styles.checkItem}>💡 Alur kabel <Text style={styles.checkVal}>(Coba Lagi)</Text></Text>
-                </View>
-
-                {/* LOOT BREAKDOWN */}
-                <View style={styles.lootBreakdown}>
-                  <View style={styles.lootRow}>
-                    <Text style={styles.lootLabel}>Loot Koin Diraih:</Text>
-                    <Text style={styles.lootVal}>+10 Koin</Text>
-                  </View>
-                  <View style={styles.totalRow}>
-                    <Text style={[styles.totalLabel, { color: "#F87171" }]}>TOTAL KOIN:</Text>
-                    <Text style={[styles.totalVal, { color: "#F87171" }]}>10 KOIN</Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* RIGHT COLUMN: ANALISIS PERKEMBANGAN OTAK */}
-              <View style={styles.resultColumnRight}>
-                <Text style={styles.brainTitle}>🧠 Evaluasi Otak</Text>
-                <Text style={styles.brainSubtitle}>(Focus & Spasial)</Text>
-
-                {/* RADAR CHART */}
-                <View style={styles.radarWrapper}>
-                  <RadarChart
-                    size={140}
-                    data={[
-                      { axis: "Spasial", score: 55 },
-                      { axis: "Keputusan", score: 60 },
-                      { axis: "Kontrol Diri", score: 68 },
-                      { axis: "Memori Kerja", score: 50 },
-                      { axis: "Fokus", score: 62 },
-                    ]}
-                  />
-                </View>
-              </View>
-            </View>
-
-            {/* ACTION BUTTONS */}
-            <View style={styles.resultActions}>
-              <Pressable style={styles.btnGhost} onPress={() => router.back()}>
-                <Text style={styles.btnGhostText}>Kembali Ke Menu</Text>
-              </Pressable>
-              <Pressable style={[styles.btnPrimaryNext, { backgroundColor: "#DC2626" }]} onPress={handleRestartLevel}>
-                <Text style={styles.btnPrimaryNextText}>Coba Lagi 🔄</Text>
-              </Pressable>
-            </View>
-          </View>
-        </ScrollView>
-      </Modal>
+      <GameResultModal
+        visible={gameState === "failed"}
+        variant="defeat"
+        badge="Mission Failed"
+        title="WAKTU HABIS!"
+        subtitle="Sirkuit Data Gagal Tersambung Dalam Batas Waktu."
+        stars={0}
+        statsTitle="Evaluasi Misi"
+        stats={[
+          { label: "Kabel sirkuit", value: "(Terputus)", ok: false },
+          { label: "Batas waktu", value: "(Waktu Habis)" },
+          { label: "Alur kabel", value: "(Coba Lagi)" },
+        ]}
+        loot={[{ label: "Loot Koin Diraih:", value: "+10 Koin" }]}
+        total={{ label: "Total Koin", value: "10 KOIN" }}
+        radarTitle="🧠 Evaluasi Otak"
+        radar={
+          <RadarChart
+            size={140}
+            data={[
+              { axis: "Spasial", score: 55 },
+              { axis: "Keputusan", score: 60 },
+              { axis: "Kontrol Diri", score: 68 },
+              { axis: "Memori Kerja", score: 50 },
+              { axis: "Fokus", score: 62 },
+            ]}
+          />
+        }
+        secondaryLabel="Kembali Ke Menu"
+        onSecondary={() => router.back()}
+        primaryLabel="Coba Lagi 🔄"
+        onPrimary={handleRestartLevel}
+        primaryTone="retry"
+      />
 
       {/* OUT OF LIVES MODAL OVERLAY */}
-      <Modal visible={gameState === "outOfLives"} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={[styles.victoryIconCircle, { backgroundColor: "#FEF2F2" }]}>
-              <Ionicons name="heart-half" size={50} color="#EF4444" />
-            </View>
-            <Text style={styles.modalTitle}>NYAWA HABIS!</Text>
-            <Text style={styles.modalSubtitle}>
-              Tunggu energi pulih untuk melanjutkan main. 1 Nyawa pulih dalam 15 menit.
-            </Text>
-
-            <View style={styles.rewardSummary}>
-              <Text style={styles.rewardLabel}>WAKTU TUNGGU</Text>
-              <Text style={{ fontSize: 24, fontWeight: "bold", color: "#EF4444" }}>
-                {Math.floor(cooldownLeft / 60)}:{(cooldownLeft % 60).toString().padStart(2, "0")}
-              </Text>
-            </View>
-
-            <Button
-              title="Kembali"
-              onPress={() => router.back()}
-              variant="primary"
-              style={{ width: "100%", backgroundColor: "#64748B" }}
-            />
-          </View>
+      <GameResultModal
+        visible={gameState === "outOfLives"}
+        variant="defeat"
+        icon={<Ionicons name="heart-half" size={50} color="#EF4444" />}
+        title="NYAWA HABIS!"
+        subtitle="Tunggu energi pulih untuk melanjutkan main. 1 Nyawa pulih dalam 15 menit."
+        primaryLabel="Kembali"
+        onPrimary={() => router.back()}
+        primaryTone="retry"
+      >
+        <View style={styles.rewardSummary}>
+          <Text style={styles.rewardLabel}>WAKTU TUNGGU</Text>
+          <Text style={{ fontSize: 24, fontWeight: "bold", color: "#EF4444" }}>
+            {Math.floor(cooldownLeft / 60)}:{(cooldownLeft % 60).toString().padStart(2, "0")}
+          </Text>
         </View>
-      </Modal>
+      </GameResultModal>
 
       <HowToPlayModal
         visible={showHelp}

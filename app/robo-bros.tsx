@@ -168,6 +168,21 @@ source={{ uri: "file:///android_asset/robo-bros/index.html" }}
         <Ionicons name="help-circle" size={22} color="#fff" />
       </Pressable>
 
+      <Pressable
+        onPress={() => {
+          if (typeof document === "undefined") return;
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen?.().catch(() => {});
+          } else {
+            document.exitFullscreen?.().catch(() => {});
+          }
+        }}
+        style={styles.floatingFs}
+      >
+        <Ionicons name="expand" size={20} color="#38bdf8" />
+        <Text style={styles.floatingFsText}>FULL</Text>
+      </Pressable>
+
       {rotatePrompt && (
         <View style={styles.rotateOverlay}>
           <MaterialCommunityIcons name="rotate-orbit" size={56} color="#38bdf8" />
@@ -294,6 +309,28 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
+  },
+  floatingFs: {
+    position: "absolute",
+    bottom: 16,
+    right: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(15,23,42,0.85)",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    zIndex: 9999,
+    elevation: 10,
+    borderWidth: 1,
+    borderColor: "rgba(56,189,248,0.4)",
+  },
+  floatingFsText: {
+    color: "#38bdf8",
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 1,
   },
   rotateOverlay: {
     position: "absolute",

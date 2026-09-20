@@ -116,7 +116,7 @@ source={{ uri: "file:///android_asset/robo-jek/index.html" }}
   }
 
   return (
-    <View style={styles.webContainer}>
+    <View ref={containerRef} style={styles.webContainer}>
       <StatusBar hidden />
 
       {loading && (
@@ -174,7 +174,7 @@ source={{ uri: "file:///android_asset/robo-jek/index.html" }}
         subtitleColor="#0369A1"
         steps={[
           { emoji: "1️⃣", text: "Pilih kendaraan (motor/mobil) dan mode kecepatan (LOW / MIDDLE / FASTER)." },
-          { emoji: "2️⃣", text: "Kemudi dengan WASD atau tombol panah. Di HP gunakan D-pad sentuh di layar." },
+          { emoji: "2️⃣", text: "Di HP: geser analog kiri bebas 360° untuk memutar arah kendaraan, tahan GAS (kanan) untuk maju, dan REM untuk berhenti lalu mundur. Di keyboard: A/D setir, W gas, S rem/mundur." },
           { emoji: "3️⃣", text: "Lewati semua checkpoint lalu sampai ke tujuan dalam batas waktu (gold time)." },
           { emoji: "4️⃣", text: "Hindari tabrakan dengan rintangan kota untuk nilai dan bintang terbaik!" },
         ]}
