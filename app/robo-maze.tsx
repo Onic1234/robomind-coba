@@ -114,7 +114,7 @@ source={{ uri: "file:///android_asset/robo-maze/index.html" }}
   }
 
   return (
-    <View ref={containerRef} style={styles.webContainer}>
+    <View style={styles.webContainer}>
       <StatusBar hidden />
 
       {loading && (

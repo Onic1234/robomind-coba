@@ -162,25 +162,6 @@
       .w-8 { width: 22px !important; }
       .h-8 { height: 22px !important; }
     }
-
-    /* Landscape (termasuk fullscreen): isi penuh layar, tidak mengecil */
-    @media screen and (orientation: landscape) {
-      body {
-        padding: 0 !important;
-      }
-      #gameContainer {
-        width: 100vw !important;
-        height: 100vh !important;
-        height: 100dvh !important;
-        max-width: 100vw !important;
-        max-height: 100vh !important;
-        max-height: 100dvh !important;
-        aspect-ratio: auto !important;
-        border-radius: 0 !important;
-        border-width: 0 !important;
-        padding: 6px !important;
-      }
-    }
   </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-2 md:p-4 text-white overflow-hidden bg-slate-950">
@@ -242,8 +223,7 @@
       </div>
 
       <!-- Wrapper Grid Labirin (Menjaga Rasio Aspek 9:6) -->
-      <!-- Wrapper Grid Labirin (Menjaga Rasio Aspek 9:6) -->
-      <div class="relative h-full aspect-[9/6] w-auto max-w-full">
+      <div class="relative h-full aspect-[9/6] w-auto">
         <!-- Cyber Particles Melayang (Latar Belakang) -->
         <div class="cyber-particle top-[10%] left-[10%]" style="animation-delay: 0s; animation-duration: 22s;">010110</div>
         <div class="cyber-particle top-[40%] left-[45%]" style="animation-delay: 4s; animation-duration: 30s;">SYSTEM_OK</div>
@@ -255,23 +235,32 @@
           <!-- Komponen visual maze akan digambar otomatis melalui JavaScript -->
         </div>
 
+        <!-- Panel Kontrol D-Pad Melayang (Kaca Transparan di Pojok Kanan Bawah) -->
+        <div class="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 md:bottom-4 md:right-4 z-30 pointer-events-auto">
+          <div class="relative w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center bg-slate-950/10 backdrop-blur-[1px] border border-white/5 shadow-2xl rounded-full p-2 opacity-70 hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
+            <!-- Tombol Tengah Dekoratif -->
+            <div class="absolute w-8 h-8 sm:w-11 sm:h-11 md:w-12 md:h-12 bg-slate-950/15 rounded-full flex items-center justify-center text-indigo-900/30 border border-white/5">
+              <i class="fa-solid fa-gamepad text-xs sm:text-sm md:text-base animate-pulse"></i>
+            </div>
+            <!-- D-Pad Atas -->
+            <button id="ctrlUp" class="absolute top-0.5 sm:top-1 w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-indigo-600/20 hover:bg-indigo-500/40 active:bg-indigo-700/60 active:scale-95 rounded-md sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow-sm text-indigo-900/80 font-bold border-b border-indigo-800/15">
+              <i class="fa-solid fa-chevron-up text-xs sm:text-sm md:text-base"></i>
+            </button>
+            <!-- D-Pad Bawah -->
+            <button id="ctrlDown" class="absolute bottom-0.5 sm:bottom-1 w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-indigo-600/20 hover:bg-indigo-500/40 active:bg-indigo-700/60 active:scale-95 rounded-md sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow-sm text-indigo-900/80 font-bold border-b border-indigo-800/15">
+              <i class="fa-solid fa-chevron-down text-xs sm:text-sm md:text-base"></i>
+            </button>
+            <!-- D-Pad Kiri -->
+            <button id="ctrlLeft" class="absolute left-0.5 sm:left-1 w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-indigo-600/20 hover:bg-indigo-500/40 active:bg-indigo-700/60 active:scale-95 rounded-md sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow-sm text-indigo-900/80 font-bold border-b border-indigo-800/15">
+              <i class="fa-solid fa-chevron-left text-xs sm:text-sm md:text-base"></i>
+            </button>
+            <!-- D-Pad Kanan -->
+            <button id="ctrlRight" class="absolute right-0.5 sm:right-1 w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-indigo-600/20 hover:bg-indigo-500/40 active:bg-indigo-700/60 active:scale-95 rounded-md sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow-sm text-indigo-900/80 font-bold border-b border-indigo-800/15">
+              <i class="fa-solid fa-chevron-right text-xs sm:text-sm md:text-base"></i>
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
-
-    <!-- CONTROL BAR (di luar arena, agar tidak menutupi labirin) -->
-    <div id="controlBar" class="w-full flex items-center justify-center gap-2.5 sm:gap-4 pt-2 pb-1 z-40 flex-shrink-0">
-      <button id="ctrlLeft" class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 active:bg-indigo-700 text-white flex items-center justify-center shadow-md border border-indigo-300/40 text-lg font-black transition">
-        <i class="fa-solid fa-chevron-left"></i>
-      </button>
-      <button id="ctrlUp" class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 active:bg-indigo-700 text-white flex items-center justify-center shadow-md border border-indigo-300/40 text-lg font-black transition">
-        <i class="fa-solid fa-chevron-up"></i>
-      </button>
-      <button id="ctrlDown" class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 active:bg-indigo-700 text-white flex items-center justify-center shadow-md border border-indigo-300/40 text-lg font-black transition">
-        <i class="fa-solid fa-chevron-down"></i>
-      </button>
-      <button id="ctrlRight" class="w-11 h-11 sm:w-12 sm:h-12 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 active:bg-indigo-700 text-white flex items-center justify-center shadow-md border border-indigo-300/40 text-lg font-black transition">
-        <i class="fa-solid fa-chevron-right"></i>
-      </button>
     </div>
 
   <!-- Modal Hasil Game (2-COLUMN COGNITIVE RADAR CHART) -->
