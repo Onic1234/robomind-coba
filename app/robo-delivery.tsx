@@ -129,7 +129,7 @@ source={{ uri: "file:///android_asset/robo-delivery/index.html" }}
   }
 
   return (
-    <View style={styles.webContainer}>
+    <View ref={containerRef} style={styles.webContainer}>
       <StatusBar hidden />
 
       {loading && (
