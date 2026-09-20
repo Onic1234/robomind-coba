@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Stack } from "expo-router";
+import { Platform } from "react-native";
+import { Stack, usePathname } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import * as ScreenOrientation from "expo-screen-orientation";
 import AppIntroFlow from "../components/AppIntroFlow";
 import { autoResetIfNeeded } from "../lib/resetProgress";
 
@@ -25,6 +27,38 @@ async function setStorageItem(key: string, value: string): Promise<void> {
 
 export default function RootLayout() {
   const [showIntro, setShowIntro] = useState(false);
+  const pathname = usePathname();
+
+  // Per-screen orientation: landscape games vs portrait elsewhere (native only)
+  useEffect(() => {
+    if (Platform.OS === "web") return;
+    const landscapeRoutes = [
+      "/robo-charge",
+      "/robo-bros",
+      "/robo-maze",
+      "/robo-jek",
+      "/robo-pose",
+      "/rogue-soul",
+      "/robo-circle",
+      "/robo-link",
+      "/robo-delivery",
+      "/robot-escape",
+    ];
+    const isLandscape = landscapeRoutes.some(
+      (r) => pathname === r || (pathname && pathname.startsWith(r + "/"))
+    );
+    (async () => {
+      try {
+        await ScreenOrientation.lockAsync(
+          isLandscape
+            ? ScreenOrientation.OrientationLock.LANDSCAPE
+            : ScreenOrientation.OrientationLock.PORTRAIT_UP
+        );
+      } catch (e) {
+        // ignore if not supported
+      }
+    })();
+  }, [pathname]);
 
   useEffect(() => {
     autoResetIfNeeded()

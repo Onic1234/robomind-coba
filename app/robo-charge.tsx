@@ -21,8 +21,8 @@ const COINS_STORAGE_KEY = "user_coins_balance";
 const LEVEL_STORAGE_KEY = "robo_charge_current_level";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const GAME_HEIGHT = 380; // Fixed gameplay viewport height
-const GROUND_Y = 310;    // Y coordinate of the road floor
+const DESIGN_GAME_HEIGHT = 380; // fallback viewport height (until measured)
+const GROUND_OFFSET = 70;       // road floor distance from viewport bottom
 const PLAYER_SCREEN_X = SCREEN_WIDTH * 0.55;
 
 interface Obstacle {
@@ -499,6 +499,37 @@ export default function RoboChargeScreen() {
 
   // Key tracking
   const keysPressed = useRef<{ [key: string]: boolean }>({});
+  const [rotatePrompt, setRotatePrompt] = useState(false);
+  const [viewportH, setViewportH] = useState(DESIGN_GAME_HEIGHT);
+
+  // Web (mobile): minta landscape + fullscreen otomatis, tampilkan prompt jika masih portrait
+  useEffect(() => {
+    if (Platform.OS !== "web" || typeof window === "undefined") return;
+    const isMobile = () => /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent || "");
+    const isPortrait = () => window.innerHeight > window.innerWidth;
+    const updatePrompt = () => setRotatePrompt(isMobile() && isPortrait());
+    const tryLock = async () => {
+      try {
+        if (!document.fullscreenElement) {
+          await document.documentElement.requestFullscreen?.();
+        }
+      } catch (e) {}
+      try {
+        const so = (screen as any).orientation;
+        if (so && so.lock) await so.lock("landscape");
+      } catch (e) {}
+    };
+    updatePrompt();
+    const t = setTimeout(() => { if (isMobile()) tryLock(); }, 400);
+    window.addEventListener("resize", updatePrompt);
+    window.addEventListener("orientationchange", updatePrompt);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("resize", updatePrompt);
+      window.removeEventListener("orientationchange", updatePrompt);
+      try { const so = (screen as any).orientation; if (so && so.unlock) so.unlock(); } catch (e) {}
+    };
+  }, []);
 
   // Load level progression & coin balance
   useEffect(() => {
@@ -921,7 +952,10 @@ export default function RoboChargeScreen() {
             (() => {
               const cameraX = Math.max(0, playerX.current - PLAYER_SCREEN_X);
               return (
-                <View style={[styles.gameplayViewport, { backgroundColor: activeCity.bgColor }]}>
+                <View
+                  onLayout={(e) => setViewportH(e.nativeEvent.layout.height)}
+                  style={[styles.gameplayViewport, { backgroundColor: activeCity.bgColor }]}
+                >
                   
                   {/* Parallax Background Landscaping */}
                   <CityBackground bgType={activeCity.bgType} cameraX={cameraX} />
@@ -937,14 +971,14 @@ export default function RoboChargeScreen() {
                   <Svg height="100%" width="100%" style={StyleSheet.absoluteFill} pointerEvents="none">
                     <Rect
                       x="0"
-                      y={GROUND_Y}
+                      y={viewportH - GROUND_OFFSET}
                       width={SCREEN_WIDTH}
-                      height={GAME_HEIGHT - GROUND_Y}
+                      height={GROUND_OFFSET}
                       fill={activeCity.groundColor}
                     />
                     <Rect
                       x="0"
-                      y={GROUND_Y - 4}
+                      y={viewportH - GROUND_OFFSET - 4}
                       width={SCREEN_WIDTH}
                       height="4"
                       fill="#374151"
@@ -956,7 +990,7 @@ export default function RoboChargeScreen() {
                     style={{
                       position: "absolute",
                       left: -40 - cameraX,
-                      bottom: GAME_HEIGHT - GROUND_Y,
+                      bottom: GROUND_OFFSET,
                     }}
                   >
                     <RobotDogCage isOpen={hasStartedMoving.current} />
@@ -977,7 +1011,7 @@ export default function RoboChargeScreen() {
                             left: screenX,
                             width: obs.width,
                             height: obs.height,
-                            bottom: GAME_HEIGHT - GROUND_Y,
+                            bottom: GROUND_OFFSET,
                             opacity: obs.hasBeenHit ? 0.35 : 1,
                           },
                         ]}
@@ -993,7 +1027,7 @@ export default function RoboChargeScreen() {
                       styles.bullChaser,
                       {
                         left: bullX.current - cameraX,
-                        bottom: GAME_HEIGHT - GROUND_Y,
+                        bottom: GROUND_OFFSET,
                       },
                     ]}
                   >
@@ -1006,7 +1040,7 @@ export default function RoboChargeScreen() {
                       styles.playerCharacter,
                       {
                         left: playerX.current - cameraX,
-                        bottom: (GAME_HEIGHT - GROUND_Y) + playerY.current,
+                        bottom: (GROUND_OFFSET) + playerY.current,
                       },
                     ]}
                   >
@@ -1020,7 +1054,7 @@ export default function RoboChargeScreen() {
                         styles.finishLineGate,
                         {
                           left: activeCity.distance - cameraX,
-                          bottom: GAME_HEIGHT - GROUND_Y,
+                          bottom: GROUND_OFFSET,
                         },
                       ]}
                     >
@@ -1175,6 +1209,32 @@ export default function RoboChargeScreen() {
           "Gunakan tombol A/D/Space pada Keyboard komputer jika bermain di web.",
         ]}
       />
+
+      {rotatePrompt && (
+        <View style={styles.rotateOverlay}>
+          <Ionicons name="phone-landscape" size={56} color="#38bdf8" />
+          <Text style={styles.rotateTitle}>Putar HP ke LANDSCAPE</Text>
+          <Text style={styles.rotateDesc}>
+            Robo Charge lebih seru dalam mode mendatar. Miringkan HP-mu ke posisi landscape.
+          </Text>
+          <Pressable
+            style={styles.rotateBtn}
+            onPress={async () => {
+              try {
+                if (typeof document !== "undefined" && !document.fullscreenElement) {
+                  await document.documentElement.requestFullscreen?.();
+                }
+                const so = (screen as any).orientation;
+                if (so && so.lock) await so.lock("landscape");
+              } catch (e) {}
+              setRotatePrompt(false);
+            }}
+          >
+            <Ionicons name="expand" size={20} color="#fff" />
+            <Text style={styles.rotateBtnText}>MASUK LANDSCAPE</Text>
+          </Pressable>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -1366,7 +1426,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   gameplayViewport: {
-    height: GAME_HEIGHT,
+    flex: 1,
     position: "relative",
     overflow: "hidden",
     borderBottomWidth: 4,
@@ -1514,5 +1574,48 @@ const styles = StyleSheet.create({
     padding: 6,
     backgroundColor: "#475569",
     borderRadius: 6,
+  },
+  rotateOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+    backgroundColor: "rgba(8, 15, 30, 0.95)",
+    zIndex: 9999,
+  },
+  rotateTitle: {
+    color: "#38bdf8",
+    fontSize: 22,
+    fontWeight: "900",
+    marginTop: 14,
+    textAlign: "center",
+    letterSpacing: 1,
+  },
+  rotateDesc: {
+    color: "#94a3b8",
+    fontSize: 14,
+    textAlign: "center",
+    lineHeight: 20,
+    maxWidth: 340,
+    marginTop: 8,
+  },
+  rotateBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#0284c7",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 50,
+    marginTop: 20,
+  },
+  rotateBtnText: {
+    color: "#fff",
+    fontWeight: "800",
+    fontSize: 14,
   },
 });
