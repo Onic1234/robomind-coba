@@ -338,6 +338,53 @@
 
   <script>
     /* ==========================================================================
+       CANVAS & SYSTEM SETUP
+       ========================================================================== */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas ? canvas.getContext('2d') : null;
+    let scaleFactor = 1.0;
+    let hoveredNodeId = null;
+
+    /* ==========================================================================
+       GLOBAL GAME VARIABLES & STATE
+       ========================================================================== */
+    let isGameRunning = false;
+    let timerInterval = null;
+    let currentLevelIndex = 0;
+    let currentLevelData = null;
+
+    const robotState = {
+      currentNodeId: 0,
+      prevNodeId: 0,
+      targetNodeId: null,
+      isMoving: false,
+      moveProgress: 0,
+      carryingFood: null,
+      bumpAnim: 0,
+      x: 0,
+      y: 0,
+      z: 0
+    };
+
+    
+    function computeCamera() {
+      // Refresh canvas scale and camera parameters
+      if (canvas) {
+        scaleFactor = Math.min((window.innerWidth || 800) / 800, (window.innerHeight || 600) / 600);
+      }
+    }
+
+    function resizeCanvas() {
+      if (!canvas) return;
+      const w = window.innerWidth || 800;
+      const h = window.innerHeight || 600;
+      canvas.width = w;
+      canvas.height = h;
+      scaleFactor = Math.min(w / 800, h / 600);
+      if (typeof computeCamera === 'function') computeCamera();
+    }
+    window.addEventListener('resize', resizeCanvas);
+    /* ==========================================================================
        AUDIO SYNTHESIZER (Web Audio API)
        ========================================================================== */
     let audioCtx = null;
