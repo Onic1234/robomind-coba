@@ -1,205 +1,91 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React from "react";
 import {
   StyleSheet,
   View,
   Text,
   Pressable,
-  Platform,
-  ActivityIndicator,
   StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Storage } from "../lib/storage";
-import { WebView } from "react-native-webview";
-import { HowToPlayModal } from "../components/HowToPlayModal";
 import { COLORS, FONTS } from "../constants/Theme";
-import { saveGameSession } from "../lib/gameProgressService";
 
 export default function RoboDeliveryScreen() {
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showHelp, setShowHelp] = useState(true);
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
-  const containerRef = useRef<any>(null);
-
-  const STORAGE_KEY_COINS = "robomind_user_coins";
-  const STORAGE_KEY_LEVEL = "robomind_delivery_unlocked_level";
-
-  const toggleFullscreen = useCallback(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    if (!document.fullscreenElement) {
-      el.requestFullscreen?.().then(() => setIsFullscreen(true)).catch(() => {});
-    } else {
-      document.exitFullscreen?.().then(() => setIsFullscreen(false)).catch(() => {});
-    }
-  }, []);
-
-  useEffect(() => {
-    const handler = () => setIsFullscreen(!!document.fullscreenElement);
-    if (typeof document !== "undefined") {
-      document.addEventListener('fullscreenchange', handler);
-      return () => document.removeEventListener('fullscreenchange', handler);
-    }
-  }, []);
-
-  useEffect(() => {
-    const timeout = setTimeout(() => setLoading(false), 3000);
-    return () => clearTimeout(timeout);
-  }, []);
-
-  // Listen to postMessage from game engine for level completions & rewards
-  useEffect(() => {
-    const handleMessage = async (event: MessageEvent) => {
-      try {
-        const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-        if (data && data.type === "LEVEL_COMPLETE") {
-          const coinsReward = data.coins || 350;
-          const currentCoinsStr = await Storage.getItem(STORAGE_KEY_COINS);
-          const currentCoins = currentCoinsStr ? parseInt(currentCoinsStr, 10) : 1250;
-          const newCoins = currentCoins + coinsReward;
-
-          await Storage.setItem(STORAGE_KEY_COINS, newCoins.toString());
-
-          if (data.level) {
-            await Storage.setItem(STORAGE_KEY_LEVEL, (data.level + 1).toString());
-          }
-
-          saveGameSession({ gameId: "robo-delivery", level: data.level ?? 1, score: 100, xpEarned: 50, coinsEarned: 50, completed: true });
-        }
-      } catch (e) {
-        // Ignore non-json messages
-      }
-    };
-
-    if (Platform.OS === "web" && typeof window !== "undefined") {
-      window.addEventListener("message", handleMessage);
-      return () => window.removeEventListener("message", handleMessage);
-    }
-  }, []);
-
-  if (Platform.OS !== "web") {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar hidden />
-        <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={22} color="#fff" />
-          </Pressable>
-          <Text style={styles.headerTitle}>Robo Delivery</Text>
-          <View style={{ width: 40 }} />
-        </View>
-        <WebView
-                    androidHardwareAccelerationDisabled={false}
-          renderToHardwareTextureAndroid={true}
-          overScrollMode="never"
-          showsHorizontalScrollIndicator={false}
-          showsVerticalScrollIndicator={false}
-          scrollEnabled={false}
-source={{ uri: "file:///android_asset/robo-delivery/index.html" }}
-          style={styles.webview}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          originWhitelist={["*"]}
-          allowFileAccessFromFileURLs={true}
-          allowUniversalAccessFromFileURLs={true}
-          onMessage={async (e) => {
-            try {
-              const data = typeof e.nativeEvent.data === "string" ? JSON.parse(e.nativeEvent.data) : e.nativeEvent.data;
-              if (data && data.type === "LEVEL_COMPLETE") {
-                const coinsReward = data.coins || 350;
-                const currentCoinsStr = await Storage.getItem(STORAGE_KEY_COINS);
-                const currentCoins = currentCoinsStr ? parseInt(currentCoinsStr, 10) : 1250;
-                const newCoins = currentCoins + coinsReward;
-                await Storage.setItem(STORAGE_KEY_COINS, newCoins.toString());
-                if (data.level) {
-                  await Storage.setItem(STORAGE_KEY_LEVEL, (data.level + 1).toString());
-                }
-
-                saveGameSession({ gameId: "robo-delivery", level: data.level ?? 1, score: 100, xpEarned: 50, coinsEarned: 50, completed: true });
-              }
-            } catch (err) {}
-          }}
-        />
-      </SafeAreaView>
-    );
-  }
 
   return (
-    <SafeAreaView style={styles.webContainer} edges={["top", "bottom"]}>
-      <StatusBar barStyle="light-content" backgroundColor="#071e27" />
+    <SafeAreaView style={styles.container} edges={["top", "bottom"]}>
+      <StatusBar barStyle="light-content" backgroundColor="#050A16" />
 
-      {/* Top Header Bar */}
+      {/* Top Header */}
       <View style={styles.header}>
         <Pressable
           onPress={() => router.back()}
           style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
         >
-          <Ionicons name="arrow-back" size={18} color="#fff" />
-          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "800", marginLeft: 4 }}>Kembali</Text>
+          <Ionicons name="arrow-back" size={20} color="#fff" />
+          <Text style={styles.backBtnText}>Kembali</Text>
         </Pressable>
-
         <Text style={styles.headerTitle}>Robo Delivery</Text>
+        <View style={{ width: 70 }} />
+      </View>
 
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+      {/* Main Coming Soon Presentation */}
+      <View style={styles.content}>
+        {/* Glowing Background Ring */}
+        <View style={styles.glowRing} />
+
+        <View style={styles.card}>
+          {/* Lock Icon Container */}
+          <View style={styles.iconCircle}>
+            <Ionicons name="lock-closed" size={44} color="#F59E0B" />
+          </View>
+
+          {/* Status Badge */}
+          <View style={styles.badge}>
+            <Ionicons name="sparkles" size={13} color="#F59E0B" />
+            <Text style={styles.badgeText}>COMING SOON</Text>
+          </View>
+
+          {/* Game Title */}
+          <Text style={styles.title}>Robo Delivery</Text>
+          <Text style={styles.category}>Labirin Kurir Robot 3D</Text>
+
+          {/* Description */}
+          <Text style={styles.desc}>
+            Petualangan kurir makanan di labirin menara isometrik 3D ini sedang dikembangkan dan disempurnakan agar kontrol serta pengalaman bermain di ponsel jauh lebih seru dan responsif!
+          </Text>
+
+          {/* Features in development */}
+          <View style={styles.featuresList}>
+            <View style={styles.featureItem}>
+              <MaterialCommunityIcons name="gesture-tap" size={18} color="#38BDF8" />
+              <Text style={styles.featureText}>Kontrol sentuh responsif & pathfinding cerdas</Text>
+            </View>
+            <View style={styles.featureItem}>
+              <MaterialCommunityIcons name="robot" size={18} color="#38BDF8" />
+              <Text style={styles.featureText}>Kustomisasi karakter robot & kostum kurir</Text>
+            </View>
+            <View style={styles.featureItem}>
+              <MaterialCommunityIcons name="timer-sand" size={18} color="#38BDF8" />
+              <Text style={styles.featureText}>Tantangan puzzle labirin berwaktu</Text>
+            </View>
+          </View>
+
+          {/* Return button */}
           <Pressable
-            onPress={() => setShowHelp(true)}
-            style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
+            onPress={() => router.back()}
+            style={({ pressed }) => [
+              styles.primaryBtn,
+              pressed && { opacity: 0.85, transform: [{ scale: 0.98 }] },
+            ]}
           >
-            <Ionicons name="help-circle" size={18} color="#38bdf8" />
-            <Text style={{ color: "#38bdf8", fontSize: 12, fontWeight: "800", marginLeft: 4 }}>Tips</Text>
-          </Pressable>
-          <Pressable
-            onPress={toggleFullscreen}
-            style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
-          >
-            <Ionicons name={isFullscreen ? "contract" : "expand"} size={16} color="#38bdf8" />
+            <Ionicons name="game-controller" size={20} color="#050A16" />
+            <Text style={styles.primaryBtnText}>Mainkan Game Lainnya</Text>
           </Pressable>
         </View>
       </View>
-
-      <View style={styles.iframeArea}>
-        {loading && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#0284c7" />
-            <Text style={styles.loadingText}>Memuat Map Robo Delivery...</Text>
-          </View>
-        )}
-
-        <iframe
-          ref={iframeRef}
-          src="/web-games/robo-delivery/index.html"
-          style={styles.iframe}
-          onLoad={() => {
-            setLoading(false);
-            iframeRef.current?.focus();
-          }}
-          allowFullScreen
-        />
-      </View>
-
-      <HowToPlayModal
-        visible={showHelp}
-        onClose={() => setShowHelp(false)}
-        title="Cara Main Robo Delivery"
-        goal="Bantu Robot mengambil makanan dan mengantarkannya ke pelanggan sebelum waktu habis!"
-        accentColor="#0284C7"
-        subtitleColor="#0369A1"
-        steps={[
-          { emoji: "1️⃣", text: "Sentuh lingkaran node di map untuk mengarahkan jalur jalan Robot." },
-          { emoji: "2️⃣", text: "Jalan ke Food Station untuk mengambil makanan (Pizza 🍕, Burger 🍔, dll)." },
-          { emoji: "3️⃣", text: "Antarkan makanan ke Pelanggan (Orang) yang memiliki bubble pesanan makanan." },
-          { emoji: "4️⃣", text: "Hati-hati menabrak Orang Berjalan — jika menabrak, robot akan memantul kembali ke node asal!" },
-          { emoji: "5️⃣", text: "Selesaikan semua pengantaran sebelum Countdown Timer ⏱️ habis!" },
-        ]}
-        tips={[
-          "Perhatikan rute orang berjalan agar tidak tertabrak saat melintas.",
-          "Ambil makanan yang paling dekat terlebih dahulu untuk menghemat waktu."
-        ]}
-      />
     </SafeAreaView>
   );
 }
@@ -207,11 +93,7 @@ source={{ uri: "file:///android_asset/robo-delivery/index.html" }}
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#071e27",
-  },
-  webContainer: {
-    flex: 1,
-    backgroundColor: "#7dd3fc",
+    backgroundColor: "#050A16",
   },
   header: {
     flexDirection: "row",
@@ -219,7 +101,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: "#071e27",
+    backgroundColor: "rgba(15, 23, 42, 0.95)",
     borderBottomWidth: 1,
     borderBottomColor: "rgba(56, 189, 248, 0.2)",
   },
@@ -238,70 +120,140 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "rgba(56, 189, 248, 0.3)",
+    gap: 4,
   },
-  iframeArea: {
+  backBtnText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "800",
+  },
+  content: {
     flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
     position: "relative",
-    width: "100%",
-    backgroundColor: "#7dd3fc",
   },
-  iframe: {
-    width: "100%",
-    height: "100%",
-    borderWidth: 0,
-    backgroundColor: "#7dd3fc",
-  },
-  loadingOverlay: {
+  glowRing: {
     position: "absolute",
-    inset: 0,
-    justifyContent: "center",
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: "rgba(245, 158, 11, 0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(245, 158, 11, 0.2)",
+  },
+  card: {
+    width: "100%",
+    maxWidth: 440,
+    backgroundColor: "rgba(13, 27, 51, 0.92)",
+    borderWidth: 1.5,
+    borderColor: "rgba(245, 158, 11, 0.35)",
+    borderRadius: 24,
+    padding: 24,
     alignItems: "center",
-    backgroundColor: "rgba(125, 211, 252, 0.95)",
-    zIndex: 5,
+    shadowColor: "#F59E0B",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 12,
   },
-  loadingText: {
-    marginTop: 12,
-    color: "#0369a1",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  mobileNotice: {
-    flex: 1,
-    justifyContent: "center",
+  iconCircle: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "rgba(245, 158, 11, 0.12)",
+    borderWidth: 2,
+    borderColor: "rgba(245, 158, 11, 0.4)",
     alignItems: "center",
-    padding: 40,
-    gap: 16,
+    justifyContent: "center",
+    marginBottom: 16,
+    shadowColor: "#F59E0B",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
   },
-  mobileTitle: {
-    ...FONTS.h2,
-    fontSize: 28,
-    color: "#38bdf8",
-    fontWeight: "900",
-  },
-  mobileDesc: {
-    color: "#94a3b8",
-    fontSize: 14,
-    textAlign: "center",
-    lineHeight: 22,
-    maxWidth: 320,
-  },
-  playBtn: {
+  badge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    backgroundColor: "#0284c7",
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 50,
-    marginTop: 8,
+    gap: 6,
+    backgroundColor: "rgba(245, 158, 11, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(245, 158, 11, 0.5)",
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 99,
+    marginBottom: 12,
   },
-  playBtnText: {
-    color: "#fff",
-    fontWeight: "800",
-    fontSize: 14,
+  badgeText: {
+    fontSize: 11,
+    fontWeight: "900",
+    color: "#FBBF24",
+    letterSpacing: 1.2,
   },
-  webview: {
+  title: {
+    ...FONTS.h2,
+    fontSize: 24,
+    fontWeight: "900",
+    color: "#FFFFFF",
+    marginBottom: 4,
+    textAlign: "center",
+  },
+  category: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#38BDF8",
+    marginBottom: 14,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  desc: {
+    fontSize: 13,
+    color: "#94A3B8",
+    textAlign: "center",
+    lineHeight: 20,
+    marginBottom: 18,
+  },
+  featuresList: {
+    width: "100%",
+    backgroundColor: "rgba(15, 23, 42, 0.6)",
+    borderRadius: 14,
+    padding: 12,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "rgba(56, 189, 248, 0.15)",
+    marginBottom: 20,
+  },
+  featureItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  featureText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#E2E8F0",
     flex: 1,
-    backgroundColor: "#000",
+  },
+  primaryBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#F59E0B",
+    width: "100%",
+    paddingVertical: 13,
+    borderRadius: 14,
+    shadowColor: "#F59E0B",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  primaryBtnText: {
+    fontSize: 14,
+    fontWeight: "900",
+    color: "#050A16",
+    letterSpacing: 0.5,
   },
 });
