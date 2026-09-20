@@ -246,6 +246,66 @@
     }
     .touch-btn:active { background: var(--primary-cyan); transform: scale(0.9); }
   </style>
+
+  <!-- ===== RoboMind shared game result/report skin (auto-injected) ===== -->
+  <style id="rb-result-skin">
+    /* Overlay layar hasil: konsisten di semua game */
+    .overlay-screen {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 16px !important;
+      overflow-y: auto !important;
+      background: rgba(3, 7, 18, 0.88) !important;
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+    }
+    /* Kartu hasil: lebar & tinggi dibatasi, isi discroll DI DALAM kartu */
+    .card-modal,
+    #screen-result .modal-box,
+    #resultModal > div,
+    #gameModal > div {
+      width: 100% !important;
+      max-width: 440px !important;
+      max-height: 90vh !important;
+      overflow-y: auto !important;
+      box-sizing: border-box !important;
+      margin: auto !important;
+      padding: 20px !important;
+      border-radius: 24px !important;
+      border: 2px solid rgba(56, 189, 248, 0.45) !important;
+      background: #0B132B !important;
+      color: #E2E8F0 !important;
+      text-align: center !important;
+      box-shadow: 0 0 40px rgba(0, 229, 255, 0.25) !important;
+    }
+    /* Baris bintang seragam */
+    #modalStars,
+    #result-stars,
+    #res_stars,
+    .rb-stars {
+      font-size: 2rem !important;
+      line-height: 1.2 !important;
+      letter-spacing: 5px !important;
+      color: #FBBF24 !important;
+      text-align: center !important;
+    }
+    /* Grid dua kolom jadi satu kolom di layar sempit */
+    .rb-result-grid {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 16px !important;
+      align-items: start !important;
+    }
+    @media (max-width: 560px) {
+      .card-modal,
+      #screen-result .modal-box,
+      #resultModal > div,
+      #gameModal > div { max-width: 100% !important; }
+      .rb-result-grid { grid-template-columns: 1fr !important; }
+    }
+  </style>
 </head>
 <body>
 
@@ -325,7 +385,7 @@
         </div>
 
         <!-- MAIN CONTENT DUAL COLUMN -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
+        <div class="rb-result-grid">
           
           <!-- BAGIAN KIRI: HASIL & KOIN -->
           <div style="background: rgba(15, 23, 42, 0.7); padding: 16px; border-radius: 12px; border: 1px solid rgba(56, 189, 248, 0.2);">

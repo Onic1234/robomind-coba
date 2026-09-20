@@ -6,7 +6,6 @@ import {
   Pressable,
   Dimensions,
   Platform,
-  Modal,
   StatusBar,
   ScrollView,
   Image,
@@ -17,6 +16,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Storage } from "../lib/storage";
 import { HowToPlayModal } from "../components/HowToPlayModal";
+import { GameResultModal } from "../components/GameResultModal";
 import { COLORS, FONTS, SHAPES, SHADOWS } from "../constants/Theme";
 
 import {
@@ -1845,102 +1845,40 @@ export default function RogueSoulGameScreen() {
             };
 
             return (
-              <View style={styles.resultsOverlay}>
-                <ScrollView contentContainerStyle={styles.resultsScrollContent} showsVerticalScrollIndicator={false}>
-                  <View style={[styles.resultBoxContainer, { borderColor: isWin ? "#F59E0B" : "#EF4444" }]}>
-                    {/* HEADER TITLE */}
-                    <View style={styles.modalHeaderSec}>
-                      <Text style={[styles.modalSubBadge, { backgroundColor: isWin ? "#D97706" : "#EF4444" }]}>
-                        {isWin ? "MISSION ACCOMPLISHED" : "MISSION FAILED"}
-                      </Text>
-                      <Text style={[styles.modalMainTitle, { color: isWin ? "#FBBF24" : "#F87171" }]}>
-                        {isWin ? `ROBOT BERHASIL! LEVEL ${selectedLevel.id}` : `ROBOT TERHENTI! LEVEL ${selectedLevel.id}`}
-                      </Text>
-                      <Text style={styles.modalSubTitle}>
-                        {isWin ? "Robot Berhasil Menyelesaikan Misi Tepat Waktu" : "Robot Terkena Rintangan / Jatuh Ke Jurang"}
-                      </Text>
-                    </View>
-
-                    {/* TWO COLUMNS CONTENT BODY */}
-                    <View style={styles.modalBodyTwoCols}>
-                      {/* LEFT COLUMN: PENCAPAIAN MISI */}
-                      <View style={styles.leftPencapaianCard}>
-                        <Text style={styles.colSectionHeader}>PENCAPAIAN MISI</Text>
-
-                        <View style={styles.starsRowNew}>
-                          {[1, 2, 3].map((s) => (
-                            <Ionicons
-                              key={s}
-                              name={s <= (isWin ? resultStats.stars : 1) ? "star" : "star-outline"}
-                              size={26}
-                              color="#F59E0B"
-                            />
-                          ))}
-                        </View>
-
-                        <View style={styles.bulletListSec}>
-                          <Text style={styles.bulletItemText}>
-                            ⭐ Item Disortir Tepat: <Text style={{ color: "#34D399", fontWeight: "bold" }}>
-                              {resultStats.enemies > 0 ? `${resultStats.enemies} Musuh Diatasi` : `${Math.max(1, Math.floor(resultStats.coins / 10))} Buah Segar`}
-                            </Text>
-                          </Text>
-                          <Text style={styles.bulletItemText}>
-                            ⭐ Akurasi Rintangan: <Text style={{ color: isWin ? "#38BDF8" : "#F87171", fontWeight: "bold" }}>
-                              {isWin ? "Akurasi Sempurna!" : "Terkena Luka Rintangan"}
-                            </Text>
-                          </Text>
-                          <Text style={styles.bulletItemText}>
-                            ⭐ Bonus Waktu Sisa: <Text style={{ color: "#FACC15", fontWeight: "bold" }}>+{resultStats.time}s</Text>
-                          </Text>
-                        </View>
-
-                        <View style={styles.colDividerLine} />
-
-                        <View style={styles.lootRowLine}>
-                          <Text style={styles.lootLabelText}>Loot Koin Terkumpul:</Text>
-                          <Text style={styles.lootValText}>+{resultStats.coins} Koin</Text>
-                        </View>
-                        <View style={styles.lootRowLine}>
-                          <Text style={styles.lootLabelText}>Bonus Akurasi Combo:</Text>
-                          <Text style={styles.lootValText}>+{resultStats.maxCombo * 5} Koin</Text>
-                        </View>
-
-                        <View style={styles.totalCoinsHighlightBox}>
-                          <Text style={styles.totalCoinsBoxLabel}>TOTAL SOULONS / KOIN:</Text>
-                          <Text style={styles.totalCoinsBoxVal}>{totalCoinsEarned} KOIN</Text>
-                        </View>
-                      </View>
-
-                      {/* RIGHT COLUMN: ANALISIS PERKEMBANGAN OTAK & RADAR CHART */}
-                      <View style={styles.rightRadarCard}>
-                        <Text style={styles.colSectionHeader}>🧠 Analisis Perkembangan Otak</Text>
-                        <Text style={styles.radarSubHeader}>Prefrontal Cortex & Kontrol Emosi</Text>
-
-                        <View style={styles.radarChartCanvasWrap}>
-                          <RogueSoulRadarChart scores={radarScores} />
-                        </View>
-                      </View>
-                    </View>
-
-                    {/* BOTTOM ACTION BUTTONS */}
-                    <View style={styles.resultActionsRowNew}>
-                      <Pressable style={styles.btnMenuPill} onPress={() => setViewState("menu")}>
-                        <Text style={styles.btnMenuPillText}>Kembali Ke Peta Utama</Text>
-                      </Pressable>
-
-                      <Pressable
-                        style={[styles.btnRetryPill, { backgroundColor: isWin ? "#10B981" : "#DC2626" }]}
-                        onPress={() => startLevelSession(selectedLevel)}
-                      >
-                        <Ionicons name="refresh" size={18} color="#FFF" style={{ marginRight: 6 }} />
-                        <Text style={styles.btnRetryPillText}>
-                          {isWin ? "Lanjut Level Berikutnya" : "COBA LAGI (Ulangi Level)"}
-                        </Text>
-                      </Pressable>
-                    </View>
-                  </View>
-                </ScrollView>
-              </View>
+              <GameResultModal
+                visible
+                variant={isWin ? "victory" : "defeat"}
+                badge={isWin ? "Mission Accomplished" : "Mission Failed"}
+                title={isWin ? `ROBOT BERHASIL! LEVEL ${selectedLevel.id}` : `ROBOT TERHENTI! LEVEL ${selectedLevel.id}`}
+                subtitle={isWin ? "Robot Berhasil Menyelesaikan Misi Tepat Waktu" : "Robot Terkena Rintangan / Jatuh Ke Jurang"}
+                stars={isWin ? resultStats.stars : 1}
+                statsTitle="Pencapaian Misi"
+                stats={[
+                  {
+                    label: "Item Disortir Tepat",
+                    value: resultStats.enemies > 0 ? `${resultStats.enemies} Musuh Diatasi` : `${Math.max(1, Math.floor(resultStats.coins / 10))} Buah Segar`,
+                    ok: true,
+                  },
+                  {
+                    label: "Akurasi Rintangan",
+                    value: isWin ? "Akurasi Sempurna!" : "Terkena Luka Rintangan",
+                    ok: isWin,
+                  },
+                  { label: "Bonus Waktu Sisa", value: `+${resultStats.time}s`, ok: true },
+                ]}
+                loot={[
+                  { label: "Loot Koin Terkumpul:", value: `+${resultStats.coins} Koin` },
+                  { label: "Bonus Akurasi Combo:", value: `+${resultStats.maxCombo * 5} Koin` },
+                ]}
+                total={{ label: "Total Soulons / Koin", value: `${totalCoinsEarned} KOIN` }}
+                radarTitle="🧠 Analisis Perkembangan Otak"
+                radar={<RogueSoulRadarChart scores={radarScores} />}
+                secondaryLabel="Kembali Ke Peta Utama"
+                onSecondary={() => setViewState("menu")}
+                primaryLabel={isWin ? "Lanjut Level Berikutnya" : "Coba Lagi (Ulangi Level)"}
+                onPrimary={() => startLevelSession(selectedLevel)}
+                primaryTone={isWin ? "next" : "retry"}
+              />
             );
           })()}
         </View>

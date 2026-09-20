@@ -5,15 +5,14 @@ import {
   Text,
   Pressable,
   Dimensions,
-  Modal,
   StatusBar,
-  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Storage } from "../lib/storage";
 import { HowToPlayModal } from "../components/HowToPlayModal";
+import { GameResultModal } from "../components/GameResultModal";
 import * as Haptics from "expo-haptics";
 import Animated, {
   useSharedValue,
@@ -25,7 +24,6 @@ import Animated, {
 } from "react-native-reanimated";
 import Svg, { Path, Rect, Circle, Polygon, Line, Text as SvgText } from "react-native-svg";
 import { SPACING } from "../constants/Theme";
-import Button from "../components/ui/Button";
 import { saveGameSession } from "../lib/gameProgressService";
 
 const STORAGE_KEY_COINS = "user_coins_balance";
@@ -653,186 +651,114 @@ export default function EnergyCoreScreen() {
       </View>
 
       {/* VICTORY / MISSION COMPLETED MODAL */}
-      <Modal visible={gameState === "victory"} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.victoryCardContainer}>
-            {/* Header Tag & Title */}
-            <Text style={styles.missionTagText}>MISSION COMPLETED</Text>
-            <Text style={styles.victoryTitleText}>
-              ENERGY CORE LEVEL {String(level).padStart(2, "0")} CLEARED!
-            </Text>
-            <Text style={styles.victorySubText}>
-              Transmisi Sirkuit Energi Core: Level {level} → Selesai!
-            </Text>
+      <GameResultModal
+        visible={gameState === "victory"}
+        variant="victory"
+        badge="Mission Completed"
+        title={`ENERGY CORE LEVEL ${String(level).padStart(2, "0")} CLEARED!`}
+        subtitle={`Transmisi Sirkuit Energi Core: Level ${level} → Selesai!`}
+        stars={3}
+        statsTitle="Pencapaian Misi"
+        stats={[
+          { label: "Koneksi Sirkuit Terhubung (100%)", ok: true },
+          { label: "Aliran Energi Terdistribusi", ok: true },
+          { label: "Efisiensi Sirkuit Maksimal", ok: true },
+        ]}
+        loot={[
+          { label: "Loot Energi Terkumpul:", value: `+${currentLevelConfig?.rewardCoins || 75} Koin` },
+          { label: "Bonus Transmisi XP:", value: `+${currentLevelConfig?.rewardXP || 35} XP` },
+        ]}
+        total={{ label: "Total Koin / XP", value: `${(currentLevelConfig?.rewardCoins || 75) + 35} KOIN` }}
+        radarTitle="🧠 Analisis Perkembangan Otak"
+        radar={
+          <Svg width={180} height={180} viewBox="0 0 200 200">
+            {[0.3, 0.6, 1.0].map((lvl, idx) => {
+              const pts = [0, 1, 2, 3, 4].map((i) => {
+                const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+                const x = 100 + 55 * lvl * Math.cos(angle);
+                const y = 100 + 55 * lvl * Math.sin(angle);
+                return `${x.toFixed(1)},${y.toFixed(1)}`;
+              }).join(" ");
 
-            {/* Main Content Row */}
-            <ScrollView style={{ width: "100%", maxHeight: 400 }} contentContainerStyle={styles.victoryContentRow}>
-              {/* Left Column: Mission Achievements */}
-              <View style={styles.victoryLeftCol}>
-                <Text style={styles.columnTitle}>PENCAPAIAN MISI</Text>
+              return (
+                <Polygon
+                  key={idx}
+                  points={pts}
+                  fill="none"
+                  stroke="rgba(56, 189, 248, 0.3)"
+                  strokeWidth="1"
+                  strokeDasharray={idx < 2 ? "3 3" : "0"}
+                />
+              );
+            })}
 
-                {/* 3 Stars */}
-                <View style={styles.starRowGroup}>
-                  <Ionicons name="star" size={26} color="#FFD700" />
-                  <Ionicons name="star" size={32} color="#FFD700" style={{ marginTop: -4 }} />
-                  <Ionicons name="star" size={26} color="#FFD700" />
-                </View>
+            {[0, 1, 2, 3, 4].map((i) => {
+              const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+              const endX = 100 + 55 * Math.cos(angle);
+              const endY = 100 + 55 * Math.sin(angle);
+              return (
+                <Line key={i} x1={100} y1={100} x2={endX} y2={endY} stroke="rgba(56, 189, 248, 0.3)" strokeWidth="1" />
+              );
+            })}
 
-                {/* Checklist */}
-                <View style={styles.checklistGroup}>
-                  <View style={styles.checkItem}>
-                    <Ionicons name="star" size={12} color="#FFD700" />
-                    <Text style={styles.checkText}>Koneksi Sirkuit Terhubung (100%)</Text>
-                  </View>
-                  <View style={styles.checkItem}>
-                    <Ionicons name="star" size={12} color="#FFD700" />
-                    <Text style={styles.checkText}>Aliran Energi Terdistribusi</Text>
-                  </View>
-                  <View style={styles.checkItem}>
-                    <Ionicons name="star" size={12} color="#FFD700" />
-                    <Text style={styles.checkText}>Efisiensi Sirkuit Maksimal</Text>
-                  </View>
-                </View>
+            {(() => {
+              const vals = [0.88, 0.8, 0.92, 0.85, 0.78];
+              const pts = vals.map((val, i) => {
+                const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+                const x = 100 + 55 * val * Math.cos(angle);
+                const y = 100 + 55 * val * Math.sin(angle);
+                return `${x.toFixed(1)},${y.toFixed(1)}`;
+              }).join(" ");
 
-                {/* Loot Breakdown */}
-                <View style={styles.lootDivider} />
-                <View style={styles.lootRow}>
-                  <Text style={styles.lootLabel}>Loot Energi Terkumpul:</Text>
-                  <Text style={styles.lootValue}>+{currentLevelConfig?.rewardCoins || 75} Koin</Text>
-                </View>
-                <View style={styles.lootRow}>
-                  <Text style={styles.lootLabel}>Bonus Transmisi XP:</Text>
-                  <Text style={styles.lootValue}>+{currentLevelConfig?.rewardXP || 35} XP</Text>
-                </View>
-                <View style={[styles.lootRow, { marginTop: 6 }]}>
-                  <Text style={styles.totalLabel}>TOTAL KOIN / XP:</Text>
-                  <Text style={styles.totalValue}>{(currentLevelConfig?.rewardCoins || 75) + 35} KOIN</Text>
-                </View>
-              </View>
+              return (
+                <Polygon
+                  points={pts}
+                  fill="rgba(56, 189, 248, 0.45)"
+                  stroke="#38BDF8"
+                  strokeWidth="2.5"
+                />
+              );
+            })()}
 
-              {/* Right Column: Brain Cognitive Analysis Radar Chart */}
-              <View style={styles.victoryRightCol}>
-                <Text style={styles.columnTitle}>🧠 Analisis Perkembangan Otak</Text>
-                <Text style={styles.columnSubTitle}>(Prefrontal Cortex & Kontrol Emosi)</Text>
+            {[0, 1, 2, 3, 4].map((i) => {
+              const vals = [0.88, 0.8, 0.92, 0.85, 0.78];
+              const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+              const x = 100 + 55 * vals[i] * Math.cos(angle);
+              const y = 100 + 55 * vals[i] * Math.sin(angle);
+              return <Circle key={i} cx={x} cy={y} r="3.5" fill="#FFFFFF" stroke="#38BDF8" strokeWidth="1.5" />;
+            })}
 
-                {/* SVG Radar Chart */}
-                <View style={styles.victoryRadarWrapper}>
-                  <Svg width={180} height={180} viewBox="0 0 200 200">
-                    {/* Grid Pentagons */}
-                    {[0.3, 0.6, 1.0].map((lvl, idx) => {
-                      const pts = [0, 1, 2, 3, 4].map((i) => {
-                        const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
-                        const x = 100 + 55 * lvl * Math.cos(angle);
-                        const y = 100 + 55 * lvl * Math.sin(angle);
-                        return `${x.toFixed(1)},${y.toFixed(1)}`;
-                      }).join(" ");
+            {["Perencanaan", "Keputusan", "Kontrol Diri", "Memori Kerja", "Spasial"].map((lbl, i) => {
+              const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+              const x = 100 + (55 + 18) * Math.cos(angle);
+              const y = 100 + (55 + 14) * Math.sin(angle);
+              let anchor: "middle" | "start" | "end" = "middle";
+              if (i === 1 || i === 2) anchor = "start";
+              if (i === 3 || i === 4) anchor = "end";
 
-                      return (
-                        <Polygon
-                          key={idx}
-                          points={pts}
-                          fill="none"
-                          stroke="rgba(56, 189, 248, 0.3)"
-                          strokeWidth="1"
-                          strokeDasharray={idx < 2 ? "3 3" : "0"}
-                        />
-                      );
-                    })}
+              return (
+                <SvgText key={i} x={x} y={i === 0 ? y - 2 : y + 3} fontSize="9" fontWeight="800" fill="#E2E8F0" textAnchor={anchor}>
+                  {lbl}
+                </SvgText>
+              );
+            })}
+          </Svg>
+        }
+        secondaryLabel="Kembali Ke Menu Utama"
+        onSecondary={() => router.back()}
+        primaryLabel="Lanjut Level ➔"
+        onPrimary={handleNextLevel}
+      />
 
-                    {/* Axis Spoke Lines */}
-                    {[0, 1, 2, 3, 4].map((i) => {
-                      const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
-                      const endX = 100 + 55 * Math.cos(angle);
-                      const endY = 100 + 55 * Math.sin(angle);
-                      return (
-                        <Line key={i} x1={100} y1={100} x2={endX} y2={endY} stroke="rgba(56, 189, 248, 0.3)" strokeWidth="1" />
-                      );
-                    })}
-
-                    {/* Polygon Fill */}
-                    {(() => {
-                      const vals = [0.88, 0.8, 0.92, 0.85, 0.78];
-                      const pts = vals.map((val, i) => {
-                        const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
-                        const x = 100 + 55 * val * Math.cos(angle);
-                        const y = 100 + 55 * val * Math.sin(angle);
-                        return `${x.toFixed(1)},${y.toFixed(1)}`;
-                      }).join(" ");
-
-                      return (
-                        <Polygon
-                          points={pts}
-                          fill="rgba(56, 189, 248, 0.45)"
-                          stroke="#38BDF8"
-                          strokeWidth="2.5"
-                        />
-                      );
-                    })()}
-
-                    {/* Data Node Dots */}
-                    {[0, 1, 2, 3, 4].map((i) => {
-                      const vals = [0.88, 0.8, 0.92, 0.85, 0.78];
-                      const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
-                      const x = 100 + 55 * vals[i] * Math.cos(angle);
-                      const y = 100 + 55 * vals[i] * Math.sin(angle);
-                      return <Circle key={i} cx={x} cy={y} r="3.5" fill="#FFFFFF" stroke="#38BDF8" strokeWidth="1.5" />;
-                    })}
-
-                    {/* Axis Text Labels */}
-                    {["Perencanaan", "Keputusan", "Kontrol Diri", "Memori Kerja", "Spasial"].map((lbl, i) => {
-                      const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
-                      const x = 100 + (55 + 18) * Math.cos(angle);
-                      const y = 100 + (55 + 14) * Math.sin(angle);
-                      let anchor: "middle" | "start" | "end" = "middle";
-                      if (i === 1 || i === 2) anchor = "start";
-                      if (i === 3 || i === 4) anchor = "end";
-
-                      return (
-                        <SvgText key={i} x={x} y={i === 0 ? y - 2 : y + 3} fontSize="9" fontWeight="800" fill="#E2E8F0" textAnchor={anchor}>
-                          {lbl}
-                        </SvgText>
-                      );
-                    })}
-                  </Svg>
-                </View>
-              </View>
-            </ScrollView>
-
-            {/* Bottom Action Buttons */}
-            <View style={styles.victoryActionRow}>
-              <Pressable
-                style={({ pressed }) => [styles.backToMapBtn, pressed && styles.btnPressed]}
-                onPress={() => router.back()}
-              >
-                <Text style={styles.backToMapText}>Kembali Ke Menu Utama</Text>
-              </Pressable>
-
-              <Pressable
-                style={({ pressed }) => [styles.continueBtn, pressed && styles.btnPressed]}
-                onPress={handleNextLevel}
-              >
-                <Text style={styles.continueText}>Lanjut Level ➔</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal visible={gameState === "completed"} transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.victoryCard}>
-            <MaterialCommunityIcons name="party-popper" size={60} color="#FF5E36" />
-            <Text style={styles.victoryTitle}>Semua Sirkuit Menyala!</Text>
-            <Text style={styles.victorySubtitle}>Kota RoboMind kini menyala terang benderang. Ron-Bonta berterima kasih!</Text>
-            <Button
-              title="Kembali ke Home"
-              onPress={() => router.back()}
-              variant="primary"
-              style={styles.nextLevelButton}
-            />
-          </View>
-        </View>
-      </Modal>
+      <GameResultModal
+        visible={gameState === "completed"}
+        variant="completed"
+        icon={<MaterialCommunityIcons name="party-popper" size={52} color="#FF5E36" />}
+        title="Semua Sirkuit Menyala!"
+        subtitle="Kota RoboMind kini menyala terang benderang. Ron-Bonta berterima kasih!"
+        primaryLabel="Kembali ke Home"
+        onPrimary={() => router.back()}
+      />
 
       <HowToPlayModal
         visible={showHelp}

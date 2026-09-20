@@ -9,13 +9,13 @@ import {
   StatusBar,
   Dimensions,
   Alert,
-  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { GameBackButton } from "../components/GameBackButton";
 import { HowToPlayModal } from "../components/HowToPlayModal";
+import { GameResultModal } from "../components/GameResultModal";
 import { Storage } from "../lib/storage";
 import * as Haptics from "expo-haptics";
 import { usePlaytimeGuard, formatDurationHMS } from "../hooks/usePlaytimeGuard";
@@ -1293,219 +1293,149 @@ export default function ScrewSpinScreen() {
       </View>
 
       {/* VICTORY / MISSION COMPLETED MODAL */}
-      <Modal visible={isVictoryModalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.victoryCardContainer}>
-            {/* Header Tag & Title */}
-            <Text style={styles.missionTagText}>MISSION COMPLETED</Text>
-            <Text style={styles.victoryTitleText}>
-              LEVEL {String(currentLevel).padStart(2, "0")} CLEARED!
-            </Text>
-            <Text style={styles.victorySubText}>
-              Rute Sirkuit Baut Logam: Level {currentLevel} → Selesai!
-            </Text>
+      <GameResultModal
+        visible={isVictoryModalVisible}
+        variant="victory"
+        badge="Mission Completed"
+        title={`LEVEL ${String(currentLevel).padStart(2, "0")} CLEARED!`}
+        subtitle={`Rute Sirkuit Baut Logam: Level ${currentLevel} → Selesai!`}
+        stars={3}
+        statsTitle="Pencapaian Misi"
+        stats={[
+          { label: "Melepaskan seluruh baut (100%)", ok: true },
+          { label: "Soket cadangan bebas penuh", ok: true },
+          { label: "Urutan Tepat (+Bonus)", ok: true },
+        ]}
+        loot={[
+          { label: "Loot Baut Terkumpul:", value: `+${levelData?.coinsReward || 100} Koin` },
+          { label: "Bonus Kombinasi Warna:", value: "+36 Koin" },
+        ]}
+        total={{ label: "Total Koin / XP", value: `${(levelData?.coinsReward || 100) + 36} KOIN` }}
+        radarTitle="🧠 Analisis Perkembangan Otak"
+        radar={
+          <Svg width={180} height={180} viewBox="0 0 200 200">
+            {[0.3, 0.6, 1.0].map((lvl, idx) => {
+              const pts = [0, 1, 2, 3, 4].map((i) => {
+                const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+                const x = 100 + 55 * lvl * Math.cos(angle);
+                const y = 100 + 55 * lvl * Math.sin(angle);
+                return `${x.toFixed(1)},${y.toFixed(1)}`;
+              }).join(" ");
 
-            {/* Main Content Area */}
-            <ScrollView style={{ width: "100%", maxHeight: 400 }} contentContainerStyle={styles.victoryContentRow}>
-              {/* Left Column: Mission Achievements */}
-              <View style={styles.victoryLeftCol}>
-                <Text style={styles.columnTitle}>PENCAPAIAN MISI</Text>
+              return (
+                <Polygon
+                  key={idx}
+                  points={pts}
+                  fill="none"
+                  stroke="rgba(0, 229, 255, 0.3)"
+                  strokeWidth="1"
+                  strokeDasharray={idx < 2 ? "3 3" : "0"}
+                />
+              );
+            })}
 
-                {/* 3 Stars */}
-                <View style={styles.starRowGroup}>
-                  <Ionicons name="star" size={26} color="#FFD700" />
-                  <Ionicons name="star" size={32} color="#FFD700" style={{ marginTop: -4 }} />
-                  <Ionicons name="star" size={26} color="#FFD700" />
-                </View>
+            {[0, 1, 2, 3, 4].map((i) => {
+              const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+              const endX = 100 + 55 * Math.cos(angle);
+              const endY = 100 + 55 * Math.sin(angle);
+              return (
+                <Line key={i} x1={100} y1={100} x2={endX} y2={endY} stroke="rgba(0, 229, 255, 0.3)" strokeWidth="1" />
+              );
+            })}
 
-                {/* Checklist */}
-                <View style={styles.checklistGroup}>
-                  <View style={styles.checkItem}>
-                    <Ionicons name="star" size={12} color="#FFD700" />
-                    <Text style={styles.checkText}>Melepaskan seluruh baut (100%)</Text>
-                  </View>
-                  <View style={styles.checkItem}>
-                    <Ionicons name="star" size={12} color="#FFD700" />
-                    <Text style={styles.checkText}>Soket cadangan bebas penuh</Text>
-                  </View>
-                  <View style={styles.checkItem}>
-                    <Ionicons name="star" size={12} color="#FFD700" />
-                    <Text style={styles.checkText}>Urutan Tepat (+Bonus)</Text>
-                  </View>
-                </View>
+            {(() => {
+              const vals = [0.85, 0.75, 0.9, 0.8, 0.7];
+              const pts = vals.map((val, i) => {
+                const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+                const x = 100 + 55 * val * Math.cos(angle);
+                const y = 100 + 55 * val * Math.sin(angle);
+                return `${x.toFixed(1)},${y.toFixed(1)}`;
+              }).join(" ");
 
-                {/* Loot Breakdown */}
-                <View style={styles.lootDivider} />
-                <View style={styles.lootRow}>
-                  <Text style={styles.lootLabel}>Loot Baut Terkumpul:</Text>
-                  <Text style={styles.lootValue}>+{levelData?.coinsReward || 100} Koin</Text>
-                </View>
-                <View style={styles.lootRow}>
-                  <Text style={styles.lootLabel}>Bonus Kombinasi Warna:</Text>
-                  <Text style={styles.lootValue}>+36 Koin</Text>
-                </View>
-                <View style={[styles.lootRow, { marginTop: 6 }]}>
-                  <Text style={styles.totalLabel}>TOTAL KOIN / XP:</Text>
-                  <Text style={styles.totalValue}>{(levelData?.coinsReward || 100) + 36} KOIN</Text>
-                </View>
-              </View>
+              return (
+                <Polygon
+                  points={pts}
+                  fill="rgba(139, 92, 246, 0.45)"
+                  stroke="#A78BFA"
+                  strokeWidth="2.5"
+                />
+              );
+            })()}
 
-              {/* Right Column: Brain Cognitive Analysis Radar Chart */}
-              <View style={styles.victoryRightCol}>
-                <Text style={styles.columnTitle}>🧠 Analisis Perkembangan Otak</Text>
-                <Text style={styles.columnSubTitle}>(Prefrontal Cortex & Kontrol Emosi)</Text>
+            {[0, 1, 2, 3, 4].map((i) => {
+              const vals = [0.85, 0.75, 0.9, 0.8, 0.7];
+              const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+              const x = 100 + 55 * vals[i] * Math.cos(angle);
+              const y = 100 + 55 * vals[i] * Math.sin(angle);
+              return <Circle key={i} cx={x} cy={y} r="3.5" fill="#FFFFFF" stroke="#A78BFA" strokeWidth="1.5" />;
+            })}
 
-                {/* SVG Radar Chart */}
-                <View style={styles.victoryRadarWrapper}>
-                  <Svg width={180} height={180} viewBox="0 0 200 200">
-                    {/* Grid Pentagons */}
-                    {[0.3, 0.6, 1.0].map((lvl, idx) => {
-                      const pts = [0, 1, 2, 3, 4].map((i) => {
-                        const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
-                        const x = 100 + 55 * lvl * Math.cos(angle);
-                        const y = 100 + 55 * lvl * Math.sin(angle);
-                        return `${x.toFixed(1)},${y.toFixed(1)}`;
-                      }).join(" ");
+            {["Perencanaan", "Keputusan", "Kontrol Diri", "Memori Kerja", "Spasial"].map((lbl, i) => {
+              const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+              const x = 100 + (55 + 18) * Math.cos(angle);
+              const y = 100 + (55 + 14) * Math.sin(angle);
+              let anchor: "middle" | "start" | "end" = "middle";
+              if (i === 1 || i === 2) anchor = "start";
+              if (i === 3 || i === 4) anchor = "end";
 
-                      return (
-                        <Polygon
-                          key={idx}
-                          points={pts}
-                          fill="none"
-                          stroke="rgba(0, 229, 255, 0.3)"
-                          strokeWidth="1"
-                          strokeDasharray={idx < 2 ? "3 3" : "0"}
-                        />
-                      );
-                    })}
-
-                    {/* Axis Spoke Lines */}
-                    {[0, 1, 2, 3, 4].map((i) => {
-                      const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
-                      const endX = 100 + 55 * Math.cos(angle);
-                      const endY = 100 + 55 * Math.sin(angle);
-                      return (
-                        <Line key={i} x1={100} y1={100} x2={endX} y2={endY} stroke="rgba(0, 229, 255, 0.3)" strokeWidth="1" />
-                      );
-                    })}
-
-                    {/* Polygon Fill */}
-                    {(() => {
-                      const vals = [0.85, 0.75, 0.9, 0.8, 0.7];
-                      const pts = vals.map((val, i) => {
-                        const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
-                        const x = 100 + 55 * val * Math.cos(angle);
-                        const y = 100 + 55 * val * Math.sin(angle);
-                        return `${x.toFixed(1)},${y.toFixed(1)}`;
-                      }).join(" ");
-
-                      return (
-                        <Polygon
-                          points={pts}
-                          fill="rgba(139, 92, 246, 0.45)"
-                          stroke="#A78BFA"
-                          strokeWidth="2.5"
-                        />
-                      );
-                    })()}
-
-                    {/* Data Node Dots */}
-                    {[0, 1, 2, 3, 4].map((i) => {
-                      const vals = [0.85, 0.75, 0.9, 0.8, 0.7];
-                      const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
-                      const x = 100 + 55 * vals[i] * Math.cos(angle);
-                      const y = 100 + 55 * vals[i] * Math.sin(angle);
-                      return <Circle key={i} cx={x} cy={y} r="3.5" fill="#FFFFFF" stroke="#A78BFA" strokeWidth="1.5" />;
-                    })}
-
-                    {/* Axis Text Labels */}
-                    {["Perencanaan", "Keputusan", "Kontrol Diri", "Memori Kerja", "Spasial"].map((lbl, i) => {
-                      const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
-                      const x = 100 + (55 + 18) * Math.cos(angle);
-                      const y = 100 + (55 + 14) * Math.sin(angle);
-                      let anchor: "middle" | "start" | "end" = "middle";
-                      if (i === 1 || i === 2) anchor = "start";
-                      if (i === 3 || i === 4) anchor = "end";
-
-                      return (
-                        <SvgText key={i} x={x} y={i === 0 ? y - 2 : y + 3} fontSize="9" fontWeight="800" fill="#E2E8F0" textAnchor={anchor}>
-                          {lbl}
-                        </SvgText>
-                      );
-                    })}
-                  </Svg>
-                </View>
-              </View>
-            </ScrollView>
-
-            {/* Bottom Action Buttons */}
-            <View style={styles.victoryActionRow}>
-              <Pressable
-                style={({ pressed }) => [styles.backToMapBtn, pressed && styles.btnPressed]}
-                onPress={() => {
-                  setIsVictoryModalVisible(false);
-                  setIsGameStarted(false);
-                }}
-              >
-                <Text style={styles.backToMapText}>Kembali Ke Menu Utama</Text>
-              </Pressable>
-
-              <Pressable
-                style={({ pressed }) => [styles.continueBtn, pressed && styles.btnPressed]}
-                onPress={handleNextLevel}
-              >
-                <Text style={styles.continueText}>Lanjut Level →</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
+              return (
+                <SvgText key={i} x={x} y={i === 0 ? y - 2 : y + 3} fontSize="9" fontWeight="800" fill="#E2E8F0" textAnchor={anchor}>
+                  {lbl}
+                </SvgText>
+              );
+            })}
+          </Svg>
+        }
+        secondaryLabel="Kembali Ke Menu Utama"
+        onSecondary={() => {
+          setIsVictoryModalVisible(false);
+          setIsGameStarted(false);
+        }}
+        primaryLabel="Lanjut Level →"
+        onPrimary={handleNextLevel}
+      />
 
       {/* DEFEAT / REST COOLDOWN MODAL */}
-      <Modal visible={isDefeatModalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <Ionicons
-              name={playtimeGuard.isCooldownActive ? "moon" : isDefeatDueToTimeout ? "time" : "alert-circle-sharp"}
-              size={60}
-              color="#FF4081"
-            />
-            <Text style={[styles.modalTitleText, { color: "#FF4081" }]}>
-              {playtimeGuard.isCooldownActive
-                ? "SAATNYA BERISTIRAHAT!"
-                : isDefeatDueToTimeout
-                ? "WAKTU HABIS!"
-                : "LUBANG PENAMPUNG PENUH!"}
+      <GameResultModal
+        visible={isDefeatModalVisible}
+        variant="defeat"
+        icon={
+          <Ionicons
+            name={playtimeGuard.isCooldownActive ? "moon" : isDefeatDueToTimeout ? "time" : "alert-circle-sharp"}
+            size={54}
+            color="#FF4081"
+          />
+        }
+        title={
+          playtimeGuard.isCooldownActive
+            ? "SAATNYA BERISTIRAHAT!"
+            : isDefeatDueToTimeout
+            ? "WAKTU HABIS!"
+            : "LUBANG PENAMPUNG PENUH!"
+        }
+        subtitle={
+          playtimeGuard.isCooldownActive
+            ? "Batas waktu bermain 1 jam telah terlampaui. Saatnya mengistirahatkan mata dan tubuh sejenak!"
+            : isDefeatDueToTimeout
+            ? "Batas waktu 90 detik telah berakhir. Game terkunci untuk masa cooldown."
+            : "Semua 5 lubang cadangan telah terisi dan tidak ada tempat untuk baut lagi."
+        }
+        primaryLabel="Kembali Ke Menu"
+        onPrimary={() => {
+          setIsDefeatModalVisible(false);
+          setIsGameStarted(false);
+        }}
+        primaryTone="retry"
+      >
+        {activeCooldownRemaining > 0 ? (
+          <View style={styles.cooldownModalBadge}>
+            <Ionicons name="lock-closed" size={14} color="#FFD700" />
+            <Text style={styles.cooldownModalBadgeText}>
+              Cooldown Istirahat: {formatTimeSeconds(activeCooldownRemaining)}
             </Text>
-            <Text style={styles.modalSubText}>
-              {playtimeGuard.isCooldownActive
-                ? "Batas waktu bermain 1 jam telah terlampaui. Saatnya mengistirahatkan mata dan tubuh sejenak!"
-                : isDefeatDueToTimeout
-                ? "Batas waktu 90 detik telah berakhir. Game terkunci untuk masa cooldown."
-                : "Semua 5 lubang cadangan telah terisi dan tidak ada tempat untuk baut lagi."}
-            </Text>
-
-            {activeCooldownRemaining > 0 && (
-              <View style={styles.cooldownModalBadge}>
-                <Ionicons name="lock-closed" size={14} color="#FFD700" />
-                <Text style={styles.cooldownModalBadgeText}>
-                  Cooldown Istirahat: {formatTimeSeconds(activeCooldownRemaining)}
-                </Text>
-              </View>
-            )}
-
-            <Pressable
-              style={({ pressed }) => [styles.modalPrimaryBtn, { backgroundColor: "#FF4081", marginTop: 12 }, pressed && styles.btnPressed]}
-              onPress={() => {
-                setIsDefeatModalVisible(false);
-                setIsGameStarted(false);
-              }}
-            >
-              <Text style={styles.modalPrimaryBtnText}>KEMBALI KE MENU</Text>
-            </Pressable>
           </View>
-        </View>
-      </Modal>
+        ) : null}
+      </GameResultModal>
 
       {/* SETTINGS MODAL */}
       <Modal visible={isSettingsModalVisible} transparent animationType="fade">

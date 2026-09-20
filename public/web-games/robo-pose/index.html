@@ -91,6 +91,66 @@
             box-shadow: 0 0 20px rgba(52, 211, 153, 0.3);
         }
     </style>
+
+  <!-- ===== RoboMind shared game result/report skin (auto-injected) ===== -->
+  <style id="rb-result-skin">
+    /* Overlay layar hasil: konsisten di semua game */
+    .overlay-screen {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 16px !important;
+      overflow-y: auto !important;
+      background: rgba(3, 7, 18, 0.88) !important;
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+    }
+    /* Kartu hasil: lebar & tinggi dibatasi, isi discroll DI DALAM kartu */
+    .card-modal,
+    #screen-result .modal-box,
+    #resultModal > div,
+    #gameModal > div {
+      width: 100% !important;
+      max-width: 440px !important;
+      max-height: 90vh !important;
+      overflow-y: auto !important;
+      box-sizing: border-box !important;
+      margin: auto !important;
+      padding: 20px !important;
+      border-radius: 24px !important;
+      border: 2px solid rgba(56, 189, 248, 0.45) !important;
+      background: #0B132B !important;
+      color: #E2E8F0 !important;
+      text-align: center !important;
+      box-shadow: 0 0 40px rgba(0, 229, 255, 0.25) !important;
+    }
+    /* Baris bintang seragam */
+    #modalStars,
+    #result-stars,
+    #res_stars,
+    .rb-stars {
+      font-size: 2rem !important;
+      line-height: 1.2 !important;
+      letter-spacing: 5px !important;
+      color: #FBBF24 !important;
+      text-align: center !important;
+    }
+    /* Grid dua kolom jadi satu kolom di layar sempit */
+    .rb-result-grid {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 16px !important;
+      align-items: start !important;
+    }
+    @media (max-width: 560px) {
+      .card-modal,
+      #screen-result .modal-box,
+      #resultModal > div,
+      #gameModal > div { max-width: 100% !important; }
+      .rb-result-grid { grid-template-columns: 1fr !important; }
+    }
+  </style>
 </head>
 <body class="text-white min-h-screen flex flex-col justify-between overflow-x-hidden relative">
 
@@ -414,6 +474,7 @@
             <div id="resultIcon" class="text-6xl mb-1 animate-bounce">🏆</div>
             <h3 id="resultTitle" class="heading-font text-2xl sm:text-3xl font-black text-yellow-300 mb-1">Hebat Sekali!</h3>
             <p id="resultSubtitle" class="text-indigo-200 text-xs mb-4">Kamu berhasil menyelesaikan level ini dengan fokus tinggi!</p>
+            <div id="resStars" class="rb-stars mb-2">⭐ ⭐ ⭐</div>
 
             <!-- Stats Box -->
             <div class="grid grid-cols-3 gap-2 bg-slate-950/70 p-3 rounded-2xl border border-indigo-900/50 mb-4">
@@ -1185,6 +1246,10 @@
             const config = LEVEL_CONFIGS[selectedLevel];
             const accuracy = Math.round((tilesHitCount / config.totalTiles) * 100) || 0;
             document.getElementById('resAccuracy').innerText = `${accuracy}%`;
+
+            const _poseStars = isVictory ? (accuracy >= 90 ? 3 : accuracy >= 70 ? 2 : 1) : 0;
+            const _poseStarEl = document.getElementById('resStars');
+            if (_poseStarEl) _poseStarEl.innerText = _poseStars === 3 ? '⭐ ⭐ ⭐' : _poseStars === 2 ? '⭐ ⭐ ☆' : _poseStars === 1 ? '⭐ ☆ ☆' : '☆ ☆ ☆';
 
             drawRadarChart('radarChartCanvas', {
                 spasial: Math.min(100, 80 + accuracy * 0.18),

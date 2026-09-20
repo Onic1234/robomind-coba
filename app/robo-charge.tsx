@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { ScrollView, StyleSheet,
+import { StyleSheet,
   View,
   Text,
   Pressable,
@@ -12,6 +12,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Storage } from "../lib/storage";
 import { HowToPlayModal } from "../components/HowToPlayModal";
+import { GameResultModal } from "../components/GameResultModal";
 import * as Haptics from "expo-haptics";
 import Svg, { Rect, Circle, Path, Line, Ellipse, Text as SvgText } from "react-native-svg";
 import { saveGameSession } from "../lib/gameProgressService";
@@ -1116,68 +1117,44 @@ export default function RoboChargeScreen() {
       )}
 
       {/* VIEW: GAME OVER */}
-      {view === "gameover" && (
-        <View style={styles.resultOverlay}>
-          <Ionicons name="close-circle" size={80} color="#EF4444" />
-          <Text style={styles.resultTitle}>TERTANGKAP ANJING ROBOT!</Text>
-          <Text style={styles.resultDesc}>
-            Anjing robot berhasil mengejar Anda. Latih refleks melompat dan perhatikan kecepatan lintasan.
-          </Text>
-
-          <View style={styles.resultActions}>
-            <Pressable style={styles.primaryBtn} onPress={() => setView("playing")}>
-              <Ionicons name="reload" size={18} color="#FFF" />
-              <Text style={styles.primaryBtnText}>COBA LAGI</Text>
-            </Pressable>
-
-            <Pressable style={styles.secondaryBtn} onPress={() => setView("menu")}>
-              <Text style={styles.secondaryBtnText}>KEMBALI KE MENU</Text>
-            </Pressable>
-          </View>
-        </View>
-      )}
+      <GameResultModal
+        visible={view === "gameover"}
+        variant="defeat"
+        icon={<Ionicons name="close-circle" size={54} color="#EF4444" />}
+        badge="Mission Failed"
+        title="TERTANGKAP ANJING ROBOT!"
+        subtitle="Anjing robot berhasil mengejar Anda. Latih refleks melompat dan perhatikan kecepatan lintasan."
+        stars={0}
+        primaryLabel="Coba Lagi"
+        onPrimary={() => setView("playing")}
+        secondaryLabel="Kembali Ke Menu"
+        onSecondary={() => setView("menu")}
+        primaryTone="retry"
+      />
 
       {/* VIEW: VICTORY */}
-      {view === "victory" && (
-        <View style={styles.resultOverlay}>
-          <Ionicons name="checkmark-circle" size={80} color="#10B981" />
-          <Text style={styles.resultTitle}>Misi Selesai!</Text>
-          <Text style={styles.resultDesc}>
-            Hebat! Robot berhasil kabur dari kejaran anjing robot di kota {activeCity.name}.
-          </Text>
-
-          <View style={styles.victoryRewardCard}>
-            <Text style={{ color: "#94A3B8", fontSize: 12, fontWeight: "600" }}>HADIAH KOIN</Text>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 6, marginTop: 4 }}>
-              <MaterialCommunityIcons name="currency-usd" size={20} color="#FBBF24" />
-              <Text style={{ color: "#FFF", fontSize: 24, fontWeight: "800" }}>+{activeCity.rewardCoins}</Text>
-            </View>
-          </View>
-
-          <View style={styles.resultActions}>
-            <Pressable
-              style={styles.primaryBtn}
-              onPress={() => {
-                if (activeCityIdx < CITIES.length - 1) {
-                  setActiveCityIdx(activeCityIdx + 1);
-                  setView("playing");
-                } else {
-                  setView("menu");
-                }
-              }}
-            >
-              <Text style={styles.primaryBtnText}>
-                {activeCityIdx < CITIES.length - 1 ? "LANJUT KOTA BERIKUTNYA" : "SELESAI"}
-              </Text>
-              <Ionicons name="arrow-forward" size={18} color="#FFF" />
-            </Pressable>
-
-            <Pressable style={styles.secondaryBtn} onPress={() => setView("menu")}>
-              <Text style={styles.secondaryBtnText}>KEMBALI KE MENU</Text>
-            </Pressable>
-          </View>
-        </View>
-      )}
+      <GameResultModal
+        visible={view === "victory"}
+        variant="victory"
+        icon={<Ionicons name="checkmark-circle" size={54} color="#10B981" />}
+        badge="Mission Completed"
+        title="Misi Selesai!"
+        subtitle={`Hebat! Robot berhasil kabur dari kejaran anjing robot di kota ${activeCity.name}.`}
+        stars={starsMap[activeCity.id] ?? 0}
+        loot={[{ label: "Hadiah Koin", value: `+${activeCity.rewardCoins} Koin` }]}
+        total={{ label: "Total Koin", value: `${activeCity.rewardCoins} KOIN` }}
+        primaryLabel={activeCityIdx < CITIES.length - 1 ? "Lanjut Kota Berikutnya" : "Selesai"}
+        onPrimary={() => {
+          if (activeCityIdx < CITIES.length - 1) {
+            setActiveCityIdx(activeCityIdx + 1);
+            setView("playing");
+          } else {
+            setView("menu");
+          }
+        }}
+        secondaryLabel="Kembali Ke Menu"
+        onSecondary={() => setView("menu")}
+      />
 
       {/* HOW TO PLAY MODAL */}
       <HowToPlayModal

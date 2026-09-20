@@ -159,6 +159,66 @@
       .h-8 { height: 22px !important; }
     }
   </style>
+
+  <!-- ===== RoboMind shared game result/report skin (auto-injected) ===== -->
+  <style id="rb-result-skin">
+    /* Overlay layar hasil: konsisten di semua game */
+    .overlay-screen {
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 16px !important;
+      overflow-y: auto !important;
+      background: rgba(3, 7, 18, 0.88) !important;
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+    }
+    /* Kartu hasil: lebar & tinggi dibatasi, isi discroll DI DALAM kartu */
+    .card-modal,
+    #screen-result .modal-box,
+    #resultModal > div,
+    #gameModal > div {
+      width: 100% !important;
+      max-width: 440px !important;
+      max-height: 90vh !important;
+      overflow-y: auto !important;
+      box-sizing: border-box !important;
+      margin: auto !important;
+      padding: 20px !important;
+      border-radius: 24px !important;
+      border: 2px solid rgba(56, 189, 248, 0.45) !important;
+      background: #0B132B !important;
+      color: #E2E8F0 !important;
+      text-align: center !important;
+      box-shadow: 0 0 40px rgba(0, 229, 255, 0.25) !important;
+    }
+    /* Baris bintang seragam */
+    #modalStars,
+    #result-stars,
+    #res_stars,
+    .rb-stars {
+      font-size: 2rem !important;
+      line-height: 1.2 !important;
+      letter-spacing: 5px !important;
+      color: #FBBF24 !important;
+      text-align: center !important;
+    }
+    /* Grid dua kolom jadi satu kolom di layar sempit */
+    .rb-result-grid {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 16px !important;
+      align-items: start !important;
+    }
+    @media (max-width: 560px) {
+      .card-modal,
+      #screen-result .modal-box,
+      #resultModal > div,
+      #gameModal > div { max-width: 100% !important; }
+      .rb-result-grid { grid-template-columns: 1fr !important; }
+    }
+  </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-2 md:p-4 text-white overflow-hidden bg-slate-950">
 
@@ -1047,8 +1107,14 @@
     // ==========================================
     function showModal(title, desc, iconHTML, btnText, callback) {
       document.getElementById('modalTitle').textContent = title;
-      document.getElementById('modalDesc').innerHTML = desc;
-      document.getElementById('modalIcon').innerHTML = iconHTML;
+      document.getElementById('modalTitle').style.color = '#FB7185';
+      const _rbBadge = document.getElementById('modalBadgeText');
+      if (_rbBadge) { _rbBadge.textContent = 'MISSION FAILED'; _rbBadge.style.color = '#FB7185'; }
+      const _rbStars = document.getElementById('modalStars');
+      if (_rbStars) _rbStars.textContent = '\u2b50 \u2606 \u2606';
+      const _rbSub = document.getElementById('modalSubtitle');
+      if (_rbSub) _rbSub.textContent = desc;
+      /* icon omitted: shared result layout */
       
       const actBtn = document.getElementById('modalActionBtn');
       actBtn.textContent = btnText;
@@ -1212,6 +1278,8 @@
       document.getElementById('modalTitle').innerText = `LEVEL 0${currentLevel} CLEARED!`;
       document.getElementById('modalSubtitle').innerText = `Rute Labirin Gaib: Robocube ➔ Portal Finish Selesai!`;
       document.getElementById('modalStars').innerText = stars;
+      document.getElementById('modalTitle').style.color = '#34D399';
+      document.getElementById('modalBadgeText').style.color = '#FBBF24';
 
       document.getElementById('checkFinish').innerText = "(100%)";
       document.getElementById('checkHits').innerText = `(${hits} Nabrak)`;

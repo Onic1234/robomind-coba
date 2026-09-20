@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { ScrollView, StyleSheet,
+import { StyleSheet,
   View,
   Text,
   Pressable,
@@ -12,6 +12,7 @@ import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Storage } from "../lib/storage";
 import { HowToPlayModal } from "../components/HowToPlayModal";
+import { GameResultModal } from "../components/GameResultModal";
 import * as Haptics from "expo-haptics";
 import Animated, {
   useSharedValue,
@@ -813,194 +814,114 @@ export default function RobotCircuitPuzzleScreen() {
       </Modal>
 
       {/* VICTORY / MISSION COMPLETED MODAL WITH COGNITIVE RADAR CHART */}
-      <Modal visible={gameState === "victory"} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.victoryCardContainer}>
-            {/* Header Tag & Title */}
-            <Text style={styles.missionTagText}>MISSION COMPLETED</Text>
-            <Text style={styles.victoryTitleText}>
-              EXCELLENT! SIRKUIT {String(level).padStart(2, "0")} CLEARED!
-            </Text>
-            <Text style={styles.victorySubText}>
-              Transmisi Robot Circuit: Level {level} → Selesai!
-            </Text>
+      <GameResultModal
+        visible={gameState === "victory"}
+        variant="victory"
+        badge="Mission Completed"
+        title={`EXCELLENT! SIRKUIT ${String(level).padStart(2, "0")} CLEARED!`}
+        subtitle={`Transmisi Robot Circuit: Level ${level} → Selesai!`}
+        stars={starsFor(moves, currentLevel.par)}
+        statsTitle="Pencapaian Misi"
+        stats={[
+          { label: "Sirkuit Terhubung (100%)", ok: true },
+          { label: "Efisiensi Gerbang NOT", ok: true },
+          { label: `Selesai Dalam ${moves} Langkah (Par: ${currentLevel.par})`, ok: true },
+        ]}
+        loot={[
+          { label: "Loot Koin Terkumpul:", value: `+${currentLevel.rewardCoins} Koin` },
+          { label: "Bonus Transmisi XP:", value: `+${currentLevel.rewardXP} XP` },
+        ]}
+        total={{ label: "Total Soulons / Koin", value: `${currentLevel.rewardCoins + currentLevel.rewardXP} KOIN` }}
+        radarTitle="🧠 Analisis Perkembangan Otak"
+        radar={
+          <Svg width={180} height={180} viewBox="0 0 200 200">
+            {[0.3, 0.6, 1.0].map((lvlVal, idx) => {
+              const pts = [0, 1, 2, 3, 4].map((i) => {
+                const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+                const x = 100 + 55 * lvlVal * Math.cos(angle);
+                const y = 100 + 55 * lvlVal * Math.sin(angle);
+                return `${x.toFixed(1)},${y.toFixed(1)}`;
+              }).join(" ");
 
-            {/* Main Content Row */}
-            <View style={{ width: "100%", maxHeight: 420 }}>
-              <View style={styles.victoryContentRow}>
-                {/* Left Column: Mission Achievements */}
-                <View style={styles.victoryLeftCol}>
-                  <Text style={styles.columnTitle}>PENCAPAIAN MISI</Text>
+              return (
+                <Polygon
+                  key={idx}
+                  points={pts}
+                  fill="none"
+                  stroke="rgba(56, 189, 248, 0.3)"
+                  strokeWidth="1"
+                  strokeDasharray={idx < 2 ? "3 3" : "0"}
+                />
+              );
+            })}
 
-                  {/* 3 Stars */}
-                  <View style={styles.starRowGroup}>
-                    {[1, 2, 3].map((s) => (
-                      <Ionicons
-                        key={s}
-                        name="star"
-                        size={s === 2 ? 32 : 26}
-                        color={s <= starsFor(moves, currentLevel.par) ? "#FFD700" : "#475569"}
-                        style={{ marginTop: s === 2 ? -4 : 0 }}
-                      />
-                    ))}
-                  </View>
+            {[0, 1, 2, 3, 4].map((i) => {
+              const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+              const endX = 100 + 55 * Math.cos(angle);
+              const endY = 100 + 55 * Math.sin(angle);
+              return (
+                <Line key={i} x1={100} y1={100} x2={endX} y2={endY} stroke="rgba(56, 189, 248, 0.3)" strokeWidth="1" />
+              );
+            })}
 
-                  {/* Checklist */}
-                  <View style={styles.checklistGroup}>
-                    <View style={styles.checkItem}>
-                      <Ionicons name="star" size={12} color="#FFD700" />
-                      <Text style={styles.checkText}>Sirkuit Terhubung (100%)</Text>
-                    </View>
-                    <View style={styles.checkItem}>
-                      <Ionicons name="star" size={12} color="#FFD700" />
-                      <Text style={styles.checkText}>Efisiensi Gerbang NOT</Text>
-                    </View>
-                    <View style={styles.checkItem}>
-                      <Ionicons name="star" size={12} color="#FFD700" />
-                      <Text style={styles.checkText}>Selesai Dalam {moves} Langkah (Par: {currentLevel.par})</Text>
-                    </View>
-                  </View>
+            {(() => {
+              const vals = [0.9, 0.94, 0.88, 0.92, 0.96];
+              const pts = vals.map((val, i) => {
+                const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+                const x = 100 + 55 * val * Math.cos(angle);
+                const y = 100 + 55 * val * Math.sin(angle);
+                return `${x.toFixed(1)},${y.toFixed(1)}`;
+              }).join(" ");
 
-                  {/* Loot Breakdown */}
-                  <View style={styles.lootDivider} />
-                  <View style={styles.lootRow}>
-                    <Text style={styles.lootLabel}>Loot Koin Terkumpul:</Text>
-                    <Text style={styles.lootValue}>+{currentLevel.rewardCoins} Koin</Text>
-                  </View>
-                  <View style={styles.lootRow}>
-                    <Text style={styles.lootLabel}>Bonus Transmisi XP:</Text>
-                    <Text style={styles.lootValue}>+{currentLevel.rewardXP} XP</Text>
-                  </View>
-                  <View style={[styles.lootRow, { marginTop: 6 }]}>
-                    <Text style={styles.totalLabel}>TOTAL SOULONS / KOIN:</Text>
-                    <Text style={styles.totalValue}>{currentLevel.rewardCoins + currentLevel.rewardXP} KOIN</Text>
-                  </View>
-                </View>
+              return (
+                <Polygon
+                  points={pts}
+                  fill="rgba(168, 85, 247, 0.45)"
+                  stroke="#C084FC"
+                  strokeWidth="2.5"
+                />
+              );
+            })()}
 
-                {/* Right Column: Brain Cognitive Analysis Radar Chart */}
-                <View style={styles.victoryRightCol}>
-                  <Text style={styles.columnTitle}>🧠 Analisis Perkembangan Otak</Text>
-                  <Text style={styles.columnSubTitle}>(Prefrontal Cortex & Logika Sirkuit)</Text>
+            {[0, 1, 2, 3, 4].map((i) => {
+              const vals = [0.9, 0.94, 0.88, 0.92, 0.96];
+              const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+              const x = 100 + 55 * vals[i] * Math.cos(angle);
+              const y = 100 + 55 * vals[i] * Math.sin(angle);
+              return <Circle key={i} cx={x} cy={y} r="3.5" fill="#FFFFFF" stroke="#A855F7" strokeWidth="1.5" />;
+            })}
 
-                  {/* SVG Radar Chart */}
-                  <View style={styles.victoryRadarWrapper}>
-                    <Svg width={180} height={180} viewBox="0 0 200 200">
-                      {/* Grid Pentagons */}
-                      {[0.3, 0.6, 1.0].map((lvlVal, idx) => {
-                        const pts = [0, 1, 2, 3, 4].map((i) => {
-                          const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
-                          const x = 100 + 55 * lvlVal * Math.cos(angle);
-                          const y = 100 + 55 * lvlVal * Math.sin(angle);
-                          return `${x.toFixed(1)},${y.toFixed(1)}`;
-                        }).join(" ");
+            {["Spasial", "Keputusan", "Kontrol Diri", "Memori Kerja", "Fokus"].map((lbl, i) => {
+              const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+              const x = 100 + (55 + 18) * Math.cos(angle);
+              const y = 100 + (55 + 14) * Math.sin(angle);
+              let anchor: "middle" | "start" | "end" = "middle";
+              if (i === 1 || i === 2) anchor = "start";
+              if (i === 3 || i === 4) anchor = "end";
 
-                        return (
-                          <Polygon
-                            key={idx}
-                            points={pts}
-                            fill="none"
-                            stroke="rgba(56, 189, 248, 0.3)"
-                            strokeWidth="1"
-                            strokeDasharray={idx < 2 ? "3 3" : "0"}
-                          />
-                        );
-                      })}
+              return (
+                <SvgText key={i} x={x} y={i === 0 ? y - 2 : y + 3} fontSize="9" fontWeight="800" fill="#E2E8F0" textAnchor={anchor}>
+                  {lbl}
+                </SvgText>
+              );
+            })}
+          </Svg>
+        }
+        secondaryLabel="Kembali Ke Menu Utama"
+        onSecondary={() => router.back()}
+        primaryLabel="Lanjut Level ➔"
+        onPrimary={handleVictoryNext}
+      />
 
-                      {/* Axis Spoke Lines */}
-                      {[0, 1, 2, 3, 4].map((i) => {
-                        const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
-                        const endX = 100 + 55 * Math.cos(angle);
-                        const endY = 100 + 55 * Math.sin(angle);
-                        return (
-                          <Line key={i} x1={100} y1={100} x2={endX} y2={endY} stroke="rgba(56, 189, 248, 0.3)" strokeWidth="1" />
-                        );
-                      })}
-
-                      {/* Polygon Fill */}
-                      {(() => {
-                        const vals = [0.9, 0.94, 0.88, 0.92, 0.96];
-                        const pts = vals.map((val, i) => {
-                          const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
-                          const x = 100 + 55 * val * Math.cos(angle);
-                          const y = 100 + 55 * val * Math.sin(angle);
-                          return `${x.toFixed(1)},${y.toFixed(1)}`;
-                        }).join(" ");
-
-                        return (
-                          <Polygon
-                            points={pts}
-                            fill="rgba(168, 85, 247, 0.45)"
-                            stroke="#C084FC"
-                            strokeWidth="2.5"
-                          />
-                        );
-                      })()}
-
-                      {/* Data Node Dots */}
-                      {[0, 1, 2, 3, 4].map((i) => {
-                        const vals = [0.9, 0.94, 0.88, 0.92, 0.96];
-                        const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
-                        const x = 100 + 55 * vals[i] * Math.cos(angle);
-                        const y = 100 + 55 * vals[i] * Math.sin(angle);
-                        return <Circle key={i} cx={x} cy={y} r="3.5" fill="#FFFFFF" stroke="#A855F7" strokeWidth="1.5" />;
-                      })}
-
-                      {/* Axis Text Labels */}
-                      {["Spasial", "Keputusan", "Kontrol Diri", "Memori Kerja", "Fokus"].map((lbl, i) => {
-                        const angle = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
-                        const x = 100 + (55 + 18) * Math.cos(angle);
-                        const y = 100 + (55 + 14) * Math.sin(angle);
-                        let anchor: "middle" | "start" | "end" = "middle";
-                        if (i === 1 || i === 2) anchor = "start";
-                        if (i === 3 || i === 4) anchor = "end";
-
-                        return (
-                          <SvgText key={i} x={x} y={i === 0 ? y - 2 : y + 3} fontSize="9" fontWeight="800" fill="#E2E8F0" textAnchor={anchor}>
-                            {lbl}
-                          </SvgText>
-                        );
-                      })}
-                    </Svg>
-                  </View>
-                </View>
-              </View>
-            </View>
-
-            {/* Bottom Action Buttons */}
-            <View style={styles.victoryActionRow}>
-              <Pressable
-                style={({ pressed }) => [styles.backToMapBtn, pressed && styles.btnPressed]}
-                onPress={() => router.back()}
-              >
-                <Text style={styles.backToMapText}>Kembali Ke Menu Utama</Text>
-              </Pressable>
-
-              <Pressable
-                style={({ pressed }) => [styles.continueBtn, pressed && styles.btnPressed]}
-                onPress={handleVictoryNext}
-              >
-                <Text style={styles.continueText}>Lanjut Level ➔</Text>
-              </Pressable>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      <Modal visible={gameState === "completed"} transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.victoryCard}>
-            <MaterialCommunityIcons name="party-popper" size={60} color="#FF5E36" />
-            <Text style={styles.victoryTitle}>Semua Sirkuit Selesai!</Text>
-            <Text style={styles.victorySubtitle}>Hebat! Seluruh sirkuit robot berhasil kamu rangkai.</Text>
-            <Button
-              title="Keluar"
-              onPress={() => router.back()}
-              variant="primary"
-              style={styles.nextLevelButton}
-            />
-          </View>
-        </View>
-      </Modal>
+      <GameResultModal
+        visible={gameState === "completed"}
+        variant="completed"
+        icon={<MaterialCommunityIcons name="party-popper" size={52} color="#FF5E36" />}
+        title="Semua Sirkuit Selesai!"
+        subtitle="Hebat! Seluruh sirkuit robot berhasil kamu rangkai."
+        primaryLabel="Keluar"
+        onPrimary={() => router.back()}
+      />
 
       <HowToPlayModal
         visible={showHelp}
