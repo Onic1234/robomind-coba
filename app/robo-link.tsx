@@ -1637,19 +1637,19 @@ export default function RoboLinkScreen() {
             <GameBackButton bgColor="#006874" borderColor="#006874" bottomBorderColor="#004E57" />
             <Text style={{ ...FONTS.heading, fontSize: 18, color: "#14532D" }}>Peta Sirkuit</Text>
           </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
             <Pressable
               onPress={() => setShowHelp(true)}
               style={({ pressed }) => [styles.resetBtn, pressed && { opacity: 0.7 }]}
             >
-              <Ionicons name="help-circle" size={18} color="#FFFFFF" />
+              <Ionicons name="help-circle" size={16} color="#FFFFFF" />
             </Pressable>
             <View style={[styles.coinsHeaderBadge, { borderColor: "#EF4444", backgroundColor: "#FEF2F2" }]}>
-              <Ionicons name="heart" size={16} color="#EF4444" />
+              <Ionicons name="heart" size={14} color="#EF4444" />
               <Text style={[styles.coinsHeaderVal, { color: "#B91C1C" }]}>{lives}</Text>
             </View>
             <View style={styles.coinsHeaderBadge}>
-              <MaterialCommunityIcons name="currency-usd" size={18} color="#D97706" />
+              <MaterialCommunityIcons name="currency-usd" size={15} color="#D97706" />
               <Text style={styles.coinsHeaderVal}>{userCoins}</Text>
             </View>
           </View>
@@ -1777,7 +1777,7 @@ export default function RoboLinkScreen() {
 
       {/* HEADER HUD BAR */}
       <View style={styles.header}>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
           <Pressable
             onPress={() => {
               triggerHaptic("light");
@@ -1785,22 +1785,22 @@ export default function RoboLinkScreen() {
             }}
             style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
           >
-            <Ionicons name="map" size={16} color="#0F766E" />
+            <Ionicons name="map" size={14} color="#0F766E" />
           </Pressable>
 
           {/* TIMER BADGE */}
           <View style={[styles.timerBadge, timeLeft <= 10 && styles.timerBadgeUrgent]}>
-            <Ionicons name="time" size={16} color={timeLeft <= 10 ? "#EF4444" : "#0D9488"} />
+            <Ionicons name="time" size={14} color={timeLeft <= 10 ? "#EF4444" : "#0D9488"} />
             <Text style={[styles.timerText, timeLeft <= 10 && styles.timerTextUrgent]}>{timeLeft}s</Text>
           </View>
         </View>
 
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
           <Pressable
             onPress={() => setShowHelp(true)}
             style={({ pressed }) => [styles.resetBtn, pressed && { opacity: 0.7 }]}
           >
-            <Ionicons name="help-circle" size={18} color="#FFFFFF" />
+            <Ionicons name="help-circle" size={16} color="#FFFFFF" />
           </Pressable>
           <View style={styles.levelBadge}>
             <Text style={styles.levelBadgeText}>Level {level}</Text>
@@ -1809,17 +1809,17 @@ export default function RoboLinkScreen() {
             onPress={handleRestartLevel}
             style={({ pressed }) => [styles.resetBtn, pressed && { opacity: 0.7 }]}
           >
-            <Ionicons name="reload" size={18} color="#FFFFFF" />
+            <Ionicons name="reload" size={16} color="#FFFFFF" />
           </Pressable>
         </View>
 
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
           <View style={[styles.coinsHeaderBadge, { borderColor: "#EF4444", backgroundColor: "#FEF2F2" }]}>
-            <Ionicons name="heart" size={16} color="#EF4444" />
+            <Ionicons name="heart" size={14} color="#EF4444" />
             <Text style={[styles.coinsHeaderVal, { color: "#B91C1C" }]}>{lives}</Text>
           </View>
           <View style={styles.coinsHeaderBadge}>
-            <MaterialCommunityIcons name={"currency-usd" as any} size={18} color="#D97706" />
+            <MaterialCommunityIcons name={"currency-usd" as any} size={15} color="#D97706" />
             <Text style={styles.coinsHeaderVal}>{userCoins}</Text>
           </View>
         </View>
@@ -2426,8 +2426,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
+    paddingHorizontal: 8,
+    paddingVertical: 8,
     backgroundColor: "#99F6E4", // Light mint-teal header
     borderBottomWidth: 2.5,
     borderBottomColor: "#5DD8C4",
@@ -2435,9 +2435,9 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     backgroundColor: "rgba(255, 255, 255, 0.6)",
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
     zIndex: 100,
@@ -2446,9 +2446,9 @@ const styles = StyleSheet.create({
   },
   resetBtn: {
     backgroundColor: "#0D9488",
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -2459,12 +2459,12 @@ const styles = StyleSheet.create({
   levelBadge: {
     backgroundColor: "#0D9488",
     borderRadius: SHAPES.radiusRound,
-    paddingVertical: 5,
-    paddingHorizontal: SPACING.lg,
+    paddingVertical: 4,
+    paddingHorizontal: 9,
   },
   levelBadgeText: {
     ...FONTS.bodyBold,
-    fontSize: 13,
+    fontSize: 12,
     color: "#FFFFFF",
   },
   coinsHeaderBadge: {
@@ -2474,13 +2474,13 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: "#FDBA74",
     borderRadius: SHAPES.radiusRound,
-    paddingVertical: 4,
-    paddingHorizontal: SPACING.md,
-    gap: 4,
+    paddingVertical: 3,
+    paddingHorizontal: 6,
+    gap: 3,
   },
   coinsHeaderVal: {
     ...FONTS.bodyBold,
-    fontSize: 13,
+    fontSize: 12,
     color: "#C2410C",
   },
   hazardTapeTop: {
@@ -3078,9 +3078,9 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: "#FFEDD5",
     borderRadius: SHAPES.radiusRound,
-    paddingVertical: 4,
-    paddingHorizontal: SPACING.md,
-    gap: 4,
+    paddingVertical: 3,
+    paddingHorizontal: 6,
+    gap: 3,
   },
   timerBadgeUrgent: {
     backgroundColor: "#FEF2F2",
@@ -3088,7 +3088,7 @@ const styles = StyleSheet.create({
   },
   timerText: {
     ...FONTS.bodyBold,
-    fontSize: 13,
+    fontSize: 12,
     color: "#C2410C",
   },
   timerTextUrgent: {
