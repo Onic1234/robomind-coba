@@ -112,8 +112,8 @@
 
     #gameContainer {
       aspect-ratio: 9 / 6;
-      max-height: 80vh;
-      max-width: 120vh; /* 80vh * 1.5 aspect ratio */
+      max-height: 86vh;
+      max-width: 129vh; /* 86vh * 1.5 aspect ratio */
       width: 100%;
     }
 
@@ -145,7 +145,7 @@
     /* Landscape mobile: compact layout */
     @media screen and (orientation: landscape) and (max-height: 500px) {
       body { padding: 4px !important; }
-      #gameContainer { max-height: 90vh; padding: 6px !important; border-width: 2px !important; border-radius: 12px !important; }
+      #gameContainer { max-height: 96vh; padding: 6px !important; border-width: 2px !important; border-radius: 12px !important; }
       #gameContainer .text-[10px] { font-size: 7px !important; }
       #gameContainer .text-[9px] { font-size: 7px !important; }
       #gameContainer .px-2\.5 { padding-left: 5px !important; padding-right: 5px !important; }
@@ -157,68 +157,6 @@
       .h-7 { height: 18px !important; }
       .w-8 { width: 22px !important; }
       .h-8 { height: 22px !important; }
-    }
-  </style>
-
-  <!-- ===== RoboMind shared game result/report skin (auto-injected) ===== -->
-  <style id="rb-result-skin">
-    /* Overlay layar hasil: konsisten di semua game */
-    .overlay-screen.hidden {
-      display: none !important;
-    }
-    .overlay-screen {
-      flex-direction: column !important;
-      align-items: center !important;
-      justify-content: center !important;
-      padding: 16px !important;
-      overflow-y: auto !important;
-      background: rgba(3, 7, 18, 0.88) !important;
-      -webkit-backdrop-filter: blur(8px);
-      backdrop-filter: blur(8px);
-    }
-    /* Kartu hasil: lebar & tinggi dibatasi, isi discroll DI DALAM kartu */
-    .card-modal,
-    #screen-result .modal-box,
-    #resultModal > div,
-    #gameModal > div {
-      width: 100% !important;
-      max-width: 440px !important;
-      max-height: 90vh !important;
-      overflow-y: auto !important;
-      box-sizing: border-box !important;
-      margin: auto !important;
-      padding: 20px !important;
-      border-radius: 24px !important;
-      border: 2px solid rgba(56, 189, 248, 0.45) !important;
-      background: #0B132B !important;
-      color: #E2E8F0 !important;
-      text-align: center !important;
-      box-shadow: 0 0 40px rgba(0, 229, 255, 0.25) !important;
-    }
-    /* Baris bintang seragam */
-    #modalStars,
-    #result-stars,
-    #res_stars,
-    .rb-stars {
-      font-size: 2rem !important;
-      line-height: 1.2 !important;
-      letter-spacing: 5px !important;
-      color: #FBBF24 !important;
-      text-align: center !important;
-    }
-    /* Grid dua kolom jadi satu kolom di layar sempit */
-    .rb-result-grid {
-      display: grid !important;
-      grid-template-columns: 1fr 1fr !important;
-      gap: 16px !important;
-      align-items: start !important;
-    }
-    @media (max-width: 560px) {
-      .card-modal,
-      #screen-result .modal-box,
-      #resultModal > div,
-      #gameModal > div { max-width: 100% !important; }
-      .rb-result-grid { grid-template-columns: 1fr !important; }
     }
   </style>
 </head>
@@ -281,7 +219,7 @@
       </div>
 
       <!-- Wrapper Grid Labirin (Menjaga Rasio Aspek 9:6) -->
-      <div id="mazeArea" class="relative h-full aspect-[9/6] w-auto">
+      <div class="relative h-full aspect-[9/6] w-auto">
         <!-- Cyber Particles Melayang (Latar Belakang) -->
         <div class="cyber-particle top-[10%] left-[10%]" style="animation-delay: 0s; animation-duration: 22s;">010110</div>
         <div class="cyber-particle top-[40%] left-[45%]" style="animation-delay: 4s; animation-duration: 30s;">SYSTEM_OK</div>
@@ -294,27 +232,27 @@
         </div>
 
         <!-- Panel Kontrol D-Pad Melayang (Kaca Transparan di Pojok Kanan Bawah) -->
-        <div class="absolute bottom-1 right-1 sm:bottom-2 sm:right-2 md:bottom-3 md:right-3 z-30 pointer-events-auto">
-          <div class="relative w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 flex items-center justify-center bg-slate-950/20 backdrop-blur-[1px] border border-white/10 shadow-2xl rounded-full p-2 opacity-90 hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
+        <div class="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 md:bottom-4 md:right-4 z-30 pointer-events-auto">
+          <div class="relative w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center bg-slate-950/10 backdrop-blur-[1px] border border-white/5 shadow-2xl rounded-full p-2 opacity-70 hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
             <!-- Tombol Tengah Dekoratif -->
-            <div class="absolute w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-slate-950/20 rounded-full flex items-center justify-center text-indigo-200/50 border border-white/10">
-              <i class="fa-solid fa-gamepad text-sm sm:text-base md:text-lg animate-pulse"></i>
+            <div class="absolute w-8 h-8 sm:w-11 sm:h-11 md:w-12 md:h-12 bg-slate-950/15 rounded-full flex items-center justify-center text-indigo-900/30 border border-white/5">
+              <i class="fa-solid fa-gamepad text-xs sm:text-sm md:text-base animate-pulse"></i>
             </div>
             <!-- D-Pad Atas -->
-            <button id="ctrlUp" class="absolute top-0.5 sm:top-1 w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-indigo-600/35 hover:bg-indigo-500/50 active:bg-indigo-700/70 active:scale-95 rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow text-indigo-50 font-bold border border-indigo-300/20">
-              <i class="fa-solid fa-chevron-up text-sm sm:text-lg"></i>
+            <button id="ctrlUp" class="absolute top-0.5 sm:top-1 w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-indigo-600/20 hover:bg-indigo-500/40 active:bg-indigo-700/60 active:scale-95 rounded-md sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow-sm text-indigo-900/80 font-bold border-b border-indigo-800/15">
+              <i class="fa-solid fa-chevron-up text-xs sm:text-sm md:text-base"></i>
             </button>
             <!-- D-Pad Bawah -->
-            <button id="ctrlDown" class="absolute bottom-0.5 sm:bottom-1 w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-indigo-600/35 hover:bg-indigo-500/50 active:bg-indigo-700/70 active:scale-95 rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow text-indigo-50 font-bold border border-indigo-300/20">
-              <i class="fa-solid fa-chevron-down text-sm sm:text-lg"></i>
+            <button id="ctrlDown" class="absolute bottom-0.5 sm:bottom-1 w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-indigo-600/20 hover:bg-indigo-500/40 active:bg-indigo-700/60 active:scale-95 rounded-md sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow-sm text-indigo-900/80 font-bold border-b border-indigo-800/15">
+              <i class="fa-solid fa-chevron-down text-xs sm:text-sm md:text-base"></i>
             </button>
             <!-- D-Pad Kiri -->
-            <button id="ctrlLeft" class="absolute left-0.5 sm:left-1 w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-indigo-600/35 hover:bg-indigo-500/50 active:bg-indigo-700/70 active:scale-95 rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow text-indigo-50 font-bold border border-indigo-300/20">
-              <i class="fa-solid fa-chevron-left text-sm sm:text-lg"></i>
+            <button id="ctrlLeft" class="absolute left-0.5 sm:left-1 w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-indigo-600/20 hover:bg-indigo-500/40 active:bg-indigo-700/60 active:scale-95 rounded-md sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow-sm text-indigo-900/80 font-bold border-b border-indigo-800/15">
+              <i class="fa-solid fa-chevron-left text-xs sm:text-sm md:text-base"></i>
             </button>
             <!-- D-Pad Kanan -->
-            <button id="ctrlRight" class="absolute right-0.5 sm:right-1 w-9 h-9 sm:w-12 sm:h-12 md:w-14 md:h-14 bg-indigo-600/35 hover:bg-indigo-500/50 active:bg-indigo-700/70 active:scale-95 rounded-lg sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow text-indigo-50 font-bold border border-indigo-300/20">
-              <i class="fa-solid fa-chevron-right text-sm sm:text-lg"></i>
+            <button id="ctrlRight" class="absolute right-0.5 sm:right-1 w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-indigo-600/20 hover:bg-indigo-500/40 active:bg-indigo-700/60 active:scale-95 rounded-md sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow-sm text-indigo-900/80 font-bold border-b border-indigo-800/15">
+              <i class="fa-solid fa-chevron-right text-xs sm:text-sm md:text-base"></i>
             </button>
           </div>
         </div>
@@ -1109,14 +1047,8 @@
     // ==========================================
     function showModal(title, desc, iconHTML, btnText, callback) {
       document.getElementById('modalTitle').textContent = title;
-      document.getElementById('modalTitle').style.color = '#FB7185';
-      const _rbBadge = document.getElementById('modalBadgeText');
-      if (_rbBadge) { _rbBadge.textContent = 'MISSION FAILED'; _rbBadge.style.color = '#FB7185'; }
-      const _rbStars = document.getElementById('modalStars');
-      if (_rbStars) _rbStars.textContent = '\u2b50 \u2606 \u2606';
-      const _rbSub = document.getElementById('modalSubtitle');
-      if (_rbSub) _rbSub.textContent = desc;
-      /* icon omitted: shared result layout */
+      document.getElementById('modalDesc').innerHTML = desc;
+      document.getElementById('modalIcon').innerHTML = iconHTML;
       
       const actBtn = document.getElementById('modalActionBtn');
       actBtn.textContent = btnText;
@@ -1280,8 +1212,6 @@
       document.getElementById('modalTitle').innerText = `LEVEL 0${currentLevel} CLEARED!`;
       document.getElementById('modalSubtitle').innerText = `Rute Labirin Gaib: Robocube ➔ Portal Finish Selesai!`;
       document.getElementById('modalStars').innerText = stars;
-      document.getElementById('modalTitle').style.color = '#34D399';
-      document.getElementById('modalBadgeText').style.color = '#FBBF24';
 
       document.getElementById('checkFinish').innerText = "(100%)";
       document.getElementById('checkHits').innerText = `(${hits} Nabrak)`;
@@ -1406,32 +1336,18 @@
       }
     }
 
-    // Set up D-pad buttons (tap = 1 step, press & hold = auto-repeat)
+    // Set up D-pad buttons using pointer events for maximum responsiveness
     function setupMobileButton(id, dx, dy) {
       const btn = document.getElementById(id);
       if (!btn) return;
-
-      let repeatTimer = null;
-      let repeatInterval = null;
-      const step = () => { movePlayer(dx, dy); triggerVibration(30); };
-      const stop = () => {
-        clearTimeout(repeatTimer);
-        clearInterval(repeatInterval);
-        repeatTimer = null;
-        repeatInterval = null;
-      };
-      const start = (e) => {
+      
+      const handler = (e) => {
         e.preventDefault();
-        e.stopPropagation();
-        step();
-        stop();
-        repeatTimer = setTimeout(() => { repeatInterval = setInterval(step, 150); }, 320);
+        movePlayer(dx, dy);
+        triggerVibration(40);
       };
-
-      btn.addEventListener('pointerdown', start);
-      btn.addEventListener('pointerup', stop);
-      btn.addEventListener('pointerleave', stop);
-      btn.addEventListener('pointercancel', stop);
+      
+      btn.addEventListener('pointerdown', handler);
       btn.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
     }
 
@@ -1439,36 +1355,6 @@
     setupMobileButton('ctrlDown', 0, 1);
     setupMobileButton('ctrlLeft', -1, 0);
     setupMobileButton('ctrlRight', 1, 0);
-
-    // Swipe controls: geser di area labirin untuk jalan (lebih mudah di HP)
-    (function setupSwipeControls() {
-      const area = document.getElementById('mazeArea') || document.getElementById('gameContainer');
-      if (!area) return;
-      const TH = 22;
-      let sx = 0, sy = 0, tracking = false;
-      const isOnPad = (t) => t && t.closest && t.closest('#ctrlUp,#ctrlDown,#ctrlLeft,#ctrlRight');
-      const start = (e) => {
-        const t = e.touches ? e.touches[0] : e;
-        if (isOnPad(e.target)) { tracking = false; return; }
-        sx = t.clientX; sy = t.clientY; tracking = true;
-      };
-      const move = (e) => {
-        if (!tracking) return;
-        const t = e.touches ? e.touches[0] : e;
-        const dx = t.clientX - sx;
-        const dy = t.clientY - sy;
-        if (Math.abs(dx) < TH && Math.abs(dy) < TH) return;
-        if (Math.abs(dx) > Math.abs(dy)) { movePlayer(dx > 0 ? 1 : -1, 0); sx = t.clientX; }
-        else { movePlayer(0, dy > 0 ? 1 : -1); sy = t.clientY; }
-      };
-      const end = () => { tracking = false; };
-      area.addEventListener('touchstart', start, { passive: true });
-      area.addEventListener('touchmove', move, { passive: true });
-      area.addEventListener('touchend', end);
-      area.addEventListener('mousedown', start);
-      area.addEventListener('mousemove', move);
-      window.addEventListener('mouseup', end);
-    })();
 
     // Kontrol Header & Menu
     document.getElementById('btnPeek').addEventListener('click', usePeek);

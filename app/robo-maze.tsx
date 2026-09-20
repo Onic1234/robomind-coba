@@ -114,7 +114,7 @@ source={{ uri: "file:///android_asset/robo-maze/index.html" }}
   }
 
   return (
-    <View ref={containerRef} style={styles.webContainer}>
+    <View style={styles.webContainer}>
       <StatusBar hidden />
 
       {loading && (
@@ -158,7 +158,7 @@ source={{ uri: "file:///android_asset/robo-maze/index.html" }}
         subtitleColor="#0F766E"
         steps={[
           { emoji: "1️⃣", text: "Pada fase awal (8 detik) dinding terlihat — hafalkan jalurnya." },
-          { emoji: "2️⃣", text: "Arahkan robot dengan menggeser (swipe) di area labirin, atau pakai D-pad / tombol panah. Tekan-tahan D-pad untuk jalan terus." },
+          { emoji: "2️⃣", text: "Setelah itu dinding jadi tak terlihat. Arahkan robot memakai D-pad / tombol panah." },
           { emoji: "3️⃣", text: "Gunakan tombol \"Intip\" untuk melihat dinding 1,5 detik (jumlah terbatas per level)." },
           { emoji: "4️⃣", text: "Jangan menabrak dinding tak terlihat — setiap tabrakan mengurangi Core (3 nyawa)." },
         ]}

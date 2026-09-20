@@ -554,12 +554,13 @@
       const move = (clientX, clientY) => {
         const r = zone.getBoundingClientRect();
         let dx = clientX - (r.left + r.width / 2);
-        if (dx > maxR) dx = maxR;
-        if (dx < -maxR) dx = -maxR;
-        knob.style.transform = `translate(calc(-50% + ${dx}px), -50%)`;
-        const nx = dx / maxR;
-        if (Math.abs(nx) < 0.18) { touchInput.x = 0; touchInput.y = 0; touchInput.active = false; }
-        else { touchInput.x = nx; touchInput.y = 0; touchInput.active = true; }
+        let dy = clientY - (r.top + r.height / 2);
+        const dist = Math.hypot(dx, dy) || 1;
+        if (dist > maxR) { dx = dx / dist * maxR; dy = dy / dist * maxR; }
+        knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+        const nx = dx / maxR, ny = dy / maxR;
+        if (Math.hypot(nx, ny) < 0.18) { touchInput.x = 0; touchInput.y = 0; touchInput.active = false; }
+        else { touchInput.x = nx; touchInput.y = ny; touchInput.active = true; }
       };
       const start = (e) => { dragging = true; const t = e.touches ? e.touches[0] : e; move(t.clientX, t.clientY); e.preventDefault(); };
       const onmove = (e) => { if (!dragging) return; const t = e.touches ? e.touches[0] : e; move(t.clientX, t.clientY); e.preventDefault(); };
@@ -1008,20 +1009,26 @@
       const isRight = keys['d'] || keys['D'] || keys['ArrowRight'];
 
       // === CAR-LIKE CONTROL MODEL ===
-      // Steering: analog joystick X (or A/D arrows). Analog only turns heading.
+      // Keyboard steering (A/D); analog is 360° (like ML)
       let steer = 0;
       if (isLeft) steer -= 1;
       if (isRight) steer += 1;
-      if (touchInput.active) steer += touchInput.x;
-      steer = Math.max(-1, Math.min(1, steer));
 
       // Throttle (gas) and brake/reverse
       const throttle = isUp || touchGas;
       const brake = isDown || touchBrake;
       const maxReverse = player.maxSpeed * 0.45;
 
-      // Turn heading (slightly damped at high speed for control)
-      if (steer !== 0) {
+      // Heading control
+      if (touchInput.active) {
+        // 360° analog: rotate the car toward the stick direction
+        const targetAngle = Math.atan2(touchInput.x, -touchInput.y) * 180 / Math.PI;
+        let diff = targetAngle - player.angle;
+        while (diff > 180) diff -= 360;
+        while (diff < -180) diff += 360;
+        const maxTurn = player.turnSpeed * dt;
+        player.angle += Math.max(-maxTurn, Math.min(maxTurn, diff));
+      } else if (steer !== 0) {
         const speedFactor = 1 - 0.35 * Math.min(1, Math.abs(player.speed) / player.maxSpeed);
         player.angle += steer * player.turnSpeed * dt * speedFactor;
       }
