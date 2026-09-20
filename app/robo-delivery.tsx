@@ -129,54 +129,57 @@ source={{ uri: "file:///android_asset/robo-delivery/index.html" }}
   }
 
   return (
-    <View style={styles.webContainer}>
-      <StatusBar hidden />
+    <SafeAreaView style={styles.webContainer} edges={["top", "bottom"]}>
+      <StatusBar barStyle="light-content" backgroundColor="#071e27" />
 
-      {loading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#0284c7" />
-          <Text style={styles.loadingText}>Memuat Map Robo Delivery...</Text>
-        </View>
-      )}
-
-      <iframe
-        ref={iframeRef}
-        src="/web-games/robo-delivery/index.html"
-        style={styles.iframe}
-        onLoad={() => {
-          setLoading(false);
-          iframeRef.current?.focus();
-        }}
-        allowFullScreen
-      />
-
-      {/* Top Left Navigation & Help Pod */}
-      <View style={styles.topLeftControls}>
+      {/* Top Header Bar */}
+      <View style={styles.header}>
         <Pressable
           onPress={() => router.back()}
-          style={({ pressed }) => [styles.floatingExit, pressed && { opacity: 0.8, transform: [{ scale: 0.96 }] }]}
+          style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
         >
-          <Ionicons name="arrow-back" size={15} color="#fff" />
-          <Text style={styles.floatingExitText}>EXIT</Text>
+          <Ionicons name="arrow-back" size={18} color="#fff" />
+          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "800", marginLeft: 4 }}>Kembali</Text>
         </Pressable>
 
-        <Pressable
-          onPress={() => setShowHelp(true)}
-          style={({ pressed }) => [styles.floatingHelp, pressed && { opacity: 0.8, transform: [{ scale: 0.96 }] }]}
-        >
-          <Ionicons name="help-circle" size={16} color="#38bdf8" />
-          <Text style={styles.floatingHelpText}>TIPS</Text>
-        </Pressable>
+        <Text style={styles.headerTitle}>Robo Delivery</Text>
+
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <Pressable
+            onPress={() => setShowHelp(true)}
+            style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
+          >
+            <Ionicons name="help-circle" size={18} color="#38bdf8" />
+            <Text style={{ color: "#38bdf8", fontSize: 12, fontWeight: "800", marginLeft: 4 }}>Tips</Text>
+          </Pressable>
+          <Pressable
+            onPress={toggleFullscreen}
+            style={({ pressed }) => [styles.backBtn, pressed && { opacity: 0.7 }]}
+          >
+            <Ionicons name={isFullscreen ? "contract" : "expand"} size={16} color="#38bdf8" />
+          </Pressable>
+        </View>
       </View>
 
-      {/* Top Right Fullscreen Pod */}
-      <Pressable
-        onPress={toggleFullscreen}
-        style={({ pressed }) => [styles.floatingFs, pressed && { opacity: 0.8, transform: [{ scale: 0.96 }] }]}
-      >
-        <Ionicons name={isFullscreen ? "contract" : "expand"} size={15} color="#38bdf8" />
-        <Text style={styles.floatingFsText}>{isFullscreen ? "WINDOW" : "FULL"}</Text>
-      </Pressable>
+      <View style={styles.iframeArea}>
+        {loading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator size="large" color="#0284c7" />
+            <Text style={styles.loadingText}>Memuat Map Robo Delivery...</Text>
+          </View>
+        )}
+
+        <iframe
+          ref={iframeRef}
+          src="/web-games/robo-delivery/index.html"
+          style={styles.iframe}
+          onLoad={() => {
+            setLoading(false);
+            iframeRef.current?.focus();
+          }}
+          allowFullScreen
+        />
+      </View>
 
       <HowToPlayModal
         visible={showHelp}
@@ -197,7 +200,7 @@ source={{ uri: "file:///android_asset/robo-delivery/index.html" }}
           "Ambil makanan yang paling dekat terlebih dahulu untuk menghemat waktu."
         ]}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -236,104 +239,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(56, 189, 248, 0.3)",
   },
-  topLeftControls: {
-    position: "absolute",
-    top: 12,
-    left: 12,
-    flexDirection: "column",
-    gap: 8,
-    zIndex: 9999,
-    elevation: 10,
-    ...Platform.select({
-      web: {
-        top: "max(12px, env(safe-area-inset-top, 12px))",
-        left: "max(12px, env(safe-area-inset-left, 12px))",
-      } as any,
-      default: {},
-    }),
-  },
-  floatingExit: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-    backgroundColor: "rgba(239, 68, 68, 0.92)",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "rgba(254, 202, 202, 0.35)",
-    shadowColor: "#ef4444",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.35,
-    shadowRadius: 6,
-  },
-  floatingExitText: {
-    color: "#fff",
-    fontSize: 11,
-    fontWeight: "900",
-    letterSpacing: 0.8,
-  },
-  floatingHelp: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-    backgroundColor: "rgba(15, 23, 42, 0.92)",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "rgba(56, 189, 248, 0.4)",
-    shadowColor: "#38bdf8",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-  },
-  floatingHelpText: {
-    color: "#38bdf8",
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-  },
-  floatingFs: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 5,
-    backgroundColor: "rgba(15, 23, 42, 0.92)",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    zIndex: 9999,
-    elevation: 10,
-    borderWidth: 1,
-    borderColor: "rgba(56, 189, 248, 0.4)",
-    shadowColor: "#38bdf8",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    ...Platform.select({
-      web: {
-        top: "max(12px, env(safe-area-inset-top, 12px))",
-        right: "max(12px, env(safe-area-inset-right, 12px))",
-      } as any,
-      default: {},
-    }),
-  },
-  floatingFsText: {
-    color: "#38bdf8",
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.8,
+  iframeArea: {
+    flex: 1,
+    position: "relative",
+    width: "100%",
+    backgroundColor: "#7dd3fc",
   },
   iframe: {
-    position: "absolute",
-    top: 0,
-    left: 0,
     width: "100%",
     height: "100%",
     borderWidth: 0,
