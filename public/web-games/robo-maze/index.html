@@ -113,7 +113,7 @@
     #gameContainer {
       aspect-ratio: 9 / 6;
       max-height: 86vh;
-      max-width: 129vh; /* 86vh * 1.5 aspect ratio */
+      max-width: min(129vh, calc(100vw - 260px));
       width: 100%;
     }
 
@@ -149,19 +149,61 @@
         padding-left: max(6px, env(safe-area-inset-left)) !important;
         padding-right: max(6px, env(safe-area-inset-right)) !important;
       }
-      #gameContainer { max-height: 90vh; padding: 6px !important; border-width: 2px !important; border-radius: 14px !important; }
+      #gameContainer {
+        max-height: 90vh !important;
+        max-width: min(135vh, calc(100vw - 230px)) !important;
+        padding: 6px !important;
+        border-width: 2px !important;
+        border-radius: 14px !important;
+      }
       #gameContainer .text-[10px] { font-size: 7px !important; }
       #gameContainer .text-[9px] { font-size: 7px !important; }
       #gameContainer .px-2\.5 { padding-left: 5px !important; padding-right: 5px !important; }
       #gameContainer .py-1 { padding-top: 2px !important; padding-bottom: 2px !important; }
       #mazeGrid { inset: 8px !important; }
+
+      .dpad-container {
+        bottom: max(10px, env(safe-area-inset-bottom)) !important;
+        right: max(12px, env(safe-area-inset-right)) !important;
+      }
+      .dpad-base {
+        width: 102px !important;
+        height: 102px !important;
+      }
+      .dpad-center {
+        width: 32px !important;
+        height: 32px !important;
+      }
+      .dpad-up {
+        top: 3px !important;
+        width: 34px !important;
+        height: 32px !important;
+      }
+      .dpad-down {
+        bottom: 3px !important;
+        width: 34px !important;
+        height: 32px !important;
+      }
+      .dpad-left {
+        left: 3px !important;
+        width: 32px !important;
+        height: 34px !important;
+      }
+      .dpad-right {
+        right: 3px !important;
+        width: 32px !important;
+        height: 34px !important;
+      }
+      .dpad-btn i {
+        font-size: 14px !important;
+      }
     }
 
     /* Gaming D-Pad Controller */
     .dpad-container {
-      position: absolute;
-      bottom: 8px;
-      right: 8px;
+      position: fixed;
+      bottom: max(16px, env(safe-area-inset-bottom));
+      right: max(18px, env(safe-area-inset-right));
       z-index: 40;
       pointer-events: auto;
       user-select: none;
@@ -343,34 +385,35 @@
         <div id="mazeGrid" class="absolute inset-5 md:inset-8 z-10">
           <!-- Komponen visual maze akan digambar otomatis melalui JavaScript -->
         </div>
-
-        <!-- Panel Kontrol D-Pad Gaming (Besar, Kontras Tinggi, Nyaman Disentuh) -->
-        <div class="dpad-container">
-          <div class="dpad-base">
-            <!-- Tombol Tengah Robot -->
-            <div class="dpad-center">
-              <i class="fa-solid fa-robot text-sm"></i>
-            </div>
-            <!-- D-Pad Atas (Maju) -->
-            <button id="ctrlUp" class="dpad-btn dpad-up" aria-label="Maju / Atas" title="Maju (Atas)">
-              <i class="fa-solid fa-chevron-up"></i>
-            </button>
-            <!-- D-Pad Bawah (Mundur) -->
-            <button id="ctrlDown" class="dpad-btn dpad-down" aria-label="Mundur / Bawah" title="Mundur (Bawah)">
-              <i class="fa-solid fa-chevron-down"></i>
-            </button>
-            <!-- D-Pad Kiri (Samping Kiri) -->
-            <button id="ctrlLeft" class="dpad-btn dpad-left" aria-label="Kiri" title="Samping Kiri">
-              <i class="fa-solid fa-chevron-left"></i>
-            </button>
-            <!-- D-Pad Kanan (Samping Kanan) -->
-            <button id="ctrlRight" class="dpad-btn dpad-right" aria-label="Kanan" title="Samping Kanan">
-              <i class="fa-solid fa-chevron-right"></i>
-            </button>
-          </div>
-        </div>
       </div>
     </div>
+  </div>
+
+  <!-- Panel Kontrol D-Pad Gaming (Fixed di luar arena, pojok kanan bawah layar) -->
+  <div class="dpad-container">
+    <div class="dpad-base">
+      <!-- Tombol Tengah Robot -->
+      <div class="dpad-center">
+        <i class="fa-solid fa-robot text-sm"></i>
+      </div>
+      <!-- D-Pad Atas (Maju) -->
+      <button id="ctrlUp" class="dpad-btn dpad-up" aria-label="Maju / Atas" title="Maju (Atas)">
+        <i class="fa-solid fa-chevron-up"></i>
+      </button>
+      <!-- D-Pad Bawah (Mundur) -->
+      <button id="ctrlDown" class="dpad-btn dpad-down" aria-label="Mundur / Bawah" title="Mundur (Bawah)">
+        <i class="fa-solid fa-chevron-down"></i>
+      </button>
+      <!-- D-Pad Kiri (Samping Kiri) -->
+      <button id="ctrlLeft" class="dpad-btn dpad-left" aria-label="Kiri" title="Samping Kiri">
+        <i class="fa-solid fa-chevron-left"></i>
+      </button>
+      <!-- D-Pad Kanan (Samping Kanan) -->
+      <button id="ctrlRight" class="dpad-btn dpad-right" aria-label="Kanan" title="Samping Kanan">
+        <i class="fa-solid fa-chevron-right"></i>
+      </button>
+    </div>
+  </div>
 
   <!-- Modal Hasil Game (2-COLUMN COGNITIVE RADAR CHART) -->
   <div id="gameModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md hidden items-center justify-center z-50 p-4">
