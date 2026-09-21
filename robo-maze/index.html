@@ -155,12 +155,121 @@
       #gameContainer .px-2\.5 { padding-left: 5px !important; padding-right: 5px !important; }
       #gameContainer .py-1 { padding-top: 2px !important; padding-bottom: 2px !important; }
       #mazeGrid { inset: 8px !important; }
-      .w-24 { width: 56px !important; }
-      .h-24 { height: 56px !important; }
-      .w-7 { width: 18px !important; }
-      .h-7 { height: 18px !important; }
-      .w-8 { width: 22px !important; }
-      .h-8 { height: 22px !important; }
+    }
+
+    /* Gaming D-Pad Controller */
+    .dpad-container {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      z-index: 40;
+      pointer-events: auto;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    .dpad-base {
+      position: relative;
+      width: 116px;
+      height: 116px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 2.5px solid rgba(56, 189, 248, 0.6);
+      border-radius: 50%;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), 0 0 16px rgba(56, 189, 248, 0.35), inset 0 0 12px rgba(56, 189, 248, 0.15);
+      transition: transform 0.15s ease;
+    }
+    .dpad-center {
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      background: #090e1a;
+      border: 1.5px solid rgba(56, 189, 248, 0.4);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #38bdf8;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+      pointer-events: none;
+      z-index: 5;
+    }
+    .dpad-btn {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      border: 1.5px solid rgba(125, 211, 252, 0.85);
+      color: #ffffff;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+      transition: all 0.1s ease;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      z-index: 10;
+    }
+    .dpad-btn:hover {
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.7);
+    }
+    .dpad-btn:active {
+      background: linear-gradient(135deg, #38bdf8, #0284c7);
+      transform: scale(0.9);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.9);
+    }
+    .dpad-up {
+      top: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 38px;
+      height: 36px;
+      border-radius: 12px 12px 6px 6px;
+    }
+    .dpad-up:active {
+      transform: translateX(-50%) scale(0.9);
+    }
+    .dpad-down {
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 38px;
+      height: 36px;
+      border-radius: 6px 6px 12px 12px;
+    }
+    .dpad-down:active {
+      transform: translateX(-50%) scale(0.9);
+    }
+    .dpad-left {
+      left: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 38px;
+      border-radius: 12px 6px 6px 12px;
+    }
+    .dpad-left:active {
+      transform: translateY(-50%) scale(0.9);
+    }
+    .dpad-right {
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 38px;
+      border-radius: 6px 12px 12px 6px;
+    }
+    .dpad-right:active {
+      transform: translateY(-50%) scale(0.9);
+    }
+    .dpad-btn i {
+      font-size: 16px;
+      color: #ffffff;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
     }
   </style>
 </head>
@@ -235,28 +344,28 @@
           <!-- Komponen visual maze akan digambar otomatis melalui JavaScript -->
         </div>
 
-        <!-- Panel Kontrol D-Pad Melayang (Kaca Transparan di Pojok Kanan Bawah) -->
-        <div class="absolute bottom-2 right-2 sm:bottom-3 sm:right-3 md:bottom-4 md:right-4 z-30 pointer-events-auto">
-          <div class="relative w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 flex items-center justify-center bg-slate-950/10 backdrop-blur-[1px] border border-white/5 shadow-2xl rounded-full p-2 opacity-70 hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200">
-            <!-- Tombol Tengah Dekoratif -->
-            <div class="absolute w-8 h-8 sm:w-11 sm:h-11 md:w-12 md:h-12 bg-slate-950/15 rounded-full flex items-center justify-center text-indigo-900/30 border border-white/5">
-              <i class="fa-solid fa-gamepad text-xs sm:text-sm md:text-base animate-pulse"></i>
+        <!-- Panel Kontrol D-Pad Gaming (Besar, Kontras Tinggi, Nyaman Disentuh) -->
+        <div class="dpad-container">
+          <div class="dpad-base">
+            <!-- Tombol Tengah Robot -->
+            <div class="dpad-center">
+              <i class="fa-solid fa-robot text-sm"></i>
             </div>
-            <!-- D-Pad Atas -->
-            <button id="ctrlUp" class="absolute top-0.5 sm:top-1 w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-indigo-600/20 hover:bg-indigo-500/40 active:bg-indigo-700/60 active:scale-95 rounded-md sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow-sm text-indigo-900/80 font-bold border-b border-indigo-800/15">
-              <i class="fa-solid fa-chevron-up text-xs sm:text-sm md:text-base"></i>
+            <!-- D-Pad Atas (Maju) -->
+            <button id="ctrlUp" class="dpad-btn dpad-up" aria-label="Maju / Atas" title="Maju (Atas)">
+              <i class="fa-solid fa-chevron-up"></i>
             </button>
-            <!-- D-Pad Bawah -->
-            <button id="ctrlDown" class="absolute bottom-0.5 sm:bottom-1 w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-indigo-600/20 hover:bg-indigo-500/40 active:bg-indigo-700/60 active:scale-95 rounded-md sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow-sm text-indigo-900/80 font-bold border-b border-indigo-800/15">
-              <i class="fa-solid fa-chevron-down text-xs sm:text-sm md:text-base"></i>
+            <!-- D-Pad Bawah (Mundur) -->
+            <button id="ctrlDown" class="dpad-btn dpad-down" aria-label="Mundur / Bawah" title="Mundur (Bawah)">
+              <i class="fa-solid fa-chevron-down"></i>
             </button>
-            <!-- D-Pad Kiri -->
-            <button id="ctrlLeft" class="absolute left-0.5 sm:left-1 w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-indigo-600/20 hover:bg-indigo-500/40 active:bg-indigo-700/60 active:scale-95 rounded-md sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow-sm text-indigo-900/80 font-bold border-b border-indigo-800/15">
-              <i class="fa-solid fa-chevron-left text-xs sm:text-sm md:text-base"></i>
+            <!-- D-Pad Kiri (Samping Kiri) -->
+            <button id="ctrlLeft" class="dpad-btn dpad-left" aria-label="Kiri" title="Samping Kiri">
+              <i class="fa-solid fa-chevron-left"></i>
             </button>
-            <!-- D-Pad Kanan -->
-            <button id="ctrlRight" class="absolute right-0.5 sm:right-1 w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 bg-indigo-600/20 hover:bg-indigo-500/40 active:bg-indigo-700/60 active:scale-95 rounded-md sm:rounded-xl md:rounded-2xl flex items-center justify-center transition shadow-sm text-indigo-900/80 font-bold border-b border-indigo-800/15">
-              <i class="fa-solid fa-chevron-right text-xs sm:text-sm md:text-base"></i>
+            <!-- D-Pad Kanan (Samping Kanan) -->
+            <button id="ctrlRight" class="dpad-btn dpad-right" aria-label="Kanan" title="Samping Kanan">
+              <i class="fa-solid fa-chevron-right"></i>
             </button>
           </div>
         </div>
@@ -1338,6 +1447,42 @@
     setupMobileButton('ctrlDown', 0, 1);
     setupMobileButton('ctrlLeft', -1, 0);
     setupMobileButton('ctrlRight', 1, 0);
+
+    // Swipe gestures on screen for mobile navigation
+    let touchStartX = 0;
+    let touchStartY = 0;
+    const gameCont = document.getElementById('gameContainer');
+    if (gameCont) {
+      gameCont.addEventListener('touchstart', (e) => {
+        if (e.target.closest('button') || e.target.closest('.dpad-container')) return;
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+      }, { passive: true });
+
+      gameCont.addEventListener('touchend', (e) => {
+        if (e.target.closest('button') || e.target.closest('.dpad-container')) return;
+        if (!touchStartX && !touchStartY) return;
+        const touch = e.changedTouches[0];
+        const diffX = touch.clientX - touchStartX;
+        const diffY = touch.clientY - touchStartY;
+        const minSwipeDistance = 25;
+        
+        if (Math.abs(diffX) > Math.abs(diffY)) {
+          if (Math.abs(diffX) > minSwipeDistance) {
+            movePlayer(diffX > 0 ? 1 : -1, 0);
+            triggerVibration(40);
+          }
+        } else {
+          if (Math.abs(diffY) > minSwipeDistance) {
+            movePlayer(0, diffY > 0 ? 1 : -1);
+            triggerVibration(40);
+          }
+        }
+        touchStartX = 0;
+        touchStartY = 0;
+      }, { passive: true });
+    }
 
     // Kontrol Header & Menu
     document.getElementById('btnPeek').addEventListener('click', usePeek);
